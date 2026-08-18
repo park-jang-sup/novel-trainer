@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:scoring": "tsx lib/scoring/verify.ts",
+    "gen:seed": "tsx scripts/gen-convert-seed.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",
@@ -26,6 +28,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.1",
     "tailwindcss": "^4",
+    "tsx": "^4.23.12",
     "typescript": "^5"
   }
 }
