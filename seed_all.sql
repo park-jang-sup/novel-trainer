@@ -50,6 +50,28 @@ grant select, insert on public.submissions to authenticated;  -- 수정·삭제 
 grant select         on public.ai_quota    to authenticated;  -- 증가는 consume_ai_quota 만
 grant select, update on public.profiles    to authenticated;
 
+-- service_role 은 RLS 는 우회하지만 GRANT 는 우회하지 않는다.
+-- 이것이 없으면 라우트가 admin 클라이언트를 써도 정답을 읽지 못하고,
+-- 채점이 조용히 pending 으로 떨어진다. 오류도 안 보인다.
+grant select         on public.problem_answers to service_role;
+grant select         on public.golden_cases    to service_role;
+grant select, update on public.system_flags    to service_role;
+grant insert         on public.ai_usage_log    to service_role;
+
+
+-- submissions 는 읽기와 쓰기 정책을 나눈다.
+-- for all 의 using 은 읽기·수정 대상 행을 고르는 조건이라 삽입에는 적용되지 않는다.
+-- 삽입에는 with check 가 필요하다. 없으면 제출이 저장되지 않는다.
+drop policy if exists "own submissions"        on submissions;
+drop policy if exists "own submissions read"   on submissions;
+drop policy if exists "own submissions insert" on submissions;
+
+create policy "own submissions read" on submissions
+  for select to authenticated using (auth.uid() = user_id);
+
+create policy "own submissions insert" on submissions
+  for insert to authenticated with check (auth.uid() = user_id);
+
 
 -- 문항과 단계는 로그인한 사용자가 읽을 수 있어야 한다.
 -- 문항 자체는 비밀이 아니다. 비밀은 정답(problem_answers)뿐이다.
@@ -465,8 +487,22 @@ begin
     raise exception '[불변식 7] anon 에 데이터 권한이 있음: %', v_bad;
   end if;
 
+  -- (8) service_role 이 정답을 읽을 수 있어야 한다.
+  --     RLS 우회와 GRANT 는 다른 층이다. 이것이 없으면 라우트가 정답을 못 읽어
+  --     choice / order / count 채점이 전부 pending 으로 떨어진다.
+  select string_agg(t, ', ') into v_bad
+    from unnest(array['problem_answers', 'golden_cases']) t
+   where not exists (
+     select 1 from information_schema.role_table_grants g
+      where g.table_schema = 'public' and g.table_name = t
+        and g.grantee = 'service_role' and g.privilege_type = 'SELECT'
+   );
+  if v_bad is not null then
+    raise exception '[불변식 8] service_role 에 SELECT 권한 없음: %', v_bad;
+  end if;
+
   select count(*) into v_cnt from problems;
-  raise notice '불변식 7건 통과. 문항 % 개', v_cnt;
+  raise notice '불변식 8건 통과. 문항 % 개', v_cnt;
 end $$;
 
 commit;

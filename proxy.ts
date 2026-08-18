@@ -36,6 +36,11 @@ export async function proxy(request: NextRequest) {
   )
 
   if (!user && !isPublicPath) {
+    // /api/* 는 fetch로 호출된다. 페이지처럼 /login으로 리다이렉트하면
+    // 클라이언트가 HTML을 JSON으로 파싱하려다 실패한다. 401 JSON을 바로 돌려준다.
+    if (request.nextUrl.pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+    }
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
