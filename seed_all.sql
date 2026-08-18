@@ -33,6 +33,38 @@ create table if not exists problem_answers (
 alter table problem_answers enable row level security;
 -- 정책 없음 = service_role 전용. 정답이 클라이언트로 나가면 안 된다.
 
+-- ── 권한(GRANT)과 정책(RLS)은 다른 층이다 ───────────────────────────
+--
+-- GRANT 가 없으면 42501(insufficient_privilege) 오류가 나고,
+-- RLS 정책만 없으면 오류 없이 0행이 온다.
+-- Day1 의 revoke 로 SELECT 권한이 회수돼 있어, 정책만 붙여서는 화면이 뜨지 않는다.
+-- 둘을 항상 함께 관리한다.
+--
+-- anon 에는 아무 권한도 주지 않는다. 로그인해야 문항을 볼 수 있다.
+-- problem_answers / golden_cases / system_flags 에도 주지 않는다.
+-- 권한 자체가 없는 것이 정책으로 막는 것보다 확실하다.
+
+grant select         on public.stages      to authenticated;
+grant select         on public.problems    to authenticated;
+grant select, insert on public.submissions to authenticated;  -- 수정·삭제 불가
+grant select         on public.ai_quota    to authenticated;  -- 증가는 consume_ai_quota 만
+grant select, update on public.profiles    to authenticated;
+
+
+-- 문항과 단계는 로그인한 사용자가 읽을 수 있어야 한다.
+-- 문항 자체는 비밀이 아니다. 비밀은 정답(problem_answers)뿐이다.
+-- 이 정책이 없으면 훈련 화면이 42501(insufficient_privilege)로 실패한다.
+alter table stages enable row level security;
+
+drop policy if exists "authed read stages" on stages;
+create policy "authed read stages" on stages
+  for select to authenticated using (true);
+
+drop policy if exists "authed read problems" on problems;
+create policy "authed read problems" on problems
+  for select to authenticated
+  using (is_active is not false);   -- null 도 활성으로 본다
+
 create table if not exists golden_cases (
   id         uuid primary key default gen_random_uuid(),
   problem_id uuid references problems(id) on delete cascade,
@@ -400,8 +432,41 @@ begin
     raise exception '[불변식 4] order 정답이 cards 와 맞지 않음: %', v_bad;
   end if;
 
+  -- (5) 정답과 골든셋에는 정책이 하나도 없어야 한다 (service_role 전용).
+  --     정책이 붙으면 choice 정답 인덱스가 클라이언트로 샌다.
+  select string_agg(tablename || '.' || policyname, ', ') into v_bad
+    from pg_policies
+   where tablename in ('problem_answers', 'golden_cases');
+  if v_bad is not null then
+    raise exception '[불변식 5] 정답 테이블에 정책이 붙어 있음: %', v_bad;
+  end if;
+
+  -- (6) authenticated 에 problems / stages 의 SELECT 권한이 있어야 한다.
+  --     정책만 있고 권한이 없으면 화면이 42501 로 죽는다. 정책과 권한은 다른 층이다.
+  select string_agg(t, ', ') into v_bad
+    from unnest(array['problems', 'stages']) t
+   where not exists (
+     select 1 from information_schema.role_table_grants g
+      where g.table_schema = 'public' and g.table_name = t
+        and g.grantee = 'authenticated' and g.privilege_type = 'SELECT'
+   );
+  if v_bad is not null then
+    raise exception '[불변식 6] authenticated 에 SELECT 권한 없음: %. grant 문을 확인하라', v_bad;
+  end if;
+
+  -- (7) anon 에는 데이터 접근 권한이 없어야 한다.
+  --     있으면 로그인하지 않고도 문항과 제출 기록이 읽힌다.
+  select string_agg(distinct table_name || '(' || privilege_type || ')', ', ') into v_bad
+    from information_schema.role_table_grants
+   where table_schema = 'public'
+     and grantee = 'anon'
+     and privilege_type in ('SELECT', 'INSERT', 'UPDATE', 'DELETE');
+  if v_bad is not null then
+    raise exception '[불변식 7] anon 에 데이터 권한이 있음: %', v_bad;
+  end if;
+
   select count(*) into v_cnt from problems;
-  raise notice '불변식 4건 통과. 문항 % 개', v_cnt;
+  raise notice '불변식 7건 통과. 문항 % 개', v_cnt;
 end $$;
 
 commit;
