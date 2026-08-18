@@ -42,3 +42,5 @@ next-env.d.ts
 .idea/
 *:Zone.Identifier
 *Zone.Identifier
+scoring-server/.venv/
+__pycache__/
