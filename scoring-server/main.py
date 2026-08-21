@@ -38,6 +38,10 @@ def is_adj(tag: str) -> bool:
     return tag.startswith("VA")          # VA, VA-I, VA-R
 
 
+def is_adj_suffix(tag: str) -> bool:
+    return tag.startswith("XSA")         # XSA, XSA-I
+
+
 class Req(BaseModel):
     text: str = Field(max_length=4000)
 
@@ -60,7 +64,49 @@ def analyze(r: Req, x_scoring_secret: str = Header(default="")):
         # len(form)으로 계산하면 우연히 맞는 경우에만 동작한다. end를 쓴다.
         return text[tokens[i].start:tokens[j].end]
 
-    adverbs = [t.form for t in tokens if t.tag in ("MAG", "MAJ")]
+    # 부사: MAG/MAJ 에 -게 부사형을 더한다.
+    #
+    # Kiwi 는 "조심스럽게"를 조심(NNG)+스럽(XSA-I)+게(EC),
+    # "간절하게"를 간절(XR)+하(XSA)+게(EC) 로 태깅한다. MAG 가 아니다.
+    # MAG 만 세면 1단계 문항이 걷어내라고 지시한 바로 그 표현이 지적되지 않는다.
+    #
+    # VV + 게 ("밥을 먹게 했다") 는 방식이 아니라 목적·사동이므로 제외한다.
+    # -게 되다 ("조용하게 되었다") 도 방식이 아니라 상태 변화이므로 제외한다.
+    #
+    # MAG 뒤에 XSA 가 붙어 오면 부사가 아니다: "캄캄했다"의 캄캄/MAG[2:4]+하/XSA[4:5]는
+    # 형용사 캄캄하다의 어근이지 부사가 아니다. 진짜 부사는 뒤에 오는 용언과 어절이
+    # 떨어져 있다 ("천천히 했다"의 천천히/MAG[0:3]+하/VV[4:5]). 위치(어절 인접)와
+    # 품사(XSA) 두 조건을 모두 만족할 때만 제외한다.
+    adverbs = []
+    for i, t in enumerate(tokens):
+        if t.tag not in ("MAG", "MAJ"):
+            continue
+        nxt = tokens[i + 1] if i + 1 < len(tokens) else None
+        if nxt is not None and nxt.start == t.end and is_adj_suffix(nxt.tag):
+            continue
+        adverbs.append(t.form)
+
+    for i, t in enumerate(tokens):
+        if t.tag != "EC" or t.form != "게" or i == 0:
+            continue
+        nxt = tokens[i + 1] if i + 1 < len(tokens) else None
+        if nxt is not None and nxt.tag.startswith("VV") and nxt.form == "되":
+            continue
+        prev = tokens[i - 1]
+        if not (is_adj(prev.tag) or is_adj_suffix(prev.tag)):
+            continue
+        # 어절 시작까지 되짚는다. 붙어 있는 토큰만 따라간다.
+        j = i - 1
+        while j > 0:
+            p = tokens[j - 1]
+            if p.end != tokens[j].start:
+                break
+            if p.tag in ("NNG", "XR", "XPN") or is_adj(p.tag) or is_adj_suffix(p.tag):
+                j -= 1
+            else:
+                break
+        adverbs.append(text[tokens[j].start:t.end])
+
     adjectives = [t.form for t in tokens if is_adj(t.tag)]
     propers = [t.form for t in tokens if t.tag == "NNP"]
 
