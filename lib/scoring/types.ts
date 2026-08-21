@@ -43,6 +43,7 @@ export interface ScoringConfig {
   maxAdverbs?: number // 부사(MAG/MAJ)만. 형태소 필요
   maxModifiers?: number // 관형형(ETM/MM)만. 형태소 필요
   minVerbs?: number // 형태소 필요
+  maxProperNouns?: number // 고유명사(NNP)만. 형태소 필요
   maxRepeat?: number
   forbidWords?: string[] // 어간 매칭
   requireAny?: string[]

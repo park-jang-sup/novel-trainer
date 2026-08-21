@@ -291,6 +291,14 @@ export function pendingMorphChecks(cfg: ScoringConfig): Check[] {
       detail: '형태소 분석 대기',
     })
   }
+  if (cfg.maxProperNouns !== undefined) {
+    out.push({
+      key: 'maxProperNouns',
+      label: '이름 있는 것',
+      status: 'pending',
+      detail: '형태소 분석 대기',
+    })
+  }
   if (cfg.maxRepeat !== undefined) {
     out.push({
       key: 'maxRepeat',

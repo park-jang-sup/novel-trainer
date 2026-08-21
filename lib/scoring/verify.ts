@@ -69,6 +69,31 @@ console.log('\n[관형형은 부사 예산을 쓰지 않는다]')
   t('통과', r.status === 'pass', JSON.stringify(r.checks.filter((c) => c.status !== 'pass')))
 }
 
+// ── maxProperNouns ──────────────────────────────────────────────
+console.log('\n[maxProperNouns]')
+{
+  const p: Problem = {
+    id: 'pn', type: 'remove', scoring_mode: 'auto',
+    scoring_config: { maxProperNouns: 3 },
+  }
+  const m4 = emptyMorph({ propers: ['흥부', '놀부', '제비', '콩쥐'] })
+  const m3 = emptyMorph({ propers: ['흥부', '놀부', '제비'] })
+  const r4 = combine(p, { text: '아무 내용' }, undefined, m4)
+  const r3 = combine(p, { text: '아무 내용' }, undefined, m3)
+  const c4 = r4.checks.find((c) => c.key === 'maxProperNouns')
+  const c3 = r3.checks.find((c) => c.key === 'maxProperNouns')
+  t('4개면 fail', c4?.status === 'fail', `실제=${c4?.status}`)
+  t('3개면 pass', c3?.status === 'pass', `실제=${c3?.status}`)
+  t('evidence에 4개 그대로', JSON.stringify(c4?.evidence) === JSON.stringify(['흥부', '놀부', '제비', '콩쥐']), JSON.stringify(c4?.evidence))
+
+  const pNoCfg: Problem = {
+    id: 'pn-none', type: 'remove', scoring_mode: 'auto',
+    scoring_config: {},
+  }
+  const rNone = combine(pNoCfg, { text: '아무 내용' }, undefined, m4)
+  t('설정 없으면 Check 자체가 없음', rNone.checks.find((c) => c.key === 'maxProperNouns') === undefined)
+}
+
 // ── 2단계 hybrid ────────────────────────────────────────────────
 const p2: Problem = {
   id: 'p2', type: 'convert', scoring_mode: 'hybrid',

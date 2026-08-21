@@ -44,6 +44,16 @@ export function gradeMorph(cfg: ScoringConfig, m: MorphResult): Check[] {
     })
   }
 
+  if (cfg.maxProperNouns !== undefined) {
+    out.push({
+      key: 'maxProperNouns',
+      label: '이름 있는 것',
+      status: m.propers.length <= cfg.maxProperNouns ? 'pass' : 'fail',
+      detail: `${m.propers.length}개 / ${cfg.maxProperNouns}개 이하`,
+      evidence: m.propers,
+    })
+  }
+
   if (cfg.maxRepeat !== undefined) {
     // 서버가 표제어 기준으로 세어 내려준다. 조사 변화를 여기서 처리하지 않는다.
     const limit = cfg.maxRepeat
