@@ -320,6 +320,14 @@ export default function TrainClient({ problem }: { problem: PublicProblem }) {
               일부 검사는 문장 분석 서버가 연결되면 표시됩니다.
             </p>
           )}
+          {/* needsAi 는 "규칙은 끝났고 AI 차례"라는 뜻이다. AI 심사가 아직 없으므로
+              이 문항의 판정은 끝나지 않았다. 통과로만 표시하면 학습자가 자기 답안이
+              좋다고 배운다. AI 심사가 붙으면 이 안내를 실제 결과로 갈아끼운다. */}
+          {result.needsAi && (
+            <p className="text-sm" style={{ color: 'var(--ink-soft)' }}>
+              규칙 검사는 통과했습니다. 내용 심사는 아직 준비 중입니다.
+            </p>
+          )}
           <div>
             {displayChecks?.map((c) => (
               <CheckRow key={c.key} check={c} />
