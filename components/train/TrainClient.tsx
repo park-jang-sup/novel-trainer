@@ -46,6 +46,19 @@ const STATUS_COLOR: Record<CheckStatus, string> = {
 
 const TEXT_TYPES: ProblemType[] = ['remove', 'convert', 'continue']
 
+// 지시문이 45자에서 220자로 늘면서 h1 하나에 담기던 것이 벽이 됐다.
+// 첫 문장만 제목으로 두고 나머지는 아래에 옅은 글씨로 내린다.
+//
+// app/train/[stageId]/page.tsx의 firstSentence와 비슷하지만 그것은
+// 목록 라벨용이라 40자에서 자르고 구두점을 뗀다. 여기서는 자르지도
+// 떼지도 않는다 — 지시문 전체를 보여줘야 하므로 따로 둔다.
+function splitInstruction(instruction: string): { first: string; rest: string } {
+  const m = instruction.match(/[^.?!]*[.?!]/)
+  const first = (m ? m[0] : instruction).trim()
+  const rest = (m ? instruction.slice(m[0].length) : '').trim()
+  return { first, rest }
+}
+
 export default function TrainClient({ problem }: { problem: PublicProblem }) {
   const { publicConfig: cfg } = problem
 
@@ -61,6 +74,11 @@ export default function TrainClient({ problem }: { problem: PublicProblem }) {
   const displayChecks = useMemo(
     () => (result ? mergeForbidChecks(result.checks) : undefined),
     [result]
+  )
+
+  const { first: instructionFirst, rest: instructionRest } = useMemo(
+    () => splitInstruction(problem.instruction),
+    [problem.instruction]
   )
 
   const isTextType = TEXT_TYPES.includes(problem.type)
@@ -127,8 +145,13 @@ export default function TrainClient({ problem }: { problem: PublicProblem }) {
           className="text-xl"
           style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}
         >
-          {problem.instruction}
+          {instructionFirst}
         </h1>
+        {instructionRest !== '' && (
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--ink-soft)' }}>
+            {instructionRest}
+          </p>
+        )}
       </div>
 
       {problem.passage && (
