@@ -691,8 +691,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'sensory'),
-  'convert', 'auto', '연못 바닥에 손을 넣은 상태다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색이 들어간 말과 보다·밝다·어둡다 계열은 전부 막습니다.',
-  '물빛이 탁해 아무것도 보이지 않았다. 나무꾼은 손끝을 살펴보았다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","짙/VA","검/VA","노랗/VA","누렇/VA"]}'::jsonb,
+  'convert', 'auto', '연못 바닥에 손을 넣은 상태다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색·시선·시야·모습·얼굴·그림자·어둠·캄캄·깜깜·컴컴·흐릿·뚜렷·선명·투명·반짝·어른어른이 들어간 말은 전부 막습니다. 보다 계열(보이다·바라보다·살펴보다 등), 밝기와 색(밝다·어둡다·붉다·푸르다·하얗다·검다·노랗다·흐리다·훤하다), 빛의 움직임(빛나다·번쩍이다·반짝이다·어른거리다)도 막습니다.',
+  '물빛이 탁해 아무것도 보이지 않았다. 나무꾼은 손끝을 살펴보았다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"]}'::jsonb,
   'folktale', 'modern', 'planned',
   2, 'sn-axe-pond'
 where not exists (select 1 from problems p where p.source_key = 'sn-axe-pond');
@@ -703,8 +703,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'sensory'),
-  'convert', 'auto', '빛이 들지 않는 헛간 안이다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색이 들어간 말과 보다·밝다·어둡다 계열은 전부 막습니다.',
-  '아무것도 보이지 않았다. 어둠 속에서 제비의 흰 배가 어렴풋이 눈에 띄었다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","짙/VA","검/VA","노랗/VA","누렇/VA"]}'::jsonb,
+  'convert', 'auto', '빛이 들지 않는 헛간 안이다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색·시선·시야·모습·얼굴·그림자·어둠·캄캄·깜깜·컴컴·흐릿·뚜렷·선명·투명·반짝·어른어른이 들어간 말은 전부 막습니다. 보다 계열(보이다·바라보다·살펴보다 등), 밝기와 색(밝다·어둡다·붉다·푸르다·하얗다·검다·노랗다·흐리다·훤하다), 빛의 움직임(빛나다·번쩍이다·반짝이다·어른거리다)도 막습니다.',
+  '아무것도 보이지 않았다. 어둠 속에서 제비의 흰 배가 어렴풋이 눈에 띄었다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"]}'::jsonb,
   'folktale', 'fantasy', 'planned',
   2, 'sn-heungbu-barn'
 where not exists (select 1 from problems p where p.source_key = 'sn-heungbu-barn');
@@ -715,8 +715,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'sensory'),
-  'convert', 'auto', '달도 없는 밤의 마당이다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색이 들어간 말과 보다·밝다·어둡다 계열은 전부 막습니다.',
-  '깨진 독이 검게 보였다. 물이 흘러나온 자리가 어둡게 번들거렸다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","짙/VA","검/VA","노랗/VA","누렇/VA"]}'::jsonb,
+  'convert', 'auto', '달도 없는 밤의 마당이다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색·시선·시야·모습·얼굴·그림자·어둠·캄캄·깜깜·컴컴·흐릿·뚜렷·선명·투명·반짝·어른어른이 들어간 말은 전부 막습니다. 보다 계열(보이다·바라보다·살펴보다 등), 밝기와 색(밝다·어둡다·붉다·푸르다·하얗다·검다·노랗다·흐리다·훤하다), 빛의 움직임(빛나다·번쩍이다·반짝이다·어른거리다)도 막습니다.',
+  '깨진 독이 검게 보였다. 물이 흘러나온 자리가 어둡게 번들거렸다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"]}'::jsonb,
   'folktale', 'modern', 'planned',
   2, 'sn-kongjwi-night'
 where not exists (select 1 from problems p where p.source_key = 'sn-kongjwi-night');
@@ -727,8 +727,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'sensory'),
-  'convert', 'auto', '물에 잠긴 직후다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색이 들어간 말과 보다·밝다·어둡다 계열은 전부 막습니다.',
-  '푸른 물빛이 눈앞을 가득 채웠다. 뱃사람들의 모습이 점점 멀어지는 것이 보였다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","짙/VA","검/VA","노랗/VA","누렇/VA"]}'::jsonb,
+  'convert', 'auto', '물에 잠긴 직후다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색·시선·시야·모습·얼굴·그림자·어둠·캄캄·깜깜·컴컴·흐릿·뚜렷·선명·투명·반짝·어른어른이 들어간 말은 전부 막습니다. 보다 계열(보이다·바라보다·살펴보다 등), 밝기와 색(밝다·어둡다·붉다·푸르다·하얗다·검다·노랗다·흐리다·훤하다), 빛의 움직임(빛나다·번쩍이다·반짝이다·어른거리다)도 막습니다.',
+  '푸른 물빛이 눈앞을 가득 채웠다. 뱃사람들의 모습이 점점 멀어지는 것이 보였다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"]}'::jsonb,
   'folktale', 'fantasy', 'planned',
   2, 'sn-simcheong-water'
 where not exists (select 1 from problems p where p.source_key = 'sn-simcheong-water');
@@ -739,8 +739,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'sensory'),
-  'convert', 'auto', '도깨비들이 방망이를 두드린다. 등을 돌리고 있어 앞이 분간되지 않는다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색이 들어간 말과 보다·밝다·어둡다 계열은 전부 막습니다.',
-  '도깨비의 모습이 어둠 속에서 어른거렸다. 방망이가 붉게 빛났다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","짙/VA","검/VA","노랗/VA","누렇/VA"]}'::jsonb,
+  'convert', 'auto', '도깨비들이 방망이를 두드린다. 등을 돌리고 있어 앞이 분간되지 않는다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색·시선·시야·모습·얼굴·그림자·어둠·캄캄·깜깜·컴컴·흐릿·뚜렷·선명·투명·반짝·어른어른이 들어간 말은 전부 막습니다. 보다 계열(보이다·바라보다·살펴보다 등), 밝기와 색(밝다·어둡다·붉다·푸르다·하얗다·검다·노랗다·흐리다·훤하다), 빛의 움직임(빛나다·번쩍이다·반짝이다·어른거리다)도 막습니다.',
+  '도깨비의 모습이 어둠 속에서 어른거렸다. 방망이가 붉게 빛났다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"]}'::jsonb,
   'folktale', 'martial', 'planned',
   3, 'sn-goblin-club'
 where not exists (select 1 from problems p where p.source_key = 'sn-goblin-club');
@@ -751,8 +751,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'sensory'),
-  'convert', 'auto', '까치 다리 위다. 발밑이 분간되지 않는다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색이 들어간 말과 보다·밝다·어둡다 계열은 전부 막습니다.',
-  '까치들의 검은 모습이 눈앞에 가득했다. 견우는 발밑을 내려다보았다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","짙/VA","검/VA","노랗/VA","누렇/VA"]}'::jsonb,
+  'convert', 'auto', '까치 다리 위다. 발밑이 분간되지 않는다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색·시선·시야·모습·얼굴·그림자·어둠·캄캄·깜깜·컴컴·흐릿·뚜렷·선명·투명·반짝·어른어른이 들어간 말은 전부 막습니다. 보다 계열(보이다·바라보다·살펴보다 등), 밝기와 색(밝다·어둡다·붉다·푸르다·하얗다·검다·노랗다·흐리다·훤하다), 빛의 움직임(빛나다·번쩍이다·반짝이다·어른거리다)도 막습니다.',
+  '까치들의 검은 모습이 눈앞에 가득했다. 견우는 발밑을 내려다보았다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"]}'::jsonb,
   'folktale', 'fantasy', 'planned',
   3, 'sn-gyeonu-bridge'
 where not exists (select 1 from problems p where p.source_key = 'sn-gyeonu-bridge');
@@ -763,8 +763,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'sensory'),
-  'convert', 'auto', '용궁 복도에서 등불이 꺼졌다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색이 들어간 말과 보다·밝다·어둡다 계열은 전부 막습니다.',
-  '붉은 기둥들이 어둠 속에 잠겨 보이지 않았다. 토끼는 앞을 바라보았다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","짙/VA","검/VA","노랗/VA","누렇/VA"]}'::jsonb,
+  'convert', 'auto', '용궁 복도에서 등불이 꺼졌다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색·시선·시야·모습·얼굴·그림자·어둠·캄캄·깜깜·컴컴·흐릿·뚜렷·선명·투명·반짝·어른어른이 들어간 말은 전부 막습니다. 보다 계열(보이다·바라보다·살펴보다 등), 밝기와 색(밝다·어둡다·붉다·푸르다·하얗다·검다·노랗다·흐리다·훤하다), 빛의 움직임(빛나다·번쩍이다·반짝이다·어른거리다)도 막습니다.',
+  '붉은 기둥들이 어둠 속에 잠겨 보이지 않았다. 토끼는 앞을 바라보았다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"]}'::jsonb,
   'folktale', 'fantasy', 'planned',
   3, 'sn-rabbit-hall'
 where not exists (select 1 from problems p where p.source_key = 'sn-rabbit-hall');
@@ -775,8 +775,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'sensory'),
-  'convert', 'auto', '나무 위다. 아래는 아무것도 분간되지 않는다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색이 들어간 말과 보다·밝다·어둡다 계열은 전부 막습니다.',
-  '호랑이의 모습이 밑동 쪽에서 어른거렸다. 오누이는 아래를 내려다보았다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","짙/VA","검/VA","노랗/VA","누렇/VA"]}'::jsonb,
+  'convert', 'auto', '나무 위다. 아래는 아무것도 분간되지 않는다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색·시선·시야·모습·얼굴·그림자·어둠·캄캄·깜깜·컴컴·흐릿·뚜렷·선명·투명·반짝·어른어른이 들어간 말은 전부 막습니다. 보다 계열(보이다·바라보다·살펴보다 등), 밝기와 색(밝다·어둡다·붉다·푸르다·하얗다·검다·노랗다·흐리다·훤하다), 빛의 움직임(빛나다·번쩍이다·반짝이다·어른거리다)도 막습니다.',
+  '호랑이의 모습이 밑동 쪽에서 어른거렸다. 오누이는 아래를 내려다보았다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"]}'::jsonb,
   'folktale', 'fantasy', 'planned',
   3, 'sn-siblings-tree'
 where not exists (select 1 from problems p where p.source_key = 'sn-siblings-tree');
