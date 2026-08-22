@@ -128,7 +128,7 @@ def analyze(r: Req, x_scoring_secret: str = Header(default="")):
     modifiers += [t.form for t in tokens if t.tag == "MM" and t.form not in MM_STOP]
 
     # 반복 어휘: 표제어 기준. 조사가 달라도 같은 단어로 센다.
-    lemmas = [
+    repeat_lemmas = [
         t.form for t in tokens
         if (t.tag in ("NNG", "NNP") or is_verb(t.tag) or is_adj(t.tag) or t.tag == "MAG")
         and len(t.form) >= 2
@@ -136,9 +136,46 @@ def analyze(r: Req, x_scoring_secret: str = Header(default="")):
     ]
     repeats = [
         {"word": w, "count": c}
-        for w, c in Counter(lemmas).most_common()
+        for w, c in Counter(repeat_lemmas).most_common()
         if c >= 2
     ]
+
+    # forbidLemmas 재료: 표제어 + 태그 + 그 토큰이 속한 어절 전체의 표면형.
+    #
+    # 어절 경계는 토큰 간격으로 찾는다. 다만 불규칙 활용의 축약형(보+았→봤)은
+    # 형태소 구간이 서로 겹친다 (쳐다보/VV[9:12], 었/EP[11:12]). 그래서 "같을
+    # 때만"이 아니라 "뜨지 않으면"(다음 토큰 시작이 앞 토큰 끝보다 뒤가 아니면)
+    # 붙어 있다고 본다. 문장부호(S로 시작하는 태그)는 간격이 없어도 어절이
+    # 아니므로 건너간다 — 안 그러면 "쳐다봤다."의 마침표까지 표면형에 들어간다.
+    def word_start(i: int) -> int:
+        j = i
+        while j > 0:
+            p = tokens[j - 1]
+            if p.tag.startswith("S") or p.end < tokens[j].start:
+                break
+            j -= 1
+        return j
+
+    def word_end(i: int) -> int:
+        k = i
+        while k < len(tokens) - 1:
+            nxt = tokens[k + 1]
+            if nxt.tag.startswith("S") or nxt.start > tokens[k].end:
+                break
+            k += 1
+        return k
+
+    LEMMA_TAG_PREFIXES = ("NNG", "NNP", "VV", "VA", "MAG", "XR")
+    lemma_entries = []
+    for i, t in enumerate(tokens):
+        if not t.tag.startswith(LEMMA_TAG_PREFIXES):
+            continue
+        j, k = word_start(i), word_end(i)
+        lemma_entries.append({
+            "lemma": t.form,
+            "tag": t.tag,
+            "surface": text[tokens[j].start:tokens[k].end],
+        })
 
     return {
         "adverbs": adverbs,
@@ -147,6 +184,7 @@ def analyze(r: Req, x_scoring_secret: str = Header(default="")):
         "verbs": verbs,
         "propers": propers,
         "repeats": repeats,
+        "lemmas": lemma_entries,
         "sentences": len([t for t in tokens if t.tag == "SF"]),
     }
 

@@ -146,6 +146,56 @@ CASES = [
         lambda r: (len(adverbs(r)) == 2, f"adverbs={adverbs(r)}"),
         "MAG 두 개(아주, 빨리)는 -게 되다 제외와 무관하게 그대로 잡혀야 한다",
     ),
+    # ── 아래 다섯은 forbidLemmas 재료용 lemmas 필드 검증 ──────────────
+    (
+        "lemmas · 불규칙 축약 표면형 (쳐다봤다)",
+        "아이가 그림자를 쳐다봤다.",
+        lambda r: (
+            any(e.get("lemma") == "쳐다보" and e.get("tag") == "VV"
+                and e.get("surface") == "쳐다봤다" for e in lemmas(r)),
+            f"lemmas={lemmas(r)}",
+        ),
+        "쳐다보/VV[9:12]+었/EP[11:12]는 축약으로 구간이 겹친다. "
+        "'같을 때만' 을 곧이곧대로 쓰면 표면형이 '쳐다봤'에서 끊긴다",
+    ),
+    (
+        "lemmas · 불규칙 축약 표면형 (봤다)",
+        "창밖을 봤다.",
+        lambda r: (
+            any(e.get("lemma") == "보" and e.get("tag") == "VV"
+                and e.get("surface") == "봤다" for e in lemmas(r)),
+            f"lemmas={lemmas(r)}",
+        ),
+        "보/VV[4:5]+었/EP[4:5] 축약. 마침표(SF)는 간격이 없어도 어절이 아니므로 표면형에서 제외돼야 한다",
+    ),
+    (
+        "lemmas · 보조용언 제외",
+        "국을 한번 먹어 보았다.",
+        lambda r: (
+            not any(e.get("lemma") == "보" and e.get("tag") == "VV" for e in lemmas(r)),
+            f"lemmas={lemmas(r)}",
+        ),
+        "'먹어 보았다'의 보조용언 '보'는 VX 다. 내용어가 아니므로 lemmas 에 없어야 한다. "
+        "여기서 새면 forbidLemmas 가 '먹어 보았다'를 오탐한다",
+    ),
+    (
+        "lemmas · VA-I 표면형 (날카로운)",
+        "날카로운 소리가 들렸다.",
+        lambda r: (
+            any(e.get("lemma") == "날카롭" and e.get("tag") == "VA-I"
+                and e.get("surface") == "날카로운" for e in lemmas(r)),
+            f"lemmas={lemmas(r)}",
+        ),
+        "VA-I 를 VA 로 정규화하면 안 되고, surface 가 len(form)(2자)이 아니라 "
+        "실제 표면 길이(3자)로 잘려야 한다",
+    ),
+    (
+        "lemmas 추가 후 adverbs 회귀 없음",
+        "흥부는 몹시 조심스럽게 제비의 다리를 아주 천천히 감쌌다. "
+        "그는 정말 간절하게 제비가 얼른 낫기를 바랐다.",
+        lambda r: (len(adverbs(r)) == 7, f"adverbs={adverbs(r)}"),
+        "lemmas 는 순수 추가 필드다. 기존 집계 루프를 건드리지 않았는지 본다",
+    ),
 ]
 
 
@@ -178,6 +228,10 @@ def verbs(r):
 
 def propers(r):
     return list(_field(r, "propers", "proper", "propernouns"))
+
+
+def lemmas(r):
+    return list(_field(r, "lemmas", "lemma"))
 
 
 def repeats(r):
