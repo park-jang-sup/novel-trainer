@@ -1,55 +1,133 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import TrainClient from '@/components/train/TrainClient'
-import type { ProblemType } from '@/lib/scoring/types'
 
-export default async function TrainStagePage({
-  params,
-}: {
-  params: Promise<{ stageId: string }>
-}) {
-  const { stageId } = await params
-  const supabase = await createClient()
+// order_no는 트랙마다 번호 구간이 달라 전역 번호가 성립하지 않는다.
+// structure는 11부터 시작하고 sentence도 11까지 있어 11번이 두 개다.
+// 그래서 화면에는 order_no를 그대로 내지 않고, 같은 트랙 안에서의
+// 상대 순번을 다시 세어 보여준다.
+const TRACK_LABEL: Record<string, string> = {
+  sentence: '문장',
+  structure: '구성',
+  start: '도입',
+}
 
-  const { data: problem, error } = await supabase
-    .from('problems')
-    .select('id, type, instruction, passage, scoring_config, choices')
-    .eq('stage_id', stageId)
-    .eq('is_active', true)
-    .limit(1)
-    .maybeSingle()
+const LABEL_MAX = 40
 
-  if (error) {
-    throw error
-  }
+// 목록에서 문항을 구분하는 라벨은 instruction이 아니라 첫 문장이다.
+// instruction은 유형끼리 문구가 같은 경우가 많고(4단계는 8문항 중 6개가
+// 글자 그대로 같다), 있을 때는 passage가 더 구체적으로 문항을 구분해 준다.
+function firstSentence(text: string): string {
+  const m = text.match(/[^.?!]*[.?!]/)
+  const raw = (m ? m[0].slice(0, -1) : text).trim()
+  return raw.length > LABEL_MAX ? raw.slice(0, LABEL_MAX) + '…' : raw
+}
 
-  if (!problem) {
+export default async function TrainStagePage(props: PageProps<'/train/[stageId]'>) {
+  const { stageId } = await props.params
+
+  if (!/^\d+$/.test(stageId)) {
     notFound()
   }
 
-  const cfg = problem.scoring_config ?? {}
+  const supabase = await createClient()
 
-  // 화면 표시에 필요한 것만 넘긴다. forbidWords · maxAdverbs · minVerbs ·
-  // maxRepeat 는 여기서 걸러진다 — 채점 결과(evidence)에 어차피 나온다.
-  const publicConfig = {
-    maxChars: cfg.maxChars ?? null,
-    cards: cfg.cards ?? null,
-    count: cfg.count ?? null,
-    minLen: cfg.minLen ?? null,
-    maxLen: cfg.maxLen ?? null,
-    inputs: cfg.inputs ?? null,
+  const { data: stage, error: stageError } = await supabase
+    .from('stages')
+    .select('id, track, order_no, title, summary')
+    .eq('id', stageId)
+    .maybeSingle()
+
+  if (stageError) {
+    throw stageError
+  }
+  if (!stage) {
+    notFound()
+  }
+
+  const { data: trackStages, error: trackError } = await supabase
+    .from('stages')
+    .select('id, order_no')
+    .eq('track', stage.track)
+    .order('order_no')
+
+  if (trackError) {
+    throw trackError
+  }
+
+  const relativeNo = (trackStages ?? []).findIndex((s) => s.id === stage.id) + 1
+  const trackLabel = TRACK_LABEL[stage.track] ?? stage.track
+
+  // scoring_config·choices는 목록에 실릴 이유가 없다. 채점 설정과 선택지는
+  // 문항 하나를 열었을 때만 필요하다.
+  //
+  // is_active 가드는 RLS 정책("is_active is not false")과 같은 모양을 쓴다.
+  // .eq('is_active', true)를 쓰면 is_active가 null인 행이 정책은 통과하고
+  // 쿼리에서만 빠지는 어긋남이 생긴다.
+  const { data: problems, error: problemsError } = await supabase
+    .from('problems')
+    .select('id, source_key, type, difficulty, instruction, passage')
+    .eq('stage_id', stageId)
+    .not('is_active', 'is', false)
+    .order('difficulty')
+    .order('source_key')
+
+  if (problemsError) {
+    throw problemsError
   }
 
   return (
-    <TrainClient
-      problem={{
-        id: problem.id,
-        type: problem.type as ProblemType,
-        instruction: problem.instruction,
-        passage: problem.passage,
-        choices: problem.choices ?? null,
-        publicConfig,
-      }}
-    />
+    <main className="mx-auto max-w-2xl space-y-6 p-6">
+      <div className="space-y-2">
+        <p className="font-mono text-sm" style={{ color: 'var(--ink-soft)' }}>
+          {trackLabel} {relativeNo}
+        </p>
+        <h1
+          className="text-xl"
+          style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}
+        >
+          {stage.title}
+        </h1>
+        {stage.summary && (
+          <p className="text-sm" style={{ color: 'var(--ink-soft)' }}>
+            {stage.summary}
+          </p>
+        )}
+      </div>
+
+      {problems && problems.length > 0 ? (
+        <div>
+          {problems.map((p, i) => (
+            <Link
+              key={p.id}
+              href={`/train/${stageId}/${p.source_key}`}
+              className="flex items-center gap-3 py-3"
+              style={{ borderBottom: '1px solid var(--rule)' }}
+            >
+              <span
+                className="font-mono"
+                style={{ color: 'var(--ink-soft)', width: '2em' }}
+                aria-hidden
+              >
+                {i + 1}
+              </span>
+              <span className="min-w-0 flex-1" style={{ fontFamily: 'var(--font-display)' }}>
+                {firstSentence(p.passage ?? p.instruction)}
+              </span>
+              <span
+                className="whitespace-nowrap font-mono text-sm"
+                style={{ color: 'var(--ink-soft)' }}
+              >
+                {p.source_key}
+              </span>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm" style={{ color: 'var(--ink-soft)' }}>
+          아직 문항이 없습니다
+        </p>
+      )}
+    </main>
   )
 }
