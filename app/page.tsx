@@ -1,69 +1,131 @@
-import Image from "next/image";
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
 
-export default function Home() {
+// app/train/[stageId]/page.tsx 와 같은 규칙: order_no는 트랙마다 번호
+// 구간이 달라 전역 번호가 성립하지 않는다. 화면에는 같은 track 안에서
+// order_no 순으로 다시 센 상대 번호를 낸다.
+const TRACKS = ['sentence', 'structure', 'start'] as const
+
+const TRACK_LABEL: Record<(typeof TRACKS)[number], string> = {
+  sentence: '문장',
+  structure: '구성',
+  start: '도입',
+}
+
+export default async function Home() {
+  const supabase = await createClient()
+
+  const { data: stages, error: stagesError } = await supabase
+    .from('stages')
+    .select('id, track, order_no, title, summary')
+    .order('order_no')
+
+  if (stagesError) {
+    throw stagesError
+  }
+
+  // 53행뿐이라 한 번에 가져와 Map으로 집계한다. 단계마다 count 쿼리를
+  // 따로 날리면 25번 왕복한다.
+  //
+  // is_active 가드는 RLS 정책("is_active is not false")과 같은 모양을 쓴다.
+  // .eq('is_active', true)를 쓰면 is_active가 null인 행이 정책은 통과하고
+  // 쿼리에서만 빠지는 어긋남이 생긴다.
+  const { data: problems, error: problemsError } = await supabase
+    .from('problems')
+    .select('stage_id')
+    .not('is_active', 'is', false)
+
+  if (problemsError) {
+    throw problemsError
+  }
+
+  const countByStage = new Map<string, number>()
+  for (const p of problems ?? []) {
+    countByStage.set(p.stage_id, (countByStage.get(p.stage_id) ?? 0) + 1)
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <main className="mx-auto max-w-2xl space-y-8 p-6">
+      <h1
+        className="text-2xl"
+        style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}
+      >
+        웹소설 훈련
+      </h1>
+
+      {TRACKS.map((track) => {
+        const trackStages = (stages ?? []).filter((s) => s.track === track)
+        if (trackStages.length === 0) return null
+
+        return (
+          <section key={track} className="space-y-2">
+            <h2
+              className="text-lg"
+              style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+              {TRACK_LABEL[track]}
+            </h2>
+            <div>
+              {trackStages.map((s, i) => {
+                const count = countByStage.get(s.id) ?? 0
+                const relativeNo = i + 1
+
+                const row = (
+                  <>
+                    <span
+                      className="font-mono"
+                      style={{ color: 'var(--ink-soft)', width: '2em' }}
+                      aria-hidden
+                    >
+                      {relativeNo}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span style={{ fontFamily: 'var(--font-display)' }}>{s.title}</span>
+                      {s.summary && (
+                        <span
+                          className="block text-sm"
+                          style={{ color: 'var(--ink-soft)' }}
+                        >
+                          {s.summary}
+                        </span>
+                      )}
+                    </span>
+                    <span
+                      className="whitespace-nowrap font-mono text-sm"
+                      style={{ color: 'var(--ink-soft)' }}
+                    >
+                      {count > 0 ? `${count}문항` : '준비 중'}
+                    </span>
+                  </>
+                )
+
+                // 화면에 내는 번호(relativeNo)와 주소에 쓰는 값(s.id)은 다르다.
+                // stages.id와 order_no는 더 이상 일치하지 않는다 — 나중에
+                // 삽입된 행이 큰 id를 받으면서 그 뒤 단계들의 id와 order_no가
+                // 하나씩 어긋났다. order_no로 주소를 만들면 엉뚱한 단계로 간다.
+                return count > 0 ? (
+                  <Link
+                    key={s.id}
+                    href={`/train/${s.id}`}
+                    className="flex items-center gap-3 py-3"
+                    style={{ borderBottom: '1px solid var(--rule)' }}
+                  >
+                    {row}
+                  </Link>
+                ) : (
+                  <div
+                    key={s.id}
+                    className="flex items-center gap-3 py-3"
+                    style={{ borderBottom: '1px solid var(--rule)' }}
+                  >
+                    {row}
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        )
+      })}
+    </main>
+  )
 }
