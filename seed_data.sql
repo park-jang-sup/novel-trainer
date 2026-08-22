@@ -644,7 +644,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'adverb_exception'),
   'choice', 'auto', '뒤 문장의 부사가 앞 문장 덕분에 값을 얻는 것을 고르시오. 부사가 없거나, 부사가 앞에서 혼자 일하고 있으면 답이 아니다.',
-  null, '["까치들이 강 위로 몸을 이어 다리를 놓았다. 견우는 조심스럽게 첫 발을 얹었다.","까치들이 강 위로 몸을 이어 다리를 놓았다. 견우는 첫 발을 얹었다.","견우는 조심스럽게 강가에 나왔다. 까치들이 하늘을 덮었다.","강물이 아주 깊었다. 견우는 매우 두려웠다."]'::jsonb, '{}'::jsonb,
+  '까치 다리가 놓인 날이다.', '["까치들이 강 위로 몸을 이어 다리를 놓았다. 견우는 조심스럽게 첫 발을 얹었다.","까치들이 강 위로 몸을 이어 다리를 놓았다. 견우는 첫 발을 얹었다.","견우는 조심스럽게 강가에 나왔다. 까치들이 하늘을 덮었다.","강물이 아주 깊었다. 견우는 매우 두려웠다."]'::jsonb, '{}'::jsonb,
   'folktale', 'fantasy', 'planned',
   1, 'ae-gyeonu-bridge'
 where not exists (select 1 from problems p where p.source_key = 'ae-gyeonu-bridge');
@@ -656,7 +656,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'adverb_exception'),
   'choice', 'auto', '뒤 문장의 부사가 앞 문장 덕분에 값을 얻는 것을 고르시오. 부사가 없거나, 부사가 앞에서 혼자 일하고 있으면 답이 아니다.',
-  null, '["문지기의 창끝이 토끼의 목 앞에서 멈췄다. 토끼는 천천히 한 걸음 나섰다.","문지기의 창끝이 토끼의 목 앞에서 멈췄다. 토끼는 한 걸음 나섰다.","토끼는 정말 용감하게 걸었다. 문지기가 창을 내렸다.","용궁 문이 열렸다. 토끼는 몹시 두려웠다."]'::jsonb, '{}'::jsonb,
+  '토끼가 용궁 문 앞에 섰다.', '["문지기의 창끝이 토끼의 목 앞에서 멈췄다. 토끼는 천천히 한 걸음 나섰다.","문지기의 창끝이 토끼의 목 앞에서 멈췄다. 토끼는 한 걸음 나섰다.","토끼는 정말 용감하게 걸었다. 문지기가 창을 내렸다.","용궁 문이 열렸다. 토끼는 몹시 두려웠다."]'::jsonb, '{}'::jsonb,
   'folktale', 'fantasy', 'planned',
   1, 'ae-rabbit-gate'
 where not exists (select 1 from problems p where p.source_key = 'ae-rabbit-gate');
@@ -668,7 +668,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'adverb_exception'),
   'choice', 'auto', '부사가 동사에 얹혀 제 일을 하는 것을 고르시오. 부사가 없거나, 동사가 이미 품은 뜻을 되풀이하거나, 동사 대신 감정을 서술하고 있으면 답이 아니다.',
-  null, '["나무꾼은 도끼를 물속으로 조심스럽게 내려놓았다.","나무꾼은 연못가로 빠르게 달려갔다.","나무꾼은 몹시 안타깝게 연못을 바라보고 있었다.","나무꾼은 도끼를 물속으로 내려놓았다."]'::jsonb, '{}'::jsonb,
+  null, '["나무꾼은 도끼를 물속으로 조심스럽게 내려놓았다.","나무꾼은 연못가로 황급히 내달렸다.","나무꾼은 몹시 안타깝게 연못을 바라보고 있었다.","나무꾼은 도끼를 물속으로 내려놓았다."]'::jsonb, '{}'::jsonb,
   'folktale', 'modern', 'planned',
   2, 'ae-axe-drop'
 where not exists (select 1 from problems p where p.source_key = 'ae-axe-drop');
