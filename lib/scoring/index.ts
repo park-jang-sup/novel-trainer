@@ -56,6 +56,44 @@ export function combine(
   return { checks, status, blocked, needsAi }
 }
 
+/**
+ * 화면 표시 전용 병합. combine()의 출력(DB에 저장됨)에는 쓰지 않는다.
+ *
+ * forbidWords(어간 매칭)와 forbidLemmas(표제어 매칭)는 판정 근거가
+ * 서로 달라 combine()에서는 끝까지 분리해 둔다. 병합본이 저장되면
+ * 나중에 어느 검사가 걸렸는지 되짚을 수 없다. 화면에는 같은 라벨
+ * ('쓰지 않을 말')이 두 줄로 뜨는 것이 학습자에게 혼란스러우므로
+ * 여기서만 한 줄로 합친다.
+ *
+ * key를 'forbidWords'로 유지하는 이유: Editor.tsx의 markClassFor가
+ * key로 하이라이트 색을 고른다. 새 key를 만들면 그쪽도 고쳐야 한다.
+ */
+export function mergeForbidChecks(checks: Check[]): Check[] {
+  const words = checks.find((c) => c.key === 'forbidWords')
+  const lemmas = checks.find((c) => c.key === 'forbidLemmas')
+  if (!words || !lemmas) return checks
+
+  const evidence = [...new Set([...(words.evidence ?? []), ...(lemmas.evidence ?? [])])]
+  const status: CheckStatus =
+    words.status === 'fail' || lemmas.status === 'fail'
+      ? 'fail'
+      : words.status === 'pending' || lemmas.status === 'pending'
+        ? 'pending'
+        : 'pass'
+  const merged: Check = {
+    key: 'forbidWords',
+    label: '쓰지 않을 말',
+    status,
+    detail: evidence.length === 0 ? '없음' : `${evidence.length}개`,
+    evidence,
+    gating: !!(words.gating || lemmas.gating),
+  }
+
+  return checks
+    .filter((c) => c.key !== 'forbidLemmas')
+    .map((c) => (c.key === 'forbidWords' ? merged : c))
+}
+
 export { gradeLocal, pendingMorphChecks, countChars, findForbidden } from './local'
 export { gradeMorph } from './morph'
 export * from './types'

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { countChars } from '@/lib/scoring'
+import { useMemo, useState } from 'react'
+import { countChars, mergeForbidChecks } from '@/lib/scoring'
 import type { Check, CheckStatus, CountInput, ProblemType } from '@/lib/scoring/types'
 import RuleGauge from './RuleGauge'
 import CheckRow from './CheckRow'
@@ -57,6 +57,11 @@ export default function TrainClient({ problem }: { problem: PublicProblem }) {
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<GradeResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  const displayChecks = useMemo(
+    () => (result ? mergeForbidChecks(result.checks) : undefined),
+    [result]
+  )
 
   const isTextType = TEXT_TYPES.includes(problem.type)
   const passageLabel = problem.type === 'coinage' || problem.type === 'count' ? '힌트' : '원문'
@@ -145,7 +150,7 @@ export default function TrainClient({ problem }: { problem: PublicProblem }) {
 
       {isTextType && (
         <div className="space-y-2">
-          <Editor value={text} onChange={setText} checks={result?.checks} rows={6} disabled={submitting} />
+          <Editor value={text} onChange={setText} checks={displayChecks} rows={6} disabled={submitting} />
           {cfg.maxChars != null && (
             <>
               <RuleGauge count={countChars(text)} max={cfg.maxChars} />
@@ -289,11 +294,11 @@ export default function TrainClient({ problem }: { problem: PublicProblem }) {
           </p>
           {!result.morphAvailable && (
             <p className="text-sm" style={{ color: 'var(--ink-soft)' }}>
-              부사·반복 검사는 문장 분석 서버가 연결되면 표시됩니다.
+              일부 검사는 문장 분석 서버가 연결되면 표시됩니다.
             </p>
           )}
           <div>
-            {result.checks.map((c) => (
+            {displayChecks?.map((c) => (
               <CheckRow key={c.key} check={c} />
             ))}
           </div>

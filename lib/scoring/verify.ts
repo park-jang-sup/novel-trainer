@@ -4,8 +4,8 @@
 //
 // 실행: npm run test:scoring
 
-import { combine, findForbidden } from './index'
-import type { Answer, MorphResult, Problem } from './types'
+import { combine, findForbidden, mergeForbidChecks } from './index'
+import type { Answer, Check, MorphResult, Problem } from './types'
 import { CONVERT_SEEDS } from './fixtures/convert-seeds'
 
 let pass = 0
@@ -163,6 +163,60 @@ console.log('\n[forbidLemmas]')
     const r = combine(pNone, { text: '봤다.' }, undefined, m)
     t('forbidLemmas 설정 없으면 Check 자체가 없음', r.checks.find((c) => c.key === 'forbidLemmas') === undefined)
   }
+}
+
+// ── mergeForbidChecks · 화면 병합 전용 (combine() 출력은 그대로) ──
+console.log('\n[mergeForbidChecks]')
+{
+  // 1) forbidWords fail(2건) + forbidLemmas fail(1건) → Check 1개, evidence 3개, fail
+  const m1 = mergeForbidChecks([
+    { key: 'forbidWords', label: '쓰지 않을 말', status: 'fail', detail: '2개', evidence: ['눈앞에', '모습이'], gating: true },
+    { key: 'forbidLemmas', label: '쓰지 않을 말', status: 'fail', detail: '1개', evidence: ['내려다보았다'], gating: true },
+  ])
+  t(
+    '2건+1건 → Check 1개, evidence 3개, fail',
+    m1.length === 1 && m1[0].evidence?.length === 3 && m1[0].status === 'fail',
+    JSON.stringify(m1)
+  )
+
+  // 2) forbidWords pass + forbidLemmas fail → fail
+  const m2 = mergeForbidChecks([
+    { key: 'forbidWords', label: '쓰지 않을 말', status: 'pass', detail: '없음', evidence: [], gating: true },
+    { key: 'forbidLemmas', label: '쓰지 않을 말', status: 'fail', detail: '1개', evidence: ['내려다보았다'], gating: true },
+  ])
+  t('pass + fail → fail', m2[0].status === 'fail', `실제=${m2[0].status}`)
+
+  // 3) forbidWords fail + forbidLemmas pending → fail (pending이 fail을 덮지 않음)
+  const m3 = mergeForbidChecks([
+    { key: 'forbidWords', label: '쓰지 않을 말', status: 'fail', detail: '1개', evidence: ['눈앞에'], gating: true },
+    { key: 'forbidLemmas', label: '쓰지 않을 말', status: 'pending', detail: '형태소 분석 대기' },
+  ])
+  t('fail + pending → fail (pending이 덮지 않음)', m3[0].status === 'fail', `실제=${m3[0].status}`)
+
+  // 4) forbidWords pass + forbidLemmas pending → pending
+  const m4 = mergeForbidChecks([
+    { key: 'forbidWords', label: '쓰지 않을 말', status: 'pass', detail: '없음', evidence: [], gating: true },
+    { key: 'forbidLemmas', label: '쓰지 않을 말', status: 'pending', detail: '형태소 분석 대기' },
+  ])
+  t('pass + pending → pending', m4[0].status === 'pending', `실제=${m4[0].status}`)
+
+  // 5) forbidWords만 있고 forbidLemmas 없음 → 입력과 같은 배열 내용, key 유지
+  const only: Check[] = [
+    { key: 'forbidWords', label: '쓰지 않을 말', status: 'fail', detail: '1개', evidence: ['눈앞에'], gating: true },
+  ]
+  const m5 = mergeForbidChecks(only)
+  t(
+    'forbidLemmas 없으면 입력과 동일, key는 forbidWords',
+    JSON.stringify(m5) === JSON.stringify(only) && m5[0].key === 'forbidWords',
+    JSON.stringify(m5)
+  )
+
+  // 6) 두 evidence에 같은 어절이 있으면 합친 evidence에 1개만
+  const m6 = mergeForbidChecks([
+    { key: 'forbidWords', label: '쓰지 않을 말', status: 'fail', detail: '1개', evidence: ['눈앞에'], gating: true },
+    { key: 'forbidLemmas', label: '쓰지 않을 말', status: 'fail', detail: '1개', evidence: ['눈앞에'], gating: true },
+  ])
+  t('중복 어절 evidence 1개로 합쳐짐', m6[0].evidence?.length === 1, JSON.stringify(m6[0].evidence))
 }
 
 // ── 2단계 hybrid ────────────────────────────────────────────────
