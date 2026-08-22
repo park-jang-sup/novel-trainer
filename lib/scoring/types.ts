@@ -53,6 +53,8 @@ export interface ScoringConfig {
   minLen?: number
   maxLen?: number
   distinctInitial?: boolean
+  // order — 섞인 카드. 정답 sequence 의 숫자가 이 배열의 인덱스다
+  cards?: string[]
   // count
   inputs?: CountInput[]
   op?: CountOp

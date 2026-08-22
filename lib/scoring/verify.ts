@@ -2,11 +2,22 @@
 // 사본을 만들지 않는다 — 검증한 코드와 출하하는 코드가 갈라지면 안 된다.
 // remote.ts(server-only)는 index.ts가 import하지 않으므로 순수 Node에서 돌아간다.
 //
+// 검사는 두 방향이다. 오탐(좋은 답안이 걸리는가)과 미검출(나쁜 답안이
+// 통과하는가). 세션 4까지는 오탐만 봤다.
+//
 // 실행: npm run test:scoring
 
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
 import { combine, findForbidden, mergeForbidChecks } from './index'
 import type { Answer, Check, MorphResult, Problem } from './types'
 import { CONVERT_SEEDS } from './fixtures/convert-seeds'
+import {
+  SENSORY_BYPASS,
+  SENSORY_CLEAN,
+  SENSORY_FORBID_WORDS,
+  SENSORY_FORBID_LEMMAS,
+} from './fixtures/sensory-bypass'
 
 let pass = 0
 let fail = 0
@@ -411,6 +422,158 @@ for (const seed of CONVERT_SEEDS) {
   }
   const r = combine(p, { text: seed.passage }, undefined, emptyMorph({ verbs: ['하', '되'] }))
   t(`'${seed.key}' 차단`, r.blocked === true && r.needsAi === false, `status=${r.status}`)
+}
+
+// ── 미검출 감시: 뚫기 표본이 실제로 검출되는가 ──────────────────────
+//
+// SENSORY_BYPASS는 forbidWords/forbidLemmas를 실제로 뚫어 봤던 표현의
+// 모음이다(형태소 분석기로 실측한 lemmas를 그대로 쓴다 — 여기서 손대지
+// 않는다). 지금까지의 검사는 "좋은 답안이 억울하게 걸리는가"만 봤다.
+// 이 검사는 반대다 — "나쁜 답안이 통과하는가"를 본다.
+console.log('\n[미검출 감시: 뚫기 표본]')
+{
+  const sensoryCfg = {
+    forbidWords: SENSORY_FORBID_WORDS,
+    forbidLemmas: SENSORY_FORBID_LEMMAS,
+  }
+  for (const item of SENSORY_BYPASS) {
+    const p: Problem = {
+      id: item.key,
+      type: 'convert',
+      scoring_mode: 'auto',
+      scoring_config: sensoryCfg,
+    }
+    const r = combine(p, { text: item.text }, undefined, emptyMorph({ lemmas: item.lemmas }))
+    const fw = r.checks.find((c) => c.key === 'forbidWords')
+    const fl = r.checks.find((c) => c.key === 'forbidLemmas')
+    const detected = fw?.status === 'fail' || fl?.status === 'fail'
+    t(
+      `'${item.key}' 검출 여부 = 기대값`,
+      detected === item.expectDetected,
+      `category=${item.category} expectDetected=${item.expectDetected} 실제=${detected}`
+    )
+  }
+}
+
+// ── 좋은 답안이 걸리지 않는가 ────────────────────────────────────────
+console.log('\n[오탐 감시: 감각 묘사 좋은 답안]')
+{
+  const sensoryCfg = {
+    forbidWords: SENSORY_FORBID_WORDS,
+    forbidLemmas: SENSORY_FORBID_LEMMAS,
+  }
+  SENSORY_CLEAN.forEach((item, i) => {
+    const p: Problem = {
+      id: `sensory-clean-${i}`,
+      type: 'convert',
+      scoring_mode: 'auto',
+      scoring_config: sensoryCfg,
+    }
+    const r = combine(p, { text: item.text }, undefined, emptyMorph({ lemmas: item.lemmas }))
+    const fw = r.checks.find((c) => c.key === 'forbidWords')
+    const fl = r.checks.find((c) => c.key === 'forbidLemmas')
+    const ok = fw?.status !== 'fail' && fl?.status !== 'fail'
+    t(
+      `'${item.category}' 좋은 답안이 안 걸림`,
+      ok,
+      `text="${item.text}" forbidWords evidence=${JSON.stringify(fw?.evidence)} forbidLemmas evidence=${JSON.stringify(fl?.evidence)}`
+    )
+  })
+}
+
+// ── 불변식: 덤프 53문항 전부가 자기 forbidWords/forbidLemmas에 걸리는가 ──
+//
+// seed_verify.sql의 불변식 2와 같은 것을 TS 쪽에서도 본다. DB에 실제로
+// 적용해 보지 않고도(DB 명령은 여기서 금지되어 있다) 여기서 먼저 잡을 수
+// 있다. CONVERT_SEEDS의 6문항과 대상이 겹치지만, 지금은 그대로 둔다 —
+// 중복 제거는 다음 작업의 몫이다.
+console.log('\n[불변식: 덤프 53문항이 자기 forbidWords/forbidLemmas에 걸림]')
+{
+  interface DumpProblem {
+    passage: string | null
+    source_key: string
+    scoring_config: { forbidWords?: string[]; forbidLemmas?: string[] }
+  }
+
+  const dumpPath = path.join(__dirname, '..', '..', 'seed', 'dump', 'problems.json')
+  // Node는 BOM을 자동으로 벗기지 않는다. scripts/gen-seed.ts의 readJson과 같은 처리.
+  const raw = readFileSync(dumpPath, 'utf8').replace(/^\uFEFF/, '')
+  const dumpProblems: DumpProblem[] = JSON.parse(raw)
+
+  const skipped: string[] = []
+  for (const dp of dumpProblems) {
+    const forbidWords = dp.scoring_config?.forbidWords
+    if (!forbidWords || forbidWords.length === 0) continue
+
+    const hits = findForbidden(dp.passage ?? '', forbidWords)
+    if (hits.length === 0 && (dp.scoring_config?.forbidLemmas?.length ?? 0) > 0) {
+      // forbidWords로는 안 걸리지만 forbidLemmas가 있다 — 표제어 매칭은
+      // 형태소 분석 없이는 TS/SQL 어느 쪽에서도 확인할 수 없다. 실패시키지
+      // 않고 건너뛴다.
+      skipped.push(dp.source_key)
+      continue
+    }
+    t(
+      `'${dp.source_key}' 지문이 자기 forbidWords에 걸림`,
+      hits.length > 0,
+      `→ forbidWords가 지문의 표현을 놓쳤다. 활용형 확인 필요`
+    )
+  }
+  if (skipped.length > 0) {
+    console.log(`  건너뜀 (forbidLemmas로만 걸림): ${skipped.join(', ')}`)
+  }
+}
+
+// ── 픽스처와 덤프의 6단계(sensory) 금지 목록이 같은가 ──────────────────
+//
+// SENSORY_FORBID_WORDS/SENSORY_FORBID_LEMMAS는 이 파일의 미검출·오탐
+// 감시(뚫기 표본, 좋은 답안)가 실제로 검증하는 목록이다. seed/dump의
+// 6단계 문항이 이것과 다른 목록을 들고 있으면, 여기서 확인한 결과가
+// 배포된 채점 설정과 어긋난다.
+//
+// 지금은 반드시 실패한다 — 픽스처 쪽 목록은 넓혔는데 DB(=덤프)는 아직
+// 그 값으로 갱신하지 않았기 때문이다. DB 갱신은 SQL로 직접 한다. 이
+// 실패를 없애려고 픽스처나 덤프를 고치지 않는다.
+console.log('\n[픽스처와 덤프의 6단계 금지 목록이 같은가 — 한쪽만 고치면 여기서 걸린다]')
+{
+  interface DumpProblem {
+    skill_key: string
+    source_key: string
+    scoring_config: { forbidWords?: string[]; forbidLemmas?: string[] }
+  }
+
+  const dumpPath = path.join(__dirname, '..', '..', 'seed', 'dump', 'problems.json')
+  const raw = readFileSync(dumpPath, 'utf8').replace(/^\uFEFF/, '')
+  const dumpProblems: DumpProblem[] = JSON.parse(raw)
+
+  const sortedJson = (xs: string[] | undefined) => JSON.stringify([...(xs ?? [])].sort())
+  // a에는 있고 b에는 없는 항목
+  const onlyIn = (a: string[] | undefined, b: string[] | undefined) => {
+    const setB = new Set(b ?? [])
+    return (a ?? []).filter((x) => !setB.has(x))
+  }
+
+  const wantWords = sortedJson(SENSORY_FORBID_WORDS)
+  const wantLemmas = sortedJson(SENSORY_FORBID_LEMMAS)
+
+  for (const dp of dumpProblems) {
+    if (dp.skill_key !== 'sensory') continue
+    const gotWords = dp.scoring_config?.forbidWords
+    const gotLemmas = dp.scoring_config?.forbidLemmas
+
+    t(
+      `'${dp.source_key}' forbidWords가 픽스처와 같음`,
+      sortedJson(gotWords) === wantWords,
+      `픽스처에만 있음=${JSON.stringify(onlyIn(SENSORY_FORBID_WORDS, gotWords))} ` +
+        `덤프에만 있음=${JSON.stringify(onlyIn(gotWords, SENSORY_FORBID_WORDS))}`
+    )
+    t(
+      `'${dp.source_key}' forbidLemmas가 픽스처와 같음`,
+      sortedJson(gotLemmas) === wantLemmas,
+      `픽스처에만 있음=${JSON.stringify(onlyIn(SENSORY_FORBID_LEMMAS, gotLemmas))} ` +
+        `덤프에만 있음=${JSON.stringify(onlyIn(gotLemmas, SENSORY_FORBID_LEMMAS))}`
+    )
+  }
 }
 
 console.log(`\n최종: ${pass} 통과 / ${fail} 실패`)
