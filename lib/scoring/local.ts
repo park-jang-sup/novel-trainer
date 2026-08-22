@@ -307,5 +307,13 @@ export function pendingMorphChecks(cfg: ScoringConfig): Check[] {
       detail: '형태소 분석 대기',
     })
   }
+  if (cfg.forbidLemmas?.length) {
+    out.push({
+      key: 'forbidLemmas',
+      label: '쓰지 않을 말',
+      status: 'pending',
+      detail: '형태소 분석 대기',
+    })
+  }
   return out
 }

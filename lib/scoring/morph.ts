@@ -67,5 +67,39 @@ export function gradeMorph(cfg: ScoringConfig, m: MorphResult): Check[] {
     })
   }
 
+  // forbidWords(어간 매칭)와 병용한다. forbidWords는 "쳐다봤다"가 "쳐다보"를
+  // 포함하지 않아 활용형을 놓치고, 표제어 매칭은 "눈앞"이 눈앞/NNG 한 덩어리라
+  // 눈/NNG로 잡히지 않아 복합명사를 놓친다. 서로 다른 구멍을 메우므로 하나가
+  // 다른 하나를 대체하지 않는다.
+  //
+  // gating: app/api/grade/route.ts는 analyze()(형태소 서버 호출)를 await한
+  // 뒤에야 combine()을 부른다. combine()이 계산한 needsAi가 그 응답에 그대로
+  // 실리고, AI 호출은 (아직 구현되지 않았지만) 그 needsAi를 보고 이후에
+  // 이뤄지므로, forbidLemmas fail은 forbidWords와 동일하게 AI 호출 이전에
+  // 걸린다 — morph가 null이면 pending으로 남아 needsAi 자체가 false가 된다.
+  if (cfg.forbidLemmas?.length) {
+    const targets = cfg.forbidLemmas.map((spec) => {
+      const i = spec.lastIndexOf('/')
+      return { lemma: spec.slice(0, i), tag: spec.slice(i + 1) }
+    })
+    const hitSurfaces = new Set<string>()
+    for (const entry of m.lemmas) {
+      for (const { lemma, tag } of targets) {
+        if (entry.lemma === lemma && entry.tag.startsWith(tag)) {
+          hitSurfaces.add(entry.surface)
+        }
+      }
+    }
+    const hits = [...hitSurfaces]
+    out.push({
+      key: 'forbidLemmas',
+      label: '쓰지 않을 말',
+      status: hits.length === 0 ? 'pass' : 'fail',
+      detail: hits.length === 0 ? '없음' : `${hits.length}개`,
+      evidence: hits,
+      gating: true,
+    })
+  }
+
   return out
 }

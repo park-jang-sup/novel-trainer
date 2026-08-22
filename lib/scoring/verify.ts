@@ -19,7 +19,7 @@ function t(name: string, cond: boolean, extra = '') {
 }
 
 const emptyMorph = (o: Partial<MorphResult> = {}): MorphResult => ({
-  adverbs: [], modifiers: [], verbs: [], propers: [], repeats: [], sentences: 1, ...o,
+  adverbs: [], modifiers: [], verbs: [], propers: [], repeats: [], lemmas: [], sentences: 1, ...o,
 })
 
 // ── 1단계 remove ────────────────────────────────────────────────
@@ -92,6 +92,77 @@ console.log('\n[maxProperNouns]')
   }
   const rNone = combine(pNoCfg, { text: '아무 내용' }, undefined, m4)
   t('설정 없으면 Check 자체가 없음', rNone.checks.find((c) => c.key === 'maxProperNouns') === undefined)
+}
+
+// ── forbidLemmas ────────────────────────────────────────────────
+console.log('\n[forbidLemmas]')
+{
+  const p: Problem = {
+    id: 'fl', type: 'remove', scoring_mode: 'auto',
+    scoring_config: { forbidLemmas: ['보/VV'] },
+  }
+  {
+    const m = emptyMorph({ lemmas: [{ lemma: '보', tag: 'VV', surface: '봤다' }] })
+    const r = combine(p, { text: '창밖을 봤다.' }, undefined, m)
+    const c = r.checks.find((c) => c.key === 'forbidLemmas')
+    t(
+      '활용형 검출 → fail, evidence에 봤다',
+      c?.status === 'fail' && c?.evidence?.includes('봤다') === true,
+      `status=${c?.status} evidence=${JSON.stringify(c?.evidence)}`
+    )
+  }
+  {
+    const m = emptyMorph({ lemmas: [{ lemma: '보', tag: 'VX', surface: '보았다' }] })
+    const r = combine(p, { text: '먹어 보았다.' }, undefined, m)
+    const c = r.checks.find((c) => c.key === 'forbidLemmas')
+    t('보조용언 VX는 통과', c?.status === 'pass', `실제=${c?.status}`)
+  }
+  {
+    const pAdj: Problem = {
+      id: 'fl-adj', type: 'remove', scoring_mode: 'auto',
+      scoring_config: { forbidLemmas: ['하얗/VA'] },
+    }
+    const m = emptyMorph({ lemmas: [{ lemma: '하얗', tag: 'VA-I', surface: '하얀' }] })
+    const r = combine(pAdj, { text: '하얀 눈이 내렸다.' }, undefined, m)
+    const c = r.checks.find((c) => c.key === 'forbidLemmas')
+    t('VA-I 접두 비교로 검출', c?.status === 'fail', `실제=${c?.status}`)
+  }
+  {
+    const m = emptyMorph({ lemmas: [{ lemma: '바라보', tag: 'VV', surface: '바라보았다' }] })
+    const r = combine(p, { text: '멀리 바라보았다.' }, undefined, m)
+    const c = r.checks.find((c) => c.key === 'forbidLemmas')
+    t("'보'가 '바라보'에 걸리지 않음 → pass", c?.status === 'pass', `실제=${c?.status}`)
+  }
+  {
+    const m = emptyMorph({
+      lemmas: [
+        { lemma: '보', tag: 'VV', surface: '봤다' },
+        { lemma: '보', tag: 'VV', surface: '봤다' },
+      ],
+    })
+    const r = combine(p, { text: '봤다. 또 봤다.' }, undefined, m)
+    const c = r.checks.find((c) => c.key === 'forbidLemmas')
+    t('중복 evidence 제거', c?.evidence?.length === 1, JSON.stringify(c?.evidence))
+  }
+  {
+    const pBoth: Problem = {
+      id: 'fl-both', type: 'remove', scoring_mode: 'auto',
+      scoring_config: { forbidWords: ['두려'], forbidLemmas: ['보/VV'] },
+    }
+    const m = emptyMorph({ lemmas: [{ lemma: '보', tag: 'VV', surface: '봤다' }] })
+    const r = combine(pBoth, { text: '두려운 마음으로 봤다.' }, undefined, m)
+    const keys = r.checks.map((c) => c.key)
+    t('두 Check가 각각 생성됨', keys.includes('forbidWords') && keys.includes('forbidLemmas'), JSON.stringify(keys))
+  }
+  {
+    const pNone: Problem = {
+      id: 'fl-none', type: 'remove', scoring_mode: 'auto',
+      scoring_config: {},
+    }
+    const m = emptyMorph({ lemmas: [{ lemma: '보', tag: 'VV', surface: '봤다' }] })
+    const r = combine(pNone, { text: '봤다.' }, undefined, m)
+    t('forbidLemmas 설정 없으면 Check 자체가 없음', r.checks.find((c) => c.key === 'forbidLemmas') === undefined)
+  }
 }
 
 // ── 2단계 hybrid ────────────────────────────────────────────────

@@ -35,6 +35,7 @@ export async function analyze(text: string): Promise<MorphResult | null> {
       verbs: raw.verbs,
       propers: raw.propers ?? [],
       repeats: Array.isArray(raw.repeats) ? raw.repeats : [],
+      lemmas: raw.lemmas ?? [],
       sentences: raw.sentences ?? 0,
     }
   } catch {

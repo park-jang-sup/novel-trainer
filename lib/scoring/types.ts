@@ -46,6 +46,7 @@ export interface ScoringConfig {
   maxProperNouns?: number // 고유명사(NNP)만. 형태소 필요
   maxRepeat?: number
   forbidWords?: string[] // 어간 매칭
+  forbidLemmas?: string[] // "보/VV" 형식. 형태소 필요
   requireAny?: string[]
   // coinage
   count?: number
@@ -85,6 +86,7 @@ export interface MorphResult {
   verbs: string[]
   propers: string[]
   repeats: { word: string; count: number }[] // 표제어 기준. 서버가 계산한다
+  lemmas: { lemma: string; tag: string; surface: string }[] // forbidLemmas 재료
   sentences: number
 }
 
