@@ -16,10 +16,14 @@ morph.ts 가 순수 함수라 verify.ts 는 하드코딩된 MorphResult 만 본�
 Kiwi 태깅이 바뀌거나 main.py 가 깨져도 TS 테스트는 초록불을 유지한다.
 6-2의 12번(테스트가 사본을 보던 문제)과 같은 계열이다.
 
+여기서 단정하는 것은 Kiwi 의 태깅 사실이다. 그 태깅으로 무엇을 판정할지는
+lib/scoring/ 이 정한다. 두 곳의 역할을 섞지 마라.
+
 아래 케이스는 전부 실제로 겪은 함정이다. 하나가 빨간불이면 그 버그가 돌아온 것이다.
 """
 from __future__ import annotations
 
+import os
 import sys
 
 # ── main.py 의 분석 함수 이름 ─────────────────────────────────────────
@@ -35,8 +39,8 @@ _CANDIDATES = ("analyze", "analyze_text", "morph", "run_analysis", "_analyze")
 # main.py 의 실제 계약: POST /analyze, 바디 {"text": ...},
 # 인증은 X-Scoring-Secret 헤더 하나뿐이다 (lib/scoring/remote.ts 와 동일).
 # Authorization: Bearer 는 main.py 가 검사하지 않으므로 보내지 않는다.
-HTTP_URL = "http://localhost:8000/analyze"
-HTTP_SECRET = "dev"
+HTTP_URL = os.environ.get("SELFTEST_URL", "http://localhost:8000/analyze")
+HTTP_SECRET = os.environ.get("SELFTEST_SECRET", "dev")
 
 
 # ── 케이스 ────────────────────────────────────────────────────────────
@@ -195,6 +199,150 @@ CASES = [
         "그는 정말 간절하게 제비가 얼른 낫기를 바랐다.",
         lambda r: (len(adverbs(r)) == 7, f"adverbs={adverbs(r)}"),
         "lemmas 는 순수 추가 필드다. 기존 집계 루프를 건드리지 않았는지 본다",
+    ),
+    # ── 아래 열다섯은 lib/scoring/fixtures/sensory-bypass.ts 의 lemmas 실측값이
+    # 여전히 맞는지 보는 태깅 사실 회귀 감시다. verify.ts 는 그 픽스처에 박힌
+    # 값으로만 판정 로직을 검사하므로, Kiwi 가 실제로 그렇게 태깅하는지는
+    # 여기서만 본다. kiwipiepy 버전이 바뀌면 이 무리가 가장 먼저 흔들린다 ──
+    (
+        "태깅 사실 · 하얘졌다",
+        "저고리가 하얘졌다.",
+        lambda r: (
+            any(e.get("lemma") == "하얘지" and e.get("tag") == "VV" for e in lemmas(r)),
+            f"lemmas={lemmas(r)}",
+        ),
+        "하얘지다는 하얗+어지 가 한 표제어로 굳는다. 하얗/VA 로는 못 잡는다",
+    ),
+    (
+        "태깅 사실 · 하얘지고 있었다",
+        "치마가 하얘지고 있었다.",
+        lambda r: (
+            any(e.get("lemma") == "하얘지" and e.get("tag") == "VV" for e in lemmas(r)),
+            f"lemmas={lemmas(r)}",
+        ),
+        "하얘졌다와 같은 표제어. 종결형이 아니라 진행형에서도 하얘지/VV 로 굳는지 본다",
+    ),
+    (
+        "태깅 사실 · 붉어졌다 (대조군)",
+        "하늘이 붉어졌다.",
+        lambda r: (
+            any(e.get("lemma") == "붉" and e.get("tag") == "VA" for e in lemmas(r)),
+            f"lemmas={lemmas(r)}",
+        ),
+        "-어지다 정상형. 하얘지다와 달리 어간+어지다는 표제어가 어간 그대로 유지된다",
+    ),
+    (
+        "태깅 사실 · 어두워졌다 (ㅂ불규칙)",
+        "방이 어두워졌다.",
+        lambda r: (
+            any(e.get("lemma") == "어둡" and e.get("tag") == "VA-I" for e in lemmas(r)),
+            f"lemmas={lemmas(r)}",
+        ),
+        "ㅂ불규칙 -어지다. 어둡/VA-I 로 잡혀야 한다. VA 로 정규화되면 forbidLemmas 접두 비교가 깨진다",
+    ),
+    (
+        "태깅 사실 · 흐려졌다 (미등재 형용사)",
+        "형체가 흐려졌다.",
+        lambda r: (
+            any(e.get("lemma") == "흐리" and e.get("tag") == "VA" for e in lemmas(r)),
+            f"lemmas={lemmas(r)}",
+        ),
+        "흐리다는 사전 미등재에 가까운 형용사다. 그래도 흐리/VA 로 잡히는지 본다",
+    ),
+    (
+        "태깅 사실 · 훤했다",
+        "달이 훤했다.",
+        lambda r: (
+            any(e.get("lemma") == "훤하" and e.get("tag") == "VA" for e in lemmas(r)),
+            f"lemmas={lemmas(r)}",
+        ),
+        "훤하다의 종결형은 훤하/VA 로 잡힌다",
+    ),
+    (
+        "태깅 사실 · 훤한 (같은 단어의 다른 활용형)",
+        "훤한 마당으로 나섰다.",
+        lambda r: (
+            any(e.get("lemma") == "훤" and e.get("tag") == "XR" for e in lemmas(r)),
+            f"lemmas={lemmas(r)}",
+        ),
+        "훤했다는 훤하/VA 인데 훤한은 훤/XR + 하/XSA 다. 같은 단어가 활용형에 따라 갈리므로 "
+        "표제어 둘을 다 넣어야 한다",
+    ),
+    (
+        "태깅 사실 · 선명했다 (명사+접사)",
+        "무늬가 선명했다.",
+        lambda r: (
+            any(e.get("lemma") == "선명" and e.get("tag") == "NNG" for e in lemmas(r)),
+            f"lemmas={lemmas(r)}",
+        ),
+        "선명하다는 형용사 하나가 아니라 선명(NNG)+하(XSA)로 갈린다. 표제어는 NNG 로 잡힌다",
+    ),
+    (
+        "태깅 사실 · 투명했다 (명사+접사)",
+        "얼음이 투명했다.",
+        lambda r: (
+            any(e.get("lemma") == "투명" and e.get("tag") == "NNG" for e in lemmas(r)),
+            f"lemmas={lemmas(r)}",
+        ),
+        "선명했다와 같은 계열. 투명(NNG)+하(XSA)",
+    ),
+    (
+        "태깅 사실 · 반짝했다 (MAG+하다)",
+        "물결이 반짝했다.",
+        lambda r: (
+            any(e.get("lemma") == "반짝" and e.get("tag") == "MAG" for e in lemmas(r)),
+            f"lemmas={lemmas(r)}",
+        ),
+        "반짝하다는 부사 반짝(MAG)+하(XSA)로 갈린다. forbidWords가 아니라 forbidLemmas로는 못 막는다",
+    ),
+    (
+        "태깅 사실 · 어른어른했다 (MAG+하다)",
+        "물체가 어른어른했다.",
+        lambda r: (
+            any(e.get("lemma") == "어른어른" and e.get("tag") == "MAG" for e in lemmas(r)),
+            f"lemmas={lemmas(r)}",
+        ),
+        "반짝했다와 같은 계열. 어른어른/MAG",
+    ),
+    (
+        "태깅 사실 · 시야가 (어휘 누락 감시)",
+        "시야가 좁아졌다.",
+        lambda r: (
+            any(e.get("lemma") == "시야" and e.get("tag") == "NNG" for e in lemmas(r)),
+            f"lemmas={lemmas(r)}",
+        ),
+        "시야는 형태소 관점에서 평범한 NNG 다. forbidLemmas가 아니라 forbidWords로 막아야 하는 이유",
+    ),
+    (
+        "태깅 사실 · 드러났다 (의도적 제외 감시)",
+        "윤곽이 드러났다.",
+        lambda r: (
+            any(e.get("lemma") == "드러나" and e.get("tag") == "VV" for e in lemmas(r)),
+            f"lemmas={lemmas(r)}",
+        ),
+        "드러나다는 VV로 정상 태깅된다. 그런데도 forbidLemmas에 넣지 않기로 한 것은 태깅 문제가 "
+        "아니라 정책 결정이다 — 그 결정이 유효하려면 태깅 자체는 정상이어야 한다",
+    ),
+    (
+        "태깅 사실 · 누레졌다는 못 잡는다 (알려진 한계)",
+        "잎이 누레졌다.",
+        lambda r: (
+            not any(e.get("lemma") == "누렇" and e.get("tag") == "VA-I" for e in lemmas(r)),
+            f"lemmas={lemmas(r)}",
+        ),
+        "누레졌다는 누/NNG 레/NNG 로 깨진다. 어떤 표제어로도 못 잡는다. Kiwi 가 이것을 고치면 "
+        "이 검사가 실패하고, 그때 금지 목록에 누렇/VA-I 를 넣을 수 있게 된다",
+    ),
+    (
+        "태깅 사실 · 훤칠한은 훤/XR로 안 잡힌다 (알려진 한계)",
+        "그는 훤칠한 걸음으로 다가왔다.",
+        lambda r: (
+            not any(e.get("lemma") == "훤" and e.get("tag") == "XR" for e in lemmas(r)),
+            f"lemmas={lemmas(r)}",
+        ),
+        "훤칠 이 한 덩어리(XR)로 잡혀 훤/XR 이 따로 나오지 않는다. 이 검사가 실패하면(훤/XR 이 "
+        "다시 나타나면) 훤칠 계열과의 충돌을 다시 살펴야 한다 — 이 검사는 실패가 나쁜 소식이 "
+        "아니라 좋은 소식인 유일한 검사다",
     ),
 ]
 
