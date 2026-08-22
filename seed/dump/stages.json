@@ -1,0 +1,202 @@
+[
+  {
+    "title": "부사 줄이기",
+    "track": "sentence",
+    "is_free": true,
+    "summary": "꾸미는 말을 걷어내고 동작으로 대신한다",
+    "order_no": 1,
+    "skill_key": "reduce_adverb"
+  },
+  {
+    "title": "감정을 동작으로",
+    "track": "sentence",
+    "is_free": true,
+    "summary": "감정을 서술하지 않고 몸으로 드러낸다",
+    "order_no": 2,
+    "skill_key": "emotion_action"
+  },
+  {
+    "title": "군더더기 빼기",
+    "track": "sentence",
+    "is_free": true,
+    "summary": "없어도 되는 문장을 알아본다",
+    "order_no": 3,
+    "skill_key": "trim_padding"
+  },
+  {
+    "title": "반복 표현 제거",
+    "track": "sentence",
+    "is_free": true,
+    "summary": "같은 말이 겹치는 것을 알아챈다",
+    "order_no": 4,
+    "skill_key": "reduce_repeat"
+  },
+  {
+    "title": "부사를 쓸 자리",
+    "track": "sentence",
+    "is_free": true,
+    "summary": "부사를 언제 써도 되는지 안다",
+    "order_no": 5,
+    "skill_key": "adverb_exception"
+  },
+  {
+    "title": "감각 묘사",
+    "track": "sentence",
+    "is_free": true,
+    "summary": "한 장면에서 두 가지 이상의 감각을 쓴다",
+    "order_no": 6,
+    "skill_key": "sensory"
+  },
+  {
+    "title": "문장 리듬",
+    "track": "sentence",
+    "is_free": true,
+    "summary": "문장 길이를 고르지 않게 배치한다",
+    "order_no": 7,
+    "skill_key": "rhythm"
+  },
+  {
+    "title": "대사와 지문",
+    "track": "sentence",
+    "is_free": true,
+    "summary": "대사가 설명을 떠맡지 않게 한다",
+    "order_no": 8,
+    "skill_key": "dialogue_ratio"
+  },
+  {
+    "title": "시점 고정",
+    "track": "sentence",
+    "is_free": true,
+    "summary": "한 인물의 눈에 보이는 것만 쓴다",
+    "order_no": 9,
+    "skill_key": "pov_lock"
+  },
+  {
+    "title": "턴제 액션",
+    "track": "sentence",
+    "is_free": true,
+    "summary": "동작이 원인과 결과로 이어지게 한다",
+    "order_no": 10,
+    "skill_key": "action_turn"
+  },
+  {
+    "title": "절단신공",
+    "track": "sentence",
+    "is_free": true,
+    "summary": "마지막 줄이 다음을 부르게 한다",
+    "order_no": 11,
+    "skill_key": "cliffhanger"
+  },
+  {
+    "title": "첫 문장 고르기",
+    "track": "start",
+    "is_free": true,
+    "summary": "어떤 첫 문장이 통하는지 안다",
+    "order_no": 1,
+    "skill_key": "start_choose"
+  },
+  {
+    "title": "첫 문장 쓰기",
+    "track": "start",
+    "is_free": true,
+    "summary": "주인공의 감각에서 시작한다",
+    "order_no": 2,
+    "skill_key": "start_write"
+  },
+  {
+    "title": "도입 잇기",
+    "track": "start",
+    "is_free": true,
+    "summary": "세 문장 안에 인물을 세운다",
+    "order_no": 3,
+    "skill_key": "start_extend"
+  },
+  {
+    "title": "1화 축약",
+    "track": "start",
+    "is_free": true,
+    "summary": "1화의 요소를 손에 쥔다",
+    "order_no": 4,
+    "skill_key": "start_episode"
+  },
+  {
+    "title": "결핍 부여",
+    "track": "structure",
+    "is_free": false,
+    "summary": "완벽한 인물을 만들지 않는다",
+    "order_no": 11,
+    "skill_key": "lack"
+  },
+  {
+    "title": "대비 캐릭터",
+    "track": "structure",
+    "is_free": false,
+    "summary": "상반된 인물을 나란히 세운다",
+    "order_no": 12,
+    "skill_key": "contrast_char"
+  },
+  {
+    "title": "호감 확보",
+    "track": "structure",
+    "is_free": false,
+    "summary": "초반에 응원할 이유를 만든다",
+    "order_no": 13,
+    "skill_key": "likability"
+  },
+  {
+    "title": "궤도 이탈 찾기",
+    "track": "structure",
+    "is_free": true,
+    "summary": "장면 목적에 기여하지 않는 문장을 본다",
+    "order_no": 14,
+    "skill_key": "off_track"
+  },
+  {
+    "title": "정보 비대칭",
+    "track": "structure",
+    "is_free": false,
+    "summary": "답답함을 기대감으로 바꾼다",
+    "order_no": 15,
+    "skill_key": "info_gap"
+  },
+  {
+    "title": "절단신공 심화",
+    "track": "structure",
+    "is_free": false,
+    "summary": "끊기 전에 신호를 깐다",
+    "order_no": 16,
+    "skill_key": "cliffhanger_adv"
+  },
+  {
+    "title": "역순 설계",
+    "track": "structure",
+    "is_free": true,
+    "summary": "목표에서 거꾸로 조건을 세운다",
+    "order_no": 17,
+    "skill_key": "reverse_design"
+  },
+  {
+    "title": "1화 훅",
+    "track": "structure",
+    "is_free": false,
+    "summary": "다섯 줄 안에 세 요소를 넣는다",
+    "order_no": 18,
+    "skill_key": "first_hook"
+  },
+  {
+    "title": "장르의 조어법",
+    "track": "structure",
+    "is_free": true,
+    "summary": "장르마다 이름을 만드는 규칙이 있다",
+    "order_no": 19,
+    "skill_key": "genre_coinage"
+  },
+  {
+    "title": "분량 역산",
+    "track": "structure",
+    "is_free": true,
+    "summary": "분기점 수로 전체 분량을 가늠한다",
+    "order_no": 20,
+    "skill_key": "branch_estimate"
+  }
+]

@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test:scoring": "tsx lib/scoring/verify.ts",
-    "gen:seed": "tsx scripts/gen-convert-seed.ts"
+    "gen:seed": "tsx scripts/gen-seed.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",

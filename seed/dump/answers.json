@@ -1,0 +1,61 @@
+{
+  "golden": [
+    {
+      "note": "띄어쓴 감정어. 화났 만으로는 안 잡히므로 화가 났 이 필요하다",
+      "content": "용왕은 화가 났다.",
+      "expected": false,
+      "source_key": "dragon-king-anger"
+    },
+    {
+      "note": "동작으로 대체",
+      "content": "용왕이 술잔을 바닥에 내려놓았다. 잔이 두 조각으로 갈라졌다.",
+      "expected": true,
+      "source_key": "dragon-king-anger"
+    },
+    {
+      "note": "감정어 우회 시도. 겁먹 어간으로 잡아야 한다",
+      "content": "심청은 겁먹은 얼굴로 뱃전을 붙잡았다.",
+      "expected": false,
+      "source_key": "sim-cheong-fear"
+    },
+    {
+      "note": "ㅂ불규칙 회귀 테스트. 어간에 두렵이 없으면 이 케이스가 통과로 잘못 나온다",
+      "content": "심청은 두렵게 뱃전을 붙잡았다.",
+      "expected": false,
+      "source_key": "sim-cheong-fear"
+    },
+    {
+      "note": "감정어 없음 + 신체 동작 둘",
+      "content": "심청은 뱃전을 붙잡은 손을 놓지 못했다. 발끝이 자꾸 뒤로 밀렸다.",
+      "expected": true,
+      "source_key": "sim-cheong-fear"
+    },
+    {
+      "note": "동작 중심. 감정을 이름 붙이지 않음",
+      "content": "심청은 숨을 삼켰다. 부름이 한 번 더 들렸고, 그녀는 뒤를 돌아보았다.",
+      "expected": true,
+      "source_key": "sim-cheong-fear"
+    },
+    {
+      "note": "감각으로 대체한 상급 답안",
+      "content": "심청의 손끝이 뱃전을 긁었다. 가시가 손톱 밑으로 파고들었다.",
+      "expected": true,
+      "source_key": "sim-cheong-fear"
+    }
+  ],
+  "answers": [
+    { "answer": { "kind": "choice", "index": 0 }, "source_key": "ae-axe-drop" },
+    { "answer": { "kind": "choice", "index": 0 }, "source_key": "ae-gyeonu-bridge" },
+    { "answer": { "kind": "choice", "index": 2 }, "source_key": "ae-kongjwi-jar" },
+    { "answer": { "kind": "choice", "index": 0 }, "source_key": "ae-rabbit-gate" },
+    { "answer": { "kind": "choice", "index": 2 }, "source_key": "ch-cursed-sword" },
+    { "answer": { "kind": "choice", "index": 2 }, "source_key": "ch-misunderstanding" },
+    { "answer": { "kind": "choice", "index": 2 }, "source_key": "ch-sinking-ship" },
+    { "answer": { "kind": "choice", "index": 1 }, "source_key": "ch-village-approval" },
+    { "answer": { "kind": "count", "expected": 200, "tolerance": 0.15 }, "source_key": "cn-fantasy-200" },
+    { "answer": { "kind": "count", "expected": 70, "tolerance": 0.15 }, "source_key": "cn-romance-70" },
+    { "answer": { "kind": "order", "sequence": [2, 3, 0, 1] }, "source_key": "od-apology" },
+    { "answer": { "kind": "order", "sequence": [1, 3, 0, 2] }, "source_key": "od-mountain-sword" },
+    { "answer": { "kind": "order", "sequence": [2, 1, 3, 0] }, "source_key": "od-open-gate" }
+  ]
+}
