@@ -12,15 +12,12 @@ const TRACK_LABEL: Record<string, string> = {
   start: '도입',
 }
 
-const LABEL_MAX = 40
-
 // 목록에서 문항을 구분하는 라벨은 instruction이 아니라 첫 문장이다.
 // instruction은 유형끼리 문구가 같은 경우가 많고(4단계는 8문항 중 6개가
 // 글자 그대로 같다), 있을 때는 passage가 더 구체적으로 문항을 구분해 준다.
 function firstSentence(text: string): string {
   const m = text.match(/[^.?!]*[.?!]/)
-  const raw = (m ? m[0].slice(0, -1) : text).trim()
-  return raw.length > LABEL_MAX ? raw.slice(0, LABEL_MAX) + '…' : raw
+  return (m ? m[0].slice(0, -1) : text).trim()
 }
 
 export default async function TrainStagePage(props: PageProps<'/train/[stageId]'>) {
@@ -129,24 +126,25 @@ export default async function TrainStagePage(props: PageProps<'/train/[stageId]'
               className="flex items-center gap-3 py-3"
               style={{ borderBottom: '1px solid var(--rule)' }}
             >
-              {progressAvailable && passedProblemIds.has(p.id) ? (
-                <span
-                  className="font-mono"
-                  style={{ color: 'var(--pass)', width: '2em' }}
-                  aria-hidden
-                >
-                  ○
-                </span>
-              ) : (
-                <span
-                  className="font-mono"
-                  style={{ color: 'var(--ink-soft)', width: '2em' }}
-                  aria-hidden
-                >
-                  {i + 1}
-                </span>
-              )}
-              <span className="min-w-0 flex-1" style={{ fontFamily: 'var(--font-display)' }}>
+              <span
+                className="font-mono"
+                style={{ color: 'var(--ink-soft)', width: '2ch' }}
+              >
+                {i + 1}
+              </span>
+              <span
+                className="font-mono"
+                style={{ color: 'var(--pass)', width: '1em' }}
+                aria-hidden
+              >
+                {progressAvailable && passedProblemIds.has(p.id) ? '○' : ''}
+              </span>
+              {/* 자르는 길이는 CSS가 정한다. 글자 수로 자르면 화면 폭과 어긋나
+                  어떤 줄만 두 줄이 된다. */}
+              <span
+                className="min-w-0 flex-1 truncate"
+                style={{ fontFamily: 'var(--font-display)' }}
+              >
                 {firstSentence(p.passage ?? p.instruction)}
               </span>
               <span
