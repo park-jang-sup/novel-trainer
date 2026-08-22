@@ -76,6 +76,31 @@ export default async function TrainStagePage(props: PageProps<'/train/[stageId]'
     throw problemsError
   }
 
+  // submissions는 RLS "own submissions read"(auth.uid() = user_id)가 이미
+  // 자기 행만 준다. user_id를 코드에서 또 거르면 정책이 도는지 안 도는지
+  // 구분이 안 된다.
+  //
+  // 같은 문항을 여러 번 통과했을 수 있어 행 수가 아니라 서로 다른
+  // problem_id의 개수를 센다. 진도를 못 읽었다고 목록이 죽으면 안 되므로
+  // 에러는 throw하지 않고 "표시하지 않음" 상태로 남긴다.
+  const { data: passedSubmissions, error: submissionsError } = await supabase
+    .from('submissions')
+    .select('problem_id')
+    .eq('passed', true)
+
+  const progressAvailable = !submissionsError
+  if (submissionsError) {
+    console.error(
+      'submissions select failed',
+      'code=' + submissionsError.code,
+      'message=' + submissionsError.message,
+      'details=' + submissionsError.details,
+      'hint=' + submissionsError.hint,
+      'raw=' + JSON.stringify(submissionsError)
+    )
+  }
+  const passedProblemIds = new Set((passedSubmissions ?? []).map((s) => s.problem_id))
+
   return (
     <main className="mx-auto max-w-2xl space-y-6 p-6">
       <div className="space-y-2">
@@ -104,13 +129,23 @@ export default async function TrainStagePage(props: PageProps<'/train/[stageId]'
               className="flex items-center gap-3 py-3"
               style={{ borderBottom: '1px solid var(--rule)' }}
             >
-              <span
-                className="font-mono"
-                style={{ color: 'var(--ink-soft)', width: '2em' }}
-                aria-hidden
-              >
-                {i + 1}
-              </span>
+              {progressAvailable && passedProblemIds.has(p.id) ? (
+                <span
+                  className="font-mono"
+                  style={{ color: 'var(--pass)', width: '2em' }}
+                  aria-hidden
+                >
+                  ○
+                </span>
+              ) : (
+                <span
+                  className="font-mono"
+                  style={{ color: 'var(--ink-soft)', width: '2em' }}
+                  aria-hidden
+                >
+                  {i + 1}
+                </span>
+              )}
               <span className="min-w-0 flex-1" style={{ fontFamily: 'var(--font-display)' }}>
                 {firstSentence(p.passage ?? p.instruction)}
               </span>

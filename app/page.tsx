@@ -32,16 +32,44 @@ export default async function Home() {
   // 쿼리에서만 빠지는 어긋남이 생긴다.
   const { data: problems, error: problemsError } = await supabase
     .from('problems')
-    .select('stage_id')
+    .select('id, stage_id')
     .not('is_active', 'is', false)
 
   if (problemsError) {
     throw problemsError
   }
 
-  const countByStage = new Map<string, number>()
+  // submissions는 RLS "own submissions read"(auth.uid() = user_id)가 이미
+  // 자기 행만 준다. user_id를 코드에서 또 거르면 정책이 도는지 안 도는지
+  // 구분이 안 된다.
+  //
+  // 같은 문항을 여러 번 통과했을 수 있어 행 수가 아니라 서로 다른
+  // problem_id의 개수를 센다. 진도를 못 읽었다고 홈이 죽으면 안 되므로
+  // 에러는 throw하지 않고 "표시하지 않음" 상태로 남긴다.
+  const { data: passedSubmissions, error: submissionsError } = await supabase
+    .from('submissions')
+    .select('problem_id')
+    .eq('passed', true)
+
+  const progressAvailable = !submissionsError
+  if (submissionsError) {
+    console.error(
+      'submissions select failed',
+      'code=' + submissionsError.code,
+      'message=' + submissionsError.message,
+      'details=' + submissionsError.details,
+      'hint=' + submissionsError.hint,
+      'raw=' + JSON.stringify(submissionsError)
+    )
+  }
+  const passedProblemIds = new Set((passedSubmissions ?? []).map((s) => s.problem_id))
+
+  const progressByStage = new Map<string, { total: number; passed: number }>()
   for (const p of problems ?? []) {
-    countByStage.set(p.stage_id, (countByStage.get(p.stage_id) ?? 0) + 1)
+    const entry = progressByStage.get(p.stage_id) ?? { total: 0, passed: 0 }
+    entry.total += 1
+    if (passedProblemIds.has(p.id)) entry.passed += 1
+    progressByStage.set(p.stage_id, entry)
   }
 
   return (
@@ -67,7 +95,8 @@ export default async function Home() {
             </h2>
             <div>
               {trackStages.map((s, i) => {
-                const count = countByStage.get(s.id) ?? 0
+                const progress = progressByStage.get(s.id)
+                const count = progress?.total ?? 0
                 const relativeNo = i + 1
 
                 const row = (
@@ -94,7 +123,11 @@ export default async function Home() {
                       className="whitespace-nowrap font-mono text-sm"
                       style={{ color: 'var(--ink-soft)' }}
                     >
-                      {count > 0 ? `${count}문항` : '준비 중'}
+                      {count === 0
+                        ? '준비 중'
+                        : progressAvailable
+                          ? `${progress?.passed ?? 0} / ${count}`
+                          : `${count}문항`}
                     </span>
                   </>
                 )
