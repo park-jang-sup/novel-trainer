@@ -40,6 +40,9 @@ export interface CountInput {
 export interface ScoringConfig {
   maxChars?: number
   minChars?: number
+  maxLineChars?: number // 한 줄 최대 글자수. 공백 제외. 형태소 필요 없음
+  minLines?: number // 형태소 필요 없음
+  maxLines?: number // 형태소 필요 없음
   maxAdverbs?: number // 부사(MAG/MAJ)만. 형태소 필요
   maxModifiers?: number // 관형형(ETM/MM)만. 형태소 필요
   minVerbs?: number // 형태소 필요

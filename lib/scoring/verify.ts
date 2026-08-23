@@ -18,6 +18,14 @@ import {
   SENSORY_FORBID_WORDS,
   SENSORY_FORBID_LEMMAS,
 } from './fixtures/sensory-bypass'
+import {
+  RHYTHM_CFG,
+  RHYTHM_PASSAGE,
+  RHYTHM_CLEAN,
+  RHYTHM_BYPASS,
+  RHYTHM_KNOWN_GAP,
+  type RhythmCase,
+} from './fixtures/rhythm-breaks'
 
 let pass = 0
 let fail = 0
@@ -574,6 +582,71 @@ console.log('\n[픽스처와 덤프의 6단계 금지 목록이 같은가 — �
         `덤프에만 있음=${JSON.stringify(onlyIn(gotLemmas, SENSORY_FORBID_LEMMAS))}`
     )
   }
+}
+
+// ── 7단계 rhythm: 개행 판정 (형태소 없이 완전 판정) ────────────────────
+//
+// morph에 null을 넘긴다 — 이 단계는 형태소가 필요 없다. status가 'pending'
+// 이 아니라 'pass'/'fail'로 떨어지는 것 자체가 완전 판정의 증거다.
+console.log('\n[7단계 rhythm: 오탐 감시 · 뚫기 표본 · 알려진 한계]')
+{
+  const p: Problem = {
+    id: 'rh', type: 'convert', scoring_mode: 'auto', scoring_config: RHYTHM_CFG,
+  }
+  const run = (item: RhythmCase) => combine(p, { text: item.text }, undefined, null)
+  const extra = (r: ReturnType<typeof run>) =>
+    `실제=${r.status} fail=${JSON.stringify(r.checks.filter((c) => c.status === 'fail').map((c) => c.key))}`
+
+  for (const item of RHYTHM_CLEAN) {
+    const r = run(item)
+    t(`'${item.key}' → ${item.expect}`, r.status === item.expect, extra(r))
+  }
+  for (const item of RHYTHM_BYPASS) {
+    const r = run(item)
+    t(`'${item.key}' → ${item.expect}`, r.status === item.expect, extra(r))
+  }
+  // 알려진 한계: 어절 중간 개행은 순수 문자열로 못 잡는다. 지금은 pass가 맞다.
+  // rhythm-breaks.ts의 주석을 본다 — 형태소 서버가 서면 이 검사가 실패하고
+  // 알려준다. 실패가 좋은 소식인 검사다.
+  for (const item of RHYTHM_KNOWN_GAP) {
+    const r = run(item)
+    t(`'${item.key}' 알려진 한계 → ${item.expect}`, r.status === item.expect, extra(r))
+  }
+}
+
+console.log('\n[7단계 rhythm: 키 가드]')
+{
+  const { maxLineChars, minLines, maxLines, ...rest } = RHYTHM_CFG
+  void maxLineChars
+  void minLines
+  void maxLines
+  const pNoLineCfg: Problem = {
+    id: 'rh-no-line-cfg', type: 'convert', scoring_mode: 'auto', scoring_config: rest,
+  }
+  const r = combine(pNoLineCfg, { text: RHYTHM_PASSAGE }, undefined, null)
+  const keys = r.checks.map((c) => c.key)
+  t(
+    '줄 설정을 빼면 minLines/maxLines/maxLineChars Check 자체가 안 생김',
+    !keys.includes('minLines') && !keys.includes('maxLines') && !keys.includes('maxLineChars'),
+    JSON.stringify(keys)
+  )
+}
+{
+  const p: Problem = {
+    id: 'rh-linebreak-chars', type: 'convert', scoring_mode: 'auto', scoring_config: RHYTHM_CFG,
+  }
+  // 같은 문장에 개행만 넣은 표본(rb-every-word)을 재사용한다 — 손으로 다시
+  // 적으면 원문과 드리프트할 수 있다.
+  const everyWord = RHYTHM_BYPASS.find((c) => c.key === 'rb-every-word')!
+  const r1 = combine(p, { text: RHYTHM_PASSAGE }, undefined, null)
+  const r2 = combine(p, { text: everyWord.text }, undefined, null)
+  const c1 = r1.checks.find((c) => c.key === 'maxChars')
+  const c2 = r2.checks.find((c) => c.key === 'maxChars')
+  t(
+    '같은 문장을 개행만 넣어 두 번 재도 maxChars 판정이 같음 (countChars가 공백을 버림)',
+    c1?.status === c2?.status && c1?.detail === c2?.detail,
+    `원문=${JSON.stringify(c1)} 개행판=${JSON.stringify(c2)}`
+  )
 }
 
 console.log(`\n최종: ${pass} 통과 / ${fail} 실패`)

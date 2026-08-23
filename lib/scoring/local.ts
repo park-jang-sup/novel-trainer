@@ -79,6 +79,53 @@ function lengthChecks(text: string, cfg: ScoringConfig): Check[] {
 }
 
 /**
+ * 줄 단위 검사. 형태소가 필요 없다.
+ *
+ * 줄의 정의: '\n'으로 쪼갠 뒤 trim해서 빈 줄은 버린다. 문단 사이를
+ * 띄우는 관행(빈 줄)을 벌하면 안 되기 때문이다.
+ */
+function lineChecks(text: string, cfg: ScoringConfig): Check[] {
+  const out: Check[] = []
+  const lines = text
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean)
+
+  if (cfg.minLines !== undefined) {
+    out.push({
+      key: 'minLines',
+      label: '최소 줄 수',
+      status: lines.length >= cfg.minLines ? 'pass' : 'fail',
+      detail: `${lines.length}줄 / ${cfg.minLines}줄 이상`,
+      gating: true,
+    })
+  }
+  if (cfg.maxLines !== undefined) {
+    out.push({
+      key: 'maxLines',
+      label: '최대 줄 수',
+      status: lines.length <= cfg.maxLines ? 'pass' : 'fail',
+      detail: `${lines.length}줄 / ${cfg.maxLines}줄 이하`,
+      gating: true,
+    })
+  }
+  if (cfg.maxLineChars !== undefined) {
+    const maxLineChars = cfg.maxLineChars
+    const bad = lines.filter((l) => countChars(l) > maxLineChars)
+    out.push({
+      key: 'maxLineChars',
+      label: '긴 줄',
+      status: bad.length === 0 ? 'pass' : 'fail',
+      detail: bad.length === 0 ? '없음' : `${bad.length}개`,
+      evidence: bad,
+      gating: true,
+    })
+  }
+
+  return out
+}
+
+/**
  * 로컬 검사 전부. 형태소가 필요한 항목은 여기서 만들지 않는다.
  * remote.ts가 나중에 pending 자리를 채운다.
  */
@@ -232,6 +279,7 @@ export function gradeLocal(
     default: {
       const text = sub.text ?? ''
       checks.push(...lengthChecks(text, cfg))
+      checks.push(...lineChecks(text, cfg))
 
       if (cfg.forbidWords?.length) {
         const hits = findForbidden(text, cfg.forbidWords)

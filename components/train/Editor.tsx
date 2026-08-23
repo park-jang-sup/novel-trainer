@@ -11,7 +11,13 @@ interface Mark {
 // "이만큼 찾았다"는 안내라서 mark(교정)가 아닌 rule 색을 쓴다.
 function markClassFor(key: string): string | null {
   if (key === 'minVerbs') return 'mk-verb'
-  if (key === 'maxModifiers' || key === 'maxAdverbs' || key === 'maxRepeat' || key === 'forbidWords') {
+  if (
+    key === 'maxModifiers' ||
+    key === 'maxAdverbs' ||
+    key === 'maxRepeat' ||
+    key === 'forbidWords' ||
+    key === 'maxLineChars'
+  ) {
     return 'mk-mark'
   }
   return null
