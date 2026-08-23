@@ -87,7 +87,7 @@ on conflict (skill_key) do update set
 
 insert into stages (track, order_no, title, skill_key, summary, is_free)
 values ('sentence', 7, '문장 리듬', 'rhythm',
-        '문장 길이를 고르지 않게 배치한다', true)
+        '문단을 끊어 읽는 속도를 만든다', true)
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
@@ -780,6 +780,18 @@ select
   'folktale', 'fantasy', 'planned',
   3, 'sn-siblings-tree'
 where not exists (select 1 from problems p where p.source_key = 'sn-siblings-tree');
+
+-- rh-heungbu-yard (order_no 7, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'rhythm'),
+  'convert', 'auto', '한 덩어리로 붙은 글을 끊어 읽히게 다시 쓰시오. 내용은 그대로 두고 줄만 나눕니다. 문장이 끝나지 않은 자리에서 끊어도 됩니다. 6~10줄로 나누고, 한 줄은 18자를 넘기지 마십시오. 줄이 길면 화면에서 접혀 끊은 것이 사라집니다. 분량은 94~110자로 유지합니다. 덜어내는 훈련이 아닙니다. ''제비''는 반드시 남깁니다.',
+  '흥부는 마당으로 나갔다. 간밤에 내린 비로 흙이 질척했다. 담장 아래 제비 한 마리가 떨어져 있었다. 다리가 꺾여 있었고 깃털이 젖어 있었다. 흥부는 두 손으로 그것을 들어 올렸다. 제비가 몸을 떨었다. 흥부는 헝겊을 찾으러 방으로 들어갔다.', null, '{"maxChars":110,"maxLines":10,"minChars":94,"minLines":6,"requireAny":["제비"],"maxLineChars":18}'::jsonb,
+  'folktale', 'fantasy', 'planned',
+  1, 'rh-heungbu-yard'
+where not exists (select 1 from problems p where p.source_key = 'rh-heungbu-yard');
 
 -- ch-village-approval (order_no 14, difficulty 1)
 insert into problems

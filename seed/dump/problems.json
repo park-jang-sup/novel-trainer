@@ -185,8 +185,7 @@
     "source_tag": "original",
     "instruction": "이 장면의 목적은 '주인공이 마을 사람들에게 처음으로 인정받는 것'이다. 목적에 기여하지 않는 문장을 고르시오.",
     "scoring_mode": "auto",
-    "scoring_config": {
-    }
+    "scoring_config": {}
   },
   {
     "type": "choice",
@@ -206,8 +205,7 @@
     "source_tag": "original",
     "instruction": "이 장면의 목적은 '주인공이 이 검이 위험하다는 것을 알아채는 것'이다. 목적에 기여하지 않는 문장을 고르시오.",
     "scoring_mode": "auto",
-    "scoring_config": {
-    }
+    "scoring_config": {}
   },
   {
     "type": "choice",
@@ -227,8 +225,7 @@
     "source_tag": "original",
     "instruction": "이 장면의 목적은 '두 사람이 서로를 오해하게 만드는 것'이다. 목적에 기여하지 않는 문장을 고르시오.",
     "scoring_mode": "auto",
-    "scoring_config": {
-    }
+    "scoring_config": {}
   },
   {
     "type": "choice",
@@ -248,8 +245,7 @@
     "source_tag": "original",
     "instruction": "이 장면의 목적은 '독자에게 주인공의 배가 곧 침몰한다는 예감을 주는 것'이다. 목적에 기여하지 않는 문장을 고르시오.",
     "scoring_mode": "auto",
-    "scoring_config": {
-    }
+    "scoring_config": {}
   },
   {
     "type": "order",
@@ -924,8 +920,7 @@
     "source_tag": "folktale",
     "instruction": "뒤 문장의 부사가 앞 문장 덕분에 값을 얻는 것을 고르시오. 부사가 없거나, 부사가 앞에서 혼자 일하고 있으면 답이 아니다.",
     "scoring_mode": "auto",
-    "scoring_config": {
-    }
+    "scoring_config": {}
   },
   {
     "type": "choice",
@@ -945,8 +940,7 @@
     "source_tag": "folktale",
     "instruction": "뒤 문장의 부사가 앞 문장 덕분에 값을 얻는 것을 고르시오. 부사가 없거나, 부사가 앞에서 혼자 일하고 있으면 답이 아니다.",
     "scoring_mode": "auto",
-    "scoring_config": {
-    }
+    "scoring_config": {}
   },
   {
     "type": "choice",
@@ -966,8 +960,7 @@
     "source_tag": "folktale",
     "instruction": "부사가 동사에 얹혀 제 일을 하는 것을 고르시오. 부사가 없거나, 동사가 이미 품은 뜻을 되풀이하거나, 동사 대신 감정을 서술하고 있으면 답이 아니다.",
     "scoring_mode": "auto",
-    "scoring_config": {
-    }
+    "scoring_config": {}
   },
   {
     "type": "choice",
@@ -987,8 +980,7 @@
     "source_tag": "folktale",
     "instruction": "한 장면에 부사를 하나만 쓴다. 값이 가장 큰 자리에 놓은 것을 고르시오.",
     "scoring_mode": "auto",
-    "scoring_config": {
-    }
+    "scoring_config": {}
   },
   {
     "type": "convert",
@@ -1524,6 +1516,30 @@
         "훤하/VA",
         "훤/XR"
       ]
+    }
+  },
+  {
+    "type": "convert",
+    "choices": null,
+    "passage": "흥부는 마당으로 나갔다. 간밤에 내린 비로 흙이 질척했다. 담장 아래 제비 한 마리가 떨어져 있었다. 다리가 꺾여 있었고 깃털이 젖어 있었다. 흥부는 두 손으로 그것을 들어 올렸다. 제비가 몸을 떨었다. 흥부는 헝겊을 찾으러 방으로 들어갔다.",
+    "order_no": 7,
+    "tone_tag": "planned",
+    "genre_tag": "fantasy",
+    "skill_key": "rhythm",
+    "difficulty": 1,
+    "source_key": "rh-heungbu-yard",
+    "source_tag": "folktale",
+    "instruction": "한 덩어리로 붙은 글을 끊어 읽히게 다시 쓰시오. 내용은 그대로 두고 줄만 나눕니다. 문장이 끝나지 않은 자리에서 끊어도 됩니다. 6~10줄로 나누고, 한 줄은 18자를 넘기지 마십시오. 줄이 길면 화면에서 접혀 끊은 것이 사라집니다. 분량은 94~110자로 유지합니다. 덜어내는 훈련이 아닙니다. '제비'는 반드시 남깁니다.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 110,
+      "maxLines": 10,
+      "minChars": 94,
+      "minLines": 6,
+      "requireAny": [
+        "제비"
+      ],
+      "maxLineChars": 18
     }
   }
 ]

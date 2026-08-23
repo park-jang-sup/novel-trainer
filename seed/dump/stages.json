@@ -51,7 +51,7 @@
     "title": "문장 리듬",
     "track": "sentence",
     "is_free": true,
-    "summary": "문장 길이를 고르지 않게 배치한다",
+    "summary": "문단을 끊어 읽는 속도를 만든다",
     "order_no": 7,
     "skill_key": "rhythm"
   },
