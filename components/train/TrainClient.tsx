@@ -14,6 +14,7 @@ interface PublicConfig {
   minLen: number | null
   maxLen: number | null
   inputs: CountInput[] | null
+  minLines: number | null
 }
 
 interface PublicProblem {
@@ -173,7 +174,16 @@ export default function TrainClient({ problem }: { problem: PublicProblem }) {
 
       {isTextType && (
         <div className="space-y-2">
-          <Editor value={text} onChange={setText} checks={displayChecks} rows={6} disabled={submitting} />
+          {/* 13의 근거: rh-heungbu-yard 모범답안 3건이 화면에서 차지하는 줄 수가
+              (빈 줄 포함) 11 · 13 · 11줄이었다. 그중 최대인 13을 쓴다 — 추측이
+              아니라 실측값이다. minLines 없는 38문항은 6 그대로다. */}
+          <Editor
+            value={text}
+            onChange={setText}
+            checks={displayChecks}
+            rows={cfg.minLines != null ? 13 : 6}
+            disabled={submitting}
+          />
           {cfg.maxChars != null && (
             <>
               <RuleGauge count={countChars(text)} max={cfg.maxChars} />
@@ -315,7 +325,15 @@ export default function TrainClient({ problem }: { problem: PublicProblem }) {
           <p style={{ color: STATUS_COLOR[result.status], fontWeight: 700 }}>
             {STATUS_LABEL[result.status]}
           </p>
-          {!result.morphAvailable && (
+          {/* morphAvailable이 아니라 pending 유무로 띄운다. 형태소 서버가 없는
+              동안 morph는 항상 null이라 morphAvailable만 보면 이 문구가 모든
+              문항에 뜬다 — 선택형 · 순서형, 7단계 개행처럼 형태소 검사가 하나도
+              없어 서버 없이도 판정이 끝나는 문항까지 "아직 덜 봤다"고 말하게 된다.
+              gradeMorph와 pendingMorphChecks가 만드는 키 집합은 maxAdverbs ·
+              maxModifiers · minVerbs · maxProperNouns · maxRepeat · forbidLemmas
+              6개로 정확히 같으므로, pending이 있다는 것이 곧 형태소 검사가 있다는
+              뜻이다. 한쪽에 키를 더하면 다른 쪽에도 더해야 이 조건이 유지된다. */}
+          {result.checks.some((c) => c.status === 'pending') && (
             <p className="text-sm" style={{ color: 'var(--ink-soft)' }}>
               일부 검사는 문장 분석 서버가 연결되면 표시됩니다.
             </p>

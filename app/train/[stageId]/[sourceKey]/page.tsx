@@ -44,6 +44,8 @@ export default async function TrainProblemPage(
     minLen: cfg.minLen ?? null,
     maxLen: cfg.maxLen ?? null,
     inputs: cfg.inputs ?? null,
+    // 화면 표시용이 아니다 — 입력창 높이(rows)를 정하는 데만 쓴다.
+    minLines: cfg.minLines ?? null,
   }
 
   return (
