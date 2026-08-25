@@ -164,6 +164,11 @@ end $$;
 --
 -- 형태소 없이 지금 채점 가능한 문항:
 -- select count(*) from problems
---  where scoring_config->'maxAdverbs' is null
---    and scoring_config->'minVerbs'  is null;
--- → 15 이어야 한다 (choice 8 + order 3 + coinage 2 + count 2)
+--  where not (scoring_config ?| array['maxAdverbs','maxModifiers','minVerbs',
+--                                     'maxProperNouns','maxRepeat','forbidLemmas']);
+-- → 23 이어야 한다
+--   (choice 8 + order 3 + coinage 2 + count 2 + rhythm 8)
+--
+-- 이 배열은 lib/scoring/morph.ts 의 gradeMorph 와 local.ts 의
+-- pendingMorphChecks 가 다루는 키와 같아야 한다. 한쪽에 키를 더하면
+-- 여기도 더해야 이 확인이 유지된다.

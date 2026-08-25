@@ -20,11 +20,10 @@ import {
 } from './fixtures/sensory-bypass'
 import {
   RHYTHM_CFG,
-  RHYTHM_PASSAGE,
-  RHYTHM_CLEAN,
-  RHYTHM_BYPASS,
-  RHYTHM_KNOWN_GAP,
-  type RhythmCase,
+  RHYTHM_ITEMS,
+  cleanCases,
+  bypassCases,
+  knownGapCase,
 } from './fixtures/rhythm-breaks'
 
 let pass = 0
@@ -588,42 +587,50 @@ console.log('\n[픽스처와 덤프의 6단계 금지 목록이 같은가 — �
 //
 // morph에 null을 넘긴다 — 이 단계는 형태소가 필요 없다. status가 'pending'
 // 이 아니라 'pass'/'fail'로 떨어지는 것 자체가 완전 판정의 증거다.
-console.log('\n[7단계 rhythm: 오탐 감시 · 뚫기 표본 · 알려진 한계]')
+console.log('\n[7단계 rhythm: 오탐 감시 · 뚫기 표본 · 알려진 한계 — 8문항 전수]')
 {
-  const p: Problem = {
-    id: 'rh', type: 'convert', scoring_mode: 'auto', scoring_config: RHYTHM_CFG,
+  const run = (item: (typeof RHYTHM_ITEMS)[number], text: string) => {
+    const p: Problem = {
+      id: item.sourceKey,
+      type: 'convert',
+      scoring_mode: 'auto',
+      scoring_config: { ...RHYTHM_CFG, requireAny: [item.keyword] },
+    }
+    return combine(p, { text }, undefined, null)
   }
-  const run = (item: RhythmCase) => combine(p, { text: item.text }, undefined, null)
-  const extra = (r: ReturnType<typeof run>) =>
-    `실제=${r.status} fail=${JSON.stringify(r.checks.filter((c) => c.status === 'fail').map((c) => c.key))}`
+  const extra = (item: (typeof RHYTHM_ITEMS)[number], caseKey: string, r: ReturnType<typeof run>) =>
+    `${item.sourceKey}/${caseKey} 실제=${r.status} fail=${JSON.stringify(r.checks.filter((c) => c.status === 'fail').map((c) => c.key))}`
 
-  for (const item of RHYTHM_CLEAN) {
-    const r = run(item)
-    t(`'${item.key}' → ${item.expect}`, r.status === item.expect, extra(r))
-  }
-  for (const item of RHYTHM_BYPASS) {
-    const r = run(item)
-    t(`'${item.key}' → ${item.expect}`, r.status === item.expect, extra(r))
-  }
-  // 알려진 한계: 어절 중간 개행은 순수 문자열로 못 잡는다. 지금은 pass가 맞다.
-  // rhythm-breaks.ts의 주석을 본다 — 형태소 서버가 서면 이 검사가 실패하고
-  // 알려준다. 실패가 좋은 소식인 검사다.
-  for (const item of RHYTHM_KNOWN_GAP) {
-    const r = run(item)
-    t(`'${item.key}' 알려진 한계 → ${item.expect}`, r.status === item.expect, extra(r))
+  for (const item of RHYTHM_ITEMS) {
+    for (const c of cleanCases(item)) {
+      const r = run(item, c.text)
+      t(`'${item.sourceKey}' clean '${c.key}' → pass`, r.status === 'pass', extra(item, c.key, r))
+    }
+    for (const c of bypassCases(item)) {
+      const r = run(item, c.text)
+      t(`'${item.sourceKey}' bypass '${c.key}' → fail`, r.status === 'fail', extra(item, c.key, r))
+    }
+    // 알려진 한계: 어절 중간 개행은 순수 문자열로 못 잡는다. 지금은 pass가 맞다.
+    // knownGapCase의 note를 본다 — 형태소 서버가 서면 이 검사가 실패하고
+    // 알려준다. 실패가 좋은 소식인 검사다.
+    const g = knownGapCase(item)
+    const r = run(item, g.text)
+    t(`'${item.sourceKey}' 알려진 한계 '${g.key}' → pass`, r.status === 'pass', extra(item, g.key, r))
   }
 }
 
 console.log('\n[7단계 rhythm: 키 가드]')
 {
+  const item = RHYTHM_ITEMS[0]
   const { maxLineChars, minLines, maxLines, ...rest } = RHYTHM_CFG
   void maxLineChars
   void minLines
   void maxLines
   const pNoLineCfg: Problem = {
-    id: 'rh-no-line-cfg', type: 'convert', scoring_mode: 'auto', scoring_config: rest,
+    id: 'rh-no-line-cfg', type: 'convert', scoring_mode: 'auto',
+    scoring_config: { ...rest, requireAny: [item.keyword] },
   }
-  const r = combine(pNoLineCfg, { text: RHYTHM_PASSAGE }, undefined, null)
+  const r = combine(pNoLineCfg, { text: item.passage }, undefined, null)
   const keys = r.checks.map((c) => c.key)
   t(
     '줄 설정을 빼면 minLines/maxLines/maxLineChars Check 자체가 안 생김',
@@ -632,18 +639,34 @@ console.log('\n[7단계 rhythm: 키 가드]')
   )
 }
 {
-  const p: Problem = {
-    id: 'rh-linebreak-chars', type: 'convert', scoring_mode: 'auto', scoring_config: RHYTHM_CFG,
+  const item = RHYTHM_ITEMS[0]
+  const { maxDuplicateLines, ...rest } = RHYTHM_CFG
+  void maxDuplicateLines
+  const pNoDup: Problem = {
+    id: 'rh-no-dup-cfg', type: 'convert', scoring_mode: 'auto',
+    scoring_config: { ...rest, requireAny: [item.keyword] },
   }
-  // 같은 문장에 개행만 넣은 표본(rb-every-word)을 재사용한다 — 손으로 다시
-  // 적으면 원문과 드리프트할 수 있다.
-  const everyWord = RHYTHM_BYPASS.find((c) => c.key === 'rb-every-word')!
-  const r1 = combine(p, { text: RHYTHM_PASSAGE }, undefined, null)
+  const r = combine(pNoDup, { text: item.passage }, undefined, null)
+  t(
+    'maxDuplicateLines 설정을 빼면 그 Check가 안 생김',
+    r.checks.find((c) => c.key === 'maxDuplicateLines') === undefined,
+    JSON.stringify(r.checks.map((c) => c.key))
+  )
+}
+{
+  const item = RHYTHM_ITEMS[0]
+  const p: Problem = {
+    id: 'rh-linebreak-chars', type: 'convert', scoring_mode: 'auto',
+    scoring_config: { ...RHYTHM_CFG, requireAny: [item.keyword] },
+  }
+  // 지문과, 같은 지문에 개행만 넣은 뚫기 표본(every-word)을 비교한다.
+  const everyWord = bypassCases(item).find((c) => c.key === 'every-word')!
+  const r1 = combine(p, { text: item.passage }, undefined, null)
   const r2 = combine(p, { text: everyWord.text }, undefined, null)
   const c1 = r1.checks.find((c) => c.key === 'maxChars')
   const c2 = r2.checks.find((c) => c.key === 'maxChars')
   t(
-    '같은 문장을 개행만 넣어 두 번 재도 maxChars 판정이 같음 (countChars가 공백을 버림)',
+    '지문과 개행만 넣은 문자열의 maxChars 판정이 같음 (countChars가 공백을 버림)',
     c1?.status === c2?.status && c1?.detail === c2?.detail,
     `원문=${JSON.stringify(c1)} 개행판=${JSON.stringify(c2)}`
   )

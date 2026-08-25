@@ -16,7 +16,8 @@ function markClassFor(key: string): string | null {
     key === 'maxAdverbs' ||
     key === 'maxRepeat' ||
     key === 'forbidWords' ||
-    key === 'maxLineChars'
+    key === 'maxLineChars' ||
+    key === 'maxDuplicateLines'
   ) {
     return 'mk-mark'
   }

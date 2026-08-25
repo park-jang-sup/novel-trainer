@@ -121,6 +121,23 @@ function lineChecks(text: string, cfg: ScoringConfig): Check[] {
       gating: true,
     })
   }
+  if (cfg.maxDuplicateLines !== undefined) {
+    const seen = new Map<string, number>()
+    for (const l of lines) seen.set(l, (seen.get(l) ?? 0) + 1)
+    const dupCount = lines.length - seen.size
+    const dupLines = [...seen.entries()]
+      .filter(([, n]) => n >= 2)
+      .map(([l]) => l)
+      .slice(0, 3)
+    out.push({
+      key: 'maxDuplicateLines',
+      label: '줄 중복',
+      status: dupCount <= cfg.maxDuplicateLines ? 'pass' : 'fail',
+      detail: dupCount === 0 ? '없음' : `${dupCount}줄`,
+      evidence: dupLines,
+      gating: true,
+    })
+  }
 
   return out
 }

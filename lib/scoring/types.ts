@@ -43,6 +43,10 @@ export interface ScoringConfig {
   maxLineChars?: number // 한 줄 최대 글자수. 공백 제외. 형태소 필요 없음
   minLines?: number // 형태소 필요 없음
   maxLines?: number // 형태소 필요 없음
+  maxDuplicateLines?: number
+  // 중복 때문에 늘어난 줄 수의 상한. lines.length - new Set(lines).size
+  // 줄마다 거는 상한이 아니다. "각 줄을 딱 두 번씩" 쓰는 답안을 잡으려면
+  // 답안 전체에서 세야 한다. 형태소 불필요.
   maxAdverbs?: number // 부사(MAG/MAJ)만. 형태소 필요
   maxModifiers?: number // 관형형(ETM/MM)만. 형태소 필요
   minVerbs?: number // 형태소 필요
