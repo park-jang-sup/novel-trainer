@@ -781,17 +781,101 @@ select
   3, 'sn-siblings-tree'
 where not exists (select 1 from problems p where p.source_key = 'sn-siblings-tree');
 
+-- rh-axe-pond (order_no 7, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'rhythm'),
+  'convert', 'auto', '한 덩어리로 붙은 글을 끊어 읽히게 다시 쓰시오. 내용은 그대로 두고 줄만 나눕니다. 문장이 길어서 문장 단위로만 끊으면 줄이 넘칩니다. 문장 안에서도 끊으십시오. 7~13줄로 나누고, 한 줄은 18자를 넘기지 마십시오. 같은 줄을 되풀이해 채우지 마십시오. 분량은 111~131자로 유지합니다. 덜어내는 훈련이 아닙니다. ''나무꾼''는 반드시 남깁니다.',
+  '나무꾼이 연못가에 주저앉자, 방금까지 흔들리던 물낯이 거짓말처럼 잔잔해져 있었다. 도끼는 이미 바닥까지 가라앉아 어디쯤 놓여 있는지 짐작조차 되지 않았다. 그가 소매를 팔꿈치까지 걷고 진흙 속을 더듬자, 손끝에 단단한 것이 걸렸다. 끌어올린 손바닥에 찬 기운이 오래 남아 있었다.', null, '{"maxChars":131,"maxLines":13,"minChars":111,"minLines":7,"requireAny":["나무꾼"],"maxLineChars":18,"maxDuplicateLines":2}'::jsonb,
+  'folktale', 'fantasy', 'planned',
+  1, 'rh-axe-pond'
+where not exists (select 1 from problems p where p.source_key = 'rh-axe-pond');
+
 -- rh-heungbu-yard (order_no 7, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'rhythm'),
-  'convert', 'auto', '한 덩어리로 붙은 글을 끊어 읽히게 다시 쓰시오. 내용은 그대로 두고 줄만 나눕니다. 문장이 끝나지 않은 자리에서 끊어도 됩니다. 6~10줄로 나누고, 한 줄은 18자를 넘기지 마십시오. 줄이 길면 화면에서 접혀 끊은 것이 사라집니다. 분량은 94~110자로 유지합니다. 덜어내는 훈련이 아닙니다. ''제비''는 반드시 남깁니다.',
-  '흥부는 마당으로 나갔다. 간밤에 내린 비로 흙이 질척했다. 담장 아래 제비 한 마리가 떨어져 있었다. 다리가 꺾여 있었고 깃털이 젖어 있었다. 흥부는 두 손으로 그것을 들어 올렸다. 제비가 몸을 떨었다. 흥부는 헝겊을 찾으러 방으로 들어갔다.', null, '{"maxChars":110,"maxLines":10,"minChars":94,"minLines":6,"requireAny":["제비"],"maxLineChars":18}'::jsonb,
+  'convert', 'auto', '한 덩어리로 붙은 글을 끊어 읽히게 다시 쓰시오. 내용은 그대로 두고 줄만 나눕니다. 문장이 길어서 문장 단위로만 끊으면 줄이 넘칩니다. 문장 안에서도 끊으십시오. 7~13줄로 나누고, 한 줄은 18자를 넘기지 마십시오. 같은 줄을 되풀이해 채우지 마십시오. 분량은 111~131자로 유지합니다. 덜어내는 훈련이 아닙니다. ''제비''는 반드시 남깁니다.',
+  '흥부가 마당으로 나서자, 밤새 내린 비에 땅이 질척거리고 있었다. 담장 아래에는 다리가 꺾인 채 깃털이 흠뻑 젖은 제비 한 마리가 떨어져 있었다. 흥부가 조심스럽게 두 손으로 제비를 들어 올리자, 손바닥 위에서 작은 몸이 파르르 떨렸다. 그는 제비를 감쌀 헝겊을 찾으려고 서둘러 방으로 들어갔다.', null, '{"maxChars":131,"maxLines":13,"minChars":111,"minLines":7,"requireAny":["제비"],"maxLineChars":18,"maxDuplicateLines":2}'::jsonb,
   'folktale', 'fantasy', 'planned',
   1, 'rh-heungbu-yard'
 where not exists (select 1 from problems p where p.source_key = 'rh-heungbu-yard');
+
+-- rh-kongjwi-jar (order_no 7, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'rhythm'),
+  'convert', 'auto', '한 덩어리로 붙은 글을 끊어 읽히게 다시 쓰시오. 내용은 그대로 두고 줄만 나눕니다. 문장이 길어서 문장 단위로만 끊으면 줄이 넘칩니다. 문장 안에서도 끊으십시오. 7~13줄로 나누고, 한 줄은 18자를 넘기지 마십시오. 같은 줄을 되풀이해 채우지 마십시오. 분량은 111~131자로 유지합니다. 덜어내는 훈련이 아닙니다. ''물동이''는 반드시 남깁니다.',
+  '콩쥐가 물동이를 내려놓자, 독 바닥에 난 금 사이로 물이 소리 없이 새어 나가고 있었다. 부으면 부은 만큼 빠져나가는데도 마당에는 도와줄 사람이 아무도 없었다. 콩쥐가 손바닥으로 금을 눌러 보았지만, 물은 손가락 사이로 그대로 흘러내렸다. 해가 담장 위로 올라올 무렵 콩쥐는 다시 우물 쪽으로 걸어갔다.', null, '{"maxChars":131,"maxLines":13,"minChars":111,"minLines":7,"requireAny":["물동이"],"maxLineChars":18,"maxDuplicateLines":2}'::jsonb,
+  'folktale', 'modern', 'planned',
+  1, 'rh-kongjwi-jar'
+where not exists (select 1 from problems p where p.source_key = 'rh-kongjwi-jar');
+
+-- rh-simcheong-deck (order_no 7, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'rhythm'),
+  'convert', 'auto', '한 덩어리로 붙은 글을 끊어 읽히게 다시 쓰시오. 내용은 그대로 두고 줄만 나눕니다. 문장이 길어서 문장 단위로만 끊으면 줄이 넘칩니다. 문장 안에서도 끊으십시오. 7~13줄로 나누고, 한 줄은 18자를 넘기지 마십시오. 같은 줄을 되풀이해 채우지 마십시오. 분량은 111~131자로 유지합니다. 덜어내는 훈련이 아닙니다. ''공양미''는 반드시 남깁니다.',
+  '심청이 뱃전에 올라서자, 노를 젓던 뱃사람들이 하나둘 손을 멈추었다. 갑판 한쪽에는 아버지의 눈을 뜨게 해 줄 공양미 삼백 석이 그대로 쌓여 있었다. 심청이 아버지의 이름을 한 번 부르고 치마를 걷어쥐자, 바람이 돛을 크게 밀었다. 발밑에서 검은 물결이 소리 없이 갈라지고 있었다.', null, '{"maxChars":131,"maxLines":13,"minChars":111,"minLines":7,"requireAny":["공양미"],"maxLineChars":18,"maxDuplicateLines":2}'::jsonb,
+  'folktale', 'modern', 'planned',
+  1, 'rh-simcheong-deck'
+where not exists (select 1 from problems p where p.source_key = 'rh-simcheong-deck');
+
+-- rh-goblin-club (order_no 7, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'rhythm'),
+  'convert', 'auto', '한 덩어리로 붙은 글을 끊어 읽히게 다시 쓰시오. 내용은 그대로 두고 줄만 나눕니다. 문장이 길어서 문장 단위로만 끊으면 줄이 넘칩니다. 문장 안에서도 끊으십시오. 7~13줄로 나누고, 한 줄은 18자를 넘기지 마십시오. 같은 줄을 되풀이해 채우지 마십시오. 분량은 111~131자로 유지합니다. 덜어내는 훈련이 아닙니다. ''방망이''는 반드시 남깁니다.',
+  '도깨비들이 마루에 둘러앉아 상 위에 놓인 방망이를 하나씩 돌려 가며 두드리기 시작했다. 방망이가 바닥을 칠 때마다 마루 위로 쌀이 한 무더기씩 쏟아져 내렸다. 기둥 뒤에 몸을 붙인 나무꾼이 숨을 죽이는 사이 발밑에서 마루가 삐걱 소리를 냈다. 도깨비들이 한꺼번에 고개를 돌렸다.', null, '{"maxChars":131,"maxLines":13,"minChars":111,"minLines":7,"requireAny":["방망이"],"maxLineChars":18,"maxDuplicateLines":2}'::jsonb,
+  'folktale', 'fantasy', 'impulsive',
+  2, 'rh-goblin-club'
+where not exists (select 1 from problems p where p.source_key = 'rh-goblin-club');
+
+-- rh-gyeonu-bridge (order_no 7, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'rhythm'),
+  'convert', 'auto', '한 덩어리로 붙은 글을 끊어 읽히게 다시 쓰시오. 내용은 그대로 두고 줄만 나눕니다. 문장이 길어서 문장 단위로만 끊으면 줄이 넘칩니다. 문장 안에서도 끊으십시오. 7~13줄로 나누고, 한 줄은 18자를 넘기지 마십시오. 같은 줄을 되풀이해 채우지 마십시오. 분량은 111~131자로 유지합니다. 덜어내는 훈련이 아닙니다. ''까치들''는 반드시 남깁니다.',
+  '견우가 강가에 나와 선 밤에도 물소리는 그치지 않고 밤새 이어졌다. 하늘이 검은 새떼로 뒤덮이더니 까치들이 서로 몸을 이어 강 위에 다리를 놓기 시작했다. 견우가 첫 발을 얹자 다리는 발밑에서 위태롭게 흔들렸지만 그는 걸음을 멈추지 않았다. 발밑에서 깃털 스치는 소리가 계속 올라왔다.', null, '{"maxChars":131,"maxLines":13,"minChars":111,"minLines":7,"requireAny":["까치들"],"maxLineChars":18,"maxDuplicateLines":2}'::jsonb,
+  'folktale', 'romance', 'planned',
+  2, 'rh-gyeonu-bridge'
+where not exists (select 1 from problems p where p.source_key = 'rh-gyeonu-bridge');
+
+-- rh-rabbit-gate (order_no 7, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'rhythm'),
+  'convert', 'auto', '한 덩어리로 붙은 글을 끊어 읽히게 다시 쓰시오. 내용은 그대로 두고 줄만 나눕니다. 문장이 길어서 문장 단위로만 끊으면 줄이 넘칩니다. 문장 안에서도 끊으십시오. 7~13줄로 나누고, 한 줄은 18자를 넘기지 마십시오. 같은 줄을 되풀이해 채우지 마십시오. 분량은 111~131자로 유지합니다. 덜어내는 훈련이 아닙니다. ''문지기''는 반드시 남깁니다.',
+  '토끼가 용궁 문 앞에 서자마자 문지기가 내린 창끝이 목 앞에서 아슬아슬하게 멈추었다. 토끼는 웃음을 거두지 않은 채 오히려 한 걸음을 더 내디뎠다. 안쪽에서 문이 천천히 열리며 복도 끝의 발소리가 점점 가까워졌다. 소매 속에 감춘 주먹만이 저도 모르게 단단히 쥐어지고 있었다.', null, '{"maxChars":131,"maxLines":13,"minChars":111,"minLines":7,"requireAny":["문지기"],"maxLineChars":18,"maxDuplicateLines":2}'::jsonb,
+  'folktale', 'martial', 'impulsive',
+  2, 'rh-rabbit-gate'
+where not exists (select 1 from problems p where p.source_key = 'rh-rabbit-gate');
+
+-- rh-siblings-tree (order_no 7, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'rhythm'),
+  'convert', 'auto', '한 덩어리로 붙은 글을 끊어 읽히게 다시 쓰시오. 내용은 그대로 두고 줄만 나눕니다. 문장이 길어서 문장 단위로만 끊으면 줄이 넘칩니다. 문장 안에서도 끊으십시오. 7~13줄로 나누고, 한 줄은 18자를 넘기지 마십시오. 같은 줄을 되풀이해 채우지 마십시오. 분량은 111~131자로 유지합니다. 덜어내는 훈련이 아닙니다. ''오라비''는 반드시 남깁니다.',
+  '오누이가 나무 꼭대기까지 올라간 뒤에도 호랑이는 밑동을 긁으며 좀처럼 물러가지 않았다. 가지가 크게 흔들릴 때마다 동생은 울음을 삼키며 오라비의 소매를 붙잡았다. 오라비가 하늘을 향해 두 손을 뻗어 무언가를 빌자 낡은 밧줄 하나가 소리 없이 내려왔다. 두 아이는 그것을 함께 붙잡았다.', null, '{"maxChars":131,"maxLines":13,"minChars":111,"minLines":7,"requireAny":["오라비"],"maxLineChars":18,"maxDuplicateLines":2}'::jsonb,
+  'folktale', 'fantasy', 'impulsive',
+  2, 'rh-siblings-tree'
+where not exists (select 1 from problems p where p.source_key = 'rh-siblings-tree');
 
 -- ch-village-approval (order_no 14, difficulty 1)
 insert into problems
