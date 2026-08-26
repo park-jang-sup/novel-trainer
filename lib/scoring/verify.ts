@@ -34,6 +34,7 @@ import {
   MONOLOGUE_REAL,
   MONOLOGUE_REAL_SECOND,
   MONOLOGUE_EMPHASIS,
+  MONOLOGUE_SIGH,
   dialogueLinesOf,
   validateMonologueItem,
   type MonologueItem,
@@ -753,10 +754,18 @@ function monologueCleanCases(item: MonologueItem): { key: string; text: string }
     out.push({ key: `${v.key}+반응서술`, text: [...lines, item.reaction].join('\n') })
   }
 
+  // 한숨 줄. maxNarrationLines: 3의 근거 표본이다. 지문 서술 1 + 한숨 1 +
+  // 반응 서술 1 = 서술 3줄, 경계값이다. 화면에서 실제로 이 꼴(따옴표 없는
+  // "하...")이 걸렸다.
+  out.push({
+    key: '한숨줄',
+    text: [l0, l1, MONOLOGUE_SIGH, item.monologues[0], l2, l3, item.reaction].join('\n'),
+  })
+
   return out
 }
 
-/** 뚫기 18종. 지문에서 생성하므로 지문을 고치면 함께 따라온다. 전부 fail이어야 한다. */
+/** 뚫기 19종. 지문에서 생성하므로 지문을 고치면 함께 따라온다. 전부 fail이어야 한다. */
 function monologueBypassCases(item: MonologueItem): { key: string; text: string }[] {
   const ls = monoLines(item.passage)
   const [l0, l1, l2, l3] = ls
@@ -792,6 +801,13 @@ function monologueBypassCases(item: MonologueItem): { key: string; text: string 
     { key: '두 어절 20회', text: insertAt2(`'${repeat('아이들 먹일', 20)}'`) },
     { key: '한 글자 어절 20회', text: insertAt2(`'${repeat('음', 20)}'`) },
     { key: '두 어절 15회', text: insertAt2(`'${repeat('정말', 15)}'`) },
+    // maxNarrationLines: 3의 경계 확인. 한숨줄(서술 3줄, 경계값) 위에
+    // 서술을 하나 더 얹어 대사 3줄을 넘어서게 만든다 — 서술 4줄은 걸려야
+    // 한다.
+    {
+      key: '서술 4줄',
+      text: [l0, l1, MONOLOGUE_SIGH, m, l2, l3, item.reaction, '바람이 마당을 지났다.'].join('\n'),
+    },
   ]
 }
 
@@ -984,6 +1000,90 @@ console.log('\n[8단계 monologue: maxLineWordRepeat 감도 감시]')
     'maxLineWordRepeat를 빼면 정확히 32건(줄 안 반복 뚫기 4종×8문항)이 샘',
     leakedByNoCap === 32,
     `실제=${leakedByNoCap} ${JSON.stringify(leakedByNoCapKeys)}`
+  )
+}
+
+console.log('\n[8단계 monologue: 좋은 답안 서술 줄 분포]')
+{
+  // maxNarrationLines: 3의 근거가 이 분포다. 한숨줄(서술 3줄)이 없으면
+  // 최대가 2가 되어 왜 3인지 잴 표본이 없어진다.
+  const dist = new Map<number, number>()
+  for (const item of MONOLOGUE_ITEMS) {
+    const p: Problem = {
+      id: item.sourceKey,
+      type: 'convert',
+      scoring_mode: 'auto',
+      scoring_config: { ...MONOLOGUE_CFG, requireAny: [item.keyword] },
+    }
+    for (const c of monologueCleanCases(item)) {
+      const r = combine(p, { text: c.text }, undefined, null)
+      const check = r.checks.find((cc) => cc.key === 'maxNarrationLines')
+      const n = check ? Number(check.detail.split('줄')[0]) : NaN
+      dist.set(n, (dist.get(n) ?? 0) + 1)
+    }
+  }
+  console.log('  분포:', Object.fromEntries([...dist.entries()].sort((a, b) => a[0] - b[0])))
+}
+
+console.log('\n[8단계 monologue: maxNarrationLines 감도 감시]')
+{
+  // 1) 3을 2로 낮추면 한숨줄(서술 3줄)만 걸려야 한다. 안 걸리면 표본이
+  //    경계에 안 붙어 있다는 뜻이다.
+  let brokenByTwoNarr = 0
+  const brokenByTwoNarrKeys: string[] = []
+  for (const item of MONOLOGUE_ITEMS) {
+    const p: Problem = {
+      id: item.sourceKey,
+      type: 'convert',
+      scoring_mode: 'auto',
+      scoring_config: { ...MONOLOGUE_CFG, maxNarrationLines: 2, requireAny: [item.keyword] },
+    }
+    for (const c of monologueCleanCases(item)) {
+      const r = combine(p, { text: c.text }, undefined, null)
+      if (r.status !== 'pass') {
+        brokenByTwoNarr++
+        brokenByTwoNarrKeys.push(`${item.sourceKey}/${c.key}`)
+      }
+    }
+  }
+  const onlySighBroken = brokenByTwoNarrKeys.every((k) => k.endsWith('/한숨줄'))
+  t(
+    'maxNarrationLines를 2로 낮추면 한숨줄만 걸림(표본이 경계에 붙어 있음)',
+    brokenByTwoNarr > 0 && onlySighBroken,
+    `걸린 건수=${brokenByTwoNarr} ${JSON.stringify(brokenByTwoNarrKeys)}`
+  )
+
+  // 2) 3을 4로 올리면 뚫기 중 '서술 4줄'이 새야 한다. 재보니 '서술로 채움'도
+  //    서술 줄이 정확히 4(지문 1 + MONOLOGUE_NARRATION_FILLER + '부인은
+  //    말이 없었다.' + '바람이 마당을 지났다.')라 3에서 이미 걸리고 있었고,
+  //    4로 올리면 같이 샌다. 8건이라고 억지로 맞추지 않고 실제 16건(둘 다
+  //    서술 4줄)을 그대로 단정한다.
+  const { maxNarrationLines, ...withoutNarrationCap } = MONOLOGUE_CFG
+  void maxNarrationLines
+  let leakedByFour = 0
+  const leakedByFourKeys: string[] = []
+  for (const item of MONOLOGUE_ITEMS) {
+    const p: Problem = {
+      id: item.sourceKey,
+      type: 'convert',
+      scoring_mode: 'auto',
+      scoring_config: { ...withoutNarrationCap, maxNarrationLines: 4, requireAny: [item.keyword] },
+    }
+    for (const c of monologueBypassCases(item)) {
+      const r = combine(p, { text: c.text }, undefined, null)
+      if (r.status === 'pass') {
+        leakedByFour++
+        leakedByFourKeys.push(`${item.sourceKey}/${c.key}`)
+      }
+    }
+  }
+  const onlyFourLineNarrLeaked = leakedByFourKeys.every(
+    (k) => k.endsWith('/서술 4줄') || k.endsWith('/서술로 채움')
+  )
+  t(
+    'maxNarrationLines를 4로 올리면 서술 줄 4개짜리 뚫기만 샘(서술 4줄·서술로 채움 각 8건)',
+    leakedByFour === 16 && onlyFourLineNarrLeaked,
+    `실제=${leakedByFour} ${JSON.stringify(leakedByFourKeys)}`
   )
 }
 

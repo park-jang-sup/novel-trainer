@@ -28,7 +28,7 @@ export const MONOLOGUE_CFG = {
     maxChars: 200,
     maxDuplicateLines: 0,
     maxLineWordRepeat: 6,
-    maxNarrationLines: 2,
+    maxNarrationLines: 3,
     minSpeeches: 3,
     minMonologues: 1,
     minMonologueChars: 8,
@@ -54,11 +54,12 @@ export const MONOLOGUE_CFG = {
 // 3으로 낮춰도 강조반복은 안 걸리고(3 <= 3), 2로 낮추면 걸린다(3 > 2) —
 // 표본이 실제로 경계에 붙어 있다.
 //
-// maxNarrationLines: 2의 근거는 둘이다.
-//   지문이 장면 서술 1줄을 준다. 학습자가 더할 만한 것은 반응 서술 하나다
-//     — 실제로 사람이 그렇게 썼다.
-//   서술이 대사 3줄을 넘으면 안 된다 — 웹소설_작법_정리.md:35
-//     "설명·묘사보다 대화·독백 위주로 서술해"
+// maxNarrationLines: 3의 근거. 서술이 대사 줄 수(3)를 넘지 않는 것이
+// 경계다 — 정리.md:35 "대화·독백 위주로". 2는 이 저장소가 만든 조합
+// ("지문 1줄 + 반응 1줄")에서 나온 수였지 근거가 아니었다. 2에서는 한숨을
+// 따옴표로 감싸느냐 마느냐로 판정이 갈렸다("하..."는 서술로 세어지고
+// "'하...'"는 안 세어진다) — 쓰는 사람은 둘 다 쓴다. 표기 취향이 통과·
+// 실패를 뒤집으면 안 된다.
 
 export interface MonologueItem {
     sourceKey: string
@@ -309,3 +310,8 @@ export const MONOLOGUE_SWAP =
 
 // 서술 뚫기에 쓰는 상수.
 export const MONOLOGUE_NARRATION_FILLER = '그는 잠시 말을 멈추었다.'
+
+// 한숨 줄. 따옴표로 감싸지 않는다 — 감싸느냐 마느냐가 쓰는 사람마다 달라서
+// (실제로 둘 다 쓴다) maxNarrationLines가 표기 취향에 좌우되면 안 된다.
+// 이 줄이 서술로 세어지는 것 자체가 3으로 올린 이유다.
+export const MONOLOGUE_SIGH = '하...'
