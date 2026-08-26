@@ -77,6 +77,12 @@ function renderHighlight(text: string, marks: Mark[]): string {
 
 // 두 레이어의 fontFamily·fontSize·lineHeight·padding·letterSpacing이
 // 완전히 같아야 밑줄 위치가 원문 글자와 어긋나지 않는다.
+//
+// 폭도 같아야 한다. 내용이 넘쳐 textarea에 세로 스크롤바가 생기면 그만큼
+// 안쪽 폭이 좁아져 줄바꿈 지점이 highlight div(overflow: hidden이라
+// 스크롤바가 안 생긴다)와 어긋난다. scrollbar-gutter: stable로 두 레이어
+// 모두 스크롤바 자리를 항상 미리 비워 둔다 — 실측: 이 속성 없이는
+// textarea.clientWidth가 highlight div보다 스크롤바 너비(15px)만큼 좁았다.
 const shared: CSSProperties = {
   margin: 0,
   fontFamily: 'var(--font-display)',
@@ -88,6 +94,7 @@ const shared: CSSProperties = {
   wordBreak: 'break-word',
   boxSizing: 'border-box',
   width: '100%',
+  scrollbarGutter: 'stable',
 }
 
 export default function Editor({
