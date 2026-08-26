@@ -48,9 +48,20 @@ export default async function TrainProblemPage(
     minLines: cfg.minLines ?? null,
   }
 
+  // 두 칸 레이아웃 대상인가. cards·inputs는 order/count의 재료지 채점
+  // 임계값이 아니라서 안 센다(answer·answerIndex도 같은 이유로 뺀다 —
+  // 지금 스키마엔 없지만 채점 키로 취급하면 안 되는 이름이다).
+  // choice·order·count·coinage는 remove/convert가 아니라서 이 조건에서
+  // 이미 걸러진다 — coinage가 채점 키 4개(count·minLen·maxLen·distinctInitial)를
+  // 넘겨도 두 칸이 되지 않는 이유다.
+  const NON_SCORING_KEYS = new Set(['cards', 'inputs', 'answer', 'answerIndex'])
+  const scoringKeyCount = Object.keys(cfg).filter((k) => !NON_SCORING_KEYS.has(k)).length
+  const isTextInputType = problem.type === 'convert' || problem.type === 'remove'
+  const twoColumnEligible = isTextInputType && scoringKeyCount >= 4
+
   return (
     <>
-      <div className="mx-auto max-w-2xl px-6 pt-6">
+      <div className={`mx-auto px-6 pt-6 ${twoColumnEligible ? 'max-w-5xl' : 'max-w-2xl'}`}>
         <Link href={`/train/${actualStageId}`} className="text-sm" style={{ color: 'var(--ink-soft)' }}>
           ← 목록으로
         </Link>
@@ -63,6 +74,7 @@ export default async function TrainProblemPage(
           passage: problem.passage,
           choices: problem.choices ?? null,
           publicConfig,
+          twoColumnEligible,
         }}
       />
     </>

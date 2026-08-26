@@ -24,6 +24,9 @@ interface PublicProblem {
   passage: string | null
   choices: string[] | null
   publicConfig: PublicConfig
+  // lg 이상 + 텍스트 입력형 + 채점 키 4개 이상일 때만 true. page.tsx가 잰다 —
+  // scoring_config 전체가 클라이언트로 안 넘어오니 개수는 서버에서만 셀 수 있다.
+  twoColumnEligible: boolean
 }
 
 interface GradeResponse {
@@ -136,8 +139,8 @@ export default function TrainClient({ problem }: { problem: PublicProblem }) {
     }
   }
 
-  return (
-    <main className="mx-auto max-w-2xl space-y-6 p-6">
+  const leftContent = (
+    <>
       <div className="space-y-2">
         <p className="font-mono text-sm" style={{ color: 'var(--ink-soft)' }}>
           {problem.type}
@@ -319,40 +322,67 @@ export default function TrainClient({ problem }: { problem: PublicProblem }) {
       >
         제출
       </button>
+    </>
+  )
 
-      {result && (
-        <div className="space-y-2 pt-4" style={{ borderTop: '1px solid var(--rule)' }}>
-          <p style={{ color: STATUS_COLOR[result.status], fontWeight: 700 }}>
-            {STATUS_LABEL[result.status]}
-          </p>
-          {/* morphAvailable이 아니라 pending 유무로 띄운다. 형태소 서버가 없는
-              동안 morph는 항상 null이라 morphAvailable만 보면 이 문구가 모든
-              문항에 뜬다 — 선택형 · 순서형, 7단계 개행처럼 형태소 검사가 하나도
-              없어 서버 없이도 판정이 끝나는 문항까지 "아직 덜 봤다"고 말하게 된다.
-              gradeMorph와 pendingMorphChecks가 만드는 키 집합은 maxAdverbs ·
-              maxModifiers · minVerbs · maxProperNouns · maxRepeat · forbidLemmas
-              6개로 정확히 같으므로, pending이 있다는 것이 곧 형태소 검사가 있다는
-              뜻이다. 한쪽에 키를 더하면 다른 쪽에도 더해야 이 조건이 유지된다. */}
-          {result.checks.some((c) => c.status === 'pending') && (
-            <p className="text-sm" style={{ color: 'var(--ink-soft)' }}>
-              일부 검사는 문장 분석 서버가 연결되면 표시됩니다.
-            </p>
-          )}
-          {/* needsAi 는 "규칙은 끝났고 AI 차례"라는 뜻이다. AI 심사가 아직 없으므로
-              이 문항의 판정은 끝나지 않았다. 통과로만 표시하면 학습자가 자기 답안이
-              좋다고 배운다. AI 심사가 붙으면 이 안내를 실제 결과로 갈아끼운다. */}
-          {result.needsAi && (
-            <p className="text-sm" style={{ color: 'var(--ink-soft)' }}>
-              규칙 검사는 통과했습니다. 내용 심사는 아직 준비 중입니다.
-            </p>
-          )}
-          <div>
-            {displayChecks?.map((c) => (
-              <CheckRow key={c.key} check={c} />
-            ))}
-          </div>
-        </div>
+  const rightContent = result && (
+    <div className="space-y-2 pt-4" style={{ borderTop: '1px solid var(--rule)' }}>
+      <p style={{ color: STATUS_COLOR[result.status], fontWeight: 700 }}>
+        {STATUS_LABEL[result.status]}
+      </p>
+      {/* morphAvailable이 아니라 pending 유무로 띄운다. 형태소 서버가 없는
+          동안 morph는 항상 null이라 morphAvailable만 보면 이 문구가 모든
+          문항에 뜬다 — 선택형 · 순서형, 7단계 개행처럼 형태소 검사가 하나도
+          없어 서버 없이도 판정이 끝나는 문항까지 "아직 덜 봤다"고 말하게 된다.
+          gradeMorph와 pendingMorphChecks가 만드는 키 집합은 maxAdverbs ·
+          maxModifiers · minVerbs · maxProperNouns · maxRepeat · forbidLemmas
+          6개로 정확히 같으므로, pending이 있다는 것이 곧 형태소 검사가 있다는
+          뜻이다. 한쪽에 키를 더하면 다른 쪽에도 더해야 이 조건이 유지된다. */}
+      {result.checks.some((c) => c.status === 'pending') && (
+        <p className="text-sm" style={{ color: 'var(--ink-soft)' }}>
+          일부 검사는 문장 분석 서버가 연결되면 표시됩니다.
+        </p>
       )}
+      {/* needsAi 는 "규칙은 끝났고 AI 차례"라는 뜻이다. AI 심사가 아직 없으므로
+          이 문항의 판정은 끝나지 않았다. 통과로만 표시하면 학습자가 자기 답안이
+          좋다고 배운다. AI 심사가 붙으면 이 안내를 실제 결과로 갈아끼운다. */}
+      {result.needsAi && (
+        <p className="text-sm" style={{ color: 'var(--ink-soft)' }}>
+          규칙 검사는 통과했습니다. 내용 심사는 아직 준비 중입니다.
+        </p>
+      )}
+      <div>
+        {displayChecks?.map((c) => (
+          <CheckRow key={c.key} check={c} />
+        ))}
+      </div>
+    </div>
+  )
+
+  // 두 칸(lg 이상 · convert/remove · 채점 키 4개 이상)일 때만 좌우로 나눈다.
+  // page.tsx가 이미 세 조건을 다 걸러 twoColumnEligible로 넘긴다 — 여기서는
+  // lg 미디어쿼리만 CSS로 더한다. 그 밖의 38문항과 좁은 화면은 지금까지의
+  // 한 칸 쌓기 그대로다.
+  if (!problem.twoColumnEligible) {
+    return (
+      <main className="mx-auto max-w-2xl space-y-6 p-6">
+        {leftContent}
+        {rightContent}
+      </main>
+    )
+  }
+
+  return (
+    <main className="mx-auto max-w-5xl p-6">
+      <div className="space-y-6 lg:grid lg:grid-cols-2 lg:items-start lg:gap-8 lg:space-y-0">
+        <div className="space-y-6">{leftContent}</div>
+        {/* 제출 전에는 비어 있다 — result가 없으면 rightContent 자체가 false다.
+            판정을 보며 왼쪽을 스크롤해도 안 따라 올라가게 sticky로 붙이고,
+            판정 목록이 화면보다 길어질 수 있어 이 칸 안에서 따로 스크롤한다. */}
+        <div className="space-y-6 lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto">
+          {rightContent}
+        </div>
+      </div>
     </main>
   )
 }
