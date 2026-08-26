@@ -33,6 +33,7 @@ import {
   MONOLOGUE_LONG,
   MONOLOGUE_REAL,
   MONOLOGUE_REAL_SECOND,
+  MONOLOGUE_EMPHASIS,
   dialogueLinesOf,
   validateMonologueItem,
   type MonologueItem,
@@ -702,15 +703,17 @@ const monoLines = (t: string) => t.split('\n').map((l) => l.trim()).filter(Boole
 const monoNoSpace = (t: string) => t.replace(/\s/g, '')
 
 /**
- * 오탐 감시용 좋은 답안 16종. 전부 pass여야 한다.
+ * 오탐 감시용 좋은 답안 20종. 전부 pass여야 한다.
  *
  * +반응서술판이 핵심이다. 좋은 답안이 서술을 한 줄도 안 만들면
  * maxNarrationLines의 오탐을 잴 수 없다 — 규칙을 바꾸면 좋은 답안 집합도
  * 바뀌는데, 생성기가 그 변화를 안 만들면 '오탐 0'은 검증이 아니라 미검증이다.
  *
  * 독백 1개: 짧은(지금 것) · 실제(46자쯤, 화면에서 사용자가 실제로 쓴 길이라
- * 135 상한에 걸렸었다) · 긴(78자쯤, 감정선을 더 살린 경우) 셋을 자리 2곳 ×
- * 반응서술 유무로 돈다.
+ * 135 상한에 걸렸었다) · 긴(78자쯤, 감정선을 더 살린 경우) · 강조반복(같은
+ * 말 서너 번, 줄 안 최대 반복 3) 넷을 자리 2곳 × 반응서술 유무로 돈다.
+ * 강조반복이 maxLineWordRepeat: 6의 근거 표본이다 — 이게 없으면 좋은 답안
+ * 쪽 최대 반복이 1이 되어 왜 6인지 잴 수 없다.
  *
  * 독백 2개(둘 끼움): minMonologues는 1 이상이라 둘도 통과해야 한다. 짧은
  * 둘 · 실제 둘까지만 넣는다. 둘 다 긴(78자) 독백을 쓰면 233~249자로 200
@@ -726,6 +729,7 @@ function monologueCleanCases(item: MonologueItem): { key: string; text: string }
     { key: '짧은독백', m: item.monologues[0] },
     { key: '실제독백', m: MONOLOGUE_REAL },
     { key: '긴독백', m: MONOLOGUE_LONG },
+    { key: '강조반복', m: MONOLOGUE_EMPHASIS },
   ]
   const positions: { key: string; lines: (m: string) => string[] }[] = [
     { key: '2번자리', lines: (m) => [l0, l1, m, l2, l3] },
@@ -877,11 +881,32 @@ console.log('\n[8단계 monologue: requireAny 의존 감시]')
   )
 }
 
+console.log('\n[8단계 monologue: 좋은 답안 최대반복 분포]')
+{
+  // maxLineWordRepeat: 6의 근거가 이 분포다. 강조반복(줄 안 최대 반복 3)이
+  // 없으면 최대가 1이 되어 왜 6인지 잴 표본이 없어진다.
+  const dist = new Map<number, number>()
+  for (const item of MONOLOGUE_ITEMS) {
+    const p: Problem = {
+      id: item.sourceKey,
+      type: 'convert',
+      scoring_mode: 'auto',
+      scoring_config: { ...MONOLOGUE_CFG, requireAny: [item.keyword] },
+    }
+    for (const c of monologueCleanCases(item)) {
+      const r = combine(p, { text: c.text }, undefined, null)
+      const check = r.checks.find((cc) => cc.key === 'maxLineWordRepeat')
+      const n = check ? Number(check.detail.split('회')[0]) : NaN
+      dist.set(n, (dist.get(n) ?? 0) + 1)
+    }
+  }
+  console.log('  분포:', Object.fromEntries([...dist.entries()].sort((a, b) => a[0] - b[0])))
+}
+
 console.log('\n[8단계 monologue: maxLineWordRepeat 감도 감시]')
 {
-  // 1) 6을 3으로 낮춰도 좋은 답안은 안 걸려야 한다 — 지금 표본(짧은·실제·긴
-  //    독백, 1개·2개)의 줄 안 최대 반복은 1이라 3까지는 여유가 크다.
-  //    여기서 걸리면 표본이 바뀐 것이다.
+  // 1) 6을 3으로 낮춰도 좋은 답안은 안 걸려야 한다 — 강조반복의 줄 안 최대
+  //    반복이 3이라(3 <= 3) 3이 경계값이다. 여기서 걸리면 표본이 바뀐 것이다.
   let brokenByThree = 0
   const brokenKeys: string[] = []
   for (const item of MONOLOGUE_ITEMS) {
@@ -903,6 +928,33 @@ console.log('\n[8단계 monologue: maxLineWordRepeat 감도 감시]')
     'maxLineWordRepeat를 3으로 낮춰도 좋은 답안은 그대로 통과함',
     brokenByThree === 0,
     `걸린 건수=${brokenByThree} ${JSON.stringify(brokenKeys)}`
+  )
+
+  // 1b) 2로 낮추면 강조반복(최대 반복 3 > 2)은 걸려야 한다. 안 걸리면
+  //     표본이 경계에 안 붙어 있다는 뜻이다 — 강조반복 외에는 안 걸려야
+  //     한다(최대 반복이 1이므로).
+  let brokenByTwo = 0
+  const brokenByTwoKeys: string[] = []
+  for (const item of MONOLOGUE_ITEMS) {
+    const p: Problem = {
+      id: item.sourceKey,
+      type: 'convert',
+      scoring_mode: 'auto',
+      scoring_config: { ...MONOLOGUE_CFG, maxLineWordRepeat: 2, requireAny: [item.keyword] },
+    }
+    for (const c of monologueCleanCases(item)) {
+      const r = combine(p, { text: c.text }, undefined, null)
+      if (r.status !== 'pass') {
+        brokenByTwo++
+        brokenByTwoKeys.push(`${item.sourceKey}/${c.key}`)
+      }
+    }
+  }
+  const onlyEmphasisBroken = brokenByTwoKeys.every((k) => k.includes('강조반복'))
+  t(
+    'maxLineWordRepeat를 2로 낮추면 강조반복만 걸림(표본이 경계에 붙어 있음)',
+    brokenByTwo > 0 && onlyEmphasisBroken,
+    `걸린 건수=${brokenByTwo} ${JSON.stringify(brokenByTwoKeys)}`
   )
 
   // 2) maxLineWordRepeat를 빼면 뚫기 중 정확히 4종×8문항=32건이 새야
