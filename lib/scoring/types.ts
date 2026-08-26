@@ -53,6 +53,9 @@ export interface ScoringConfig {
   // 중복 때문에 늘어난 줄 수의 상한. lines.length - new Set(lines).size
   // 줄마다 거는 상한이 아니다. "각 줄을 딱 두 번씩" 쓰는 답안을 잡으려면
   // 답안 전체에서 세야 한다. 형태소 불필요.
+  /** 한 줄 안에서 같은 어절이 몇 번까지 나올 수 있는가.
+   *  maxDuplicateLines는 줄 단위라 한 줄 안을 못 본다. */
+  maxLineWordRepeat?: number
   //
   // 아래 넷은 줄이 아니라 따옴표 쌍을 센다 — Lines를 붙이지 않는다.
   // minLines·maxLines·maxLineChars·maxDuplicateLines는 전부 '\n'으로 나눈

@@ -30,6 +30,8 @@ import {
   MONOLOGUE_ITEMS,
   MONOLOGUE_SWAP,
   MONOLOGUE_NARRATION_FILLER,
+  MONOLOGUE_LONG,
+  MONOLOGUE_EMPHASIS,
   dialogueLinesOf,
   validateMonologueItem,
   type MonologueItem,
@@ -707,24 +709,40 @@ const monoNoSpace = (t: string) => t.replace(/\s/g, '')
  */
 function monologueCleanCases(item: MonologueItem): { key: string; text: string }[] {
   const [l0, l1, l2, l3] = monoLines(item.passage)
-  const [m0, m1] = item.monologues
-  const base: { key: string; lines: string[] }[] = [
-    { key: '2번 자리', lines: [l0, l1, m0, l2, l3] },
-    { key: '3번 자리', lines: [l0, l1, l2, m0, l3] },
-    { key: '둘 끼움', lines: [l0, l1, m0, l2, m1, l3] },
+  // 세 종류: 짧은 독백(지금 것) · 긴 독백(80자쯤, 감정선을 살린 경우) ·
+  // 강조 반복(같은 말 서너 번). 짧은 독백만 표본에 있으면 상한이 좁아도
+  // 오탐 0이 나온다 — 화면에서 실제로 그런 일이 있었다(46자 독백이 135
+  // 상한에 걸림).
+  const variants: { key: string; m: string }[] = [
+    { key: '짧은독백', m: item.monologues[0] },
+    { key: '긴독백', m: MONOLOGUE_LONG },
+    { key: '강조반복', m: MONOLOGUE_EMPHASIS },
   ]
-  return [
-    ...base.map((b) => ({ key: b.key, text: b.lines.join('\n') })),
-    ...base.map((b) => ({ key: `${b.key}+반응서술`, text: [...b.lines, item.reaction].join('\n') })),
+  const positions: { key: string; lines: (m: string) => string[] }[] = [
+    { key: '2번자리', lines: (m) => [l0, l1, m, l2, l3] },
+    { key: '3번자리', lines: (m) => [l0, l1, l2, m, l3] },
   ]
+  const out: { key: string; text: string }[] = []
+  for (const v of variants) {
+    for (const p of positions) {
+      const lines = p.lines(v.m)
+      out.push({ key: `${v.key}/${p.key}`, text: lines.join('\n') })
+      out.push({ key: `${v.key}/${p.key}+반응서술`, text: [...lines, item.reaction].join('\n') })
+    }
+  }
+  return out
 }
 
-/** 뚫기 14종. 지문에서 생성하므로 지문을 고치면 함께 따라온다. 전부 fail이어야 한다. */
+/** 뚫기 18종. 지문에서 생성하므로 지문을 고치면 함께 따라온다. 전부 fail이어야 한다. */
 function monologueBypassCases(item: MonologueItem): { key: string; text: string }[] {
   const ls = monoLines(item.passage)
   const [l0, l1, l2, l3] = ls
   const m = item.monologues[0]
   const bare = (l: string) => (l.startsWith('"') ? l.slice(1, -1) : l)
+  // "2번 자리"에 끼워 넣는다 — 나머지 검사는 전부 통과하는 정상적인 좋은
+  // 답안 모양으로 만들어야, maxLineWordRepeat 하나만 걸리는지 볼 수 있다.
+  const insertAt2 = (m2: string) => [l0, l1, m2, l2, l3].join('\n')
+  const repeat = (word: string, n: number) => Array(n).fill(word).join(' ')
   return [
     { key: '원문 그대로', text: item.passage },
     { key: '독백 맨 앞', text: `${m}\n${item.passage}` },
@@ -745,6 +763,12 @@ function monologueBypassCases(item: MonologueItem): { key: string; text: string 
         '\n'
       ),
     },
+    // 상한(200)을 넓히며 새로 생긴 구멍: 한 줄 안에서 같은 어절을 몰아
+    // 쓰면 분량만 채운 것도 통과했다. maxLineWordRepeat가 이걸 잡는다.
+    { key: '같은 어절 30회', text: insertAt2(`'${repeat('그러하다', 30)}'`) },
+    { key: '두 어절 20회', text: insertAt2(`'${repeat('아이들 먹일', 20)}'`) },
+    { key: '한 글자 어절 20회', text: insertAt2(`'${repeat('음', 20)}'`) },
+    { key: '두 어절 15회', text: insertAt2(`'${repeat('정말', 15)}'`) },
   ]
 }
 
@@ -777,9 +801,12 @@ console.log('\n[8단계 monologue: 오탐 감시 · 뚫기 표본 — 8문항 �
 console.log('\n[8단계 monologue: 밴드 의존 감시]')
 {
   // 뚫기가 걸렸다는 사실만으로는 설계가 막았다는 뜻이 아니다. 분량 밴드에
-  // 우연히 걸렸을 수 있다. minChars·maxChars를 뺀 설정으로 104건을 다시
-  // 돌려서 전부 여전히 fail인지 본다. 이 검사가 깨지면 표본을 늘린 것이
-  // 아니라 설계가 헐거워진 것이다.
+  // 우연히 걸렸을 수 있다. minChars·maxChars를 뺀 설정으로 뚫기 전부를
+  // 다시 돌려서 전부 여전히 fail인지 본다. 이번 변경의 핵심이다 — 상한을
+  // 135→200으로 넓히며 "같은 어절 30회" 같은 뚫기 넷이 새로 생겼는데,
+  // 이 감시가 0을 유지해야 maxLineWordRepeat가 밴드 없이도 그 넷을 스스로
+  // 잡는다는 뜻이 된다. 이 검사가 깨지면 표본을 늘린 것이 아니라 설계가
+  // 헐거워진 것이다.
   const { minChars, maxChars, ...rest } = MONOLOGUE_CFG
   void minChars
   void maxChars
@@ -828,6 +855,64 @@ console.log('\n[8단계 monologue: requireAny 의존 감시]')
     'requireAny를 빼면 정확히 8건(내용 통째 교체)이 샘',
     leaked === 8,
     `실제=${leaked} ${JSON.stringify(leakedKeys)}`
+  )
+}
+
+console.log('\n[8단계 monologue: maxLineWordRepeat 감도 감시]')
+{
+  // 1) 6을 3으로 낮춰도 좋은 답안(96건)은 안 걸려야 한다 — 지금 표본의
+  //    최대 반복이 3(강조 반복 변형)이라 3이 경계값이다. 여기서 걸리면
+  //    표본이 바뀐 것이다.
+  let brokenByThree = 0
+  const brokenKeys: string[] = []
+  for (const item of MONOLOGUE_ITEMS) {
+    const p: Problem = {
+      id: item.sourceKey,
+      type: 'convert',
+      scoring_mode: 'auto',
+      scoring_config: { ...MONOLOGUE_CFG, maxLineWordRepeat: 3, requireAny: [item.keyword] },
+    }
+    for (const c of monologueCleanCases(item)) {
+      const r = combine(p, { text: c.text }, undefined, null)
+      if (r.status !== 'pass') {
+        brokenByThree++
+        brokenKeys.push(`${item.sourceKey}/${c.key}`)
+      }
+    }
+  }
+  t(
+    'maxLineWordRepeat를 3으로 낮춰도 좋은 답안은 그대로 통과함',
+    brokenByThree === 0,
+    `걸린 건수=${brokenByThree} ${JSON.stringify(brokenKeys)}`
+  )
+
+  // 2) maxLineWordRepeat를 빼면 뚫기 중 정확히 4종×8문항=32건이 새야
+  //    한다(같은 어절 30회 · 두 어절 20회 · 한 글자 어절 20회 · 두 어절
+  //    15회). 0이면 검사가 안 걸리는 것이고, 32보다 크면 다른 뚫기까지
+  //    이 검사에 기대고 있었다는 뜻이다.
+  const { maxLineWordRepeat, ...withoutRepeatCap } = MONOLOGUE_CFG
+  void maxLineWordRepeat
+  let leakedByNoCap = 0
+  const leakedByNoCapKeys: string[] = []
+  for (const item of MONOLOGUE_ITEMS) {
+    const p: Problem = {
+      id: item.sourceKey,
+      type: 'convert',
+      scoring_mode: 'auto',
+      scoring_config: { ...withoutRepeatCap, requireAny: [item.keyword] },
+    }
+    for (const c of monologueBypassCases(item)) {
+      const r = combine(p, { text: c.text }, undefined, null)
+      if (r.status === 'pass') {
+        leakedByNoCap++
+        leakedByNoCapKeys.push(`${item.sourceKey}/${c.key}`)
+      }
+    }
+  }
+  t(
+    'maxLineWordRepeat를 빼면 정확히 32건(줄 안 반복 뚫기 4종×8문항)이 샘',
+    leakedByNoCap === 32,
+    `실제=${leakedByNoCap} ${JSON.stringify(leakedByNoCapKeys)}`
   )
 }
 
@@ -911,7 +996,7 @@ console.log('\n[8단계 monologue: 회귀 조건 3건]')
       .filter(Boolean)
       .filter((l) => !l.startsWith('"')).length
   const heungbu = MONOLOGUE_ITEMS.find((i) => i.sourceKey === 'mo-heungbu-swallow')!
-  const sample = monologueCleanCases(heungbu).find((c) => c.key === '2번 자리')!.text
+  const sample = monologueCleanCases(heungbu).find((c) => c.key === '짧은독백/2번자리')!.text
   t(
     '회귀3: 서술 정의를 큰따옴표 기준으로 되돌리면 서술 줄 수가 1이 아님',
     oldCountNarrationLines(sample) !== 1,

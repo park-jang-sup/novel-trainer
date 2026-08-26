@@ -144,6 +144,32 @@ function lineChecks(text: string, cfg: ScoringConfig): Check[] {
       gating: true,
     })
   }
+  if (cfg.maxLineWordRepeat !== undefined) {
+    const limit = cfg.maxLineWordRepeat
+    let worstWord = ''
+    let worstCount = 0
+    for (const l of lines) {
+      const stripped = l.replace(/["'.,!?…]/g, '')
+      const words = stripped.split(/\s+/).filter(Boolean)
+      const counts = new Map<string, number>()
+      for (const w of words) counts.set(w, (counts.get(w) ?? 0) + 1)
+      for (const [word, count] of counts) {
+        if (count > worstCount) {
+          worstCount = count
+          worstWord = word
+        }
+      }
+    }
+    out.push({
+      key: 'maxLineWordRepeat',
+      label: '줄 안 반복',
+      status: worstCount <= limit ? 'pass' : 'fail',
+      detail: `${worstCount}회 / ${limit}회 이하`,
+      rule: `한 줄에 같은 말 ${limit}회 이하`,
+      evidence: worstCount > limit && worstWord ? [worstWord] : [],
+      gating: true,
+    })
+  }
 
   return out
 }
