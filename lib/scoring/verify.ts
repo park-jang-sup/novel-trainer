@@ -9,8 +9,8 @@
 
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
-import { combine, findForbidden, mergeForbidChecks } from './index'
-import type { Answer, Check, MorphResult, Problem } from './types'
+import { combine, findForbidden, mergeForbidChecks, gradeLocal, pendingMorphChecks } from './index'
+import type { Answer, Check, MorphResult, Problem, ProblemType, ScoringMode } from './types'
 import { CONVERT_SEEDS } from './fixtures/convert-seeds'
 import {
   SENSORY_BYPASS,
@@ -202,8 +202,8 @@ console.log('\n[mergeForbidChecks]')
 {
   // 1) forbidWords fail(2건) + forbidLemmas fail(1건) → Check 1개, evidence 3개, fail
   const m1 = mergeForbidChecks([
-    { key: 'forbidWords', label: '쓰지 않을 말', status: 'fail', detail: '2개', evidence: ['눈앞에', '모습이'], gating: true },
-    { key: 'forbidLemmas', label: '쓰지 않을 말', status: 'fail', detail: '1개', evidence: ['내려다보았다'], gating: true },
+    { key: 'forbidWords', label: '쓰지 않을 말', status: 'fail', detail: '2개', rule: '쓰지 않음: 눈앞, 모습', evidence: ['눈앞에', '모습이'], gating: true },
+    { key: 'forbidLemmas', label: '쓰지 않을 말', status: 'fail', detail: '1개', rule: '쓰지 않음: 내려다보다', evidence: ['내려다보았다'], gating: true },
   ])
   t(
     '2건+1건 → Check 1개, evidence 3개, fail',
@@ -213,28 +213,28 @@ console.log('\n[mergeForbidChecks]')
 
   // 2) forbidWords pass + forbidLemmas fail → fail
   const m2 = mergeForbidChecks([
-    { key: 'forbidWords', label: '쓰지 않을 말', status: 'pass', detail: '없음', evidence: [], gating: true },
-    { key: 'forbidLemmas', label: '쓰지 않을 말', status: 'fail', detail: '1개', evidence: ['내려다보았다'], gating: true },
+    { key: 'forbidWords', label: '쓰지 않을 말', status: 'pass', detail: '없음', rule: '쓰지 않음: 눈앞, 모습', evidence: [], gating: true },
+    { key: 'forbidLemmas', label: '쓰지 않을 말', status: 'fail', detail: '1개', rule: '쓰지 않음: 내려다보다', evidence: ['내려다보았다'], gating: true },
   ])
   t('pass + fail → fail', m2[0].status === 'fail', `실제=${m2[0].status}`)
 
   // 3) forbidWords fail + forbidLemmas pending → fail (pending이 fail을 덮지 않음)
   const m3 = mergeForbidChecks([
-    { key: 'forbidWords', label: '쓰지 않을 말', status: 'fail', detail: '1개', evidence: ['눈앞에'], gating: true },
-    { key: 'forbidLemmas', label: '쓰지 않을 말', status: 'pending', detail: '형태소 분석 대기' },
+    { key: 'forbidWords', label: '쓰지 않을 말', status: 'fail', detail: '1개', rule: '쓰지 않음: 눈앞', evidence: ['눈앞에'], gating: true },
+    { key: 'forbidLemmas', label: '쓰지 않을 말', status: 'pending', detail: '형태소 분석 대기', rule: '쓰지 않음: 내려다보다' },
   ])
   t('fail + pending → fail (pending이 덮지 않음)', m3[0].status === 'fail', `실제=${m3[0].status}`)
 
   // 4) forbidWords pass + forbidLemmas pending → pending
   const m4 = mergeForbidChecks([
-    { key: 'forbidWords', label: '쓰지 않을 말', status: 'pass', detail: '없음', evidence: [], gating: true },
-    { key: 'forbidLemmas', label: '쓰지 않을 말', status: 'pending', detail: '형태소 분석 대기' },
+    { key: 'forbidWords', label: '쓰지 않을 말', status: 'pass', detail: '없음', rule: '쓰지 않음: 눈앞', evidence: [], gating: true },
+    { key: 'forbidLemmas', label: '쓰지 않을 말', status: 'pending', detail: '형태소 분석 대기', rule: '쓰지 않음: 내려다보다' },
   ])
   t('pass + pending → pending', m4[0].status === 'pending', `실제=${m4[0].status}`)
 
   // 5) forbidWords만 있고 forbidLemmas 없음 → 입력과 같은 배열 내용, key 유지
   const only: Check[] = [
-    { key: 'forbidWords', label: '쓰지 않을 말', status: 'fail', detail: '1개', evidence: ['눈앞에'], gating: true },
+    { key: 'forbidWords', label: '쓰지 않을 말', status: 'fail', detail: '1개', rule: '쓰지 않음: 눈앞', evidence: ['눈앞에'], gating: true },
   ]
   const m5 = mergeForbidChecks(only)
   t(
@@ -245,8 +245,8 @@ console.log('\n[mergeForbidChecks]')
 
   // 6) 두 evidence에 같은 어절이 있으면 합친 evidence에 1개만
   const m6 = mergeForbidChecks([
-    { key: 'forbidWords', label: '쓰지 않을 말', status: 'fail', detail: '1개', evidence: ['눈앞에'], gating: true },
-    { key: 'forbidLemmas', label: '쓰지 않을 말', status: 'fail', detail: '1개', evidence: ['눈앞에'], gating: true },
+    { key: 'forbidWords', label: '쓰지 않을 말', status: 'fail', detail: '1개', rule: '쓰지 않음: 눈앞', evidence: ['눈앞에'], gating: true },
+    { key: 'forbidLemmas', label: '쓰지 않을 말', status: 'fail', detail: '1개', rule: '쓰지 않음: 눈앞', evidence: ['눈앞에'], gating: true },
   ])
   t('중복 어절 evidence 1개로 합쳐짐', m6[0].evidence?.length === 1, JSON.stringify(m6[0].evidence))
 }
@@ -984,6 +984,52 @@ console.log('\n[8단계 monologue: 설정 일치 · 키 가드]')
   if (guardSkipped.length > 0) {
     console.log(`  건너뜀 (키 가드: 덤프에 dialogue_ratio 문항 없음): ${guardSkipped.join(', ')}`)
   }
+}
+
+// ── rule 누락 감시 — 이 지시서의 핵심 장치 ────────────────────────────
+//
+// 지금은 이 감시가 없으면 다음에 검사를 추가하는 사람이 rule을 빈
+// 문자열로 채우고 넘어가도 타입은 통과하고 화면에서는 빈 줄로 보인다.
+// 아무도 안 본다. 덤프 62문항 전부에 gradeLocal을 두 번(빈 문자열 한 번,
+// 지문으로 한 번) 돌리고, pendingMorphChecks도 함께 본다.
+console.log('\n[rule 누락 감시: 덤프 62문항 전부]')
+{
+  interface DumpProblem {
+    source_key: string
+    type: string
+    passage: string | null
+    scoring_config: Record<string, unknown>
+  }
+
+  const dumpPath = path.join(__dirname, '..', '..', 'seed', 'dump', 'problems.json')
+  const raw = readFileSync(dumpPath, 'utf8').replace(/^\uFEFF/, '')
+  const dumpProblems: DumpProblem[] = JSON.parse(raw)
+
+  let checked = 0
+  const missing: string[] = []
+  for (const dp of dumpProblems) {
+    const problem: Problem = {
+      id: dp.source_key,
+      type: dp.type as ProblemType,
+      scoring_mode: 'auto' as ScoringMode, // gradeLocal은 scoring_mode를 안 본다
+      scoring_config: dp.scoring_config,
+    }
+    for (const text of ['', dp.passage ?? '']) {
+      const checks = [
+        ...gradeLocal(problem, { text }, undefined),
+        ...pendingMorphChecks(problem.scoring_config),
+      ]
+      for (const c of checks) {
+        checked++
+        if (c.rule.trim() === '') missing.push(`${dp.source_key}/${c.key}`)
+      }
+    }
+  }
+  t(
+    'rule이 빈(또는 공백뿐인) Check가 하나도 없음',
+    missing.length === 0,
+    `checked=${checked} missing=${JSON.stringify(missing)}`
+  )
 }
 
 console.log(`\n최종: ${pass} 통과 / ${fail} 실패`)

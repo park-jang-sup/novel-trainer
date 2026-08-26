@@ -12,6 +12,12 @@ export interface Check {
   label: string
   status: CheckStatus
   detail: string
+  /**
+   * 답안과 무관한 기준만. detail이 "123자 / 135자 이하"라면 rule은 "135자 이하".
+   * 선택 필드로 두지 않는다 — rule?: string이면 빼먹어도 타입이 통과해
+   * 화면에 빈 줄로 나가도 아무도 못 본다. gradeLocal이 유일한 출처다.
+   */
+  rule: string
   evidence?: string[] // 걸린 근거. UI에서 그대로 보여준다
   gating?: boolean // true면 fail 시 AI를 호출하지 않는다
 }

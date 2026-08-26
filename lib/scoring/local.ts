@@ -63,6 +63,7 @@ function lengthChecks(text: string, cfg: ScoringConfig): Check[] {
       label: '분량',
       status: n <= cfg.maxChars ? 'pass' : 'fail',
       detail: `${n}자 / ${cfg.maxChars}자 이하`,
+      rule: `${cfg.maxChars}자 이하`,
       gating: true, // 넘치면 AI를 부르지 않는다
     })
   }
@@ -72,6 +73,7 @@ function lengthChecks(text: string, cfg: ScoringConfig): Check[] {
       label: '최소 분량',
       status: n >= cfg.minChars ? 'pass' : 'fail',
       detail: `${n}자 / ${cfg.minChars}자 이상`,
+      rule: `${cfg.minChars}자 이상`,
       gating: true,
     })
   }
@@ -97,6 +99,7 @@ function lineChecks(text: string, cfg: ScoringConfig): Check[] {
       label: '최소 줄 수',
       status: lines.length >= cfg.minLines ? 'pass' : 'fail',
       detail: `${lines.length}줄 / ${cfg.minLines}줄 이상`,
+      rule: `${cfg.minLines}줄 이상`,
       gating: true,
     })
   }
@@ -106,6 +109,7 @@ function lineChecks(text: string, cfg: ScoringConfig): Check[] {
       label: '최대 줄 수',
       status: lines.length <= cfg.maxLines ? 'pass' : 'fail',
       detail: `${lines.length}줄 / ${cfg.maxLines}줄 이하`,
+      rule: `${cfg.maxLines}줄 이하`,
       gating: true,
     })
   }
@@ -117,6 +121,7 @@ function lineChecks(text: string, cfg: ScoringConfig): Check[] {
       label: '긴 줄',
       status: bad.length === 0 ? 'pass' : 'fail',
       detail: bad.length === 0 ? '없음' : `${bad.length}개`,
+      rule: `한 줄 ${maxLineChars}자 이하`,
       evidence: bad,
       gating: true,
     })
@@ -134,6 +139,7 @@ function lineChecks(text: string, cfg: ScoringConfig): Check[] {
       label: '줄 중복',
       status: dupCount <= cfg.maxDuplicateLines ? 'pass' : 'fail',
       detail: dupCount === 0 ? '없음' : `${dupCount}줄`,
+      rule: cfg.maxDuplicateLines === 0 ? '되풀이 없어야 함' : `되풀이 ${cfg.maxDuplicateLines}줄까지 허용`,
       evidence: dupLines,
       gating: true,
     })
@@ -210,6 +216,7 @@ function quoteChecks(text: string, cfg: ScoringConfig): Check[] {
       label: '대사 수',
       status: speeches.length >= cfg.minSpeeches ? 'pass' : 'fail',
       detail: `${speeches.length}개 / ${cfg.minSpeeches}개 이상`,
+      rule: `${cfg.minSpeeches}개 이상`,
       gating: true,
     })
   }
@@ -219,6 +226,7 @@ function quoteChecks(text: string, cfg: ScoringConfig): Check[] {
       label: '독백 수',
       status: monologues.length >= cfg.minMonologues ? 'pass' : 'fail',
       detail: monologueQuoteDetail ?? `${monologues.length}개 / ${cfg.minMonologues}개 이상`,
+      rule: `${cfg.minMonologues}개 이상`,
       gating: true,
     })
   }
@@ -231,6 +239,7 @@ function quoteChecks(text: string, cfg: ScoringConfig): Check[] {
       label: '독백 글자수',
       status: ok ? 'pass' : 'fail',
       detail: monologueQuoteDetail ?? (ok ? '미달 없음' : `${short.length}개 미달`),
+      rule: `${minMonologueChars}자 이상`,
       evidence: short.map((m) => m.content),
       gating: true,
     })
@@ -244,6 +253,7 @@ function quoteChecks(text: string, cfg: ScoringConfig): Check[] {
       label: '독백 위치',
       status: between ? 'pass' : 'fail',
       detail: between ? '사이에 있음' : '사이에 없음',
+      rule: '대사와 대사 사이',
       gating: true,
     })
   }
@@ -254,6 +264,7 @@ function quoteChecks(text: string, cfg: ScoringConfig): Check[] {
       label: '서술 줄',
       status: narrationCount <= cfg.maxNarrationLines ? 'pass' : 'fail',
       detail: `${narrationCount}줄 / ${cfg.maxNarrationLines}줄 이하`,
+      rule: `${cfg.maxNarrationLines}줄 이하`,
       gating: true,
     })
   }
@@ -281,6 +292,7 @@ export function gradeLocal(
           label: '정답',
           status: 'pending',
           detail: '정답 정보를 불러오지 못했습니다',
+          rule: '정답과 일치해야 함',
         })
         break
       }
@@ -290,6 +302,7 @@ export function gradeLocal(
         label: '정답',
         status: ok ? 'pass' : 'fail',
         detail: ok ? '맞음' : '다시 보기',
+        rule: '정답과 일치해야 함',
       })
       break
     }
@@ -301,6 +314,7 @@ export function gradeLocal(
           label: '순서',
           status: 'pending',
           detail: '정답 정보를 불러오지 못했습니다',
+          rule: '정답 순서와 일치해야 함',
         })
         break
       }
@@ -314,6 +328,7 @@ export function gradeLocal(
         label: '순서',
         status: ok ? 'pass' : 'fail',
         detail: ok ? '맞음' : `${wrongAt + 1}번째부터 어긋남`,
+        rule: '정답 순서와 일치해야 함',
       })
       break
     }
@@ -330,6 +345,7 @@ export function gradeLocal(
           label: '입력값',
           status: 'fail',
           detail: `${missing.length}개 비어 있음`,
+          rule: '모든 입력값을 채워야 함',
           evidence: missing.map((m) => m.label),
         })
         break
@@ -343,6 +359,7 @@ export function gradeLocal(
           label: '입력 범위',
           status: 'fail',
           detail: '범위를 벗어남',
+          rule: '입력값이 각 범위 안에 있어야 함',
           evidence: outOfRange.map(
             (i) => `${i.label}: ${i.min}~${i.max}`
           ),
@@ -359,6 +376,7 @@ export function gradeLocal(
           label: '계산',
           status: 'pending',
           detail: `계산값 ${computed}`,
+          rule: '목표값 근처여야 함',
         })
         break
       }
@@ -369,6 +387,7 @@ export function gradeLocal(
         label: '분량 추정',
         status: ok ? 'pass' : 'fail',
         detail: `${computed}화 (목표 ${answer.expected}화)`,
+        rule: `목표 ${answer.expected}화 근처(오차 ${Math.round(answer.tolerance * 100)}% 이내)`,
       })
       break
     }
@@ -384,6 +403,7 @@ export function gradeLocal(
           label: '개수',
           status: lines.length === cfg.count ? 'pass' : 'fail',
           detail: `${lines.length}개 / ${cfg.count}개`,
+          rule: `${cfg.count}개`,
           gating: true,
         })
       }
@@ -395,6 +415,7 @@ export function gradeLocal(
         label: '글자 수',
         status: bad.length === 0 ? 'pass' : 'fail',
         detail: `${lo}~${hi}자`,
+        rule: `${lo}~${hi}자`,
         evidence: bad,
       })
       if (cfg.distinctInitial) {
@@ -405,6 +426,7 @@ export function gradeLocal(
           label: '첫 글자 중복',
           status: dup.length === 0 ? 'pass' : 'fail',
           detail: dup.length === 0 ? '없음' : `${dup.length}건`,
+          rule: '첫 글자 중복 없어야 함',
           evidence: [...new Set(dup)],
         })
       }
@@ -425,6 +447,7 @@ export function gradeLocal(
           label: '쓰지 않을 말',
           status: hits.length === 0 ? 'pass' : 'fail',
           detail: hits.length === 0 ? '없음' : `${hits.length}개`,
+          rule: `쓰지 않음: ${cfg.forbidWords.join(', ')}`,
           evidence: hits,
           gating: true, // 감정어가 남아 있으면 AI를 부르지 않는다
         })
@@ -443,6 +466,7 @@ export function gradeLocal(
           label: '반드시 넣을 말',
           status: found.length > 0 ? 'pass' : 'fail',
           detail: found.length > 0 ? found.join(', ') : '없음',
+          rule: cfg.requireAny.join(', '),
           gating: true,
         })
       }
@@ -464,6 +488,7 @@ export function pendingMorphChecks(cfg: ScoringConfig): Check[] {
       label: '부사',
       status: 'pending',
       detail: '형태소 분석 대기',
+      rule: `${cfg.maxAdverbs}개 이하`,
     })
   }
   if (cfg.maxModifiers !== undefined) {
@@ -472,6 +497,7 @@ export function pendingMorphChecks(cfg: ScoringConfig): Check[] {
       label: '꾸미는 말',
       status: 'pending',
       detail: '형태소 분석 대기',
+      rule: `${cfg.maxModifiers}개 이하`,
     })
   }
   if (cfg.minVerbs !== undefined) {
@@ -480,6 +506,7 @@ export function pendingMorphChecks(cfg: ScoringConfig): Check[] {
       label: '움직이는 말',
       status: 'pending',
       detail: '형태소 분석 대기',
+      rule: `${cfg.minVerbs}개 이상`,
     })
   }
   if (cfg.maxProperNouns !== undefined) {
@@ -488,6 +515,7 @@ export function pendingMorphChecks(cfg: ScoringConfig): Check[] {
       label: '이름 있는 것',
       status: 'pending',
       detail: '형태소 분석 대기',
+      rule: `${cfg.maxProperNouns}개 이하`,
     })
   }
   if (cfg.maxRepeat !== undefined) {
@@ -496,6 +524,7 @@ export function pendingMorphChecks(cfg: ScoringConfig): Check[] {
       label: '반복 어휘',
       status: 'pending',
       detail: '형태소 분석 대기',
+      rule: `같은 낱말 ${cfg.maxRepeat}회까지`,
     })
   }
   if (cfg.forbidLemmas?.length) {
@@ -504,6 +533,7 @@ export function pendingMorphChecks(cfg: ScoringConfig): Check[] {
       label: '쓰지 않을 말',
       status: 'pending',
       detail: '형태소 분석 대기',
+      rule: `쓰지 않음: ${cfg.forbidLemmas.map((s) => s.split('/')[0]).join(', ')}`,
     })
   }
   return out

@@ -80,11 +80,18 @@ export function mergeForbidChecks(checks: Check[]): Check[] {
       : words.status === 'pending' || lemmas.status === 'pending'
         ? 'pending'
         : 'pass'
+  // words.rule과 lemmas.rule은 둘 다 "쓰지 않음: A, B" 꼴이다. 접두를 떼고
+  // 낱말 목록만 합친다 — 표제어 쪽이 어간 쪽 낱말을 그대로 되풀이하기도 한다.
+  const stripRulePrefix = (r: string) => r.replace(/^쓰지 않음: /, '')
+  const ruleWords = [
+    ...new Set([...stripRulePrefix(words.rule).split(', '), ...stripRulePrefix(lemmas.rule).split(', ')]),
+  ]
   const merged: Check = {
     key: 'forbidWords',
     label: '쓰지 않을 말',
     status,
     detail: evidence.length === 0 ? '없음' : `${evidence.length}개`,
+    rule: `쓰지 않음: ${ruleWords.join(', ')}`,
     evidence,
     gating: !!(words.gating || lemmas.gating),
   }

@@ -1,8 +1,8 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { countChars, mergeForbidChecks } from '@/lib/scoring'
-import type { Check, CheckStatus, CountInput, ProblemType } from '@/lib/scoring/types'
+import { countChars, mergeForbidChecks, gradeLocal, pendingMorphChecks } from '@/lib/scoring'
+import type { Check, CheckStatus, CountInput, ProblemType, ScoringConfig } from '@/lib/scoring/types'
 import RuleGauge from './RuleGauge'
 import CheckRow from './CheckRow'
 import Editor from './Editor'
@@ -27,6 +27,9 @@ interface PublicProblem {
   // lg 이상 + 텍스트 입력형 + 채점 키 4개 이상일 때만 true. page.tsx가 잰다 —
   // scoring_config 전체가 클라이언트로 안 넘어오니 개수는 서버에서만 셀 수 있다.
   twoColumnEligible: boolean
+  // twoColumnEligible일 때만 원본 cfg가 들어온다(그 밖엔 null) — 오른쪽 칸의
+  // 제출 전 기준 목록을 gradeLocal로 직접 만들 때만 필요하다.
+  scoringConfig: ScoringConfig | null
 }
 
 interface GradeResponse {
@@ -79,6 +82,28 @@ export default function TrainClient({ problem }: { problem: PublicProblem }) {
     () => (result ? mergeForbidChecks(result.checks) : undefined),
     [result]
   )
+
+  // 제출 전 기준 목록. gradeLocal('', cfg) + pendingMorphChecks(cfg)가 유일한
+  // 출처다 — cfg를 사람 말로 옮기는 표를 따로 짜지 않는다. 답안이 빈 문자열
+  // 이라 status는 전부 'fail'로 나오지만 여기서는 label·rule만 쓴다.
+  //
+  // 제출 후 combine()도 같은 두 함수(gradeLocal + pendingMorphChecks 또는
+  // gradeMorph)를 같은 순서로 부르므로 항목 순서·개수가 그대로 유지된다 —
+  // forbidWords와 forbidLemmas를 둘 다 쓰는 문항이 생기면 mergeForbidChecks가
+  // 둘을 하나로 합쳐 이 순서가 깨질 수 있다. 지금 두 칸 문항 중에는 없다.
+  const criteriaChecks = useMemo(() => {
+    if (!problem.twoColumnEligible || !problem.scoringConfig) return []
+    const dummy = {
+      id: problem.id,
+      type: problem.type,
+      scoring_mode: 'auto' as const,
+      scoring_config: problem.scoringConfig,
+    }
+    return [
+      ...gradeLocal(dummy, { text: '' }, undefined),
+      ...pendingMorphChecks(problem.scoringConfig),
+    ]
+  }, [problem])
 
   const { first: instructionFirst, rest: instructionRest } = useMemo(
     () => splitInstruction(problem.instruction),
@@ -325,7 +350,30 @@ export default function TrainClient({ problem }: { problem: PublicProblem }) {
     </>
   )
 
-  const rightContent = result && (
+  // 제출 전: 기준만 보여준다. 통과·실패 표시(○ ×)는 없다 — 판정이 아니다.
+  // "무엇을 봅니다" 정도로만 제목을 단다. "아직 미달"처럼 판정처럼 들리면
+  // 안 된다. label은 CheckRow와 같은 자리에, rule은 detail이 있던 자리에
+  // 놓아서 제출 순간 아이콘·detail만 채워지고 재배치가 없게 한다.
+  const criteriaContent = criteriaChecks.length > 0 && (
+    <div className="space-y-2 pt-4" style={{ borderTop: '1px solid var(--rule)' }}>
+      <p style={{ fontWeight: 700 }}>무엇을 봅니다</p>
+      <div>
+        {criteriaChecks.map((c) => (
+          <div key={c.key} style={{ borderBottom: '1px solid var(--rule)' }}>
+            <div className="flex w-full items-center gap-3 py-2">
+              <span className="font-mono" style={{ width: '1em' }} aria-hidden />
+              <span className="flex-1">{c.label}</span>
+              <span className="font-mono text-sm" style={{ color: 'var(--ink-soft)' }}>
+                {c.rule}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+
+  const rightContent = result ? (
     <div className="space-y-2 pt-4" style={{ borderTop: '1px solid var(--rule)' }}>
       <p style={{ color: STATUS_COLOR[result.status], fontWeight: 700 }}>
         {STATUS_LABEL[result.status]}
@@ -357,6 +405,8 @@ export default function TrainClient({ problem }: { problem: PublicProblem }) {
         ))}
       </div>
     </div>
+  ) : (
+    criteriaContent
   )
 
   // 두 칸(lg 이상 · convert/remove · 채점 키 4개 이상)일 때만 좌우로 나눈다.

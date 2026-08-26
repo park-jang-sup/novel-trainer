@@ -20,6 +20,7 @@ export function gradeMorph(cfg: ScoringConfig, m: MorphResult): Check[] {
       label: '부사',
       status: m.adverbs.length <= cfg.maxAdverbs ? 'pass' : 'fail',
       detail: `${m.adverbs.length}개 / ${cfg.maxAdverbs}개 이하`,
+      rule: `${cfg.maxAdverbs}개 이하`,
       evidence: m.adverbs,
     })
   }
@@ -30,6 +31,7 @@ export function gradeMorph(cfg: ScoringConfig, m: MorphResult): Check[] {
       label: '꾸미는 말',
       status: m.modifiers.length <= cfg.maxModifiers ? 'pass' : 'fail',
       detail: `${m.modifiers.length}개 / ${cfg.maxModifiers}개 이하`,
+      rule: `${cfg.maxModifiers}개 이하`,
       evidence: m.modifiers,
     })
   }
@@ -40,6 +42,7 @@ export function gradeMorph(cfg: ScoringConfig, m: MorphResult): Check[] {
       label: '움직이는 말',
       status: m.verbs.length >= cfg.minVerbs ? 'pass' : 'fail',
       detail: `${m.verbs.length}개 / ${cfg.minVerbs}개 이상`,
+      rule: `${cfg.minVerbs}개 이상`,
       evidence: m.verbs,
     })
   }
@@ -50,6 +53,7 @@ export function gradeMorph(cfg: ScoringConfig, m: MorphResult): Check[] {
       label: '이름 있는 것',
       status: m.propers.length <= cfg.maxProperNouns ? 'pass' : 'fail',
       detail: `${m.propers.length}개 / ${cfg.maxProperNouns}개 이하`,
+      rule: `${cfg.maxProperNouns}개 이하`,
       evidence: m.propers,
     })
   }
@@ -63,6 +67,7 @@ export function gradeMorph(cfg: ScoringConfig, m: MorphResult): Check[] {
       label: '반복 어휘',
       status: over.length === 0 ? 'pass' : 'fail',
       detail: over.length === 0 ? '없음' : `${over.length}건`,
+      rule: `같은 낱말 ${limit}회까지`,
       evidence: over.map((r) => `${r.word} ${r.count}회`),
     })
   }
@@ -96,6 +101,7 @@ export function gradeMorph(cfg: ScoringConfig, m: MorphResult): Check[] {
       label: '쓰지 않을 말',
       status: hits.length === 0 ? 'pass' : 'fail',
       detail: hits.length === 0 ? '없음' : `${hits.length}개`,
+      rule: `쓰지 않음: ${cfg.forbidLemmas.map((s) => s.split('/')[0]).join(', ')}`,
       evidence: hits,
       gating: true,
     })

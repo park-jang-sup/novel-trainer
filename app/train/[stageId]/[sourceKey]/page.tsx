@@ -59,6 +59,11 @@ export default async function TrainProblemPage(
   const isTextInputType = problem.type === 'convert' || problem.type === 'remove'
   const twoColumnEligible = isTextInputType && scoringKeyCount >= 4
 
+  // 두 칸일 때만 원본 cfg를 그대로 넘긴다 — 오른쪽 칸이 gradeLocal(빈 문자열,
+  // cfg)로 제출 전 기준 목록을 직접 만든다(지시서 5). 한 칸 문항은 지금까지처럼
+  // publicConfig로 걸러진 값만 받는다.
+  const scoringConfig = twoColumnEligible ? cfg : null
+
   return (
     <>
       <div className={`mx-auto px-6 pt-6 ${twoColumnEligible ? 'max-w-5xl' : 'max-w-2xl'}`}>
@@ -75,6 +80,7 @@ export default async function TrainProblemPage(
           choices: problem.choices ?? null,
           publicConfig,
           twoColumnEligible,
+          scoringConfig,
         }}
       />
     </>
