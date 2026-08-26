@@ -59,11 +59,54 @@ const TEXT_TYPES: ProblemType[] = ['remove', 'convert', 'continue']
 // app/train/[stageId]/page.tsx의 firstSentence와 비슷하지만 그것은
 // 목록 라벨용이라 40자에서 자르고 구두점을 뗀다. 여기서는 자르지도
 // 떼지도 않는다 — 지시문 전체를 보여줘야 하므로 따로 둔다.
-function splitInstruction(instruction: string): { first: string; rest: string } {
+//
+// rest 안에 두 칸 들여쓴 줄 덩어리가 있으면 example로, 그 바로 위 마지막
+// 비어있지 않은 줄을 caption으로 뗀다(8단계의 "이렇게 됩니다." + 예시
+// 다섯 줄). 8단계를 이름으로 지목하지 않고 들여쓰기로만 판단한다 —
+// 9·10단계도 같은 꼴을 쓸 것이다. 들여쓴 줄이 없으면(지금 61문항)
+// example·caption은 빈 문자열이고 rest는 예전과 완전히 같다.
+function splitInstruction(instruction: string): {
+  first: string
+  caption: string
+  example: string
+  rest: string
+} {
   const m = instruction.match(/[^.?!]*[.?!]/)
   const first = (m ? m[0] : instruction).trim()
-  const rest = (m ? instruction.slice(m[0].length) : '').trim()
-  return { first, rest }
+  const afterFirst = (m ? instruction.slice(m[0].length) : '').trim()
+
+  const lines = afterFirst.split('\n')
+  let exStart = -1
+  let exEnd = -1
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].startsWith('  ')) {
+      if (exStart === -1) exStart = i
+      exEnd = i
+    } else if (exStart !== -1) {
+      break
+    }
+  }
+
+  if (exStart === -1) {
+    return { first, caption: '', example: '', rest: afterFirst }
+  }
+
+  const example = lines
+    .slice(exStart, exEnd + 1)
+    .map((l) => l.slice(2))
+    .join('\n')
+
+  // example 바로 앞의 마지막 비어있지 않은 줄이 caption이다.
+  let capIdx = exStart - 1
+  while (capIdx >= 0 && lines[capIdx].trim() === '') capIdx--
+  const caption = capIdx >= 0 ? lines[capIdx].trim() : ''
+
+  const otherLines = [...lines.slice(0, capIdx >= 0 ? capIdx : exStart), ...lines.slice(exEnd + 1)]
+  while (otherLines.length && otherLines[0].trim() === '') otherLines.shift()
+  while (otherLines.length && otherLines[otherLines.length - 1].trim() === '') otherLines.pop()
+  const rest = otherLines.join('\n').trim()
+
+  return { first, caption, example, rest }
 }
 
 export default function TrainClient({ problem }: { problem: PublicProblem }) {
@@ -105,10 +148,32 @@ export default function TrainClient({ problem }: { problem: PublicProblem }) {
     ]
   }, [problem])
 
-  const { first: instructionFirst, rest: instructionRest } = useMemo(
-    () => splitInstruction(problem.instruction),
-    [problem.instruction]
-  )
+  const {
+    first: instructionFirst,
+    caption: instructionCaption,
+    example: instructionExample,
+    rest: instructionRest,
+  } = useMemo(() => splitInstruction(problem.instruction), [problem.instruction])
+
+  // 두 칸: 왼쪽엔 rest만(caption·example은 오른쪽 exampleContent가 맡는다).
+  // 한 칸: 오른쪽이 없으므로 caption·example을 rest 앞에 다시 이어 붙여
+  // 지금과 같은 한 덩어리로 보여준다 — example엔 들여쓰기를 되살린다.
+  // 지금 caption·example이 있는 문항(8단계)은 전부 twoColumnEligible이라
+  // 이 분기는 아직 실제로 안 타지만, 언젠가 안 그런 문항이 생겨도
+  // 화면이 지금 꼴을 유지하게 한다.
+  const displayedInstructionRest = problem.twoColumnEligible
+    ? instructionRest
+    : [
+        instructionCaption,
+        instructionExample &&
+          instructionExample
+            .split('\n')
+            .map((l) => `  ${l}`)
+            .join('\n'),
+        instructionRest,
+      ]
+        .filter(Boolean)
+        .join('\n\n')
 
   const isTextType = TEXT_TYPES.includes(problem.type)
   const passageLabel = problem.type === 'coinage' || problem.type === 'count' ? '힌트' : '원문'
@@ -176,12 +241,12 @@ export default function TrainClient({ problem }: { problem: PublicProblem }) {
         >
           {instructionFirst}
         </h1>
-        {instructionRest !== '' && (
+        {displayedInstructionRest !== '' && (
           // 지시문에 개행이 있다(8단계 예시 다섯 줄). pre-wrap이 없으면 HTML이
           // 개행을 공백으로 접어 예시가 본문에 녹는다 — 화면에서 실제로 그랬다.
           // 바로 아래 지문 상자와 같은 처리다.
           <p className="whitespace-pre-wrap text-sm leading-relaxed" style={{ color: 'var(--ink-soft)' }}>
-            {instructionRest}
+            {displayedInstructionRest}
           </p>
         )}
       </div>
@@ -353,6 +418,28 @@ export default function TrainClient({ problem }: { problem: PublicProblem }) {
     </>
   )
 
+  // 지시문의 예시. 두 칸일 때만 오른쪽으로 옮긴다 — 사람이 화면에서
+  // "예시인지 문제인지 헷갈린다"고 했다(예시 다섯 줄과 원문 상자가 같은
+  // 열에 세로로 쌓여 있었다). caption을 "무엇을 봅니다"와 같은 자리(제목)
+  // 에 두고, 안쪽은 지문 상자와 같은 처리(pre-wrap · 패널 배경 · 테두리)를
+  // 쓴다. example이 빈 문자열이면(지금 61문항) 아예 만들지 않는다.
+  const exampleContent = instructionExample !== '' && (
+    <div className="space-y-2 pt-4" style={{ borderTop: '1px solid var(--rule)' }}>
+      {instructionCaption !== '' && <p style={{ fontWeight: 700 }}>{instructionCaption}</p>}
+      <div
+        className="whitespace-pre-wrap p-4 text-sm leading-relaxed"
+        style={{
+          fontFamily: 'var(--font-display)',
+          background: 'var(--panel)',
+          border: '1px solid var(--rule)',
+          borderRadius: 4,
+        }}
+      >
+        {instructionExample}
+      </div>
+    </div>
+  )
+
   // 제출 전: 기준만 보여준다. 통과·실패 표시(○ ×)는 없다 — 판정이 아니다.
   // "무엇을 봅니다" 정도로만 제목을 단다. "아직 미달"처럼 판정처럼 들리면
   // 안 된다. label은 CheckRow와 같은 자리에, rule은 detail이 있던 자리에
@@ -376,40 +463,50 @@ export default function TrainClient({ problem }: { problem: PublicProblem }) {
     </div>
   )
 
-  const rightContent = result ? (
-    <div className="space-y-2 pt-4" style={{ borderTop: '1px solid var(--rule)' }}>
-      <p style={{ color: STATUS_COLOR[result.status], fontWeight: 700 }}>
-        {STATUS_LABEL[result.status]}
-      </p>
-      {/* morphAvailable이 아니라 pending 유무로 띄운다. 형태소 서버가 없는
-          동안 morph는 항상 null이라 morphAvailable만 보면 이 문구가 모든
-          문항에 뜬다 — 선택형 · 순서형, 7단계 개행처럼 형태소 검사가 하나도
-          없어 서버 없이도 판정이 끝나는 문항까지 "아직 덜 봤다"고 말하게 된다.
-          gradeMorph와 pendingMorphChecks가 만드는 키 집합은 maxAdverbs ·
-          maxModifiers · minVerbs · maxProperNouns · maxRepeat · forbidLemmas
-          6개로 정확히 같으므로, pending이 있다는 것이 곧 형태소 검사가 있다는
-          뜻이다. 한쪽에 키를 더하면 다른 쪽에도 더해야 이 조건이 유지된다. */}
-      {result.checks.some((c) => c.status === 'pending') && (
-        <p className="text-sm" style={{ color: 'var(--ink-soft)' }}>
-          일부 검사는 문장 분석 서버가 연결되면 표시됩니다.
-        </p>
+  // 예시가 위, 목록·판정이 아래다. 제출해도 예시는 그 자리에 그대로 있고
+  // 아래 블록만 "무엇을 봅니다" → "통과"로 바뀐다 — 이 순서에서만 제출
+  // 전후 재배치가 안 생긴다. 예시를 아래에 두면 목록이 판정으로 바뀔 때
+  // 높이가 달라져 예시가 위아래로 움직인다. 한 칸에는 오른쪽이 없으므로
+  // exampleContent를 twoColumnEligible일 때만 끼워 넣는다.
+  const rightContent = (
+    <>
+      {problem.twoColumnEligible && exampleContent}
+      {result ? (
+        <div className="space-y-2 pt-4" style={{ borderTop: '1px solid var(--rule)' }}>
+          <p style={{ color: STATUS_COLOR[result.status], fontWeight: 700 }}>
+            {STATUS_LABEL[result.status]}
+          </p>
+          {/* morphAvailable이 아니라 pending 유무로 띄운다. 형태소 서버가 없는
+              동안 morph는 항상 null이라 morphAvailable만 보면 이 문구가 모든
+              문항에 뜬다 — 선택형 · 순서형, 7단계 개행처럼 형태소 검사가 하나도
+              없어 서버 없이도 판정이 끝나는 문항까지 "아직 덜 봤다"고 말하게 된다.
+              gradeMorph와 pendingMorphChecks가 만드는 키 집합은 maxAdverbs ·
+              maxModifiers · minVerbs · maxProperNouns · maxRepeat · forbidLemmas
+              6개로 정확히 같으므로, pending이 있다는 것이 곧 형태소 검사가 있다는
+              뜻이다. 한쪽에 키를 더하면 다른 쪽에도 더해야 이 조건이 유지된다. */}
+          {result.checks.some((c) => c.status === 'pending') && (
+            <p className="text-sm" style={{ color: 'var(--ink-soft)' }}>
+              일부 검사는 문장 분석 서버가 연결되면 표시됩니다.
+            </p>
+          )}
+          {/* needsAi 는 "규칙은 끝났고 AI 차례"라는 뜻이다. AI 심사가 아직 없으므로
+              이 문항의 판정은 끝나지 않았다. 통과로만 표시하면 학습자가 자기 답안이
+              좋다고 배운다. AI 심사가 붙으면 이 안내를 실제 결과로 갈아끼운다. */}
+          {result.needsAi && (
+            <p className="text-sm" style={{ color: 'var(--ink-soft)' }}>
+              규칙 검사는 통과했습니다. 내용 심사는 아직 준비 중입니다.
+            </p>
+          )}
+          <div>
+            {displayChecks?.map((c) => (
+              <CheckRow key={c.key} check={c} />
+            ))}
+          </div>
+        </div>
+      ) : (
+        criteriaContent
       )}
-      {/* needsAi 는 "규칙은 끝났고 AI 차례"라는 뜻이다. AI 심사가 아직 없으므로
-          이 문항의 판정은 끝나지 않았다. 통과로만 표시하면 학습자가 자기 답안이
-          좋다고 배운다. AI 심사가 붙으면 이 안내를 실제 결과로 갈아끼운다. */}
-      {result.needsAi && (
-        <p className="text-sm" style={{ color: 'var(--ink-soft)' }}>
-          규칙 검사는 통과했습니다. 내용 심사는 아직 준비 중입니다.
-        </p>
-      )}
-      <div>
-        {displayChecks?.map((c) => (
-          <CheckRow key={c.key} check={c} />
-        ))}
-      </div>
-    </div>
-  ) : (
-    criteriaContent
+    </>
   )
 
   // 두 칸(lg 이상 · convert/remove · 채점 키 4개 이상)일 때만 좌우로 나눈다.
