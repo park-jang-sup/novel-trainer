@@ -31,7 +31,8 @@ import {
   MONOLOGUE_SWAP,
   MONOLOGUE_NARRATION_FILLER,
   MONOLOGUE_LONG,
-  MONOLOGUE_EMPHASIS,
+  MONOLOGUE_REAL,
+  MONOLOGUE_REAL_SECOND,
   dialogueLinesOf,
   validateMonologueItem,
   type MonologueItem,
@@ -701,35 +702,53 @@ const monoLines = (t: string) => t.split('\n').map((l) => l.trim()).filter(Boole
 const monoNoSpace = (t: string) => t.replace(/\s/g, '')
 
 /**
- * 오탐 감시용 좋은 답안 6종. 전부 pass여야 한다.
+ * 오탐 감시용 좋은 답안 16종. 전부 pass여야 한다.
  *
- * 뒤의 +반응서술 3종이 핵심이다. 좋은 답안이 서술을 한 줄도 안 만들면
+ * +반응서술판이 핵심이다. 좋은 답안이 서술을 한 줄도 안 만들면
  * maxNarrationLines의 오탐을 잴 수 없다 — 규칙을 바꾸면 좋은 답안 집합도
  * 바뀌는데, 생성기가 그 변화를 안 만들면 '오탐 0'은 검증이 아니라 미검증이다.
+ *
+ * 독백 1개: 짧은(지금 것) · 실제(46자쯤, 화면에서 사용자가 실제로 쓴 길이라
+ * 135 상한에 걸렸었다) · 긴(78자쯤, 감정선을 더 살린 경우) 셋을 자리 2곳 ×
+ * 반응서술 유무로 돈다.
+ *
+ * 독백 2개(둘 끼움): minMonologues는 1 이상이라 둘도 통과해야 한다. 짧은
+ * 둘 · 실제 둘까지만 넣는다. 둘 다 긴(78자) 독백을 쓰면 233~249자로 200
+ * 상한을 넘는다(MONOLOGUE_LONG 주석 참조) — [SE-02] 957은 "한 번씩"이라고
+ * 말한다. minMonologues는 하한이지 둘을 권장하는 것이 아니므로 그 조합은
+ * 표본에 넣지 않는다. 화면에서 그렇게 쓰는 사람이 나오면 그때 다시 본다.
  */
 function monologueCleanCases(item: MonologueItem): { key: string; text: string }[] {
   const [l0, l1, l2, l3] = monoLines(item.passage)
-  // 세 종류: 짧은 독백(지금 것) · 긴 독백(80자쯤, 감정선을 살린 경우) ·
-  // 강조 반복(같은 말 서너 번). 짧은 독백만 표본에 있으면 상한이 좁아도
-  // 오탐 0이 나온다 — 화면에서 실제로 그런 일이 있었다(46자 독백이 135
-  // 상한에 걸림).
-  const variants: { key: string; m: string }[] = [
+  const out: { key: string; text: string }[] = []
+
+  const singleVariants: { key: string; m: string }[] = [
     { key: '짧은독백', m: item.monologues[0] },
+    { key: '실제독백', m: MONOLOGUE_REAL },
     { key: '긴독백', m: MONOLOGUE_LONG },
-    { key: '강조반복', m: MONOLOGUE_EMPHASIS },
   ]
   const positions: { key: string; lines: (m: string) => string[] }[] = [
     { key: '2번자리', lines: (m) => [l0, l1, m, l2, l3] },
     { key: '3번자리', lines: (m) => [l0, l1, l2, m, l3] },
   ]
-  const out: { key: string; text: string }[] = []
-  for (const v of variants) {
+  for (const v of singleVariants) {
     for (const p of positions) {
       const lines = p.lines(v.m)
       out.push({ key: `${v.key}/${p.key}`, text: lines.join('\n') })
       out.push({ key: `${v.key}/${p.key}+반응서술`, text: [...lines, item.reaction].join('\n') })
     }
   }
+
+  const doubleVariants: { key: string; a: string; b: string }[] = [
+    { key: '짧은독백둘', a: item.monologues[0], b: item.monologues[1] },
+    { key: '실제독백둘', a: MONOLOGUE_REAL, b: MONOLOGUE_REAL_SECOND },
+  ]
+  for (const v of doubleVariants) {
+    const lines = [l0, l1, v.a, l2, v.b, l3]
+    out.push({ key: v.key, text: lines.join('\n') })
+    out.push({ key: `${v.key}+반응서술`, text: [...lines, item.reaction].join('\n') })
+  }
+
   return out
 }
 
@@ -860,9 +879,9 @@ console.log('\n[8단계 monologue: requireAny 의존 감시]')
 
 console.log('\n[8단계 monologue: maxLineWordRepeat 감도 감시]')
 {
-  // 1) 6을 3으로 낮춰도 좋은 답안(96건)은 안 걸려야 한다 — 지금 표본의
-  //    최대 반복이 3(강조 반복 변형)이라 3이 경계값이다. 여기서 걸리면
-  //    표본이 바뀐 것이다.
+  // 1) 6을 3으로 낮춰도 좋은 답안은 안 걸려야 한다 — 지금 표본(짧은·실제·긴
+  //    독백, 1개·2개)의 줄 안 최대 반복은 1이라 3까지는 여유가 크다.
+  //    여기서 걸리면 표본이 바뀐 것이다.
   let brokenByThree = 0
   const brokenKeys: string[] = []
   for (const item of MONOLOGUE_ITEMS) {
