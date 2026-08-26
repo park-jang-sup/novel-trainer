@@ -35,6 +35,8 @@ import {
   MONOLOGUE_REAL_SECOND,
   MONOLOGUE_EMPHASIS,
   MONOLOGUE_SIGH,
+  MONOLOGUE_INSTRUCTION,
+  MONOLOGUE_INSTRUCTION_EXAMPLE,
   dialogueLinesOf,
   validateMonologueItem,
   type MonologueItem,
@@ -765,7 +767,11 @@ function monologueCleanCases(item: MonologueItem): { key: string; text: string }
   return out
 }
 
-/** 뚫기 19종. 지문에서 생성하므로 지문을 고치면 함께 따라온다. 전부 fail이어야 한다. */
+/**
+ * 뚫기 20종. 대부분 지문에서 생성하므로 지문을 고치면 함께 따라온다.
+ * '내용 통째 교체'·'지시문 예시 그대로' 둘은 지문과 무관한 것이 정의라
+ * 예외다 — 상수 하나를 여덟이 함께 쓴다. 전부 fail이어야 한다.
+ */
 function monologueBypassCases(item: MonologueItem): { key: string; text: string }[] {
   const ls = monoLines(item.passage)
   const [l0, l1, l2, l3] = ls
@@ -789,6 +795,10 @@ function monologueBypassCases(item: MonologueItem): { key: string; text: string 
     { key: '같은 독백 되풀이', text: [l0, l1, m, m, l2, m, l3].join('\n') },
     { key: '개행만 함', text: (monoNoSpace(item.passage).match(/.{1,16}/g) ?? []).join('\n') },
     { key: '내용 통째 교체', text: MONOLOGUE_SWAP },
+    // 지문에서 생성할 수 없다 — 예시가 지문과 무관한 것이 이 뚫기가
+    // 성립하는 조건이다. 예시를 제 지문으로 되돌리면 이 뚫기는 모범 답안이
+    // 되어 아홉 검사를 전부 통과한다(미검출 8/8, 실측값).
+    { key: '지시문 예시 그대로', text: MONOLOGUE_INSTRUCTION_EXAMPLE },
     {
       key: '서술로 채움',
       text: [l0, MONOLOGUE_NARRATION_FILLER, l1, '부인은 말이 없었다.', m, '바람이 마당을 지났다.', l2, l3].join(
@@ -869,10 +879,11 @@ console.log('\n[8단계 monologue: 밴드 의존 감시]')
 
 console.log('\n[8단계 monologue: requireAny 의존 감시]')
 {
-  // 뚫기 14종은 전부 지문에서 생성되므로 keyword가 늘 살아 있다 — requireAny는
-  // 그중 아무것도 잡지 않는다. requireAny를 빼면 정확히 8건(내용 통째 교체)이
-  // 새야 한다. 0이면 requireAny가 합쳐지지 않은 것이고, 8보다 크면 표본이
-  // 바뀐 것이다.
+  // 뚫기 20종 중 열여덟은 지문에서 생성되므로 keyword가 늘 살아 있다 —
+  // requireAny는 그중 아무것도 잡지 않는다. 지문과 무관한 것은 이제
+  // 둘이다('내용 통째 교체'·'지시문 예시 그대로'). requireAny를 빼면
+  // 정확히 16건(둘 × 8문항)이 새야 한다. 8이면 지시문 예시 뚫기가
+  // requireAny에 안 걸리고 있다는 뜻이고, 16보다 크면 표본이 바뀐 것이다.
   let leaked = 0
   const leakedKeys: string[] = []
   for (const item of MONOLOGUE_ITEMS) {
@@ -891,8 +902,8 @@ console.log('\n[8단계 monologue: requireAny 의존 감시]')
     }
   }
   t(
-    'requireAny를 빼면 정확히 8건(내용 통째 교체)이 샘',
-    leaked === 8,
+    'requireAny를 빼면 정확히 16건(내용 통째 교체 · 지시문 예시)이 샘',
+    leaked === 16,
     `실제=${leaked} ${JSON.stringify(leakedKeys)}`
   )
 }
@@ -1193,6 +1204,7 @@ console.log('\n[8단계 monologue: 설정 일치 · 키 가드]')
   interface DumpProblem {
     skill_key: string
     source_key: string
+    instruction: string
     scoring_config: Record<string, unknown>
   }
 
@@ -1240,15 +1252,37 @@ console.log('\n[8단계 monologue: 설정 일치 · 키 가드]')
   if (guardSkipped.length > 0) {
     console.log(`  건너뜀 (키 가드: 덤프에 dialogue_ratio 문항 없음): ${guardSkipped.join(', ')}`)
   }
+
+  // 지시문 일치 가드 8건: 키 가드와 같은 모양이다 — 그 항목이 덤프에
+  // 없으면 그 항목만 건너뛴다. 이 가드가 없으면 예시를 제 지문으로
+  // 되돌리는 변경이 덤프에서 조용히 일어나고, '지시문 예시 그대로' 뚫기는
+  // 상수(MONOLOGUE_INSTRUCTION_EXAMPLE) 쪽만 보고 있어서 계속 통과라고
+  // 말한다 — 감시가 실제 배포물을 안 보는 상태가 된다.
+  const instructionGuardSkipped: string[] = []
+  for (const item of MONOLOGUE_ITEMS) {
+    const dp = dialogueDump.find((d) => d.source_key === item.sourceKey)
+    if (!dp) {
+      instructionGuardSkipped.push(item.sourceKey)
+      continue
+    }
+    t(
+      `'${item.sourceKey}' 덤프 instruction이 MONOLOGUE_INSTRUCTION과 같음`,
+      dp.instruction === MONOLOGUE_INSTRUCTION,
+      `덤프=${JSON.stringify(dp.instruction)}`
+    )
+  }
+  if (instructionGuardSkipped.length > 0) {
+    console.log(`  건너뜀 (지시문 일치: 덤프에 dialogue_ratio 문항 없음): ${instructionGuardSkipped.join(', ')}`)
+  }
 }
 
 // ── rule 누락 감시 — 이 지시서의 핵심 장치 ────────────────────────────
 //
 // 지금은 이 감시가 없으면 다음에 검사를 추가하는 사람이 rule을 빈
 // 문자열로 채우고 넘어가도 타입은 통과하고 화면에서는 빈 줄로 보인다.
-// 아무도 안 본다. 덤프 62문항 전부에 gradeLocal을 두 번(빈 문자열 한 번,
+// 아무도 안 본다. 덤프 69문항 전부에 gradeLocal을 두 번(빈 문자열 한 번,
 // 지문으로 한 번) 돌리고, pendingMorphChecks도 함께 본다.
-console.log('\n[rule 누락 감시: 덤프 62문항 전부]')
+console.log('\n[rule 누락 감시: 덤프 69문항 전부]')
 {
   interface DumpProblem {
     source_key: string

@@ -96,8 +96,8 @@ on conflict (skill_key) do update set
   is_free = excluded.is_free;
 
 insert into stages (track, order_no, title, skill_key, summary, is_free)
-values ('sentence', 8, '대사와 지문', 'dialogue_ratio',
-        '대사가 설명을 떠맡지 않게 한다', true)
+values ('sentence', 8, '대사와 독백', 'dialogue_ratio',
+        '대화 사이에 속마음을 끼워 넣는다', true)
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
@@ -877,19 +877,189 @@ select
   2, 'rh-siblings-tree'
 where not exists (select 1 from problems p where p.source_key = 'rh-siblings-tree');
 
+-- mo-axe-pond (order_no 8, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'dialogue_ratio'),
+  'convert', 'auto', '대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.
+
+  사공이 노를 놓고 물끄러미 강 건너를 보았다.
+  "오늘은 배를 안 띄우려 하오."
+  ''이 물살이면 반도 못 가서 뒤집힌다.''
+  "삯은 이미 받으셨잖습니까."
+  "받은 것은 내일 돌려드리리다."
+
+원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다. 나머지 기준은 오른쪽에 있습니다.',
+  '산신이 물속에서 금도끼를 건져 올려 나무꾼 앞에 놓았다.
+"네가 빠뜨린 것이 이것이냐."
+"아닙니다. 제 것은 낡은 쇠도끼입니다."
+"그 말이 참이면 셋을 다 가져가거라."', null, '{"maxChars":200,"minChars":75,"requireAny":["쇠도끼"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
+  'folktale', 'fantasy', 'planned',
+  1, 'mo-axe-pond'
+where not exists (select 1 from problems p where p.source_key = 'mo-axe-pond');
+
 -- mo-heungbu-swallow (order_no 8, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'dialogue_ratio'),
-  'convert', 'auto', '아래 대사 사이에 인물의 속마음을 독백으로 끼워 넣으시오. 대사 세 줄은 그대로 두고, 첫 대사와 마지막 대사 사이 어딘가에 독백을 하나 넣습니다. 독백은 작은따옴표로 감싸시오. 한 글자짜리로 얼버무리지 말고 여덟 자 이상 씁니다. 같은 줄을 되풀이하지 마시오. 분량은 52~91자로 유지합니다. 덜어내는 훈련이 아닙니다. ''제비''는 반드시 남깁니다.',
-  '"처마 밑에 제비가 다리를 다치고 떨어졌소."
+  'convert', 'auto', '대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.
+
+  사공이 노를 놓고 물끄러미 강 건너를 보았다.
+  "오늘은 배를 안 띄우려 하오."
+  ''이 물살이면 반도 못 가서 뒤집힌다.''
+  "삯은 이미 받으셨잖습니까."
+  "받은 것은 내일 돌려드리리다."
+
+원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다. 나머지 기준은 오른쪽에 있습니다.',
+  '흥부가 마당으로 나서자 담장 아래 제비 한 마리가 떨어져 있었다.
+"다리가 부러졌소. 데려다 거둡시다."
 "아이들 먹일 것도 없어요."
-"그래도 매어서 보내기는 하겠소."', null, '{"minChars":52,"maxChars":91,"maxDuplicateLines":0,"minSpeeches":3,"minMonologues":1,"minMonologueChars":8,"requireMonologueBetween":true,"requireAny":["제비"]}'::jsonb,
+"그래도 눈앞에서 죽게 둘 수야 없지."', null, '{"maxChars":200,"minChars":75,"requireAny":["제비"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
   'folktale', 'fantasy', 'planned',
   1, 'mo-heungbu-swallow'
 where not exists (select 1 from problems p where p.source_key = 'mo-heungbu-swallow');
+
+-- mo-kongjwi-shoe (order_no 8, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'dialogue_ratio'),
+  'convert', 'auto', '대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.
+
+  사공이 노를 놓고 물끄러미 강 건너를 보았다.
+  "오늘은 배를 안 띄우려 하오."
+  ''이 물살이면 반도 못 가서 뒤집힌다.''
+  "삯은 이미 받으셨잖습니까."
+  "받은 것은 내일 돌려드리리다."
+
+원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다. 나머지 기준은 오른쪽에 있습니다.',
+  '원님이 뜰에 놓인 신 한 짝을 턱으로 가리켰다.
+"저것이 네 것이냐."
+"제 것이 맞습니다."
+"신어 보아라. 발이 맞지 않으면 도둑으로 다스린다."', null, '{"maxChars":200,"minChars":75,"requireAny":["도둑"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
+  'folktale', 'modern', 'impulsive',
+  1, 'mo-kongjwi-shoe'
+where not exists (select 1 from problems p where p.source_key = 'mo-kongjwi-shoe');
+
+-- mo-simcheong-rice (order_no 8, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'dialogue_ratio'),
+  'convert', 'auto', '대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.
+
+  사공이 노를 놓고 물끄러미 강 건너를 보았다.
+  "오늘은 배를 안 띄우려 하오."
+  ''이 물살이면 반도 못 가서 뒤집힌다.''
+  "삯은 이미 받으셨잖습니까."
+  "받은 것은 내일 돌려드리리다."
+
+원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다. 나머지 기준은 오른쪽에 있습니다.',
+  '심청이 아버지 앞에 무릎을 접고 앉았다.
+"공양미 삼백 석이면 눈을 뜨신다 합니다."
+"그 많은 쌀을 어디서 구한단 말이냐."
+"이미 마련해 두었으니 묻지 마십시오."', null, '{"maxChars":200,"minChars":75,"requireAny":["공양미"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
+  'folktale', 'modern', 'planned',
+  1, 'mo-simcheong-rice'
+where not exists (select 1 from problems p where p.source_key = 'mo-simcheong-rice');
+
+-- mo-goblin-club (order_no 8, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'dialogue_ratio'),
+  'convert', 'auto', '대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.
+
+  사공이 노를 놓고 물끄러미 강 건너를 보았다.
+  "오늘은 배를 안 띄우려 하오."
+  ''이 물살이면 반도 못 가서 뒤집힌다.''
+  "삯은 이미 받으셨잖습니까."
+  "받은 것은 내일 돌려드리리다."
+
+원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다. 나머지 기준은 오른쪽에 있습니다.',
+  '도깨비들이 방망이를 두드리다 말고 노인 쪽으로 고개를 돌렸다.
+"그 고운 노래가 어디서 나오느냐."
+"이 혹에서 나옵니다."
+"거짓이면 저 방망이로 다스리겠다."', null, '{"maxChars":200,"minChars":75,"requireAny":["방망이"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
+  'folktale', 'fantasy', 'impulsive',
+  2, 'mo-goblin-club'
+where not exists (select 1 from problems p where p.source_key = 'mo-goblin-club');
+
+-- mo-gyeonu-bridge (order_no 8, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'dialogue_ratio'),
+  'convert', 'auto', '대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.
+
+  사공이 노를 놓고 물끄러미 강 건너를 보았다.
+  "오늘은 배를 안 띄우려 하오."
+  ''이 물살이면 반도 못 가서 뒤집힌다.''
+  "삯은 이미 받으셨잖습니까."
+  "받은 것은 내일 돌려드리리다."
+
+원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다. 나머지 기준은 오른쪽에 있습니다.',
+  '까치들이 은하 위로 몰려들었으나 다리는 좀처럼 이어지지 않았다.
+"올해는 비가 늦게 그쳤습니다."
+"그러면 만날 날이 하루 줄어들겠군요."
+"줄어든 하루는 내년에 갚으면 되오."', null, '{"maxChars":200,"minChars":75,"requireAny":["까치"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
+  'folktale', 'romance', 'planned',
+  2, 'mo-gyeonu-bridge'
+where not exists (select 1 from problems p where p.source_key = 'mo-gyeonu-bridge');
+
+-- mo-rabbit-gate (order_no 8, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'dialogue_ratio'),
+  'convert', 'auto', '대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.
+
+  사공이 노를 놓고 물끄러미 강 건너를 보았다.
+  "오늘은 배를 안 띄우려 하오."
+  ''이 물살이면 반도 못 가서 뒤집힌다.''
+  "삯은 이미 받으셨잖습니까."
+  "받은 것은 내일 돌려드리리다."
+
+원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다. 나머지 기준은 오른쪽에 있습니다.',
+  '용왕이 옥좌에서 몸을 앞으로 기울였다.
+"네 간이 어디에 있느냐."
+"뭍에 두고 왔사옵니다."
+"용궁까지 온 놈의 혀를 어찌 믿으시렵니까."', null, '{"maxChars":200,"minChars":75,"requireAny":["용궁"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
+  'folktale', 'martial', 'planned',
+  2, 'mo-rabbit-gate'
+where not exists (select 1 from problems p where p.source_key = 'mo-rabbit-gate');
+
+-- mo-siblings-rope (order_no 8, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'dialogue_ratio'),
+  'convert', 'auto', '대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.
+
+  사공이 노를 놓고 물끄러미 강 건너를 보았다.
+  "오늘은 배를 안 띄우려 하오."
+  ''이 물살이면 반도 못 가서 뒤집힌다.''
+  "삯은 이미 받으셨잖습니까."
+  "받은 것은 내일 돌려드리리다."
+
+원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다. 나머지 기준은 오른쪽에 있습니다.',
+  '문 밖에서 발소리가 멎고 낮은 목소리가 들려왔다.
+"얘들아, 문을 열어라. 밖이 몹시 춥구나."
+"어머니 목소리가 아니야."
+"손을 들이밀어 보라고 해."', null, '{"maxChars":200,"minChars":75,"requireAny":["어머니"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
+  'folktale', 'fantasy', 'impulsive',
+  2, 'mo-siblings-rope'
+where not exists (select 1 from problems p where p.source_key = 'mo-siblings-rope');
 
 -- ch-village-approval (order_no 14, difficulty 1)
 insert into problems

@@ -56,10 +56,10 @@
     "skill_key": "rhythm"
   },
   {
-    "title": "대사와 지문",
+    "title": "대사와 독백",
     "track": "sentence",
     "is_free": true,
-    "summary": "대사가 설명을 떠맡지 않게 한다",
+    "summary": "대화 사이에 속마음을 끼워 넣는다",
     "order_no": 8,
     "skill_key": "dialogue_ratio"
   },
