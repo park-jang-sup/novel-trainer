@@ -166,9 +166,14 @@ end $$;
 -- select count(*) from problems
 --  where not (scoring_config ?| array['maxAdverbs','maxModifiers','minVerbs',
 --                                     'maxProperNouns','maxRepeat','forbidLemmas']);
--- → 23 이어야 한다
---   (choice 8 + order 3 + coinage 2 + count 2 + rhythm 8)
+-- → 31 이어야 한다
+--   (choice 8 + order 3 + coinage 2 + count 2 + convert 16)
+--   convert 16 = rhythm 8 + dialogue_ratio 8. 7단계가 들어올 때 23으로,
+--   8단계가 들어올 때 31로 두 번 밀렸는데 이 주석은 안 고쳐져 있었다.
 --
 -- 이 배열은 lib/scoring/morph.ts 의 gradeMorph 와 local.ts 의
 -- pendingMorphChecks 가 다루는 키와 같아야 한다. 한쪽에 키를 더하면
 -- 여기도 더해야 이 확인이 유지된다.
+--
+-- 이 수는 손으로 적은 것이라 단계가 늘 때마다 썩는다. 이번에 23 → 31 로
+-- 두 번 밀린 것을 뒤늦게 고쳤다. seed_check.sql 은 그래서 생성한다.

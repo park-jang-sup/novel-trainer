@@ -16,6 +16,7 @@
 //   스크립트가 파일을 직접 쓰면 npm의 stdout이 파일에 섞일 여지가 없다.
 
 import { readFileSync, writeFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import path from 'node:path'
 
 interface DumpStage {
@@ -91,6 +92,11 @@ function sqlInt(value: number): string {
     throw new Error(`정수가 아닌 값을 SQL 정수 자리에 쓰려고 했다: ${value}`)
   }
   return String(value)
+}
+
+// Postgres의 md5(text)와 같은 해시가 나와야 한다 — 둘 다 UTF-8 바이트를 본다.
+function md5Hex(value: string): string {
+  return createHash('md5').update(value, 'utf8').digest('hex')
 }
 
 const stages = readJson<DumpStage[]>('seed/dump/stages.json')
@@ -228,6 +234,14 @@ for (const g of goldenSorted) {
 
 out.push('commit;', '')
 
+// 다음에 무엇을 할지 사람이 보는 자리에 뜬다. 그리고 이 notice가 안 뜨면
+// 파일이 끝까지 안 돈 것이다 — stages만 들어가고 문항이 통째로 빠졌을 때
+// (붙여넣다 잘린 seed_data.sql) 이 줄이 있었으면 즉시 알았다.
+out.push(
+  "do $$ begin raise notice '완료. 이제 seed_check.sql 을 돌려라 (덤프 ↔ DB 대조).'; end $$;",
+  ''
+)
+
 const sql = out.join('\n')
 writeFileSync(path.join(ROOT, 'seed_data.sql'), sql, 'utf8')
 
@@ -235,4 +249,133 @@ console.log(
   `seed_data.sql 생성 완료 — 단계 ${stagesSorted.length}개, ` +
     `문항 ${problemsSorted.length}개, 정답 ${answersSorted.length}개, ` +
     `골든셋 ${goldenSorted.length}개`
+)
+
+// ── seed_check.sql: 덤프 ↔ DB 대조 ────────────────────────────────────
+//
+// 같은 덤프(problemsSorted)에서 만드므로 seed_data.sql과 갈릴 수 없다.
+// 지시문/원문을 md5+길이로, scoring_config를 jsonb로 대조한다. 저장소
+// 사본끼리(test:scoring)는 이미 맞춰 봤다 — 이건 그 사본이 DB에 실제로
+// 들어갔는지를 잰다.
+const checkOut: string[] = []
+
+checkOut.push(
+  '-- 자동 생성 파일. 직접 고치지 말 것.',
+  '-- 원본: seed/dump/problems.json',
+  '-- 재생성: npm run gen:seed',
+  '--',
+  '-- 적용 순서: seed_schema.sql → seed_data.sql → 이 파일 → seed_verify.sql',
+  '--',
+  '-- 이 파일은 덤프와 DB를 대조한다. seed_verify.sql은 DB 안에서 닫힌',
+  '-- 불변식을 잰다 — 다른 일이라 파일을 나눈다.',
+  '-- 아무것도 바꾸지 않는다.',
+  '--',
+  '-- md5만으로는 "다르다"만 알고 무엇이 다른지 모른다. 길이가 함께 있으면',
+  '-- 214 vs 206처럼 CRLF 오염이 즉시 드러난다. 이번 세션에 그것 때문에',
+  '-- 한참 걸렸다.',
+  '--',
+  '-- scoring_config는 md5를 쓰지 않는다. jsonb끼리 is distinct from으로',
+  '-- 비교한다 — 키 순서와 공백이 무관해진다. md5를 쓰려면 양쪽이 똑같은',
+  '-- 정규화 문자열을 만들어야 하는데 배열 표기(["a", "b"] vs ["a","b"])',
+  '-- 에서 갈려 거짓 경보가 난다.',
+  '--',
+  '-- expect는 CTE가 아니라 임시 테이블이다. CTE는 그것이 붙은 statement',
+  '-- 하나에만 유효해서, 검사 넷을 한 do 블록 안에서 나눠 적으려면 매번',
+  `-- ${problemsSorted.length}행짜리 values를 다시 적어야 한다. 임시 테이블로 한 번만 채운다.`,
+  ''
+)
+
+checkOut.push(
+  'drop table if exists expect;',
+  '',
+  'create temporary table expect (',
+  '  source_key text,',
+  '  instr_md5 text,',
+  '  instr_len int,',
+  '  pass_md5 text,',
+  '  pass_len int,',
+  '  cfg jsonb',
+  ');',
+  '',
+  'insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) values'
+)
+
+// passage가 null인 문항은 pass_md5·pass_len도 null이어야 한다 — coalesce로
+// 빈 문자열을 씌우면 "null인 것"과 "빈 문자열인 것"이 구분 안 된다.
+const expectRows = problemsSorted.map((p) => {
+  const instrMd5 = sqlStr(md5Hex(p.instruction))
+  const instrLen = sqlInt(p.instruction.length)
+  const passMd5 = p.passage === null ? 'null' : sqlStr(md5Hex(p.passage))
+  const passLen = p.passage === null ? 'null' : sqlInt(p.passage.length)
+  const cfg = sqlJsonb(p.scoring_config)
+  return `  (${sqlStr(p.source_key)}, ${instrMd5}, ${instrLen}, ${passMd5}, ${passLen}, ${cfg})`
+})
+checkOut.push(expectRows.join(',\n') + ';', '')
+
+checkOut.push(
+  'do $$',
+  'declare v_bad text; v_cnt int;',
+  'begin',
+  '  -- (1) 덤프에는 있는데 DB에 없는 문항.',
+  "  select string_agg(e.source_key, ', ') into v_bad",
+  '    from expect e',
+  '   where not exists (select 1 from problems p where p.source_key = e.source_key);',
+  '  if v_bad is not null then',
+  "    raise exception '[대조] 덤프에는 있는데 DB에 없음: %', v_bad;",
+  '  end if;',
+  '',
+  '  -- (2) DB에는 있는데 덤프에 없는 문항. expect는 덤프에서 왔으니',
+  '  --     반대 방향은 problems 쪽에서 따로 훑어야 한다.',
+  "  select string_agg(p.source_key, ', ') into v_bad",
+  '    from problems p',
+  '   where p.source_key is not null',
+  '     and not exists (select 1 from expect e where e.source_key = p.source_key);',
+  '  if v_bad is not null then',
+  "    raise exception '[대조] DB에는 있는데 덤프에 없음: %', v_bad;",
+  '  end if;',
+  '',
+  '  -- (3) instruction/passage가 어긋난 문항. 어느 필드인지와 길이를 함께',
+  '  --     낸다 — 214 vs 206처럼 CRLF 오염이 여기서 드러난다. md5가',
+  '  --     is distinct from이므로 한쪽만 null이어도(passage 유무가 갈려도)',
+  '  --     정확히 잡힌다.',
+  '  select string_agg(',
+  "           p.source_key || '(' || array_to_string(array_remove(array[",
+  "             case when md5(p.instruction) is distinct from e.instr_md5",
+  "                  then 'instruction ' || e.instr_len || '→' || length(p.instruction) end,",
+  "             case when md5(p.passage) is distinct from e.pass_md5",
+  "                  then 'passage ' || coalesce(e.pass_len::text, 'null') || '→' ||",
+  "                       coalesce(length(p.passage)::text, 'null') end",
+  "           ], null), ', ') || ')', ', '",
+  '         ) into v_bad',
+  '    from problems p',
+  '    join expect e on e.source_key = p.source_key',
+  '   where md5(p.instruction) is distinct from e.instr_md5',
+  '      or md5(p.passage) is distinct from e.pass_md5;',
+  '  if v_bad is not null then',
+  "    raise exception '[대조] instruction/passage 가 어긋남: %', v_bad;",
+  '  end if;',
+  '',
+  '  -- (4) scoring_config가 어긋난 문항.',
+  "  select string_agg(p.source_key, ', ') into v_bad",
+  '    from problems p',
+  '    join expect e on e.source_key = p.source_key',
+  '   where p.scoring_config is distinct from e.cfg;',
+  '  if v_bad is not null then',
+  "    raise exception '[대조] scoring_config 가 어긋남: %', v_bad;",
+  '  end if;',
+  '',
+  '  select count(*) into v_cnt from expect;',
+  "  raise notice '덤프 ↔ DB 대조 통과. 문항 % 개', v_cnt;",
+  'end $$;',
+  '',
+  'drop table expect;',
+  ''
+)
+
+const checkSql = checkOut.join('\n')
+writeFileSync(path.join(ROOT, 'seed_check.sql'), checkSql, 'utf8')
+
+console.log(
+  `seed_check.sql 생성 완료 — 문항 ${problemsSorted.length}개, ` +
+    `${(Buffer.byteLength(checkSql, 'utf8') / 1024).toFixed(1)}KB`
 )

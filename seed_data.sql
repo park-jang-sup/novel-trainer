@@ -1359,3 +1359,5 @@ where p.source_key = 'dragon-king-anger'
   );
 
 commit;
+
+do $$ begin raise notice '완료. 이제 seed_check.sql 을 돌려라 (덤프 ↔ DB 대조).'; end $$;
