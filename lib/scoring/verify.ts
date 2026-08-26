@@ -25,6 +25,20 @@ import {
   bypassCases,
   knownGapCase,
 } from './fixtures/rhythm-breaks'
+import {
+  MONOLOGUE_CFG,
+  MONOLOGUE_ITEMS,
+  MONOLOGUE_SWAP,
+  MONOLOGUE_NARRATION_FILLER,
+  dialogueLinesOf,
+  validateMonologueItem,
+  type MonologueItem,
+} from './fixtures/monologue-insert'
+import {
+  checkPassageRules,
+  checkPassageSetRules,
+  type PassageRuleInput,
+} from './fixtures/passage-rules'
 
 let pass = 0
 let fail = 0
@@ -670,6 +684,306 @@ console.log('\n[7단계 rhythm: 키 가드]')
     c1?.status === c2?.status && c1?.detail === c2?.detail,
     `원문=${JSON.stringify(c1)} 개행판=${JSON.stringify(c2)}`
   )
+}
+
+// ── 8단계 monologue: 대사 사이 독백 끼워넣기 (형태소 없이 완전 판정) ─────
+//
+// [SE-02] 953~959행: 큰따옴표 대사 사이에 작은따옴표 독백을 한 번씩 끼워
+// 넣는 기법. skill_key는 dialogue_ratio지만 비율은 재지 않는다 —
+// 웹소설_작법_정리.md:156이 비율의 기계적 분석을 직접 지목했다.
+//
+// 좋은 답안·뚫기 표본은 지문에서 생성한다. 손으로 적으면 지문이 바뀔 때
+// 조용히 낡는다. morph에는 null을 넘긴다 — 이 단계도 형태소가 필요 없다.
+
+const monoLines = (t: string) => t.split('\n').map((l) => l.trim()).filter(Boolean)
+const monoNoSpace = (t: string) => t.replace(/\s/g, '')
+
+/**
+ * 오탐 감시용 좋은 답안 6종. 전부 pass여야 한다.
+ *
+ * 뒤의 +반응서술 3종이 핵심이다. 좋은 답안이 서술을 한 줄도 안 만들면
+ * maxNarrationLines의 오탐을 잴 수 없다 — 규칙을 바꾸면 좋은 답안 집합도
+ * 바뀌는데, 생성기가 그 변화를 안 만들면 '오탐 0'은 검증이 아니라 미검증이다.
+ */
+function monologueCleanCases(item: MonologueItem): { key: string; text: string }[] {
+  const [l0, l1, l2, l3] = monoLines(item.passage)
+  const [m0, m1] = item.monologues
+  const base: { key: string; lines: string[] }[] = [
+    { key: '2번 자리', lines: [l0, l1, m0, l2, l3] },
+    { key: '3번 자리', lines: [l0, l1, l2, m0, l3] },
+    { key: '둘 끼움', lines: [l0, l1, m0, l2, m1, l3] },
+  ]
+  return [
+    ...base.map((b) => ({ key: b.key, text: b.lines.join('\n') })),
+    ...base.map((b) => ({ key: `${b.key}+반응서술`, text: [...b.lines, item.reaction].join('\n') })),
+  ]
+}
+
+/** 뚫기 14종. 지문에서 생성하므로 지문을 고치면 함께 따라온다. 전부 fail이어야 한다. */
+function monologueBypassCases(item: MonologueItem): { key: string; text: string }[] {
+  const ls = monoLines(item.passage)
+  const [l0, l1, l2, l3] = ls
+  const m = item.monologues[0]
+  const bare = (l: string) => (l.startsWith('"') ? l.slice(1, -1) : l)
+  return [
+    { key: '원문 그대로', text: item.passage },
+    { key: '독백 맨 앞', text: `${m}\n${item.passage}` },
+    { key: '독백 맨 뒤', text: `${item.passage}\n${m}` },
+    { key: '빈 독백', text: [l0, l1, "'…'", l2, l3].join('\n') },
+    { key: '짧은 독백', text: [l0, l1, "'그런가.'", l2, l3].join('\n') },
+    { key: '전부 독백으로', text: ls.map((l) => `'${bare(l)}'`).join('\n') },
+    { key: '독백을 큰따옴표로', text: [l0, l1, `"${m.slice(1, -1)}"`, l2, l3].join('\n') },
+    { key: '대사 하나만', text: `${l0}\n${l1}\n${m}` },
+    { key: '서술만 더 붙임', text: `${item.passage}\n${MONOLOGUE_NARRATION_FILLER}` },
+    { key: '아무 글자 한 줄', text: `${item.passage}\nㅁ` },
+    { key: '같은 독백 되풀이', text: [l0, l1, m, m, l2, m, l3].join('\n') },
+    { key: '개행만 함', text: (monoNoSpace(item.passage).match(/.{1,16}/g) ?? []).join('\n') },
+    { key: '내용 통째 교체', text: MONOLOGUE_SWAP },
+    {
+      key: '서술로 채움',
+      text: [l0, MONOLOGUE_NARRATION_FILLER, l1, '부인은 말이 없었다.', m, '바람이 마당을 지났다.', l2, l3].join(
+        '\n'
+      ),
+    },
+  ]
+}
+
+console.log('\n[8단계 monologue: 오탐 감시 · 뚫기 표본 — 8문항 전수]')
+{
+  const run = (item: MonologueItem, text: string) => {
+    const p: Problem = {
+      id: item.sourceKey,
+      type: 'convert',
+      scoring_mode: 'auto',
+      scoring_config: { ...MONOLOGUE_CFG, requireAny: [item.keyword] },
+    }
+    return combine(p, { text }, undefined, null)
+  }
+  const extra = (item: MonologueItem, caseKey: string, r: ReturnType<typeof run>) =>
+    `${item.sourceKey}/${caseKey} 실제=${r.status} fail=${JSON.stringify(r.checks.filter((c) => c.status === 'fail').map((c) => c.key))}`
+
+  for (const item of MONOLOGUE_ITEMS) {
+    for (const c of monologueCleanCases(item)) {
+      const r = run(item, c.text)
+      t(`'${item.sourceKey}' clean '${c.key}' → pass`, r.status === 'pass', extra(item, c.key, r))
+    }
+    for (const c of monologueBypassCases(item)) {
+      const r = run(item, c.text)
+      t(`'${item.sourceKey}' bypass '${c.key}' → fail`, r.status === 'fail', extra(item, c.key, r))
+    }
+  }
+}
+
+console.log('\n[8단계 monologue: 밴드 의존 감시]')
+{
+  // 뚫기가 걸렸다는 사실만으로는 설계가 막았다는 뜻이 아니다. 분량 밴드에
+  // 우연히 걸렸을 수 있다. minChars·maxChars를 뺀 설정으로 104건을 다시
+  // 돌려서 전부 여전히 fail인지 본다. 이 검사가 깨지면 표본을 늘린 것이
+  // 아니라 설계가 헐거워진 것이다.
+  const { minChars, maxChars, ...rest } = MONOLOGUE_CFG
+  void minChars
+  void maxChars
+  for (const item of MONOLOGUE_ITEMS) {
+    for (const c of monologueBypassCases(item)) {
+      const p: Problem = {
+        id: item.sourceKey,
+        type: 'convert',
+        scoring_mode: 'auto',
+        scoring_config: { ...rest, requireAny: [item.keyword] },
+      }
+      const r = combine(p, { text: c.text }, undefined, null)
+      t(
+        `'${item.sourceKey}' bypass '${c.key}' → 밴드 없이도 fail`,
+        r.status === 'fail',
+        `${item.sourceKey}/${c.key} 실제=${r.status} fail=${JSON.stringify(r.checks.filter((cc) => cc.status === 'fail').map((cc) => cc.key))}`
+      )
+    }
+  }
+}
+
+console.log('\n[8단계 monologue: requireAny 의존 감시]')
+{
+  // 뚫기 14종은 전부 지문에서 생성되므로 keyword가 늘 살아 있다 — requireAny는
+  // 그중 아무것도 잡지 않는다. requireAny를 빼면 정확히 8건(내용 통째 교체)이
+  // 새야 한다. 0이면 requireAny가 합쳐지지 않은 것이고, 8보다 크면 표본이
+  // 바뀐 것이다.
+  let leaked = 0
+  const leakedKeys: string[] = []
+  for (const item of MONOLOGUE_ITEMS) {
+    for (const c of monologueBypassCases(item)) {
+      const p: Problem = {
+        id: item.sourceKey,
+        type: 'convert',
+        scoring_mode: 'auto',
+        scoring_config: MONOLOGUE_CFG, // requireAny 없음
+      }
+      const r = combine(p, { text: c.text }, undefined, null)
+      if (r.status === 'pass') {
+        leaked++
+        leakedKeys.push(`${item.sourceKey}/${c.key}`)
+      }
+    }
+  }
+  t(
+    'requireAny를 빼면 정확히 8건(내용 통째 교체)이 샘',
+    leaked === 8,
+    `실제=${leaked} ${JSON.stringify(leakedKeys)}`
+  )
+}
+
+// 지문 규칙(passage-rules.ts)이 실제로 붙어 있는지. tone은 scoring_config에
+// 안 들어가 MonologueItem에도 없다 — 여기서만 쓰는 검증용 데이터다.
+const MONOLOGUE_TONE: Record<string, string> = {
+  'mo-heungbu-swallow': 'planned',
+  'mo-simcheong-rice': 'planned',
+  'mo-kongjwi-shoe': 'impulsive',
+  'mo-axe-pond': 'planned',
+  'mo-siblings-rope': 'impulsive',
+  'mo-rabbit-gate': 'planned',
+  'mo-gyeonu-bridge': 'planned',
+  'mo-goblin-club': 'impulsive',
+}
+const passageInputOf = (item: MonologueItem): PassageRuleInput => ({
+  sourceKey: item.sourceKey,
+  keyword: item.keyword,
+  passage: item.passage,
+  dialogueLines: dialogueLinesOf(item),
+  difficulty: item.difficulty,
+  tone: MONOLOGUE_TONE[item.sourceKey],
+})
+
+console.log('\n[8단계 monologue: 지문 규칙 — passage-rules.ts 포팅]')
+{
+  for (const item of MONOLOGUE_ITEMS) {
+    const fails = checkPassageRules(passageInputOf(item))
+    t(`'${item.sourceKey}' 지문 규칙(공용) 통과`, fails.length === 0, JSON.stringify(fails))
+  }
+
+  const setFails = checkPassageSetRules(MONOLOGUE_ITEMS.map(passageInputOf), {
+    difficulty: { 1: 4, 2: 4 },
+    tone: { planned: 5, impulsive: 3 },
+    maxLengthSpread: 20,
+  })
+  t('문항 집합 규칙(분포·중복) 통과', setFails.length === 0, JSON.stringify(setFails))
+
+  for (const item of MONOLOGUE_ITEMS) {
+    const fails = validateMonologueItem(item)
+    t(`'${item.sourceKey}' 지문 규칙(8단계 전용) 통과`, fails.length === 0, JSON.stringify(fails))
+  }
+}
+
+// ── 회귀 조건 3건 — 포팅이 옳았다는 유일한 증거 ────────────────────
+//
+// 옛 결함을 다시 잡아야 포팅이 뜻을 지킨 것이다. 셋 다 초안 단계에서
+// 실제로 났던 결함이고, 지금 이 검사들이 잡아준 것들이다.
+console.log('\n[8단계 monologue: 회귀 조건 3건]')
+{
+  // 1) keyword를 '도끼'로 바꾸면 LEAK_PROBE의 '도끼눈을 떴다'에 샌다고
+  //    걸려야 한다. 지금 실제 keyword는 '쇠도끼'라 안 샌다.
+  const axe = MONOLOGUE_ITEMS.find((i) => i.sourceKey === 'mo-axe-pond')!
+  const leakFails = checkPassageRules({ ...passageInputOf(axe), keyword: '도끼' })
+  t(
+    "회귀1: keyword를 '도끼'로 바꾸면 흔한 말 누출이 걸림",
+    leakFails.some((f) => f.includes('흔한 말에 샌다')),
+    JSON.stringify(leakFails)
+  )
+
+  // 2) mo-rabbit-gate 셋째 대사를 옛 문장("...혀를 믿을 수 없습니다.")으로
+  //    되돌리면 종결어미가 둘째 대사("...왔사옵니다.")와 겹친다고 걸려야
+  //    한다 — 둘 다 '니다'로 끝난다.
+  const rabbit = MONOLOGUE_ITEMS.find((i) => i.sourceKey === 'mo-rabbit-gate')!
+  const rabbitLines = dialogueLinesOf(rabbit)
+  const oldDialogueLines = [rabbitLines[0], rabbitLines[1], '"용궁까지 온 놈의 혀를 믿을 수 없습니다."']
+  const endingFails = checkPassageRules({ ...passageInputOf(rabbit), dialogueLines: oldDialogueLines })
+  t(
+    '회귀2: 옛 셋째 대사로 되돌리면 종결어미 충돌이 걸림',
+    endingFails.some((f) => f.includes('종결어미가 겹친다')),
+    JSON.stringify(endingFails)
+  )
+
+  // 3) 서술 줄 정의를 "큰따옴표로 시작 안 함"(옛 버그)으로 되돌리면 좋은
+  //    답안의 서술 줄 수가 1이 아니라고(독백 줄까지 서술로 세어짐) 걸려야
+  //    한다. local.ts의 실제 구현은 건드리지 않고 옛 정의만 여기서 재현한다.
+  const oldCountNarrationLines = (text: string): number =>
+    text
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .filter((l) => !l.startsWith('"')).length
+  const heungbu = MONOLOGUE_ITEMS.find((i) => i.sourceKey === 'mo-heungbu-swallow')!
+  const sample = monologueCleanCases(heungbu).find((c) => c.key === '2번 자리')!.text
+  t(
+    '회귀3: 서술 정의를 큰따옴표 기준으로 되돌리면 서술 줄 수가 1이 아님',
+    oldCountNarrationLines(sample) !== 1,
+    `실제=${oldCountNarrationLines(sample)}`
+  )
+}
+
+// ── 설정 일치 · 키 가드 ──────────────────────────────────────────
+//
+// 문항 SQL은 여덟 중 일부만 먼저 들어올 수 있다(지금은 mo-heungbu-swallow
+// 하나). 비교할 대상이 없을 때 통과로 세면 이 검사가 아무것도 안 지키면서
+// 숫자만 채운다. 6단계 forbidWords 검사가 쓰는 "건너뜀"과 같은 자리다.
+//
+// 설정 일치는 "전부 갖췄을 때 전부 맞는가"를 보는 완결성 검사라 8개가
+// 다 있어야 의미가 있다 — 7개가 없는데 1개만 비교하고 통과라고 하면
+// 나머지 7개의 부재를 숨기는 꼴이다. 그래서 8개 미만이면 통째로 건너뛴다.
+//
+// 키 가드는 반대로 항목마다 독립된 체크리스트다. 그 항목이 덤프에 없으면
+// 그 항목만 건너뛰고, 있으면 그 항목만 잰다 — 다른 일곱이 없다고 해서
+// 이미 들어온 하나까지 건너뛸 이유가 없다.
+console.log('\n[8단계 monologue: 설정 일치 · 키 가드]')
+{
+  interface DumpProblem {
+    skill_key: string
+    source_key: string
+    scoring_config: Record<string, unknown>
+  }
+
+  const dumpPath = path.join(__dirname, '..', '..', 'seed', 'dump', 'problems.json')
+  const raw = readFileSync(dumpPath, 'utf8').replace(/^\uFEFF/, '')
+  const dumpProblems: DumpProblem[] = JSON.parse(raw)
+  const dialogueDump = dumpProblems.filter((dp) => dp.skill_key === 'dialogue_ratio')
+  const dialogueDumpKeys = new Set(dialogueDump.map((dp) => dp.source_key))
+
+  const canon = (o: Record<string, unknown>) => JSON.stringify(o, Object.keys(o).sort())
+
+  // 설정 일치 검사 1건: 8개가 전부 덤프에 있을 때만 잰다.
+  if (dialogueDump.length < MONOLOGUE_ITEMS.length) {
+    console.log(
+      `  건너뜀 (설정 일치: 덤프에 dialogue_ratio 문항 ${dialogueDump.length}/${MONOLOGUE_ITEMS.length}개 — 전부 갖춰지지 않음)`
+    )
+  } else {
+    const mismatches = dialogueDump.filter((dp) => {
+      const item = MONOLOGUE_ITEMS.find((i) => i.sourceKey === dp.source_key)
+      if (!item) return true
+      const want = { ...MONOLOGUE_CFG, requireAny: [item.keyword] }
+      return canon(dp.scoring_config) !== canon(want)
+    })
+    t(
+      'MONOLOGUE_CFG와 덤프 8문항의 scoring_config가 같음',
+      mismatches.length === 0,
+      `어긋난 source_key=${JSON.stringify(mismatches.map((m) => m.source_key))}`
+    )
+  }
+
+  // 키 가드 8건: 항목마다 따로 잰다. 그 항목이 덤프에 없으면 그 항목만
+  // 건너뛴다.
+  const guardSkipped: string[] = []
+  for (const item of MONOLOGUE_ITEMS) {
+    if (!dialogueDumpKeys.has(item.sourceKey)) {
+      guardSkipped.push(item.sourceKey)
+      continue
+    }
+    t(
+      `'${item.sourceKey}' 가 덤프의 dialogue_ratio 문항과 일치`,
+      dialogueDumpKeys.has(item.sourceKey),
+      `덤프 dialogue_ratio 키=${JSON.stringify([...dialogueDumpKeys])}`
+    )
+  }
+  if (guardSkipped.length > 0) {
+    console.log(`  건너뜀 (키 가드: 덤프에 dialogue_ratio 문항 없음): ${guardSkipped.join(', ')}`)
+  }
 }
 
 console.log(`\n최종: ${pass} 통과 / ${fail} 실패`)

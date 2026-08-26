@@ -47,6 +47,22 @@ export interface ScoringConfig {
   // 중복 때문에 늘어난 줄 수의 상한. lines.length - new Set(lines).size
   // 줄마다 거는 상한이 아니다. "각 줄을 딱 두 번씩" 쓰는 답안을 잡으려면
   // 답안 전체에서 세야 한다. 형태소 불필요.
+  //
+  // 아래 넷은 줄이 아니라 따옴표 쌍을 센다 — Lines를 붙이지 않는다.
+  // minLines·maxLines·maxLineChars·maxDuplicateLines는 전부 '\n'으로 나눈
+  // 진짜 줄을 세지만, 이 넷은 큰따옴표/작은따옴표 쌍의 개수·글자수·위치를
+  // 잰다. 같은 이름표가 두 단위를 가리키면 scoring_config를 읽는 사람이
+  // 속는다. 형태소 필요 없음.
+  /** 큰따옴표 쌍의 개수 하한. 대사가 몇 개인가 */
+  minSpeeches?: number
+  /** 작은따옴표 쌍의 개수 하한. 독백이 몇 개인가 */
+  minMonologues?: number
+  /** 독백 하나의 최소 글자수(공백 제외). 빈 독백을 막는다 */
+  minMonologueChars?: number
+  /** 독백이 첫 대사와 마지막 대사 사이에 있는가. 문자 인덱스로 잰다 */
+  requireMonologueBetween?: boolean
+  /** 대사도 독백도 아닌 줄의 수 상한. 서술이 대사를 밀어내지 않게 한다 */
+  maxNarrationLines?: number
   maxAdverbs?: number // 부사(MAG/MAJ)만. 형태소 필요
   maxModifiers?: number // 관형형(ETM/MM)만. 형태소 필요
   minVerbs?: number // 형태소 필요

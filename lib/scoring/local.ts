@@ -142,6 +142,125 @@ function lineChecks(text: string, cfg: ScoringConfig): Check[] {
   return out
 }
 
+interface QuotePair {
+  start: number // 여는 따옴표의 인덱스
+  end: number // 닫는 따옴표의 인덱스
+  content: string
+}
+
+/** 따옴표 문자의 위치를 모아 앞에서부터 둘씩 짝짓는다. 홀수 개가 남으면 마지막 하나는 버린다. */
+function quotePairs(text: string, ch: string): QuotePair[] {
+  const idx: number[] = []
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === ch) idx.push(i)
+  }
+  const pairs: QuotePair[] = []
+  for (let i = 0; i + 1 < idx.length; i += 2) {
+    pairs.push({ start: idx[i], end: idx[i + 1], content: text.slice(idx[i] + 1, idx[i + 1]) })
+  }
+  return pairs
+}
+
+/**
+ * 대사·독백 검사(8단계). 형태소가 필요 없다.
+ *
+ * 큰따옴표 쌍은 대사, 작은따옴표 쌍은 독백으로 센다.
+ *
+ * 알려진 한계: 대사 안에 작은따옴표가 섞이면(예: "그건 '간'이 아닙니다.")
+ * 독백 쌍 수가 부푼다. 지문을 우리가 쓰고 지시문이 큰따옴표/작은따옴표를
+ * 선언하므로 실사용에서는 드물다. 문서에만 적으면 아무도 돌아오지 않아
+ * 여기 코드에 적어 둔다.
+ */
+/**
+ * 서술 줄의 수. 서술 = 대사(큰따옴표)도 독백(작은따옴표)도 아닌 줄.
+ *
+ * 큰따옴표로 시작하지 않는 줄을 전부 서술로 세면 안 된다 — 독백 줄도
+ * 큰따옴표로 시작하지 않으므로 그러면 독백이 서술로 잘못 세어진다.
+ * 초안 단계에서 실제로 이 버그를 냈고, 좋은 답안의 서술 줄 수가
+ * 1이 아니라 2~3으로 나온 것으로 겨우 잡았다. 눈으로는 안 보인다.
+ */
+function countNarrationLines(text: string): number {
+  const lines = text
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean)
+  return lines.filter((l) => !l.startsWith('"') && !l.startsWith("'")).length
+}
+
+function quoteChecks(text: string, cfg: ScoringConfig): Check[] {
+  const out: Check[] = []
+  const speeches = quotePairs(text, '"')
+  const monologues = quotePairs(text, "'")
+  const rawMonologueQuoteCount = text.match(/'/g)?.length ?? 0
+  // 작은따옴표가 아예 없으면(가장 흔한 경우 — 학습자가 속마음을 썼지만
+  // 표기를 안 한 경우다) 쌍이 0으로 떨어져 minMonologues가 "미달"로
+  // 걸린다. 판정은 맞지만 말이 틀린다 — 화면이 "안 썼다"고 하면 학습자는
+  // 헤맨다. 홀수 개(감싸다 만 경우)는 다른 문제이므로 따로 구분한다.
+  const noMonologueQuotes = rawMonologueQuoteCount === 0
+  const oddMonologueQuotes = rawMonologueQuoteCount % 2 !== 0
+  const monologueQuoteDetail = noMonologueQuotes
+    ? '작은따옴표로 감싼 부분이 없습니다'
+    : oddMonologueQuotes
+      ? '따옴표 짝이 맞지 않습니다'
+      : null
+
+  if (cfg.minSpeeches !== undefined) {
+    out.push({
+      key: 'minSpeeches',
+      label: '대사 수',
+      status: speeches.length >= cfg.minSpeeches ? 'pass' : 'fail',
+      detail: `${speeches.length}개 / ${cfg.minSpeeches}개 이상`,
+      gating: true,
+    })
+  }
+  if (cfg.minMonologues !== undefined) {
+    out.push({
+      key: 'minMonologues',
+      label: '독백 수',
+      status: monologues.length >= cfg.minMonologues ? 'pass' : 'fail',
+      detail: monologueQuoteDetail ?? `${monologues.length}개 / ${cfg.minMonologues}개 이상`,
+      gating: true,
+    })
+  }
+  if (cfg.minMonologueChars !== undefined) {
+    const minMonologueChars = cfg.minMonologueChars
+    const short = monologues.filter((m) => countChars(m.content) < minMonologueChars)
+    const ok = monologues.length > 0 && short.length === 0
+    out.push({
+      key: 'minMonologueChars',
+      label: '독백 글자수',
+      status: ok ? 'pass' : 'fail',
+      detail: monologueQuoteDetail ?? (ok ? '없음' : `${short.length}개`),
+      evidence: short.map((m) => m.content),
+      gating: true,
+    })
+  }
+  if (cfg.requireMonologueBetween !== undefined) {
+    const between =
+      speeches.length > 0 &&
+      monologues.some((m) => speeches[0].start < m.start && m.end < speeches[speeches.length - 1].end)
+    out.push({
+      key: 'requireMonologueBetween',
+      label: '독백 위치',
+      status: between ? 'pass' : 'fail',
+      detail: between ? '사이에 있음' : '사이에 없음',
+      gating: true,
+    })
+  }
+  if (cfg.maxNarrationLines !== undefined) {
+    const narrationCount = countNarrationLines(text)
+    out.push({
+      key: 'maxNarrationLines',
+      label: '서술 줄',
+      status: narrationCount <= cfg.maxNarrationLines ? 'pass' : 'fail',
+      detail: `${narrationCount}줄 / ${cfg.maxNarrationLines}줄 이하`,
+      gating: true,
+    })
+  }
+
+  return out
+}
+
 /**
  * 로컬 검사 전부. 형태소가 필요한 항목은 여기서 만들지 않는다.
  * remote.ts가 나중에 pending 자리를 채운다.
@@ -297,6 +416,7 @@ export function gradeLocal(
       const text = sub.text ?? ''
       checks.push(...lengthChecks(text, cfg))
       checks.push(...lineChecks(text, cfg))
+      checks.push(...quoteChecks(text, cfg))
 
       if (cfg.forbidWords?.length) {
         const hits = findForbidden(text, cfg.forbidWords)
@@ -310,6 +430,12 @@ export function gradeLocal(
         })
       }
 
+      // 알려진 한계: requireAny는 낱말 하나가 들어 있는지만 본다. 낱말만
+      // 남기고 내용을 통째로 바꾼 답안은 통과한다. 재봤다 —
+      //   "오늘 장에 제비가 날아들었습니다." / '값을 더 받을 수 있을지…' / …  59자 통과
+      // 서술형 채점이 전부 안고 있는 것이지 8단계만의 결함이 아니다. 내용
+      // 판정은 AI 쪽 몫이다. 규칙으로 더 조이려 들지 마라 — 조이면 좋은
+      // 답안이 먼저 걸린다.
       if (cfg.requireAny?.length) {
         const found = cfg.requireAny.filter((w) => text.includes(w))
         checks.push({

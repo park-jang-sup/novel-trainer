@@ -877,6 +877,20 @@ select
   2, 'rh-siblings-tree'
 where not exists (select 1 from problems p where p.source_key = 'rh-siblings-tree');
 
+-- mo-heungbu-swallow (order_no 8, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'dialogue_ratio'),
+  'convert', 'auto', '아래 대사 사이에 인물의 속마음을 독백으로 끼워 넣으시오. 대사 세 줄은 그대로 두고, 첫 대사와 마지막 대사 사이 어딘가에 독백을 하나 넣습니다. 독백은 작은따옴표로 감싸시오. 한 글자짜리로 얼버무리지 말고 여덟 자 이상 씁니다. 같은 줄을 되풀이하지 마시오. 분량은 52~91자로 유지합니다. 덜어내는 훈련이 아닙니다. ''제비''는 반드시 남깁니다.',
+  '"처마 밑에 제비가 다리를 다치고 떨어졌소."
+"아이들 먹일 것도 없어요."
+"그래도 매어서 보내기는 하겠소."', null, '{"minChars":52,"maxChars":91,"maxDuplicateLines":0,"minSpeeches":3,"minMonologues":1,"minMonologueChars":8,"requireMonologueBetween":true,"requireAny":["제비"]}'::jsonb,
+  'folktale', 'fantasy', 'planned',
+  1, 'mo-heungbu-swallow'
+where not exists (select 1 from problems p where p.source_key = 'mo-heungbu-swallow');
+
 -- ch-village-approval (order_no 14, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
