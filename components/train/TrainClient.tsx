@@ -420,12 +420,18 @@ export default function TrainClient({ problem }: { problem: PublicProblem }) {
 
   // 지시문의 예시. 두 칸일 때만 오른쪽으로 옮긴다 — 사람이 화면에서
   // "예시인지 문제인지 헷갈린다"고 했다(예시 다섯 줄과 원문 상자가 같은
-  // 열에 세로로 쌓여 있었다). caption을 "무엇을 봅니다"와 같은 자리(제목)
-  // 에 두고, 안쪽은 지문 상자와 같은 처리(pre-wrap · 패널 배경 · 테두리)를
-  // 쓴다. example이 빈 문자열이면(지금 61문항) 아예 만들지 않는다.
+  // 열에 세로로 쌓여 있었다). 안쪽은 지문 상자와 같은 처리(pre-wrap ·
+  // 패널 배경 · 테두리)를 쓴다. example이 빈 문자열이면(지금 61문항)
+  // 아예 만들지 않는다.
+  //
+  // 두 칸에서는 caption(예: '이렇게 됩니다.')을 화면에 띄우지 않는다.
+  // 상자가 이미 예시를 감싸고 있어 이끄는 문장이 할 일이 없고, 아래
+  // '무엇을 봅니다'와 층을 맞춰야 한다. caption 파싱은 그대로 둔다 —
+  // 왼쪽 prose에서 그 문장을 떼어내는 데 계속 쓰인다.
+  // 9·10단계에서 caption에 실제 정보를 담지 마라. 두 칸에서 사라진다.
   const exampleContent = instructionExample !== '' && (
     <div className="space-y-2 pt-4" style={{ borderTop: '1px solid var(--rule)' }}>
-      {instructionCaption !== '' && <p style={{ fontWeight: 700 }}>{instructionCaption}</p>}
+      <p style={{ fontWeight: 700 }}>예시</p>
       <div
         className="whitespace-pre-wrap p-4 text-sm leading-relaxed"
         style={{
