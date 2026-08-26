@@ -230,7 +230,7 @@ function quoteChecks(text: string, cfg: ScoringConfig): Check[] {
       key: 'minMonologueChars',
       label: '독백 글자수',
       status: ok ? 'pass' : 'fail',
-      detail: monologueQuoteDetail ?? (ok ? '없음' : `${short.length}개`),
+      detail: monologueQuoteDetail ?? (ok ? '미달 없음' : `${short.length}개 미달`),
       evidence: short.map((m) => m.content),
       gating: true,
     })
