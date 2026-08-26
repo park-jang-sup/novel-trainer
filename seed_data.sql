@@ -8,6 +8,11 @@
 -- 문항은 source_key로, 단계는 skill_key로 매칭한다. stages.id는 여기
 -- 박아 넣지 않는다. id와 order_no는 일치하지 않고, 재구축하면 id가
 -- 달라진다.
+--
+-- 마지막 문장이 select인 것은 의도다. Supabase 편집기가 NOTICE를
+-- 안 띄워서, raise notice로 끝내면 "통과"와 "파일이 잘려 안 돌았다"가
+-- 둘 다 'Success. No rows returned'로 보인다. 행이 나오면 끝까지 돈 것이다.
+-- 이 select 뒤에 다른 문장을 두지 마라 — 편집기는 마지막 결과만 보여준다.
 
 begin;
 
@@ -1360,4 +1365,6 @@ where p.source_key = 'dragon-king-anger'
 
 commit;
 
-do $$ begin raise notice '완료. 이제 seed_check.sql 을 돌려라 (덤프 ↔ DB 대조).'; end $$;
+select '시드 적용 완료. 다음: seed_check.sql' as 결과,
+       (select count(*) from problems) as 문항수,
+       (select count(*) from stages) as 단계수;

@@ -148,6 +148,11 @@ out.push(
   '-- 문항은 source_key로, 단계는 skill_key로 매칭한다. stages.id는 여기',
   '-- 박아 넣지 않는다. id와 order_no는 일치하지 않고, 재구축하면 id가',
   '-- 달라진다.',
+  '--',
+  '-- 마지막 문장이 select인 것은 의도다. Supabase 편집기가 NOTICE를',
+  '-- 안 띄워서, raise notice로 끝내면 "통과"와 "파일이 잘려 안 돌았다"가',
+  "-- 둘 다 'Success. No rows returned'로 보인다. 행이 나오면 끝까지 돈 것이다.",
+  '-- 이 select 뒤에 다른 문장을 두지 마라 — 편집기는 마지막 결과만 보여준다.',
   '',
   'begin;',
   '',
@@ -234,11 +239,13 @@ for (const g of goldenSorted) {
 
 out.push('commit;', '')
 
-// 다음에 무엇을 할지 사람이 보는 자리에 뜬다. 그리고 이 notice가 안 뜨면
-// 파일이 끝까지 안 돈 것이다 — stages만 들어가고 문항이 통째로 빠졌을 때
-// (붙여넣다 잘린 seed_data.sql) 이 줄이 있었으면 즉시 알았다.
+// 다음에 무엇을 할지 사람이 보는 자리에 뜬다. Supabase 편집기는 NOTICE를
+// 안 띄우므로 select로 낸다 — 행이 나오면 commit;까지 끝까지 돈 것이다.
+// commit; 뒤에 둔다. 트랜잭션 안이면 롤백 시 이 결과 자체가 사라진다.
 out.push(
-  "do $$ begin raise notice '완료. 이제 seed_check.sql 을 돌려라 (덤프 ↔ DB 대조).'; end $$;",
+  "select '시드 적용 완료. 다음: seed_check.sql' as 결과,",
+  '       (select count(*) from problems) as 문항수,',
+  '       (select count(*) from stages) as 단계수;',
   ''
 )
 
@@ -282,6 +289,19 @@ checkOut.push(
   '-- expect는 CTE가 아니라 임시 테이블이다. CTE는 그것이 붙은 statement',
   '-- 하나에만 유효해서, 검사 넷을 한 do 블록 안에서 나눠 적으려면 매번',
   `-- ${problemsSorted.length}행짜리 values를 다시 적어야 한다. 임시 테이블로 한 번만 채운다.`,
+  '--',
+  '-- 마지막 문장이 select인 것은 의도다. Supabase 편집기가 NOTICE를',
+  '-- 안 띄워서, raise notice로 끝내면 "통과"와 "파일이 잘려 안 돌았다"가',
+  "-- 둘 다 'Success. No rows returned'로 보인다. 행이 나오면 끝까지 돈 것이다.",
+  '-- 이 select 뒤에 다른 문장을 두지 마라 — 편집기는 마지막 결과만 보여준다.',
+  '-- do 블록 안의 raise notice는 지우지 않는다. psql로 돌리는 사람에게는',
+  '-- 그쪽이 보인다.',
+  '--',
+  "-- Supabase 편집기가 'destructive / RLS 없는 테이블' 경고를 띄운다.",
+  '-- Run without RLS를 누르면 된다. drop 대상은 이 파일이 만든 임시 테이블',
+  '-- 뿐이고, temporary table은 pg_temp에 있어 anon·authenticated가 볼 수',
+  '-- 없다. Run and enable RLS는 임시 테이블에 RLS를 걸려다 검사가 엉뚱하게',
+  '-- 죽을 수 있으니 누르지 마라.',
   ''
 )
 
@@ -369,6 +389,8 @@ checkOut.push(
   'end $$;',
   '',
   'drop table expect;',
+  '',
+  "select '덤프 ↔ DB 대조 통과' as 결과, count(*) as 문항수 from problems;",
   ''
 )
 

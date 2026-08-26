@@ -20,6 +20,19 @@
 -- expect는 CTE가 아니라 임시 테이블이다. CTE는 그것이 붙은 statement
 -- 하나에만 유효해서, 검사 넷을 한 do 블록 안에서 나눠 적으려면 매번
 -- 69행짜리 values를 다시 적어야 한다. 임시 테이블로 한 번만 채운다.
+--
+-- 마지막 문장이 select인 것은 의도다. Supabase 편집기가 NOTICE를
+-- 안 띄워서, raise notice로 끝내면 "통과"와 "파일이 잘려 안 돌았다"가
+-- 둘 다 'Success. No rows returned'로 보인다. 행이 나오면 끝까지 돈 것이다.
+-- 이 select 뒤에 다른 문장을 두지 마라 — 편집기는 마지막 결과만 보여준다.
+-- do 블록 안의 raise notice는 지우지 않는다. psql로 돌리는 사람에게는
+-- 그쪽이 보인다.
+--
+-- Supabase 편집기가 'destructive / RLS 없는 테이블' 경고를 띄운다.
+-- Run without RLS를 누르면 된다. drop 대상은 이 파일이 만든 임시 테이블
+-- 뿐이고, temporary table은 pg_temp에 있어 anon·authenticated가 볼 수
+-- 없다. Run and enable RLS는 임시 테이블에 RLS를 걸려다 검사가 엉뚱하게
+-- 죽을 수 있으니 누르지 마라.
 
 drop table if exists expect;
 
@@ -159,3 +172,5 @@ begin
 end $$;
 
 drop table expect;
+
+select '덤프 ↔ DB 대조 통과' as 결과, count(*) as 문항수 from problems;
