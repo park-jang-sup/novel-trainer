@@ -529,7 +529,10 @@ export default function TrainClient({ problem }: { problem: PublicProblem }) {
   }
 
   return (
-    <main className="mx-auto max-w-5xl p-6">
+    // 6xl(1152). 5xl(1024)에서는 한 열이 472px라 예시·원문 상자가 좁았다.
+    // 7xl(1280)까지 넓히지 않는 이유는 왼쪽 입력창 한 줄이 길어지면
+    // 7단계(maxLineChars 18)의 "짧게 끊는다"는 눈의 감각이 흐려지기 때문이다.
+    <main className="mx-auto max-w-6xl p-6">
       <div className="space-y-6 lg:grid lg:grid-cols-2 lg:items-start lg:gap-8 lg:space-y-0">
         <div className="space-y-6">{leftContent}</div>
         {/* 제출 전에는 비어 있다 — result가 없으면 rightContent 자체가 false다.
