@@ -177,7 +177,10 @@ export default function TrainClient({ problem }: { problem: PublicProblem }) {
           {instructionFirst}
         </h1>
         {instructionRest !== '' && (
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--ink-soft)' }}>
+          // 지시문에 개행이 있다(8단계 예시 다섯 줄). pre-wrap이 없으면 HTML이
+          // 개행을 공백으로 접어 예시가 본문에 녹는다 — 화면에서 실제로 그랬다.
+          // 바로 아래 지문 상자와 같은 처리다.
+          <p className="whitespace-pre-wrap text-sm leading-relaxed" style={{ color: 'var(--ink-soft)' }}>
             {instructionRest}
           </p>
         )}
