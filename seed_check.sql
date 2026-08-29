@@ -19,7 +19,7 @@
 --
 -- expect는 CTE가 아니라 임시 테이블이다. CTE는 그것이 붙은 statement
 -- 하나에만 유효해서, 검사 넷을 한 do 블록 안에서 나눠 적으려면 매번
--- 77행짜리 values를 다시 적어야 한다. 임시 테이블로 한 번만 채운다.
+-- 85행짜리 values를 다시 적어야 한다. 임시 테이블로 한 번만 채운다.
 --
 -- 마지막 문장이 select인 것은 의도다. Supabase 편집기가 NOTICE를
 -- 안 띄워서, raise notice로 끝내면 "통과"와 "파일이 잘려 안 돌았다"가
@@ -112,6 +112,14 @@ insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) v
   ('pv-dawn-market', '74c90b61bb8cb9f643b3570bcc5844bb', 217, '6820a24800c1b8060fb6adc7c59c1881', 67, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","좌판 여덟","짐꾼 셋이"],"requireAny":["정순"]}'::jsonb),
   ('pv-frozen-lake', '74c90b61bb8cb9f643b3570bcc5844bb', 217, 'f835e02b9ca70ad41038f4a531efe3b6', 74, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","낚시 구멍 열넷","아이 셋이"],"requireAny":["연희"]}'::jsonb),
   ('pv-lantern-night', '74c90b61bb8cb9f643b3570bcc5844bb', 217, '048ec67183dc20a6e73e14ac0acc8377', 71, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","등불 스무 개","연인 넷이"],"requireAny":["소하"]}'::jsonb),
+  ('at-cracked-ice', 'b2cd91e973687aef56c316448ce23e47', 276, '4bef9a1e8146392e1adb3f64d1d9717d', 51, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["갈라진 얼음"],"requireInLastLine":["갈라진 얼음"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb),
+  ('at-left-feeler', 'b2cd91e973687aef56c316448ce23e47', 276, '67d80ef72c708e66051c9029da981875', 55, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["왼쪽 더듬이"],"requireInLastLine":["왼쪽 더듬이"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb),
+  ('at-left-feint', 'b2cd91e973687aef56c316448ce23e47', 276, 'a73394c2476d78e42951fc6d724ad90e', 58, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["왼발 페인트"],"requireInLastLine":["왼발 페인트"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb),
+  ('at-look-back', 'b2cd91e973687aef56c316448ce23e47', 276, 'a688a5491b0033c66bfba485b8c150f0', 60, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["돌아보지 않겠다"],"requireInLastLine":["돌아보지 않겠다"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb),
+  ('at-bell-rope', '3bb15c8a9e7d79578a6b4a70ba59e01f', 337, '627ddaa0c39b10d9c437ac6eb3ba75a8', 61, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["종줄"],"requireInLastLine":["종줄"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb),
+  ('at-broken-gate', '3bb15c8a9e7d79578a6b4a70ba59e01f', 337, '8a7f4972bdd1f55a7232c3e637f6b819', 64, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["창끝"],"requireInLastLine":["창끝"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb),
+  ('at-edit-log', '3bb15c8a9e7d79578a6b4a70ba59e01f', 337, '030184dfe54da5fe9141a53a94a616f2', 68, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["수정 기록"],"requireInLastLine":["수정 기록"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb),
+  ('at-left-draw', '3bb15c8a9e7d79578a6b4a70ba59e01f', 337, '9cd4c4cfc018a698d3ea58b16c302cf2', 67, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["왼손 발도"],"requireInLastLine":["왼손 발도"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb),
   ('ch-village-approval', '424cd68473f72bfa2999257a700f216f', 62, null, null, '{}'::jsonb),
   ('ch-cursed-sword', 'f1831fd166947069b9e047c021b5fa0d', 62, null, null, '{}'::jsonb),
   ('ch-misunderstanding', 'bbcbf8d670bc52057ddf7d316948beae', 57, null, null, '{}'::jsonb),

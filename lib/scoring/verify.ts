@@ -63,9 +63,16 @@ import {
 import {
   AT_ITEMS,
   AT_CFG,
+  EXAMPLE_ELEMENT,
+  EXAMPLE_ANSWER_1,
+  EXAMPLE_ANSWER_2,
+  AT_INSTRUCTION_1,
+  AT_INSTRUCTION_2,
+  instructionOf,
   AT_D2_EXTRA,
   AT_TONE,
   BYPASS_KINDS,
+  PASSAGE_TAGS,
   actionCfgOf,
   passageOf as atPassageOf,
   validateActionItem,
@@ -1649,7 +1656,12 @@ console.log('\n[10단계 action_turn: requireAny 의 탐지 기여는 0이다]')
   // 남기는 이유는 화면에서 두 실패를 가르기 위해서다(요소가 없다 / 끝이 아니다).
   // 세션 10 §7-1(5) 표는 둘이 각각 잡는 것처럼 읽히게 적혀 있었다. 아니다.
   for (const item of AT_ITEMS) {
-    const bare: ScoringConfig = { ...AT_CFG, requireInLastLine: [item.element] }
+    // ★ requireAny 하나만 뺀다. forbidWords 까지 빼면 두 개를 뺀 실험이 된다.
+    const bare: ScoringConfig = {
+      ...AT_CFG,
+      requireInLastLine: [item.element],
+      forbidWords: PASSAGE_TAGS,
+    }
     const withAny = item.bypasses.filter((b) => atPasses(item, b.text)).length
     const without = item.bypasses.filter((b) => atPasses(item, b.text, bare)).length
     t(`'${item.sourceKey}' requireAny 를 빼도 미검출이 같다`, withAny === without, `있을때=${withAny} 뺐을때=${without}`)
@@ -1792,13 +1804,107 @@ console.log('\n[10단계 action_turn: 설정 일치 · 수 가드]')
   t('문항 8건', AT_ITEMS.length === 8, `실제=${AT_ITEMS.length}`)
   const goods = AT_ITEMS.reduce((n, i) => n + i.goods.length, 0)
   t('좋은 답안 144건', goods === 144, `실제=${goods}`)
-  t('뚫기 갈래 11종', BYPASS_KINDS.length === 11, `실제=${BYPASS_KINDS.length}`)
+  t('뚫기 갈래 12종', BYPASS_KINDS.length === 12, `실제=${BYPASS_KINDS.length}`)
   // 난이도가 설정을 안 가른다. 8문항 단계 넷이 예외 없이 그렇다.
   const shapes = new Set(AT_ITEMS.map((i) => JSON.stringify(Object.keys(actionCfgOf(i)).sort())))
   t('난이도 1과 2의 scoring_config 키가 같다', shapes.size === 1, JSON.stringify([...shapes]))
-  const KNOWN = new Set(['minLines', 'maxLines', 'maxLineChars', 'requireAny', 'requireInLastLine'])
+  const KNOWN = new Set([
+    'minLines', 'maxLines', 'maxLineChars', 'requireAny', 'requireInLastLine', 'forbidWords',
+  ])
   const unknown = Object.keys(actionCfgOf(AT_ITEMS[0])).filter((k) => !KNOWN.has(k))
   t('scoring_config 에 모르는 키가 없다', unknown.length === 0, JSON.stringify(unknown))
+}
+
+console.log('\n[10단계 action_turn: 지시문 예시가 자기 규칙을 지키는가]')
+{
+  // 지시문을 고치면 예시가 규칙을 깨도 아무도 모른다. 9단계가 같은 이유로
+  // 지시문 가드를 뒀다. 예시를 상수로 빼서 지시문이 그것으로 조립되므로
+  // 여기서 재는 것이 곧 화면에 나가는 것이다.
+  const exCfg: ScoringConfig = {
+    ...AT_CFG,
+    requireAny: [EXAMPLE_ELEMENT],
+    requireInLastLine: [EXAMPLE_ELEMENT],
+    forbidWords: PASSAGE_TAGS,
+  }
+  const run = (text: string) =>
+    combine({ id: 'ex', type: 'convert', scoring_mode: 'auto', scoring_config: exCfg } as Problem, { text }, undefined, null)
+  for (const [name, ans] of [['난이도 1', EXAMPLE_ANSWER_1], ['난이도 2', EXAMPLE_ANSWER_2]] as [string, string][]) {
+    const r = run(ans)
+    t(`지시문 ${name} 예시 답안이 그 설정으로 pass`, r.status === 'pass', JSON.stringify(r.checks.filter((c) => c.status !== 'pass').map((c) => c.key)))
+  }
+  // 예시가 여덟 문항의 재료를 쓰면 답을 흘린다.
+  const leaks: string[] = []
+  for (const i of AT_ITEMS) {
+    for (const w of [i.element, i.foreshadow].filter(Boolean) as string[]) {
+      for (const [n, a] of [['1', EXAMPLE_ANSWER_1], ['2', EXAMPLE_ANSWER_2]] as [string, string][]) {
+        if (a.includes(w)) leaks.push(`예시${n} ← ${i.sourceKey}/${w}`)
+      }
+    }
+    if (AT_INSTRUCTION_1.includes(i.situation) || AT_INSTRUCTION_2.includes(i.situation)) {
+      leaks.push(`지시문 ← ${i.sourceKey} situation`)
+    }
+  }
+  t('지시문 예시가 여덟 문항의 재료를 안 쓴다', leaks.length === 0, JSON.stringify(leaks))
+  // 예시가 대괄호 표기를 노출하면 학습자에게 '지문을 통째로 베끼는 길'을 알려 준다.
+  // 난이도 2는 그것이 정확히 네 줄이라 forbidWords 가 서기 전에는 통과했다.
+  for (const [n, ins] of [['1', AT_INSTRUCTION_1], ['2', AT_INSTRUCTION_2]] as [string, string][]) {
+    const inExample = ins.split('↓')[0]
+    t(`지시문 ${n} 의 예시 지문에 대괄호 표기가 없다`, !PASSAGE_TAGS.some((g) => inExample.includes(g)), inExample)
+  }
+}
+
+console.log('\n[10단계 action_turn: 덤프 대조]')
+{
+  // 픽스처와 덤프가 갈리면 위의 감시 전부가 실제 배포물을 안 보는 상태가 된다.
+  // 8·9단계가 같은 가드를 두고 있다. 문항이 덤프에 없으면 건너뛰지 않고 실패시킨다.
+  //
+  // ★ 이 블록이 서면서 [지문 꼴 검사는 아직 안 문다] 의 전제가 바뀐다.
+  //   저 블록은 passageOf 출력을 재서 늘 통과했는데, 여기서는 덤프 passage 를
+  //   잰다 — 자기가 만든 것을 자기가 검사하는 구조가 여기서 풀린다.
+  interface DumpProblem {
+    source_key: string
+    skill_key: string
+    type: string
+    passage: string | null
+    instruction: string
+    difficulty: number
+    tone_tag: string | null
+    genre_tag: string | null
+    scoring_mode: string
+    order_no: number
+    source_tag: string | null
+    scoring_config: Record<string, unknown>
+  }
+  const dump = JSON.parse(readFileSync('seed/dump/problems.json', 'utf8')) as DumpProblem[]
+  const canon = (o: Record<string, unknown>) => JSON.stringify(o, Object.keys(o).sort())
+  const at = dump.filter((d) => d.skill_key === 'action_turn')
+  t('덤프에 action_turn 8문항이 있다', at.length === 8, `실제=${at.length}`)
+  for (const item of AT_ITEMS) {
+    const dp = at.find((d) => d.source_key === item.sourceKey)
+    if (!dp) {
+      t(`'${item.sourceKey}' 가 덤프에 있다`, false, '없다')
+      continue
+    }
+    const bad: string[] = []
+    if (dp.passage !== atPassageOf(item)) bad.push('passage 가 다르다')
+    if (dp.instruction !== instructionOf(item)) bad.push('instruction 이 다르다')
+    if (dp.difficulty !== item.difficulty) bad.push('difficulty 가 다르다')
+    if (dp.tone_tag !== AT_TONE[item.sourceKey]) bad.push('tone_tag 가 다르다')
+    if (dp.type !== 'convert') bad.push(`type 이 ${dp.type} 이다`)
+    if (dp.scoring_mode !== 'auto') bad.push(`scoring_mode 가 ${dp.scoring_mode} 이다`)
+    if (dp.order_no !== 10) bad.push(`order_no 가 ${dp.order_no} 이다`)
+    if (canon(dp.scoring_config) !== canon(actionCfgOf(item) as unknown as Record<string, unknown>)) {
+      bad.push('scoring_config 가 다르다')
+    }
+    t(`'${item.sourceKey}' 덤프 ↔ 픽스처 일치`, bad.length === 0, bad.join(' · '))
+  }
+  // 지시문은 두 종뿐이다. 여덟 개가 그것을 나눠 쓴다(8·9단계와 같은 꼴).
+  const kinds = new Set(at.map((d) => d.instruction))
+  t('덤프 지시문이 두 종이다', kinds.size === 2, `실제=${kinds.size}`)
+  t(
+    '덤프 지시문 두 종이 AT_INSTRUCTION_1·2 다',
+    [...kinds].every((k) => k === AT_INSTRUCTION_1 || k === AT_INSTRUCTION_2)
+  )
 }
 
 // 픽스처와 덤프가 갈리면 위의 감시 전부가 실제 배포물을 안 보는 상태가 된다.
@@ -2050,9 +2156,17 @@ console.log('\n[덤프 ↔ 생성된 SQL: 줄바꿈 · 최신 여부]')
     t(`${dp.source_key}: 덤프 값이 seed_data.sql 에 그대로 있다`, bad.length === 0, bad.join(' · '))
   }
 
-  // (4) E'' 로 나간 리터럴 수 = 덤프에서 줄바꿈을 가진 필드 수. 실측 32.
-  //     8단계 mo-* 8문항(instruction 8 + passage 3)과 9단계 pv-* 8문항
-  //     (instruction 10 + passage 1)이 전부다.
+  // (4) E'' 로 나간 리터럴 수 = 덤프에서 줄바꿈을 가진 필드 수.
+  //
+  //     ★ 등식이 본체다. 절대 수는 문항이 늘면 바뀐다 — 세션 10이 '실측 32'를
+  //       값으로 박아 두었고 10단계 8문항이 들어오면서 48로 늘었다(+16 =
+  //       passage 8 + instruction 8). 등식만 재고 절대 수는 아래 주석에 남긴다.
+  //
+  //     32  8단계 mo-* (instruction 8 + passage 3) · 9단계 pv-* (instruction 10 + passage 1)
+  //     48  + 10단계 at-* (instruction 8 + passage 8)
+  //
+  //     세션 10 §6-1 이 sqlStr 을 고친 뒤로 줄바꿈을 가진 문항이 하나도 안
+  //     들어왔다. 10단계가 그 고침이 실전에서 처음 걸린 자리다.
   const withNewline = sqlDump.reduce(
     (n, dp) =>
       n +
@@ -2060,7 +2174,7 @@ console.log('\n[덤프 ↔ 생성된 SQL: 줄바꿈 · 최신 여부]')
       (dp.passage !== null && /[\n\r]/.test(dp.passage) ? 1 : 0),
     0
   )
-  t(`E'' 리터럴 수가 줄바꿈 보유 필드 수와 같다`, eLiterals === withNewline && eLiterals === 32,
+  t(`E'' 리터럴 수가 줄바꿈 보유 필드 수와 같다`, eLiterals === withNewline,
     `E''=${eLiterals} 줄바꿈필드=${withNewline}`)
 }
 

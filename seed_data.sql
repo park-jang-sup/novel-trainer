@@ -1074,6 +1074,102 @@ select
   2, 'pv-lantern-night'
 where not exists (select 1 from problems p where p.source_key = 'pv-lantern-night');
 
+-- at-cracked-ice (order_no 10, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'action_turn'),
+  'convert', 'auto', E'빌드업 세 줄 뒤에 결정타 한 줄을 쓰시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  결정타로 쓸 것은 사내가 앞서 절뚝인 걸음입니다.\n\n  ↓\n\n  덕수는 주먹을 쥐지 않았다.\n  사내가 걸음을 옮길 때마다 오른쪽이 반 박자 늦었다.\n  덕수는 그것을 세 번 세었다.\n  덕수의 발이 그 절뚝인 걸음을 걸어 넘겼다.\n\n네 줄로 씁니다. [결정타] 요소는 마지막 줄에 옵니다.\n동작을 낱낱이 늘어놓지 않습니다.\n무엇을 했는지보다 왜 그렇게 했는지가 빌드업입니다.',
+  E'[상황] 도경이 얼어붙은 강 위에서 늑대 무리에 둘러싸인다.\n[결정타] 발밑에서 갈라진 얼음', null, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["갈라진 얼음"],"requireInLastLine":["갈라진 얼음"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb,
+  'original', 'fantasy', 'impulsive',
+  1, 'at-cracked-ice'
+where not exists (select 1 from problems p where p.source_key = 'at-cracked-ice');
+
+-- at-left-feeler (order_no 10, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'action_turn'),
+  'convert', 'auto', E'빌드업 세 줄 뒤에 결정타 한 줄을 쓰시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  결정타로 쓸 것은 사내가 앞서 절뚝인 걸음입니다.\n\n  ↓\n\n  덕수는 주먹을 쥐지 않았다.\n  사내가 걸음을 옮길 때마다 오른쪽이 반 박자 늦었다.\n  덕수는 그것을 세 번 세었다.\n  덕수의 발이 그 절뚝인 걸음을 걸어 넘겼다.\n\n네 줄로 씁니다. [결정타] 요소는 마지막 줄에 옵니다.\n동작을 낱낱이 늘어놓지 않습니다.\n무엇을 했는지보다 왜 그렇게 했는지가 빌드업입니다.',
+  E'[상황] 연희가 좁은 갱도에서 마수와 갑자기 마주친다.\n[결정타] 움직임을 읽는 마수의 왼쪽 더듬이', null, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["왼쪽 더듬이"],"requireInLastLine":["왼쪽 더듬이"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb,
+  'original', 'fantasy', 'impulsive',
+  1, 'at-left-feeler'
+where not exists (select 1 from problems p where p.source_key = 'at-left-feeler');
+
+-- at-left-feint (order_no 10, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'action_turn'),
+  'convert', 'auto', E'빌드업 세 줄 뒤에 결정타 한 줄을 쓰시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  결정타로 쓸 것은 사내가 앞서 절뚝인 걸음입니다.\n\n  ↓\n\n  덕수는 주먹을 쥐지 않았다.\n  사내가 걸음을 옮길 때마다 오른쪽이 반 박자 늦었다.\n  덕수는 그것을 세 번 세었다.\n  덕수의 발이 그 절뚝인 걸음을 걸어 넘겼다.\n\n네 줄로 씁니다. [결정타] 요소는 마지막 줄에 옵니다.\n동작을 낱낱이 늘어놓지 않습니다.\n무엇을 했는지보다 왜 그렇게 했는지가 빌드업입니다.',
+  E'[상황] 태윤이 자신보다 머리 하나 큰 상대와 맞붙는다.\n[결정타] 상대가 앞서 한 번 보인 왼발 페인트', null, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["왼발 페인트"],"requireInLastLine":["왼발 페인트"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb,
+  'original', 'modern', 'planned',
+  1, 'at-left-feint'
+where not exists (select 1 from problems p where p.source_key = 'at-left-feint');
+
+-- at-look-back (order_no 10, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'action_turn'),
+  'convert', 'auto', E'빌드업 세 줄 뒤에 결정타 한 줄을 쓰시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  결정타로 쓸 것은 사내가 앞서 절뚝인 걸음입니다.\n\n  ↓\n\n  덕수는 주먹을 쥐지 않았다.\n  사내가 걸음을 옮길 때마다 오른쪽이 반 박자 늦었다.\n  덕수는 그것을 세 번 세었다.\n  덕수의 발이 그 절뚝인 걸음을 걸어 넘겼다.\n\n네 줄로 씁니다. [결정타] 요소는 마지막 줄에 옵니다.\n동작을 낱낱이 늘어놓지 않습니다.\n무엇을 했는지보다 왜 그렇게 했는지가 빌드업입니다.',
+  E'[상황] 수하가 저승 문턱에서 자신을 돌려보내려는 문지기와 마주 선다.\n[결정타] 뒤를 돌아보지 않겠다는 말', null, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["돌아보지 않겠다"],"requireInLastLine":["돌아보지 않겠다"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb,
+  'original', 'romance', 'planned',
+  1, 'at-look-back'
+where not exists (select 1 from problems p where p.source_key = 'at-look-back');
+
+-- at-bell-rope (order_no 10, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'action_turn'),
+  'convert', 'auto', E'빌드업 세 줄 뒤에 결정타 한 줄을 쓰시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  앞서 깔린 것은 지난겨울 덕수의 짐을 엎은 손입니다.\n  결정타로 쓸 것은 사내가 앞서 절뚝인 걸음입니다.\n\n  ↓\n\n  덕수는 그 손을 알아보았다. 지난겨울 자기 짐을 엎은 손이었다.\n  사내는 걸음마다 오른쪽이 반 박자 늦었다.\n  덕수는 그것을 세 번 세었다.\n  덕수의 발이 그 절뚝인 걸음을 걸어 넘겼다.\n\n네 줄로 씁니다. [결정타] 요소는 마지막 줄에, [복선]은 그 앞 어딘가에 옵니다.\n동작을 낱낱이 늘어놓지 않습니다.\n이 싸움을 왜 봐야 하는지가 [복선]에 있습니다.',
+  E'[상황] 서린이 종탑 꼭대기에서 추격자와 마주 선다.\n[복선] 추격자가 죽인 누이\n[결정타] 마지막 층의 종줄', null, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["종줄"],"requireInLastLine":["종줄"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb,
+  'original', 'fantasy', 'planned',
+  2, 'at-bell-rope'
+where not exists (select 1 from problems p where p.source_key = 'at-bell-rope');
+
+-- at-broken-gate (order_no 10, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'action_turn'),
+  'convert', 'auto', E'빌드업 세 줄 뒤에 결정타 한 줄을 쓰시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  앞서 깔린 것은 지난겨울 덕수의 짐을 엎은 손입니다.\n  결정타로 쓸 것은 사내가 앞서 절뚝인 걸음입니다.\n\n  ↓\n\n  덕수는 그 손을 알아보았다. 지난겨울 자기 짐을 엎은 손이었다.\n  사내는 걸음마다 오른쪽이 반 박자 늦었다.\n  덕수는 그것을 세 번 세었다.\n  덕수의 발이 그 절뚝인 걸음을 걸어 넘겼다.\n\n네 줄로 씁니다. [결정타] 요소는 마지막 줄에, [복선]은 그 앞 어딘가에 옵니다.\n동작을 낱낱이 늘어놓지 않습니다.\n이 싸움을 왜 봐야 하는지가 [복선]에 있습니다.',
+  E'[상황] 세연이 무너진 성문 아래서 마수와 갑자기 마주친다.\n[복선] 작년에 동생을 문 이빨\n[결정타] 부러진 창끝', null, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["창끝"],"requireInLastLine":["창끝"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb,
+  'original', 'fantasy', 'impulsive',
+  2, 'at-broken-gate'
+where not exists (select 1 from problems p where p.source_key = 'at-broken-gate');
+
+-- at-edit-log (order_no 10, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'action_turn'),
+  'convert', 'auto', E'빌드업 세 줄 뒤에 결정타 한 줄을 쓰시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  앞서 깔린 것은 지난겨울 덕수의 짐을 엎은 손입니다.\n  결정타로 쓸 것은 사내가 앞서 절뚝인 걸음입니다.\n\n  ↓\n\n  덕수는 그 손을 알아보았다. 지난겨울 자기 짐을 엎은 손이었다.\n  사내는 걸음마다 오른쪽이 반 박자 늦었다.\n  덕수는 그것을 세 번 세었다.\n  덕수의 발이 그 절뚝인 걸음을 걸어 넘겼다.\n\n네 줄로 씁니다. [결정타] 요소는 마지막 줄에, [복선]은 그 앞 어딘가에 옵니다.\n동작을 낱낱이 늘어놓지 않습니다.\n이 싸움을 왜 봐야 하는지가 [복선]에 있습니다.',
+  E'[상황] 민재가 기획안을 가로챈 팀장과 마주 앉는다.\n[복선] 회의 전에 공유해 둔 초안\n[결정타] 초안에 남은 수정 기록', null, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["수정 기록"],"requireInLastLine":["수정 기록"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb,
+  'original', 'modern', 'planned',
+  2, 'at-edit-log'
+where not exists (select 1 from problems p where p.source_key = 'at-edit-log');
+
+-- at-left-draw (order_no 10, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'action_turn'),
+  'convert', 'auto', E'빌드업 세 줄 뒤에 결정타 한 줄을 쓰시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  앞서 깔린 것은 지난겨울 덕수의 짐을 엎은 손입니다.\n  결정타로 쓸 것은 사내가 앞서 절뚝인 걸음입니다.\n\n  ↓\n\n  덕수는 그 손을 알아보았다. 지난겨울 자기 짐을 엎은 손이었다.\n  사내는 걸음마다 오른쪽이 반 박자 늦었다.\n  덕수는 그것을 세 번 세었다.\n  덕수의 발이 그 절뚝인 걸음을 걸어 넘겼다.\n\n네 줄로 씁니다. [결정타] 요소는 마지막 줄에, [복선]은 그 앞 어딘가에 옵니다.\n동작을 낱낱이 늘어놓지 않습니다.\n이 싸움을 왜 봐야 하는지가 [복선]에 있습니다.',
+  E'[상황] 무결이 지난달 자신을 벤 상대와 다시 마주한다.\n[복선] 그때 부러진 오른팔\n[결정타] 한 달을 감춘 왼손 발도', null, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["왼손 발도"],"requireInLastLine":["왼손 발도"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb,
+  'original', 'martial', 'planned',
+  2, 'at-left-draw'
+where not exists (select 1 from problems p where p.source_key = 'at-left-draw');
+
 -- ch-village-approval (order_no 14, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
