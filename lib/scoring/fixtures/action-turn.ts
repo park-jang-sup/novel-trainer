@@ -37,7 +37,7 @@ export interface ActionItem {
     why: string
     /** 좋은 답안 18건. 마지막 줄을 짧게 끊은 것이 섞여 있어야 한다 */
     goods: string[]
-    /** 뚫기 11건. BYPASS_KINDS 에서 골라 쓴다 */
+    /** 뚫기 12건. BYPASS_KINDS 에서 골라 쓴다 — 목록 전부를 하나씩 */
     bypasses: { key: string; text: string; known?: true }[]
 }
 
@@ -517,11 +517,15 @@ export const AT_ITEMS: ActionItem[] = [
 ]
 
 /**
- * 난이도 2 전용 뚫기. **BYPASS_KINDS 11건과 따로 센다.**
- * 섞으면 난이도 2가 미검출 4/12 가 되어 난이도 1의 3/11 과 비교가 깨진다.
+ * 난이도 2 전용 뚫기. **BYPASS_KINDS 12건과 따로 센다.**
+ * 섞으면 난이도 2가 미검출 4/13 이 되어 난이도 1의 3/12 와 비교가 깨진다.
+ * 난이도 2 지문 넷이 전부 하나씩 가져야 한다 — validateActionItem 이 그것을 잰다.
+ * at-left-draw 가 한동안 빠져 있었고, verify 의 if (ex) 가 건너뛰어 아무도 몰랐다.
  * foreshadow 가 채점에 안 들어가니 원리적으로 못 잡는다 — 알려진 한계 넷째다.
  */
 export const AT_D2_EXTRA: Record<string, { key: string; text: string }> = {
+    'at-left-draw':
+        { key: '복선(오른팔)을 안 씀', text: '검집이 허리에서 낮게 울었다.\n두 사람 사이가 세 걸음으로 줄었다.\n상대가 먼저 검을 들었다.\n왼손 발도가 그보다 빨랐다.' },
     'at-broken-gate':
     { key: '복선(이빨)을 안 씀', text: '마수가 성문 아래를 막고 섰다.\n세연은 물러설 데가 없었다.\n손에 잡히는 것을 아무거나 쥐었다.\n세연이 창끝을 휘둘렀다.' },
     'at-bell-rope':
@@ -659,6 +663,11 @@ export function validateActionItem(item: ActionItem): string[] {
     if (item.goods.length !== 18) fails.push(`좋은 답안이 18건이 아니다 (${item.goods.length})`)
     if (item.why.length < 20) fails.push('why 가 너무 짧다')
 
+    // 난이도 2 는 전용 뚫기를 하나 가져야 한다. 없으면 verify 가 건너뛰어
+    // '아직 안 넣었다'와 '통과'가 구별되지 않는다(세션 10 §4).
+    if ((item.foreshadow !== undefined) !== (AT_D2_EXTRA[item.sourceKey] !== undefined)) {
+        fails.push('난이도와 전용 뚫기(AT_D2_EXTRA) 유무가 안 맞는다')
+    }
     // 갈래 목록 고정. 이름이 두 번 갈렸고 두 번 다 사람 눈이 잡았다.
     const kinds = new Set<string>(BYPASS_KINDS)
     for (const b of item.bypasses) if (!kinds.has(b.key)) fails.push(`목록에 없는 뚫기 갈래 (${b.key})`)

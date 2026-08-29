@@ -1640,10 +1640,16 @@ console.log('\n[10단계 action_turn: 오탐 감시 · 뚫기 · 알려진 한�
     }
     // 난이도 2 전용 뚫기. ★ 위 11건과 따로 센다 — 섞으면 난이도 2가 미검출
     // 4/12 가 되어 난이도 1의 3/11 과 비교가 깨진다.
+    // ★ 건너뛰지 않는다. 난이도 2인데 전용 뚫기가 없으면 실패시킨다 —
+    //   if (ex) 로 두었더니 at-left-draw 가 빠진 것을 아무도 못 봤다.
     const ex = AT_D2_EXTRA[item.sourceKey]
-    if (ex) {
-      const r = runAt(item, ex.text)
-      t(`'${item.sourceKey}' 전용 뚫기 '${ex.key}' → pass (알려진 한계 넷째)`, r.status === 'pass', atExtra(item, ex.key, r))
+    if (item.foreshadow !== undefined || ex) {
+      if (!ex) {
+        t(`'${item.sourceKey}' 전용 뚫기가 있다`, false, '난이도 2인데 AT_D2_EXTRA 에 없다')
+      } else {
+        const r = runAt(item, ex.text)
+        t(`'${item.sourceKey}' 전용 뚫기 '${ex.key}' → pass (알려진 한계 넷째)`, r.status === 'pass', atExtra(item, ex.key, r))
+      }
     }
   }
 }

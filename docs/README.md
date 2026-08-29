@@ -20,7 +20,8 @@
 
 인수인계_세션11.md   ★ 살아 있다
     10단계 완료 · 붙여넣기 탐침 3·4·2 확정
-    8장 AI 심사 조회 — 171건 표본 · 상한 둘 · 지출 상한이 강제되지 않는다
+    8·8-1장 AI 심사 조회 — 표본 244(AI 행 172) · 상한 둘
+    ai_usage_log 가 이미 있다. 지출 상한은 프롬프트를 안 기다린다
 
 인수인계_세션6.md    ★ §12 가 살아 있다
     AI 심사를 붙이기 전 조건 셋. 다섯 세션째 아무도 안 건드렸다
@@ -67,7 +68,7 @@ npx next typegen            # ★ 안 돌리면 다음 줄이 3건 뜬다
 npx tsc --noEmit            # 0건
 npm run lint                # 깨끗
 npm run gen:seed            # 아무 파일도 안 바뀌어야 한다
-npm run test:scoring        # 1596 통과 / 0 실패
+npm run test:scoring        # 1597 통과 / 0 실패
 npx tsx scripts/at-table.ts # 10단계 배정표
 ```
 
