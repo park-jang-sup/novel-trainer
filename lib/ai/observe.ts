@@ -34,6 +34,29 @@ export interface ObserveOutcome {
   model: string
   /** 파싱이 깨졌을 때만. 사람이 보려고 남긴다 */
   raw: string | null
+  /**
+   * 실패의 내용. **`error` 만으로는 왜 실패했는지 모른다.**
+   * ★ 4-7장에서 고친 것과 같은 병을 이 파일이 저지르고 있었다 —
+   *   `call_failed` 만 내고 던진 것을 통째로 버렸다. 오류가 오는데 내용이 없다.
+   */
+  detail: string | null
+}
+
+/** 던져진 것에서 사람이 읽을 줄을 뽑는다. SDK 는 Error 가 아닌 것도 던진다. */
+function detailOf(e: unknown): string {
+  if (e instanceof Error) {
+    // SDK 가 status·code 를 얹어 오는 경우가 있다. 있으면 함께 낸다.
+    const extra = e as Error & { status?: unknown; code?: unknown }
+    const bits = [e.message]
+    if (extra.status !== undefined) bits.push(`status=${String(extra.status)}`)
+    if (extra.code !== undefined) bits.push(`code=${String(extra.code)}`)
+    return bits.join(' · ')
+  }
+  try {
+    return JSON.stringify(e)
+  } catch {
+    return String(e)
+  }
 }
 
 export async function observeWith(
@@ -46,10 +69,14 @@ export async function observeWith(
   let reply: GeminiReply
   try {
     reply = await call(prompt, model)
-  } catch {
+  } catch (e) {
     // 호출이 못 나갔다. 태운 토큰이 없으니 usage 도 없다.
     // ★ 부분 실패(응답은 왔는데 끊김)는 gemini.ts 가 usage 를 채워 던지지 않는다.
-    return { ok: false, observation: null, error: 'call_failed', usage: null, costUsd: null, model, raw: null }
+    return {
+      ok: false, observation: null, error: 'call_failed',
+      usage: null, costUsd: null, model, raw: null,
+      detail: detailOf(e),
+    }
   }
 
   const cost = costUsd(reply.model, reply.usage)
@@ -64,6 +91,7 @@ export async function observeWith(
       costUsd: cost,
       model: reply.model,
       raw: parsed.raw.slice(0, 500),
+      detail: parsed.reason === 'not_json' ? 'JSON 이 아니다' : '꼴이 다르다',
     }
   }
 
@@ -75,5 +103,6 @@ export async function observeWith(
     costUsd: cost,
     model: reply.model,
     raw: null,
+    detail: null,
   }
 }

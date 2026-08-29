@@ -303,6 +303,15 @@ async function main() {
         `in=${u?.inputTokens ?? '-'} cache=${u?.cachedTokens ?? '-'} out=${u?.outputTokens ?? '-'} ` +
         `$${outcome.costUsd ?? '-'}  ${outcome.ok ? 'ok' : '★ ' + outcome.error}`
     )
+    if (!outcome.ok && outcome.detail) console.log(`      ${outcome.detail}`)
+    if (!outcome.ok && outcome.raw) console.log(`      raw: ${outcome.raw.slice(0, 200)}`)
+
+    // ★ 첫 호출부터 못 나가면 뒤를 더 돌릴 이유가 없다. 열 번 같은 오류를
+    //   찍는 대신 멈춘다 — 부분 실패와 설정 실패를 가르는 자리다.
+    if (outcome.error === 'call_failed' && calls === 1) {
+      console.log('\n★ 첫 호출부터 못 나갔다. 설정 문제다 — 뒤를 안 돌린다.')
+      break
+    }
   }
 
   // ── 요약. 설계안 8장을 정정할 수 있는 수는 이 넷이다 ──────────────────

@@ -93,9 +93,10 @@ import {
   checkRunBudget,
   type GateDecision,
 } from '../ai/gate'
-import { buildPrompt, elementOf, fourLines, parseObservation, passesAt } from '../ai/prompt'
+import { buildPrompt, elementOf, fourLines, looksLikeC4, parseObservation, passesAt, PROMPT_FRAME, PROMPT_FRAME_CHARS } from '../ai/prompt'
 import { costUsd } from '../ai/pricing'
 import { observeWith } from '../ai/observe'
+import { backoffMs, isRetryable, statusOf } from '../ai/retry'
 
 let pass = 0
 let fail = 0
@@ -2293,6 +2294,63 @@ console.log('\n[AI 마개 — 게이트와 관측]')
   t('마개: 하니스 상한 아래면 통과한다', checkRunBudget(9, 10).allow)
   t('병: 하니스 상한이 0이면 막는다', ruleOf(checkRunBudget(0, 0)) === 'run_cap')
 
+  // ── 재시도 판단 ────────────────────────────────────────────────────
+  //
+  // ★ 503 은 실제로 만난 것이다. `gemini-3.7-flash` 가 몰려서
+  //   `This model is currently experiencing high demand` 를 냈다.
+  //   172건을 돌리면 몇 건은 반드시 만난다 — 재시도가 없으면 측정이
+  //   프롬프트가 아니라 모델 혼잡도를 잰다.
+  //
+  // ★★ SDK 가 던지는 꼴이 하나가 아니었다. 상태가 `Error.status` 가 아니라
+  //   **메시지 안의 JSON** 으로 왔다. 그걸 못 캐면 재시도가 통째로 안 돈다.
+  t('재시도: message 안의 JSON 에서 상태를 캔다',
+    statusOf(new Error('{"error":{"code":503,"message":"high demand","status":"UNAVAILABLE"}}')) === 503)
+  t('재시도: Error.status 에서도 캔다', statusOf(Object.assign(new Error('x'), { status: 429 })) === 429)
+  t('재시도: 못 캐면 null 이다', statusOf(new Error('그냥 실패')) === null)
+
+  t('재시도: 503 은 다시 건다', isRetryable(new Error('{"error":{"code":503}}')))
+  t('재시도: 429 는 다시 건다', isRetryable(Object.assign(new Error('x'), { status: 429 })))
+  // ★ 400·403 은 다시 걸어도 같은 답이 온다. 재시도가 그것을 가리면 안 된다.
+  t('병: 400 은 다시 안 건다', !isRetryable(new Error('{"error":{"code":400}}')))
+  t('병: 403 은 다시 안 건다', !isRetryable(Object.assign(new Error('x'), { status: 403 })))
+  t('재시도: 중단·끊김은 다시 건다', isRetryable(new Error('This operation was aborted')))
+
+  // 지수로 늘리되 흔들림이 붙는다. 172건이 같은 박자로 재시도하면 우리가 더 민다.
+  t('재시도: 대기가 지수로 는다', backoffMs(0, () => 1) < backoffMs(3, () => 1))
+  t('재시도: 흔들림이 붙는다', backoffMs(2, () => 0) !== backoffMs(2, () => 1))
+  t('재시도: 상한 30초를 안 넘는다', backoffMs(20, () => 1) <= 30_000)
+
+  // ── 프롬프트 v2 — 바뀐 곳과 안 바뀐 곳 ─────────────────────────────
+  //
+  // ★★ v1 과 v2 의 차이가 `delete` 하나여야 두 결과를 나란히 놓을 수 있다.
+  //   `cue_copied` 는 36건에서 8/8, `foreshadow_used` 는 4/4 로 섰다 —
+  //   서 있는 관측을 같이 고치면 무엇이 좋아졌는지 못 가린다.
+  //   그래서 **안 바뀐 것을 검사가 문다.** 사람 눈으로 대조하면 다음 번에 샌다.
+  t('v2: cue_copied 문안이 안 바뀌었다',
+    PROMPT_FRAME.includes('그 낱말을 자기 문장으로 만들었으면 false, 구절째 놔뒀으면 true.') &&
+    PROMPT_FRAME.includes('★ 4번 줄이 짧은 것은 true 의 근거가 아니다. 짧게 끊는 것은 권장되는 마무리다.'))
+  t('v2: foreshadow_used 문안이 안 바뀌었다',
+    PROMPT_FRAME.includes('지문에 [복선] 줄이 있을 때만 판정한다. 없으면 null.') &&
+    PROMPT_FRAME.includes('1~3번 줄 중 하나라도 그 복선을 집어 쓰면 true, 한 번도 안 쓰면 false.'))
+  t('v2: has_actor 문안이 안 바뀌었다',
+    PROMPT_FRAME.includes('4번 줄에 인물의 행동이나 상태가 있으면 true, 사물·상황만 있는 명사구면 false.'))
+
+  // 바뀐 곳 — v1 이 무너진 자리 셋을 각각 막는 문장이 실제로 들어 있는가.
+  t('v2: C-1 을 막는다 (1번 줄도 판정)', PROMPT_FRAME.includes('1번 줄도 반드시 판정한다'))
+  t('v2: C-2 를 막는다 (4번 줄 하나만)', PROMPT_FRAME.includes('2번 줄과 3번 줄 사이의 근거는 세지 않는다'))
+  t('v2: C-4 를 막는다 (지시 해소는 false)', PROMPT_FRAME.includes('주어·주체·대상이 누구인지 모호해진다'))
+  // v1 의 문장은 사라져야 한다. 남아 있으면 v1 과 v2 가 섞인 것이다.
+  t('병: v1 의 delete 문안이 안 남아 있다',
+    !PROMPT_FRAME.includes("★ 문장 연결이 어색해지는 것은 세지 않는다. 4번 줄의 근거가 사라지는지만 본다."))
+
+  // why 계수기 — 판정에 안 쓰고 사람이 읽을 자리를 좁히는 데만 쓴다.
+  t('why: C-4 말투를 집는다', looksLikeC4('2번 줄을 지우면 4번 창끝이 박힌 주체가 불분명해짐'))
+  t('why: 근거를 댄 why 는 안 집는다', !looksLikeC4('3번의 얼음 소리가 4번 얼음 파쇄의 직접적 복선임'))
+
+  // ★ 틀 길이는 **출력만 한다.** 수를 박으면 문안을 고칠 때마다 낡는다 —
+  //   check:numbers 가 세운 규칙과 같다. v1 은 1,010자였다.
+  console.log(`  틀 ${PROMPT_FRAME_CHARS}자 (v1 은 1,010자였다 — 비용 계산에 들어간다)`)
+
   // ── 프롬프트와 파싱 ────────────────────────────────────────────────
   //
   // ★ 프롬프트 문안의 단일 출처는 docs/AI심사_설계안.md 2-2 다. 여기서 재는 것은
@@ -2373,6 +2431,20 @@ console.log('\n[AI 마개 — 게이트와 관측]')
     tAsync('병: 호출이 실패하면 call_failed 이고 usage 가 없다', async () => {
       const r = await observeWith(async () => { throw new Error('네트워크') }, input, 'gemini-3.7-flash')
       return !r.ok && r.error === 'call_failed' && r.usage === null && r.costUsd === null
+    })
+
+    // ★★ 병: 실패는 **내용을 실어 와야 한다.** `call_failed` 만 오면 왜 실패했는지
+    //    모른다 — 4-7장의 `head: true` 와 같은 병을 observe.ts 가 저지르고 있었다.
+    //    실제로 첫 --n=10 이 `★ call_failed` 만 열 줄 찍고 끝났다.
+    tAsync('병: 실패하면 던진 내용이 실려 온다', async () => {
+      const r = await observeWith(async () => { throw new Error('네트워크가 끊겼다') }, input, 'gemini-3.7-flash')
+      return !r.ok && !!r.detail && r.detail.includes('네트워크가 끊겼다')
+    })
+
+    // Error 가 아닌 것을 던져도 버리지 않는다. SDK 가 늘 Error 를 던지지는 않는다.
+    tAsync('병: Error 가 아닌 것을 던져도 내용이 남는다', async () => {
+      const r = await observeWith(async () => { throw { status: 404 } }, input, 'gemini-3.7-flash')
+      return !r.ok && !!r.detail && r.detail.includes('404')
     })
 
     // ★★ 병: 모델이 헛소리를 뱉어도 **비용은 나온다.** 토큰은 태웠다.

@@ -1,6 +1,7 @@
 import 'server-only'
 import { GoogleGenAI, ThinkingLevel } from '@google/genai'
 import type { GeminiCall, GeminiReply } from './observe'
+import { backoffMs, isRetryable, statusOf } from './retry'
 
 /**
  * Gemini 호출. **네트워크만 담당한다** — 판정도 조립도 observe.ts 에 있다.
@@ -19,7 +20,17 @@ import type { GeminiCall, GeminiReply } from './observe'
  */
 export const DEFAULT_MODEL = 'gemini-3.7-flash'
 
-const TIMEOUT_MS = 30_000
+/**
+ * ★ 30초였다가 늘렸다. `gemini-3.7-flash` 가 몰릴 때 **503 이 63초 만에**
+ *   왔다 — 30초에 자르면 그 503 을 못 보고 `call_failed` 만 남는다.
+ *   마개를 세우려고 짧게 잡은 것이 진단을 가렸다.
+ */
+const TIMEOUT_MS = Number(process.env.GEMINI_TIMEOUT_MS || 90_000)
+
+/** 재시도 횟수. 첫 시도를 뺀 수다. */
+const MAX_RETRIES = Number(process.env.GEMINI_MAX_RETRIES || 4)
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 /**
  * ★ 흔들림 측정의 축이 여기다. `temperature` 자리를 이것이 대신한다.
@@ -71,6 +82,22 @@ export const callGemini: GeminiCall = async (prompt, model): Promise<GeminiReply
 
   const ai = new GoogleGenAI({ apiKey })
 
+  let lastError: unknown
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    if (attempt > 0) await sleep(backoffMs(attempt - 1))
+    try {
+      return await once(ai, prompt, model)
+    } catch (e) {
+      lastError = e
+      if (!isRetryable(e)) throw e
+      const s = statusOf(e)
+      console.error(`  Gemini ${s ?? '?'} — ${attempt + 1}/${MAX_RETRIES + 1} 시도`)
+    }
+  }
+  throw lastError
+}
+
+async function once(ai: GoogleGenAI, prompt: string, model: string): Promise<GeminiReply> {
   const res = await ai.models.generateContent({
     model,
     contents: prompt,

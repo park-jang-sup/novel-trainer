@@ -10,7 +10,8 @@
     "test:scoring": "tsx lib/scoring/verify.ts",
     "check:numbers": "tsx scripts/stale-numbers.ts",
     "gen:seed": "tsx scripts/gen-seed.ts",
-    "ai:probe": "NODE_OPTIONS=--conditions=react-server tsx scripts/ai-probe.ts"
+    "ai:probe": "NODE_OPTIONS=--conditions=react-server tsx scripts/ai-probe.ts",
+    "ai:report": "tsx scripts/ai-report.ts"
   },
   "dependencies": {
     "@google/genai": "^2.19.0",
