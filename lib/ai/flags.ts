@@ -55,7 +55,7 @@ export async function readFlags(): Promise<SystemFlags> {
     .in('key', ['kill_switch', 'daily_spend_cap_usd'])
 
   if (error) {
-    console.error('system_flags select failed', 'code=' + error.code, 'message=' + error.message)
+    logPgError('system_flags select', error)
     return { killSwitch: null, dailySpendCapUsd: null }
   }
 
@@ -86,7 +86,36 @@ export async function readFlags(): Promise<SystemFlags> {
 function todayFilter() {
   const since = new Date()
   since.setUTCHours(0, 0, 0, 0)
-  return `created_at.is.null,created_at.gte.${since.toISOString()}`
+  // ★ 밀리초를 뗀다. PostgREST 의 `or=()` 안에서 값은 점(.)으로 갈리는 자리다.
+  //   `...T00:00:00.000Z` 는 점을 하나 더 갖고 있어 파서에 걸릴 여지가 있다.
+  //   초 단위여도 하루 경계를 재는 데 아무 손해가 없다.
+  const iso = since.toISOString().replace(/\.\d{3}Z$/, 'Z')
+  return `created_at.is.null,created_at.gte.${iso}`
+}
+
+/**
+ * 오류를 통째로 낸다. `code` 하나만 찍으면 무엇이 왔는지 모른다 —
+ * 실제로 `code=undefined message=` 만 보고 권한인지 문법인지 못 갈랐다.
+ */
+export function logPgError(
+  where: string,
+  e: { code?: string; message?: string; details?: string; hint?: string }
+) {
+  console.error(
+    `${where} failed`,
+    'code=' + (e.code || '(없음)'),
+    'message=' + (e.message || '(없음)'),
+    'details=' + (e.details || '(없음)'),
+    'hint=' + (e.hint || '(없음)')
+  )
+  if (e.code === '42501') {
+    console.error('  ★ 42501 은 권한이다. seed_schema.sql 을 DB 에 다시 적용해라 —')
+    console.error('    파일만 고쳐서는 안 걸린다. grant 는 DB 에 가야 걸린다.')
+    if ((e.message || '').includes('sequence')) {
+      console.error('    ★★ 시퀀스다. 테이블 권한과 다른 객체다:')
+      console.error('       grant usage, select on sequence public.ai_usage_log_id_seq to service_role;')
+    }
+  }
 }
 
 export async function sumSpendTodayUsd(): Promise<number | null> {
@@ -95,7 +124,7 @@ export async function sumSpendTodayUsd(): Promise<number | null> {
   const { data, error } = await admin.from('ai_usage_log').select('cost_usd').or(todayFilter())
 
   if (error) {
-    console.error('ai_usage_log select failed', 'code=' + error.code, 'message=' + error.message)
+    logPgError('ai_usage_log select', error)
     return null
   }
 
@@ -117,16 +146,27 @@ export async function sumSpendTodayUsd(): Promise<number | null> {
  * 오늘 행 수. 비용이 아니라 **쓰기가 실제로 도착했는지**를 보려고 센다.
  * 하니스의 예비 검사가 이 수가 하나 느는지로 insert 를 확인한다 —
  * `$0` 짜리 표시 행은 합계를 안 움직여서 합계로는 못 본다.
+ *
+ * ★★ **`head: true` 를 쓰지 않는다.** HEAD 응답은 본문이 없어서, 오류가 나도
+ *   PostgREST 가 실어 보내는 `{code, message, details, hint}` 가 통째로
+ *   사라진다. 실제로 `code=undefined message=` 만 나왔고, 그래서 권한(42501)
+ *   인지 필터 문법(400)인지를 못 갈랐다.
+ *
+ *   ★ `검사가 통과한 채로 비는 자리` 의 사촌이다 — 이쪽은 **오류가 오는데
+ *     내용이 없다.** 몸통을 안 받는 최적화가 진단을 통째로 지웠다.
+ *     `limit(1)` 로 몸통을 최소로 두되 **받기는 받는다.** count 는 어차피
+ *     Content-Range 헤더로 오므로 limit 이 세는 수를 안 줄인다.
  */
 export async function countTodayRows(): Promise<number | null> {
   const admin = createAdminClient()
   const { count, error } = await admin
     .from('ai_usage_log')
-    .select('id', { count: 'exact', head: true })
+    .select('id', { count: 'exact' })
     .or(todayFilter())
+    .limit(1)
 
   if (error) {
-    console.error('ai_usage_log count failed', 'code=' + error.code, 'message=' + error.message)
+    logPgError('ai_usage_log count', error)
     return null
   }
   return count ?? null

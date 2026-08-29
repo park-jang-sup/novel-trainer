@@ -35,13 +35,16 @@
  * ★ `--conditions=react-server` 가 필요하다(package.json 이 준다). gemini.ts 와
  *   flags.ts 가 `server-only` 를 문다 — 그 표시를 떼지 않는다. 여기는 서버다.
  */
+// ★ 이 import 가 맨 앞이어야 한다. 아래 모듈들이 불릴 때 process.env 가
+//   이미 채워져 있어야 한다 — gemini.ts 는 로드 시점에 env 를 읽는다.
+import './load-env'
 import { writeFileSync } from 'node:fs'
 import { AT_ITEMS, AT_D2_EXTRA, passageOf } from '../lib/scoring/fixtures/action-turn'
 import { buildPrompt, fourLines, PROMPT_FRAME_CHARS } from '../lib/ai/prompt'
 import { observeWith, type ObserveOutcome } from '../lib/ai/observe'
 import { callGemini, DEFAULT_MODEL, THINKING_LEVEL } from '../lib/ai/gemini'
 import { checkGateBeforeQuota, checkRunBudget } from '../lib/ai/gate'
-import { countTodayRows, readFlags, sumSpendTodayUsd } from '../lib/ai/flags'
+import { countTodayRows, logPgError, readFlags, sumSpendTodayUsd } from '../lib/ai/flags'
 import { createAdminClient } from '../lib/supabase/admin'
 import { PRICES, PROMO_ENDS } from '../lib/ai/pricing'
 
@@ -147,7 +150,7 @@ async function preflightWrite(): Promise<boolean> {
   })
   if (error) {
     console.error('★ ai_usage_log 에 못 적는다. 호출하기 전에 멈춘다.')
-    console.error('  code=' + error.code, 'message=' + error.message, 'hint=' + error.hint)
+    logPgError('ai_usage_log insert', error)
     console.error('  23502(not null)면 AI_PROBE_USER_ID 를 주고 다시 돌려라.')
     return false
   }
@@ -198,9 +201,20 @@ async function main() {
     return
   }
 
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    console.error('\n★ DB 자격이 없다. .env.local 에 NEXT_PUBLIC_SUPABASE_URL 과')
-    console.error('  SUPABASE_SERVICE_ROLE_KEY 가 있어야 마개가 선다. 자격 없이 볼 것은 --dry 다.')
+  // 무엇이 있고 무엇이 없는지를 이름으로 낸다. `자격이 없다` 한 줄로는
+  // '파일이 없다' 와 '읽는 코드가 없다' 를 못 가른다 — 실제로 그 둘을 헷갈렸다.
+  const need = ['NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY']
+  const missing = need.filter((k) => !process.env[k])
+  console.log(
+    '\nenv  ' +
+      [...need, 'GEMINI_API_KEY']
+        .map((k) => `${k}=${process.env[k] ? '있음' : '없음'}`)
+        .join(' · ')
+  )
+  if (missing.length > 0) {
+    console.error(`★ DB 자격이 없다: ${missing.join(' · ')}`)
+    console.error('  .env.local 에 넣어라. 이 스크립트가 그 파일을 읽는다(scripts/load-env.ts).')
+    console.error('  자격 없이 볼 것은 --dry 다.')
     process.exit(1)
   }
 
@@ -275,7 +289,7 @@ async function main() {
       })
       if (error) {
         console.error('\n★ ai_usage_log 에 못 적었다. 지출을 못 세면 상한이 아니다 — 멈춘다.')
-        console.error('  code=' + error.code, 'message=' + error.message, 'hint=' + error.hint)
+        logPgError('ai_usage_log insert', error)
         console.error('  user_id 가 not null 이면 AI_PROBE_USER_ID 를 주고 다시 돌려라.')
         results.push({ ...c, outcome })
         break

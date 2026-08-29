@@ -71,6 +71,15 @@ grant select, update on public.system_flags    to service_role;
 --   세션 12가 'ai_usage_log 가 이미 있다' 로 가-2 를 신설에서 배선으로 낮췄는데,
 --   배선에도 이 줄이 필요했다.
 grant select, insert on public.ai_usage_log    to service_role;
+-- 그리고 테이블 권한만으로는 여전히 못 넣는다. id 가 bigserial 이라 INSERT 가
+-- 시퀀스를 당기고, 시퀀스는 **테이블과 다른 객체**라 권한을 따로 받는다.
+--   permission denied for sequence ai_usage_log_id_seq
+--
+-- ★ 이 파일 위쪽이 `GRANT 와 RLS 는 다른 층이다` 라고 적어 뒀는데, 층이 둘이
+--   아니라 셋이었다. 테이블 권한 · 시퀀스 권한 · RLS 정책이다.
+--   identity 컬럼(generated as identity)이면 이 줄이 필요 없다 — bigserial 일
+--   때만이다. 그래서 눈으로는 안 보이고 넣어 봐야 걸린다.
+grant usage, select on sequence public.ai_usage_log_id_seq to service_role;
 
 
 -- submissions 는 읽기와 쓰기 정책을 나눈다.
