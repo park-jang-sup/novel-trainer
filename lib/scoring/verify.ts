@@ -7,7 +7,7 @@
 //
 // 실행: npm run test:scoring
 
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import path from 'node:path'
 import { combine, findForbidden, mergeForbidChecks, gradeLocal, pendingMorphChecks } from './index'
 import { sqlStr, countRawNewlinesInStrings } from '../seed-sql'
@@ -2188,6 +2188,31 @@ console.log('\n[덤프 ↔ 생성된 SQL: 줄바꿈 · 최신 여부]')
   )
   t(`E'' 리터럴 수가 줄바꿈 보유 필드 수와 같다`, eLiterals === withNewline,
     `E''=${eLiterals} 줄바꿈필드=${withNewline}`)
+}
+
+console.log('\n[docs ↔ README 대조]')
+{
+  // docs/README.md 가 '살아 있는 것' 을 가린다. 그것이 없는 파일을 가리키거나
+  // 있는 파일을 안 가리키면 README 가 거짓말을 한다 — 그런데 test:scoring 도
+  // check:numbers 도 그걸 안 본다. `git status` 로만 보이던 자리다.
+  //
+  // ★ 두 방향을 다 잰다. 한 방향만 재면 정규식이 덜 잡아도 통과한다.
+  //   셸 한 줄(grep -oE '[가-힣...]')로 두면 로케일에 따라 조용히 덜 잡는다.
+  //   실제로 한 쪽 환경에서 'Invalid collation character' 로 죽고 다른 쪽에서는
+  //   일부만 뽑혔다. 방향 2 가 그 미탐을 잡는다.
+  const docsDir = path.join(__dirname, '..', '..', 'docs')
+  const readme = readFileSync(path.join(docsDir, 'README.md'), 'utf8')
+  const named = [...new Set([...readme.matchAll(/([^\s`'"()]+\.md)/g)].map((m) => m[1]))]
+    .filter((f) => f !== 'README.md')
+  const onDisk = readdirSync(docsDir).filter((f) => f.endsWith('.md') && f !== 'README.md')
+
+  const missing = named.filter((f) => !existsSync(path.join(docsDir, f)))
+  t('README 가 가리키는 문서가 전부 실재한다', missing.length === 0,
+    `없는 것=${JSON.stringify(missing)}`)
+
+  const unlisted = onDisk.filter((f) => !named.includes(f))
+  t('docs 의 문서가 전부 README 에 있다', unlisted.length === 0,
+    `안 가리키는 것=${JSON.stringify(unlisted)}`)
 }
 
 console.log(`\n최종: ${pass} 통과 / ${fail} 실패`)
