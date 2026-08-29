@@ -888,19 +888,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'dialogue_ratio'),
-  'convert', 'auto', '대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.
-
-  사공이 노를 놓고 물끄러미 강 건너를 보았다.
-  "오늘은 배를 안 띄우려 하오."
-  ''이 물살이면 반도 못 가서 뒤집힌다.''
-  "삯은 이미 받으셨잖습니까."
-  "받은 것은 내일 돌려드리리다."
-
-원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다.',
-  '산신이 물속에서 금도끼를 건져 올려 나무꾼 앞에 놓았다.
-"네가 빠뜨린 것이 이것이냐."
-"아닙니다. 제 것은 낡은 쇠도끼입니다."
-"그 말이 참이면 셋을 다 가져가거라."', null, '{"maxChars":200,"minChars":75,"requireAny":["쇠도끼"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
+  'convert', 'auto', E'대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.\n\n  사공이 노를 놓고 물끄러미 강 건너를 보았다.\n  "오늘은 배를 안 띄우려 하오."\n  ''이 물살이면 반도 못 가서 뒤집힌다.''\n  "삯은 이미 받으셨잖습니까."\n  "받은 것은 내일 돌려드리리다."\n\n원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다.',
+  E'산신이 물속에서 금도끼를 건져 올려 나무꾼 앞에 놓았다.\n"네가 빠뜨린 것이 이것이냐."\n"아닙니다. 제 것은 낡은 쇠도끼입니다."\n"그 말이 참이면 셋을 다 가져가거라."', null, '{"maxChars":200,"minChars":75,"requireAny":["쇠도끼"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
   'folktale', 'fantasy', 'planned',
   1, 'mo-axe-pond'
 where not exists (select 1 from problems p where p.source_key = 'mo-axe-pond');
@@ -911,19 +900,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'dialogue_ratio'),
-  'convert', 'auto', '대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.
-
-  사공이 노를 놓고 물끄러미 강 건너를 보았다.
-  "오늘은 배를 안 띄우려 하오."
-  ''이 물살이면 반도 못 가서 뒤집힌다.''
-  "삯은 이미 받으셨잖습니까."
-  "받은 것은 내일 돌려드리리다."
-
-원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다.',
-  '흥부가 마당으로 나서자 담장 아래 제비 한 마리가 떨어져 있었다.
-"다리가 부러졌소. 데려다 거둡시다."
-"아이들 먹일 것도 없어요."
-"그래도 눈앞에서 죽게 둘 수야 없지."', null, '{"maxChars":200,"minChars":75,"requireAny":["제비"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
+  'convert', 'auto', E'대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.\n\n  사공이 노를 놓고 물끄러미 강 건너를 보았다.\n  "오늘은 배를 안 띄우려 하오."\n  ''이 물살이면 반도 못 가서 뒤집힌다.''\n  "삯은 이미 받으셨잖습니까."\n  "받은 것은 내일 돌려드리리다."\n\n원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다.',
+  E'흥부가 마당으로 나서자 담장 아래 제비 한 마리가 떨어져 있었다.\n"다리가 부러졌소. 데려다 거둡시다."\n"아이들 먹일 것도 없어요."\n"그래도 눈앞에서 죽게 둘 수야 없지."', null, '{"maxChars":200,"minChars":75,"requireAny":["제비"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
   'folktale', 'fantasy', 'planned',
   1, 'mo-heungbu-swallow'
 where not exists (select 1 from problems p where p.source_key = 'mo-heungbu-swallow');
@@ -934,19 +912,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'dialogue_ratio'),
-  'convert', 'auto', '대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.
-
-  사공이 노를 놓고 물끄러미 강 건너를 보았다.
-  "오늘은 배를 안 띄우려 하오."
-  ''이 물살이면 반도 못 가서 뒤집힌다.''
-  "삯은 이미 받으셨잖습니까."
-  "받은 것은 내일 돌려드리리다."
-
-원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다.',
-  '원님이 뜰에 놓인 신 한 짝을 턱으로 가리켰다.
-"저것이 네 것이냐."
-"제 것이 맞습니다."
-"신어 보아라. 발이 맞지 않으면 도둑으로 다스린다."', null, '{"maxChars":200,"minChars":75,"requireAny":["도둑"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
+  'convert', 'auto', E'대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.\n\n  사공이 노를 놓고 물끄러미 강 건너를 보았다.\n  "오늘은 배를 안 띄우려 하오."\n  ''이 물살이면 반도 못 가서 뒤집힌다.''\n  "삯은 이미 받으셨잖습니까."\n  "받은 것은 내일 돌려드리리다."\n\n원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다.',
+  E'원님이 뜰에 놓인 신 한 짝을 턱으로 가리켰다.\n"저것이 네 것이냐."\n"제 것이 맞습니다."\n"신어 보아라. 발이 맞지 않으면 도둑으로 다스린다."', null, '{"maxChars":200,"minChars":75,"requireAny":["도둑"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
   'folktale', 'modern', 'impulsive',
   1, 'mo-kongjwi-shoe'
 where not exists (select 1 from problems p where p.source_key = 'mo-kongjwi-shoe');
@@ -957,19 +924,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'dialogue_ratio'),
-  'convert', 'auto', '대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.
-
-  사공이 노를 놓고 물끄러미 강 건너를 보았다.
-  "오늘은 배를 안 띄우려 하오."
-  ''이 물살이면 반도 못 가서 뒤집힌다.''
-  "삯은 이미 받으셨잖습니까."
-  "받은 것은 내일 돌려드리리다."
-
-원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다.',
-  '심청이 아버지 앞에 무릎을 접고 앉았다.
-"공양미 삼백 석이면 눈을 뜨신다 합니다."
-"그 많은 쌀을 어디서 구한단 말이냐."
-"이미 마련해 두었으니 묻지 마십시오."', null, '{"maxChars":200,"minChars":75,"requireAny":["공양미"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
+  'convert', 'auto', E'대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.\n\n  사공이 노를 놓고 물끄러미 강 건너를 보았다.\n  "오늘은 배를 안 띄우려 하오."\n  ''이 물살이면 반도 못 가서 뒤집힌다.''\n  "삯은 이미 받으셨잖습니까."\n  "받은 것은 내일 돌려드리리다."\n\n원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다.',
+  E'심청이 아버지 앞에 무릎을 접고 앉았다.\n"공양미 삼백 석이면 눈을 뜨신다 합니다."\n"그 많은 쌀을 어디서 구한단 말이냐."\n"이미 마련해 두었으니 묻지 마십시오."', null, '{"maxChars":200,"minChars":75,"requireAny":["공양미"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
   'folktale', 'modern', 'planned',
   1, 'mo-simcheong-rice'
 where not exists (select 1 from problems p where p.source_key = 'mo-simcheong-rice');
@@ -980,19 +936,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'dialogue_ratio'),
-  'convert', 'auto', '대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.
-
-  사공이 노를 놓고 물끄러미 강 건너를 보았다.
-  "오늘은 배를 안 띄우려 하오."
-  ''이 물살이면 반도 못 가서 뒤집힌다.''
-  "삯은 이미 받으셨잖습니까."
-  "받은 것은 내일 돌려드리리다."
-
-원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다.',
-  '도깨비들이 방망이를 두드리다 말고 노인 쪽으로 고개를 돌렸다.
-"그 고운 노래가 어디서 나오느냐."
-"이 혹에서 나옵니다."
-"거짓이면 저 방망이로 다스리겠다."', null, '{"maxChars":200,"minChars":75,"requireAny":["방망이"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
+  'convert', 'auto', E'대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.\n\n  사공이 노를 놓고 물끄러미 강 건너를 보았다.\n  "오늘은 배를 안 띄우려 하오."\n  ''이 물살이면 반도 못 가서 뒤집힌다.''\n  "삯은 이미 받으셨잖습니까."\n  "받은 것은 내일 돌려드리리다."\n\n원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다.',
+  E'도깨비들이 방망이를 두드리다 말고 노인 쪽으로 고개를 돌렸다.\n"그 고운 노래가 어디서 나오느냐."\n"이 혹에서 나옵니다."\n"거짓이면 저 방망이로 다스리겠다."', null, '{"maxChars":200,"minChars":75,"requireAny":["방망이"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
   'folktale', 'fantasy', 'impulsive',
   2, 'mo-goblin-club'
 where not exists (select 1 from problems p where p.source_key = 'mo-goblin-club');
@@ -1003,19 +948,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'dialogue_ratio'),
-  'convert', 'auto', '대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.
-
-  사공이 노를 놓고 물끄러미 강 건너를 보았다.
-  "오늘은 배를 안 띄우려 하오."
-  ''이 물살이면 반도 못 가서 뒤집힌다.''
-  "삯은 이미 받으셨잖습니까."
-  "받은 것은 내일 돌려드리리다."
-
-원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다.',
-  '까치들이 은하 위로 몰려들었으나 다리는 좀처럼 이어지지 않았다.
-"올해는 비가 늦게 그쳤습니다."
-"그러면 만날 날이 하루 줄어들겠군요."
-"줄어든 하루는 내년에 갚으면 되오."', null, '{"maxChars":200,"minChars":75,"requireAny":["까치"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
+  'convert', 'auto', E'대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.\n\n  사공이 노를 놓고 물끄러미 강 건너를 보았다.\n  "오늘은 배를 안 띄우려 하오."\n  ''이 물살이면 반도 못 가서 뒤집힌다.''\n  "삯은 이미 받으셨잖습니까."\n  "받은 것은 내일 돌려드리리다."\n\n원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다.',
+  E'까치들이 은하 위로 몰려들었으나 다리는 좀처럼 이어지지 않았다.\n"올해는 비가 늦게 그쳤습니다."\n"그러면 만날 날이 하루 줄어들겠군요."\n"줄어든 하루는 내년에 갚으면 되오."', null, '{"maxChars":200,"minChars":75,"requireAny":["까치"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
   'folktale', 'romance', 'planned',
   2, 'mo-gyeonu-bridge'
 where not exists (select 1 from problems p where p.source_key = 'mo-gyeonu-bridge');
@@ -1026,19 +960,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'dialogue_ratio'),
-  'convert', 'auto', '대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.
-
-  사공이 노를 놓고 물끄러미 강 건너를 보았다.
-  "오늘은 배를 안 띄우려 하오."
-  ''이 물살이면 반도 못 가서 뒤집힌다.''
-  "삯은 이미 받으셨잖습니까."
-  "받은 것은 내일 돌려드리리다."
-
-원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다.',
-  '용왕이 옥좌에서 몸을 앞으로 기울였다.
-"네 간이 어디에 있느냐."
-"뭍에 두고 왔사옵니다."
-"용궁까지 온 놈의 혀를 어찌 믿으시렵니까."', null, '{"maxChars":200,"minChars":75,"requireAny":["용궁"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
+  'convert', 'auto', E'대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.\n\n  사공이 노를 놓고 물끄러미 강 건너를 보았다.\n  "오늘은 배를 안 띄우려 하오."\n  ''이 물살이면 반도 못 가서 뒤집힌다.''\n  "삯은 이미 받으셨잖습니까."\n  "받은 것은 내일 돌려드리리다."\n\n원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다.',
+  E'용왕이 옥좌에서 몸을 앞으로 기울였다.\n"네 간이 어디에 있느냐."\n"뭍에 두고 왔사옵니다."\n"용궁까지 온 놈의 혀를 어찌 믿으시렵니까."', null, '{"maxChars":200,"minChars":75,"requireAny":["용궁"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
   'folktale', 'martial', 'planned',
   2, 'mo-rabbit-gate'
 where not exists (select 1 from problems p where p.source_key = 'mo-rabbit-gate');
@@ -1049,19 +972,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'dialogue_ratio'),
-  'convert', 'auto', '대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.
-
-  사공이 노를 놓고 물끄러미 강 건너를 보았다.
-  "오늘은 배를 안 띄우려 하오."
-  ''이 물살이면 반도 못 가서 뒤집힌다.''
-  "삯은 이미 받으셨잖습니까."
-  "받은 것은 내일 돌려드리리다."
-
-원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다.',
-  '문 밖에서 발소리가 멎고 낮은 목소리가 들려왔다.
-"얘들아, 문을 열어라. 밖이 몹시 춥구나."
-"어머니 목소리가 아니야."
-"손을 들이밀어 보라고 해."', null, '{"maxChars":200,"minChars":75,"requireAny":["어머니"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
+  'convert', 'auto', E'대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.\n\n  사공이 노를 놓고 물끄러미 강 건너를 보았다.\n  "오늘은 배를 안 띄우려 하오."\n  ''이 물살이면 반도 못 가서 뒤집힌다.''\n  "삯은 이미 받으셨잖습니까."\n  "받은 것은 내일 돌려드리리다."\n\n원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다.',
+  E'문 밖에서 발소리가 멎고 낮은 목소리가 들려왔다.\n"얘들아, 문을 열어라. 밖이 몹시 춥구나."\n"어머니 목소리가 아니야."\n"손을 들이밀어 보라고 해."', null, '{"maxChars":200,"minChars":75,"requireAny":["어머니"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
   'folktale', 'fantasy', 'impulsive',
   2, 'mo-siblings-rope'
 where not exists (select 1 from problems p where p.source_key = 'mo-siblings-rope');
@@ -1072,19 +984,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'pov_lock'),
-  'convert', 'auto', '한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.
-
-  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.
-  덕수는 둑 위에 서 있었다.
-
-  ↓
-
-  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.
-  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.
-
-1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
-  '멀찍이 무너진 성문 앞에 병사 열이 창을 세우고 늘어섰고, 깨진 돌이 길을 반쯤 막고 있었다.
-규담은 마른 도랑에 엎드려 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","병사 열이","길을 반쯤 막고"],"requireAny":["규담"]}'::jsonb,
+  'convert', 'auto', E'한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.\n\n  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.\n  덕수는 둑 위에 서 있었다.\n\n  ↓\n\n  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.\n  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.\n\n1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
+  E'멀찍이 무너진 성문 앞에 병사 열이 창을 세우고 늘어섰고, 깨진 돌이 길을 반쯤 막고 있었다.\n규담은 마른 도랑에 엎드려 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","병사 열이","길을 반쯤 막고"],"requireAny":["규담"]}'::jsonb,
   'original', 'fantasy', 'planned',
   1, 'pv-broken-gate'
 where not exists (select 1 from problems p where p.source_key = 'pv-broken-gate');
@@ -1095,19 +996,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'pov_lock'),
-  'convert', 'auto', '한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.
-
-  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.
-  덕수는 둑 위에 서 있었다.
-
-  ↓
-
-  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.
-  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.
-
-1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
-  '저 멀리 연무장에서는 제자 스물이 목검을 휘둘렀고, 흙먼지가 담장 위로 피어올랐다.
-무결은 회랑 기둥에 기대 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","제자 스물","흙먼지가 담장 위로"],"requireAny":["무결"]}'::jsonb,
+  'convert', 'auto', E'한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.\n\n  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.\n  덕수는 둑 위에 서 있었다.\n\n  ↓\n\n  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.\n  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.\n\n1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
+  E'저 멀리 연무장에서는 제자 스물이 목검을 휘둘렀고, 흙먼지가 담장 위로 피어올랐다.\n무결은 회랑 기둥에 기대 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","제자 스물","흙먼지가 담장 위로"],"requireAny":["무결"]}'::jsonb,
   'original', 'martial', 'impulsive',
   1, 'pv-drill-yard'
 where not exists (select 1 from problems p where p.source_key = 'pv-drill-yard');
@@ -1118,19 +1008,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'pov_lock'),
-  'convert', 'auto', '한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.
-
-  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.
-  덕수는 둑 위에 서 있었다.
-
-  ↓
-
-  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.
-  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.
-
-1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
-  '저쪽 길드 사무실에는 모험가 열둘이 모여 있었고, 벽에는 의뢰서가 빼곡히 붙어 있었다.
-하람은 문턱에 서 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","모험가 열둘","의뢰서가 빼곡히"],"requireAny":["하람"]}'::jsonb,
+  'convert', 'auto', E'한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.\n\n  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.\n  덕수는 둑 위에 서 있었다.\n\n  ↓\n\n  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.\n  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.\n\n1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
+  E'저쪽 길드 사무실에는 모험가 열둘이 모여 있었고, 벽에는 의뢰서가 빼곡히 붙어 있었다.\n하람은 문턱에 서 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","모험가 열둘","의뢰서가 빼곡히"],"requireAny":["하람"]}'::jsonb,
   'original', 'fantasy', 'planned',
   1, 'pv-guild-desk'
 where not exists (select 1 from problems p where p.source_key = 'pv-guild-desk');
@@ -1141,19 +1020,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'pov_lock'),
-  'convert', 'auto', '한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.
-
-  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.
-  덕수는 둑 위에 서 있었다.
-
-  ↓
-
-  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.
-  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.
-
-1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
-  '저기 하늘에 별이 떠 있고, 남자 둘 여자 하나가 지나가며 이야기를 나누고 있었다.
-태윤은 담장 아래 서 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","남자 둘 여자 하나","이야기를 나누고"],"requireAny":["태윤"]}'::jsonb,
+  'convert', 'auto', E'한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.\n\n  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.\n  덕수는 둑 위에 서 있었다.\n\n  ↓\n\n  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.\n  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.\n\n1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
+  E'저기 하늘에 별이 떠 있고, 남자 둘 여자 하나가 지나가며 이야기를 나누고 있었다.\n태윤은 담장 아래 서 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","남자 둘 여자 하나","이야기를 나누고"],"requireAny":["태윤"]}'::jsonb,
   'original', 'modern', 'planned',
   1, 'pv-star-field'
 where not exists (select 1 from problems p where p.source_key = 'pv-star-field');
@@ -1164,19 +1032,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'pov_lock'),
-  'convert', 'auto', '한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.
-
-  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.
-  덕수는 둑 위에 서 있었다.
-
-  ↓
-
-  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.
-  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.
-
-1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
-  '저 위 연회장에는 촛대 열둘이 타올랐고, 귀족 예닐곱이 잔을 든 채 낮은 말을 주고받았다.
-유안은 계단 아래 그늘에 서 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","촛대 열둘","귀족 예닐곱이"],"requireAny":["유안"]}'::jsonb,
+  'convert', 'auto', E'한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.\n\n  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.\n  덕수는 둑 위에 서 있었다.\n\n  ↓\n\n  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.\n  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.\n\n1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
+  E'저 위 연회장에는 촛대 열둘이 타올랐고, 귀족 예닐곱이 잔을 든 채 낮은 말을 주고받았다.\n유안은 계단 아래 그늘에 서 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","촛대 열둘","귀족 예닐곱이"],"requireAny":["유안"]}'::jsonb,
   'original', 'fantasy', 'planned',
   2, 'pv-banquet-hall'
 where not exists (select 1 from problems p where p.source_key = 'pv-banquet-hall');
@@ -1187,19 +1044,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'pov_lock'),
-  'convert', 'auto', '한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.
-
-  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.
-  덕수는 둑 위에 서 있었다.
-
-  ↓
-
-  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.
-  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.
-
-1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
-  '저 앞 시장에는 좌판 여덟이 늘어섰고, 짐꾼 셋이 상자를 나르며 고함을 주고받고 있었다.
-정순은 골목 어귀에 서 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","좌판 여덟","짐꾼 셋이"],"requireAny":["정순"]}'::jsonb,
+  'convert', 'auto', E'한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.\n\n  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.\n  덕수는 둑 위에 서 있었다.\n\n  ↓\n\n  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.\n  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.\n\n1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
+  E'저 앞 시장에는 좌판 여덟이 늘어섰고, 짐꾼 셋이 상자를 나르며 고함을 주고받고 있었다.\n정순은 골목 어귀에 서 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","좌판 여덟","짐꾼 셋이"],"requireAny":["정순"]}'::jsonb,
   'original', 'modern', 'impulsive',
   2, 'pv-dawn-market'
 where not exists (select 1 from problems p where p.source_key = 'pv-dawn-market');
@@ -1210,19 +1056,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'pov_lock'),
-  'convert', 'auto', '한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.
-
-  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.
-  덕수는 둑 위에 서 있었다.
-
-  ↓
-
-  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.
-  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.
-
-1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
-  '저기 얼어붙은 호수에는 낚시 구멍 열넷이 뚫려 있었고, 아이 셋이 얼음을 지치며 소리를 질렀다.
-연희는 비탈 위 바위에 앉아 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","낚시 구멍 열넷","아이 셋이"],"requireAny":["연희"]}'::jsonb,
+  'convert', 'auto', E'한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.\n\n  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.\n  덕수는 둑 위에 서 있었다.\n\n  ↓\n\n  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.\n  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.\n\n1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
+  E'저기 얼어붙은 호수에는 낚시 구멍 열넷이 뚫려 있었고, 아이 셋이 얼음을 지치며 소리를 질렀다.\n연희는 비탈 위 바위에 앉아 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","낚시 구멍 열넷","아이 셋이"],"requireAny":["연희"]}'::jsonb,
   'original', 'fantasy', 'impulsive',
   2, 'pv-frozen-lake'
 where not exists (select 1 from problems p where p.source_key = 'pv-frozen-lake');
@@ -1233,19 +1068,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'pov_lock'),
-  'convert', 'auto', '한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.
-
-  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.
-  덕수는 둑 위에 서 있었다.
-
-  ↓
-
-  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.
-  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.
-
-1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
-  '저 너머 강가에는 등불 스무 개가 떠갔고, 다리 위에서 연인 넷이 난간에 기대 웃고 있었다.
-소하는 버드나무 그늘에 서 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","등불 스무 개","연인 넷이"],"requireAny":["소하"]}'::jsonb,
+  'convert', 'auto', E'한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.\n\n  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.\n  덕수는 둑 위에 서 있었다.\n\n  ↓\n\n  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.\n  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.\n\n1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
+  E'저 너머 강가에는 등불 스무 개가 떠갔고, 다리 위에서 연인 넷이 난간에 기대 웃고 있었다.\n소하는 버드나무 그늘에 서 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","등불 스무 개","연인 넷이"],"requireAny":["소하"]}'::jsonb,
   'original', 'romance', 'planned',
   2, 'pv-lantern-night'
 where not exists (select 1 from problems p where p.source_key = 'pv-lantern-night');

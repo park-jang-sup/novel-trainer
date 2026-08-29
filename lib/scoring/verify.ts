@@ -10,6 +10,7 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { combine, findForbidden, mergeForbidChecks, gradeLocal, pendingMorphChecks } from './index'
+import { sqlStr, countRawNewlinesInStrings } from '../seed-sql'
 import type { Answer, Check, MorphResult, Problem, ProblemType, ScoringConfig, ScoringMode } from './types'
 import { CONVERT_SEEDS } from './fixtures/convert-seeds'
 import {
@@ -1667,6 +1668,123 @@ console.log('\n[9단계 pov_lock: 지시문 가드]')
     missing.length === 0,
     `checked=${checked} missing=${JSON.stringify(missing)}`
   )
+}
+
+// ── 덤프 ↔ 생성된 SQL ────────────────────────────────────────────
+//
+// 셋 중 하나가 비어 있었다.
+//   덤프 ↔ 저장소 사본   test:scoring 이 이미 본다
+//   덤프 ↔ DB            seed_check.sql (세션 8)
+//   덤프 ↔ 생성된 SQL    ← 여기. 세션 9 §5 의 오염이 로컬에서 안 걸린 이유다
+//
+// test:scoring 은 seed_data.sql 을 아예 안 봤다. 그래서 문자열 리터럴 안에
+// 실제 줄바꿈 176개가 들어간 채로 커밋되고, Supabase 편집기가 그것을 CRLF로
+// 바꿔 놓은 뒤에야 seed_check.sql 이 잡았다.
+console.log('\n[덤프 ↔ 생성된 SQL: 줄바꿈 · 최신 여부]')
+{
+  const repoRoot = path.join(__dirname, '..', '..')
+
+  // (1) 스캐너 자체 표본. 스캐너가 틀리면 아래 검사 전부가 거짓 통과다.
+  const probes: Array<[string, string, number]> = [
+    ['실제 줄바꿈을 센다', "select '가\n나';", 1],
+    ["E'' 의 \\n 은 안 센다", "select E'가\\n나';", 0],
+    ['-- 주석 안의 줄바꿈은 안 센다', "-- 가 ' 나\nselect 1;", 0],
+    ["'' 뒤의 줄바꿈도 센다", "select '가''나\n다';", 1],
+    ['CR 도 센다', "select '가\r나';", 1],
+    ["E'' 의 \\' 는 문자열을 안 끝낸다", "select E'가\\'나\n다';", 1],
+    ["E'' 끝의 \\\\ 뒤에서는 문자열이 끝난다", "select E'가\\\\';\nselect 1;", 0],
+    ['리터럴 두 개를 따로 센다', "select '가' || '나\n다';", 1],
+    // 아래 다섯은 '조용한 미탐'이 나던 자리다. 과탐이 아니라 미탐이었다 —
+    // 위반이 있는데 0개로 통과했다. 없음을 재는 자에게는 이쪽이 훨씬 나쁘다.
+    ['블록 주석의 따옴표가 상태를 안 뒤집는다', "/* 가 ' 나 */ select '다\n라';", 1],
+    ['블록 주석 안의 줄바꿈은 안 센다', "/* 가\n나 */\nselect 1;", 0],
+    ['블록 주석은 겹칠 수 있다', "/* 가 /* 나 */ 다 ' */\nselect 1;", 0],
+    ['-- 안의 /* 는 블록 주석이 아니다', "-- 원본: seed/dump/*.json\nselect '가\n나';", 1],
+    ["e 로 끝난 식별자 뒤는 E'' 가 아니다", "select type'가\\\n나';", 1],
+  ]
+  for (const [label, sample, want] of probes) {
+    const got = countRawNewlinesInStrings(sample).count
+    t(`스캐너: ${label}`, got === want, `기대=${want} 실제=${got}`)
+  }
+
+  // (2) 저장소에 커밋된 SQL 네 개 전수.
+  for (const name of ['seed_data.sql', 'seed_check.sql', 'seed_verify.sql', 'seed_schema.sql']) {
+    const sql = readFileSync(path.join(repoRoot, name), 'utf8')
+    const { count, lines } = countRawNewlinesInStrings(sql)
+    t(
+      `${name}: 문자열 리터럴 안 실제 줄바꿈 0개`,
+      count === 0,
+      `${count}개 · 행 ${lines.slice(0, 10).join(', ')}`
+    )
+  }
+
+  // (3) 덤프의 값이 seed_data.sql 에 그대로 들어 있는가. 줄바꿈 이스케이프가
+  //     맞는지와, gen:seed 를 돌리는 것을 잊지 않았는지를 한 번에 잰다.
+  //     sqlStr 은 gen-seed.ts 가 쓰는 바로 그 함수다(lib/seed-sql.ts).
+  interface SqlDumpProblem {
+    source_key: string
+    instruction: string
+    passage: string | null
+  }
+  const seedSql = readFileSync(path.join(repoRoot, 'seed_data.sql'), 'utf8')
+  const sqlDump: SqlDumpProblem[] = JSON.parse(
+    readFileSync(path.join(repoRoot, 'seed', 'dump', 'problems.json'), 'utf8').replace(/^﻿/, '')
+  )
+
+  // Postgres 가 E'' 를 읽는 방식대로 되돌린다. 이스케이프 순서가 뒤집히면
+  // (\n 을 먼저 만들고 역슬래시를 겹치면) 스캐너는 통과하고 여기서 걸린다.
+  function decodeSqlLiteral(lit: string): string {
+    if (!lit.startsWith("E'")) return lit.slice(1, -1).replace(/''/g, "'")
+    const body = lit.slice(2, -1)
+    let out = ''
+    let i = 0
+    while (i < body.length) {
+      if (body[i] === '\\') {
+        const n = body[i + 1]
+        out += n === 'n' ? '\n' : n === 'r' ? '\r' : n === 't' ? '\t' : n
+        i += 2
+        continue
+      }
+      if (body[i] === "'" && body[i + 1] === "'") {
+        out += "'"
+        i += 2
+        continue
+      }
+      out += body[i]
+      i++
+    }
+    return out
+  }
+
+  let eLiterals = 0
+  for (const dp of sqlDump) {
+    const bad: string[] = []
+    for (const [field, value] of [
+      ['instruction', dp.instruction],
+      ['passage', dp.passage],
+    ] as Array<[string, string | null]>) {
+      if (value === null) continue
+      const lit = sqlStr(value)
+      if (lit.startsWith("E'")) eLiterals++
+      if (!seedSql.includes(lit)) bad.push(`${field} 가 seed_data.sql 에 없다`)
+      if (decodeSqlLiteral(lit) !== value) bad.push(`${field} 왕복 실패`)
+      if (countRawNewlinesInStrings(lit).count > 0) bad.push(`${field} 리터럴에 실제 줄바꿈`)
+    }
+    t(`${dp.source_key}: 덤프 값이 seed_data.sql 에 그대로 있다`, bad.length === 0, bad.join(' · '))
+  }
+
+  // (4) E'' 로 나간 리터럴 수 = 덤프에서 줄바꿈을 가진 필드 수. 실측 32.
+  //     8단계 mo-* 8문항(instruction 8 + passage 3)과 9단계 pv-* 8문항
+  //     (instruction 10 + passage 1)이 전부다.
+  const withNewline = sqlDump.reduce(
+    (n, dp) =>
+      n +
+      (/[\n\r]/.test(dp.instruction) ? 1 : 0) +
+      (dp.passage !== null && /[\n\r]/.test(dp.passage) ? 1 : 0),
+    0
+  )
+  t(`E'' 리터럴 수가 줄바꿈 보유 필드 수와 같다`, eLiterals === withNewline && eLiterals === 32,
+    `E''=${eLiterals} 줄바꿈필드=${withNewline}`)
 }
 
 console.log(`\n최종: ${pass} 통과 / ${fail} 실패`)

@@ -18,6 +18,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import path from 'node:path'
+import { sqlStr, countRawNewlinesInStrings } from '../lib/seed-sql'
 
 interface DumpStage {
   title: string
@@ -69,13 +70,7 @@ function readJson<T>(relPath: string): T {
   return JSON.parse(raw) as T
 }
 
-// 문자열 리터럴을 만드는 유일한 통로. 지문에 작은따옴표가 들어 있다
-// (예: instruction의 '흥부는 기뻤다'). 직접 문자열을 이어붙이지 않고
-// 전부 이 함수를 통과시켜 작은따옴표를 두 번 쓰는 방식으로 이스케이프한다.
-function sqlStr(value: string | null | undefined): string {
-  if (value === null || value === undefined) return 'null'
-  return `'${value.replace(/'/g, "''")}'`
-}
+// 문자열 리터럴은 전부 lib/seed-sql.ts 의 sqlStr 을 통과시킨다.
 
 // jsonb 컬럼도 같은 헬퍼로 이스케이프한 뒤 ::jsonb를 붙인다.
 function sqlJsonb(value: unknown): string {
@@ -97,6 +92,18 @@ function sqlInt(value: number): string {
 // Postgres의 md5(text)와 같은 해시가 나와야 한다 — 둘 다 UTF-8 바이트를 본다.
 function md5Hex(value: string): string {
   return createHash('md5').update(value, 'utf8').digest('hex')
+}
+
+// 오염된 파일은 아예 쓰지 않는다. 나가서 붙여 넣힌 뒤에 아는 것보다 낫다.
+function assertNoRawNewlines(name: string, sql: string): void {
+  const { count, lines } = countRawNewlinesInStrings(sql)
+  if (count > 0) {
+    throw new Error(
+      `${name}: 문자열 리터럴 안에 실제 줄바꿈이 ${count}개 있다 ` +
+        `(행 ${lines.slice(0, 10).join(', ')}${lines.length > 10 ? ' …' : ''}). ` +
+        'sqlStr 을 거치지 않고 문자열을 이어붙인 자리가 있다.'
+    )
+  }
 }
 
 const stages = readJson<DumpStage[]>('seed/dump/stages.json')
@@ -250,6 +257,7 @@ out.push(
 )
 
 const sql = out.join('\n')
+assertNoRawNewlines('seed_data.sql', sql)
 writeFileSync(path.join(ROOT, 'seed_data.sql'), sql, 'utf8')
 
 console.log(
@@ -395,6 +403,7 @@ checkOut.push(
 )
 
 const checkSql = checkOut.join('\n')
+assertNoRawNewlines('seed_check.sql', checkSql)
 writeFileSync(path.join(ROOT, 'seed_check.sql'), checkSql, 'utf8')
 
 console.log(
