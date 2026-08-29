@@ -73,6 +73,7 @@ import {
   AT_TONE,
   BYPASS_KINDS,
   PASSAGE_TAGS,
+  goodsCollidingWithCue,
   actionCfgOf,
   passageOf as atPassageOf,
   validateActionItem,
@@ -1740,6 +1741,11 @@ console.log('\n[10단계 action_turn: 지문 규칙 · 교차 검사]')
   }
   for (const item of AT_ITEMS) {
     t(`'${item.sourceKey}' 지문 규칙(10단계 전용) 통과`, validateActionItem(item).length === 0, JSON.stringify(validateActionItem(item)))
+  }
+  // 지문마다 따로 센다 — 합쳐서 하나로 두면 붙었는지를 수로 확인할 수 없다.
+  for (const item of AT_ITEMS) {
+    const hits = goodsCollidingWithCue(item)
+    t(`'${item.sourceKey}' 좋은 답안 마지막 줄이 elementCue 와 안 겹친다`, hits.length === 0, JSON.stringify(hits))
   }
   t(
     '문항 집합 규칙(분포·중복) 통과',

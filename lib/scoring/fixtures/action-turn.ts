@@ -297,7 +297,7 @@ export const AT_ITEMS: ActionItem[] = [
     //   무대도 함께 옮겨 at-left-feeler 와의 다양성 겹침(연희·갱도)을 같이 풀었다.
     foreshadowCue: '작년에 동생을 문 이빨',
     foreshadow: '이빨',
-    elementCue: '부러진 창끝',
+    elementCue: '잔해에서 주운 부러진 창끝',
     element: '창끝',
     why: '작년에 그 이빨이 동생을 물었고 세연은 아무것도 못 했다. 부러진 창끝 하나가 그 자리를 갚는다. 마주침은 갑작스럽지만 이유는 일 년 전에 있다.',
     goods: [
@@ -329,8 +329,8 @@ export const AT_ITEMS: ActionItem[] = [
         { key: '줄이 셋뿐', text: '마수의 아가리가 먼저 열렸다.\n작년에 동생을 문 이빨이 그대로 있었다.\n부러진 창끝이 그 이빨 사이로 들어갔다.' },
         { key: '줄이 여섯', text: '성문이 무너졌다.\n마수가 왔다.\n세연이 섰다.\n이빨이 보였다.\n창을 들었다.\n부러진 창끝이 들어갔다.' },
         { key: '빌드업을 한 줄에 몰아넣음', text: '마수의 아가리가 먼저 열렸고 작년에 동생을 문 이빨이 그대로 있었으며 세연은 그것을 잊지 않았다.\n세연이 한 발 물러섰다.\n마수가 한 발 들어왔다.\n부러진 창끝이 그 이빨 사이로 들어갔다.' },
-        { key: '지문의 결정타 줄을 그대로 마지막 줄에', known: true, text: '마수의 아가리가 먼저 열렸다.\n작년에 동생을 문 이빨이 그대로 있었다.\n세연은 그것을 잊은 적이 없다.\n부러진 창끝' },
-        { key: '지문 표기를 베낌', text: '[상황] 세연이 무너진 성문 아래서 마수와 갑자기 마주친다.\n[복선] 작년에 동생을 문 이빨\n[결정타] 부러진 창끝\n부러진 창끝이 그 이빨 사이로 들어갔다.' },
+        { key: '지문의 결정타 줄을 그대로 마지막 줄에', known: true, text: '마수의 아가리가 먼저 열렸다.\n작년에 동생을 문 이빨이 그대로 있었다.\n세연은 그것을 잊은 적이 없다.\n잔해에서 주운 부러진 창끝' },
+        { key: '지문 표기를 베낌', text: '[상황] 세연이 무너진 성문 아래서 마수와 갑자기 마주친다.\n[복선] 작년에 동생을 문 이빨\n[결정타] 잔해에서 주운 부러진 창끝\n부러진 창끝이 그 이빨 사이로 들어갔다.' },
         { key: '낱낱 나열', known: true, text: '세연이 창을 들었다.\n마수가 앞발을 내리쳤다.\n세연이 옆으로 굴렀다.\n부러진 창끝이 이빨을 찔렀다.' },
         { key: '빌드업 없이 압축', known: true, text: '마수가 나타났다.\n세연이 달려들었다.\n먼지가 일었다.\n창끝이 박혔다.' },
     ],
@@ -626,6 +626,30 @@ export const AT_INSTRUCTION_2 = [
 
 export const instructionOf = (i: ActionItem) =>
     i.foreshadow === undefined ? AT_INSTRUCTION_1 : AT_INSTRUCTION_2
+
+/**
+ * 좋은 답안의 마지막 줄이 elementCue 와 같으면 안 된다.
+ *
+ * at-broken-gate 가 elementCue 를 '부러진 창끝'(요소+형용사 하나)으로 잡아서
+ * 짧게 끊은 좋은 답안 '부러진 창끝.' 과 글자까지 같아졌다. 그러면 4번 줄만
+ * 보고는 좋은 답안과 '지문의 결정타 줄을 그대로'를 원리적으로 못 가른다.
+ *
+ * ★ 길이로 재지 않는다. cue 가 element 보다 몇 자 긴가는 대리 지표이고,
+ *   이것이 재려는 것이다. 값을 박으면 다음 지문에서 또 걸린다(세션 11 §2).
+ *
+ * ★ validateActionItem 에 접지 않고 따로 뺐다. 접으면 단언 수가 안 늘어
+ *   붙었는지를 수로 확인할 수 없고, 어느 지문이 물렸는지도 안 보인다.
+ *   세션 11 §9 가 금지한 자리다.
+ */
+export function goodsCollidingWithCue(item: ActionItem): string[] {
+    const hits: string[] = []
+    for (const g of item.goods) {
+        const ls = g.split('\n').map((l) => l.trim()).filter(Boolean)
+        const tail = (ls[ls.length - 1] ?? '').replace(/[.!?…]+$/, '')
+        if (tail === item.elementCue) hits.push(tail)
+    }
+    return hits
+}
 
 export function validateActionItem(item: ActionItem): string[] {
     const fails: string[] = []

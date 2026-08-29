@@ -1141,7 +1141,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'action_turn'),
   'convert', 'auto', E'빌드업 세 줄 뒤에 결정타 한 줄을 쓰시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  앞서 깔린 것은 지난겨울 덕수의 짐을 엎은 손입니다.\n  결정타로 쓸 것은 사내가 앞서 절뚝인 걸음입니다.\n\n  ↓\n\n  덕수는 그 손을 알아보았다. 지난겨울 자기 짐을 엎은 손이었다.\n  사내는 걸음마다 오른쪽이 반 박자 늦었다.\n  덕수는 그것을 세 번 세었다.\n  덕수의 발이 그 절뚝인 걸음을 걸어 넘겼다.\n\n네 줄로 씁니다. [결정타] 요소는 마지막 줄에, [복선]은 그 앞 어딘가에 옵니다.\n동작을 낱낱이 늘어놓지 않습니다.\n이 싸움을 왜 봐야 하는지가 [복선]에 있습니다.',
-  E'[상황] 세연이 무너진 성문 아래서 마수와 갑자기 마주친다.\n[복선] 작년에 동생을 문 이빨\n[결정타] 부러진 창끝', null, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["창끝"],"requireInLastLine":["창끝"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb,
+  E'[상황] 세연이 무너진 성문 아래서 마수와 갑자기 마주친다.\n[복선] 작년에 동생을 문 이빨\n[결정타] 잔해에서 주운 부러진 창끝', null, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["창끝"],"requireInLastLine":["창끝"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb,
   'original', 'fantasy', 'impulsive',
   2, 'at-broken-gate'
 where not exists (select 1 from problems p where p.source_key = 'at-broken-gate');
