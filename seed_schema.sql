@@ -61,7 +61,16 @@ grant select, update on public.profiles    to authenticated;
 grant select         on public.problem_answers to service_role;
 grant select         on public.golden_cases    to service_role;
 grant select, update on public.system_flags    to service_role;
-grant insert         on public.ai_usage_log    to service_role;
+-- ai_usage_log 은 쓰기만으로 부족하다. 지출 상한이 오늘 sum(cost_usd) 를 읽는다.
+-- insert 만 있던 동안에는 마개가 첫 호출에서 42501 로 죽는다 — 위 주석이 적어 둔
+-- 바로 그 함정이다.
+--
+-- ★ 세션 11 §8-1 의 세 번째 얼굴이다.
+--     적혀 있는 것과 걸리는 것은 다르다   daily_spend_cap_usd 20 을 읽는 코드가 없었다
+--     있는 것과 읽을 수 있는 것은 다르다  ★ 테이블은 있었고 select 이 없었다
+--   세션 12가 'ai_usage_log 가 이미 있다' 로 가-2 를 신설에서 배선으로 낮췄는데,
+--   배선에도 이 줄이 필요했다.
+grant select, insert on public.ai_usage_log    to service_role;
 
 
 -- submissions 는 읽기와 쓰기 정책을 나눈다.

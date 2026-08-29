@@ -84,15 +84,71 @@ import {
   checkPassageSetRules,
   type PassageRuleInput,
 } from './fixtures/passage-rules'
+// ── AI 마개. lib/ai 의 순수한 쪽만 가져온다 ─────────────────────────────
+// gemini.ts(server-only)와 flags.ts(server-only)는 여기서 안 부른다 —
+// remote.ts 를 안 부르는 것과 같은 이유다. 그 둘을 뺀 전 구간을 아래에서 문다.
+import {
+  checkGateBeforeQuota,
+  checkQuota,
+  checkRunBudget,
+  type GateDecision,
+} from '../ai/gate'
+import { buildPrompt, elementOf, fourLines, parseObservation, passesAt } from '../ai/prompt'
+import { costUsd } from '../ai/pricing'
+import { observeWith } from '../ai/observe'
 
 let pass = 0
 let fail = 0
+/**
+ * 최종 줄을 찍은 뒤인가. `t` 가 이 뒤에 불리면 그 단언은 세어지지 못한 것이다.
+ *
+ * ★★ `Promise.all(aiChainChecks)` 만으로는 반만 막힌다 — **명단에 넣는 것이
+ *   opt-in 이라 빠뜨려도 조용하다.** `aiChainChecks.push(...)` 를 안 쓴 async
+ *   단언은 그대로 새고, 그게 `1649 가 1649 로` 나와서 안 보인다. 세션 12 §6 의
+ *   `감시를 기존 검사 안에 접기`(수가 안 는다)와 같은 모양이다.
+ *
+ *   그래서 명단을 믿지 않고 **`t` 쪽에서 잡는다.** 수를 안 박는다 —
+ *   `늦게 왔다` 는 사실 하나만 잰다.
+ *
+ * ★★ **이 그물은 완전하지 않다.** 잡는 것은 최종 줄보다 **늦게 도착한 것뿐**이고,
+ *   같은 틱에 도착한 미아는 그냥 세어진다(그건 해가 없다 — 수에 들어갔다).
+ *   실제로 `push` 를 지운 미아가 마이크로태스크 한 틱 차이로 먼저 도착해서
+ *   이 그물을 그대로 통과했다. 20ms 를 물려야 잡혔다.
+ *   **그러니 `sealed` 를 믿고 `tAsync` 를 건너뛰지 마라.** 근본은 `tAsync` 이고
+ *   이건 그 뒤에 치는 그물이다.
+ */
+let sealed = false
 function t(name: string, cond: boolean, extra = '') {
+  if (sealed) {
+    // 최종 줄이 이미 찍혔다. 이 단언은 어디에도 안 세어졌다.
+    console.log(`  ✗ 최종 줄 뒤에 단언이 왔다: ${name}`)
+    console.log(`    ★ aiChainChecks 에 push 를 빠뜨렸는가? 비동기 단언은 명단에 넣어야 기다린다.`)
+    process.exit(1)
+  }
   if (cond) pass++
   else {
     fail++
     console.log(`  ✗ ${name} ${extra}`)
   }
+}
+
+/**
+ * 비동기로만 잴 수 있는 단언. `observeWith` 가 async 라 그렇다.
+ * ★ 끝에서 반드시 await 한다 — 안 하면 이 단언들이 세어지기 전에 최종 줄이
+ *   찍히고, 실패해도 0 실패로 보인다.
+ */
+const aiChainChecks: Promise<void>[] = []
+
+/**
+ * 비동기 단언은 **이걸로만 적어라.** 명단 등록이 자동이라 빠뜨릴 수 없다.
+ *
+ * ★ `sealed` 와 둘이 한 쌍이다. 이쪽은 `push 를 잊는 것` 을 막고, `sealed` 는
+ *   그래도 새어 나온 것을 잡는다. 다만 `sealed` 가 잡는 것은 **최종 줄보다
+ *   늦게 도착한 것뿐**이다 — 같은 틱에 도착한 미아는 그냥 세어진다(그건 해가
+ *   없다. 수에 들어갔으니까). 둘 다 필요한 이유가 그것이다.
+ */
+function tAsync(name: string, run: () => Promise<boolean>) {
+  aiChainChecks.push(run().then((v) => t(name, v)))
 }
 
 const emptyMorph = (o: Partial<MorphResult> = {}): MorphResult => ({
@@ -2190,6 +2246,146 @@ console.log('\n[덤프 ↔ 생성된 SQL: 줄바꿈 · 최신 여부]')
     `E''=${eLiterals} 줄바꿈필드=${withNewline}`)
 }
 
+console.log('\n[AI 마개 — 게이트와 관측]')
+{
+  // ★ 별도 절이다. 기존 검사 안에 접지 않는다 — 세션 12 §6 `감시를 기존 검사
+  //   안에 접기`. 단언 수가 안 늘면 붙었는지를 수로 못 본다.
+  //
+  // ★★ 검사가 통과하는 것과 문다는 것은 다르다(세션 11 계보 둘째). 그래서
+  //   아래는 전부 **병을 넣어 물리는** 꼴이다 — 마개를 하나씩 망가뜨리고
+  //   deny 가 나오는지 본다. `정상값에서 allow 가 나온다` 만 재면 마개를
+  //   통째로 지워도 그 단언은 통과한다.
+  const ok = {
+    hasApiKey: true,
+    killSwitch: false,
+    dailySpendCapUsd: 20,
+    spentTodayUsd: 0,
+  }
+  const ruleOf = (d: GateDecision) => (d.allow ? 'allow' : d.rule)
+
+  t('마개: 정상값이면 통과한다', checkGateBeforeQuota(ok).allow)
+
+  // 병 1 — 킬스위치. 세션 6 §12 `가-1` 이 여섯 세션 기다린 자리다.
+  t('병: kill_switch=true 면 막는다', ruleOf(checkGateBeforeQuota({ ...ok, killSwitch: true })) === 'kill_switch')
+  // ★ null 은 false 가 아니다. 못 읽은 채로 통과시키면 마개가 없는 것과 같다.
+  t('병: kill_switch 를 못 읽으면 막는다', ruleOf(checkGateBeforeQuota({ ...ok, killSwitch: null })) === 'kill_switch')
+
+  // 병 2 — 지출 상한. 세션 11 §8-1 `20 은 한도가 아니다 — 적혀 있을 뿐이다`.
+  t('병: 오늘 지출이 상한이면 막는다', ruleOf(checkGateBeforeQuota({ ...ok, spentTodayUsd: 20 })) === 'spend_cap')
+  t('병: 오늘 지출이 상한을 넘으면 막는다', ruleOf(checkGateBeforeQuota({ ...ok, spentTodayUsd: 20.01 })) === 'spend_cap')
+  t('마개: 상한 아래면 통과한다', checkGateBeforeQuota({ ...ok, spentTodayUsd: 19.99 }).allow)
+  t('병: 상한이 없으면 막는다', ruleOf(checkGateBeforeQuota({ ...ok, dailySpendCapUsd: null })) === 'spend_cap')
+  t('병: 오늘 지출을 못 읽으면 막는다', ruleOf(checkGateBeforeQuota({ ...ok, spentTodayUsd: null })) === 'spend_cap')
+
+  // 병 3 — 키. 키가 없으면 호출 자체가 못 선다.
+  t('병: API 키가 없으면 막는다', ruleOf(checkGateBeforeQuota({ ...ok, hasApiKey: false })) === 'api_key')
+
+  // ★ 순서. 킬스위치가 켜져 있는데 상한 이유로 막히면, 킬스위치를 내려도 안 열린다.
+  //   어느 마개에 걸렸는지가 값으로 나오는 것이 이 게이트의 존재 이유다.
+  t('마개: 여럿이 닫혔을 때 앞선 마개가 이유가 된다',
+    ruleOf(checkGateBeforeQuota({ hasApiKey: false, killSwitch: true, dailySpendCapUsd: null, spentTodayUsd: null })) === 'api_key')
+
+  // 병 4 — 사용자 한도(라우트) · 실행 상한(하니스). 넷째 마개는 경로마다 다르다.
+  t('병: 한도 차감이 실패하면 막는다', ruleOf(checkQuota(null)) === 'quota')
+  t('병: 한도를 다 쓰면 막는다', ruleOf(checkQuota(-1)) === 'quota')
+  t('마개: 한도가 남으면 통과한다', checkQuota(0).allow)
+  t('병: 하니스가 자기 상한을 채우면 막는다', ruleOf(checkRunBudget(10, 10)) === 'run_cap')
+  t('마개: 하니스 상한 아래면 통과한다', checkRunBudget(9, 10).allow)
+  t('병: 하니스 상한이 0이면 막는다', ruleOf(checkRunBudget(0, 0)) === 'run_cap')
+
+  // ── 프롬프트와 파싱 ────────────────────────────────────────────────
+  //
+  // ★ 프롬프트 문안의 단일 출처는 docs/AI심사_설계안.md 2-2 다. 여기서 재는 것은
+  //   `문안이 옳은가` 가 아니라 `조립과 읽기가 새지 않는가` 다.
+  const at0 = AT_ITEMS[0]
+  const good0 = fourLines(at0.goods[0])
+  t('프롬프트: 좋은 답안이 네 줄로 갈린다', good0 !== null)
+  if (good0) {
+    const p = buildPrompt({ passage: atPassageOf(at0), lines: good0, element: at0.element })
+    t('프롬프트: 치환자가 하나도 안 남는다', !/\{(passage|line[1-4]|element)\}/.test(p))
+    t('프롬프트: 네 줄이 다 들어간다', good0.every((l) => p.includes(l)))
+    t('프롬프트: 지문과 요소가 들어간다', p.includes(at0.elementCue) && p.includes(at0.element))
+    // ★ 지문의 why 는 안 준다. 학습자가 못 본 것을 AI 에만 주면 AI 가 유리한
+    //   자리에서 재게 된다(설계안 7장 `지문의 why 를 AI 에 주기`).
+    t('프롬프트: 지문의 why 는 안 들어간다', !p.includes(at0.why))
+  }
+  // 병: 줄 수가 넷이 아니면 null. 조용히 채우거나 자르지 않는다.
+  t('병: 세 줄이면 조립을 거부한다', fourLines('가\n나\n다') === null)
+  t('병: 다섯 줄이면 조립을 거부한다', fourLines('가\n나\n다\n라\n마') === null)
+  t('요소: requireInLastLine 이 단일 출처다', elementOf(actionCfgOf(at0)) === at0.element)
+
+  const goodJson = '{"delete":[true,false,true],"cue_copied":false,"foreshadow_used":null,"has_actor":true,"why":"근거"}'
+  const parsedGood = parseObservation(goodJson)
+  t('관측: 바른 JSON 을 읽는다', parsedGood.ok)
+  t('관측: 코드펜스를 둘러도 읽는다', parseObservation('```json\n' + goodJson + '\n```').ok)
+  // ★ 고쳐 읽지 않는다. 꼴이 틀리면 틀렸다고 낸다 — 조용히 기우면 흔들림
+  //   측정에서 그 건이 정상으로 보인다.
+  t('병: JSON 이 아니면 not_json', !parseObservation('네, 판정하겠습니다').ok)
+  t('병: delete 가 둘이면 bad_shape',
+    !parseObservation('{"delete":[true,false],"cue_copied":false,"foreshadow_used":null,"has_actor":true,"why":""}').ok)
+  t('병: cue_copied 가 문자열이면 bad_shape',
+    !parseObservation('{"delete":[true,false,true],"cue_copied":"false","foreshadow_used":null,"has_actor":true,"why":""}').ok)
+  // ★ foreshadow_used 는 null 을 받아야 한다. 난이도 1 지문에는 [복선] 이 없다.
+  t('관측: foreshadow_used 가 null 이어도 읽는다', parsedGood.ok)
+
+  // 합격선은 코드에 있고, **지금 아무도 안 부른다**(T 미결). 식만 물어 둔다.
+  if (parsedGood.ok) {
+    const o = parsedGood.observation
+    t('합격선: load 가 T 를 넘으면 통과 (T=2)', passesAt(o, 2))
+    t('합격선: load 가 T 에 모자라면 탈락 (T=3)', !passesAt(o, 3))
+    t('합격선: cue_copied 면 T 와 무관하게 탈락',
+      !passesAt({ ...o, cue_copied: true }, 1))
+    // ★ foreshadow_used !== false 다. === true 로 쓰면 난이도 1 전량이 떨어진다.
+    t('합격선: foreshadow_used=false 면 탈락', !passesAt({ ...o, foreshadow_used: false }, 1))
+    t('합격선: foreshadow_used=null 은 통과한다 (난이도 1)', passesAt({ ...o, foreshadow_used: null }, 1))
+    // ★★ has_actor 는 합격선에 없다. 넣으면 좋은 답안 7건이 죽는다(설계안 3-4).
+    t('합격선: has_actor 는 판정을 안 바꾼다',
+      passesAt({ ...o, has_actor: false }, 2) === passesAt({ ...o, has_actor: true }, 2))
+  }
+
+  // ── 비용 환산 ──────────────────────────────────────────────────────
+  const usage = { inputTokens: 1000, cachedTokens: 0, outputTokens: 100 }
+  const c = costUsd('gemini-3.7-flash', usage)
+  // 1000 × 0.75/1M + 100 × 3.75/1M = 0.00075 + 0.000375
+  t('비용: 잰 토큰을 단가로 환산한다', c === 0.001125, `${c}`)
+  // ★ 모르는 모델은 0 이 아니라 null 이다. 0 을 내면 모델 이름 하나 바뀐 것만으로
+  //   지출 상한이 통째로 새고 아무도 모른다.
+  t('병: 모르는 모델이면 null 을 낸다', costUsd('gemini-9-flash', usage) === null)
+  const cached = costUsd('gemini-3.7-flash', { inputTokens: 1000, cachedTokens: 800, outputTokens: 100 })
+  t('비용: 캐시 적중분은 싼 단가로 센다', cached !== null && c !== null && cached < c)
+
+  // ── 호출 없이 전 구간 ──────────────────────────────────────────────
+  //
+  // ★ 가짜 호출로 조립 → 파싱 → 환산 → 결과까지 한 번에 문다. 여기까지가
+  //   네트워크 없이 재는 전부다. gemini.ts 만 남는다.
+  if (good0) {
+    const input = { passage: atPassageOf(at0), lines: good0, element: at0.element }
+    const fakeUsage = { inputTokens: 1200, cachedTokens: 0, outputTokens: 120 }
+
+    tAsync('전 구간: 성공하면 관측과 비용이 함께 나온다', async () => {
+      const r = await observeWith(
+        async () => ({ text: goodJson, usage: fakeUsage, model: 'gemini-3.7-flash' }),
+        input, 'gemini-3.7-flash')
+      return r.ok && r.observation !== null && r.costUsd !== null
+    })
+
+    // 병: 호출이 던지면 usage 가 없다 — 태운 토큰이 없으니 적을 것도 없다.
+    tAsync('병: 호출이 실패하면 call_failed 이고 usage 가 없다', async () => {
+      const r = await observeWith(async () => { throw new Error('네트워크') }, input, 'gemini-3.7-flash')
+      return !r.ok && r.error === 'call_failed' && r.usage === null && r.costUsd === null
+    })
+
+    // ★★ 병: 모델이 헛소리를 뱉어도 **비용은 나온다.** 토큰은 태웠다.
+    //    이게 안 나오면 파싱이 깨진 호출만큼 지출 상한이 덜 센다.
+    tAsync('병: 관측이 깨져도 비용은 나온다', async () => {
+      const r = await observeWith(
+        async () => ({ text: '음... 판정이 어렵습니다', usage: fakeUsage, model: 'gemini-3.7-flash' }),
+        input, 'gemini-3.7-flash')
+      return !r.ok && r.error === 'not_json' && r.costUsd !== null
+    })
+  }
+}
+
 console.log('\n[docs ↔ README 대조]')
 {
   // docs/README.md 가 '살아 있는 것' 을 가린다. 그것이 없는 파일을 가리키거나
@@ -2215,5 +2411,21 @@ console.log('\n[docs ↔ README 대조]')
     `안 가리키는 것=${JSON.stringify(unlisted)}`)
 }
 
-console.log(`\n최종: ${pass} 통과 / ${fail} 실패`)
-if (fail > 0) process.exit(1)
+// ★ 비동기 단언을 먼저 기다린다. 이 파일은 CJS 로 돌아 top-level await 이 없다 —
+//   .then 으로 미룬다. 여기서 안 기다리면 위의 전 구간 검사가 세어지기 전에
+//   최종 줄이 찍히고, **0 실패에 종료 코드 0** 으로 조용히 지나간다.
+//
+// ★ .catch 가 있어야 한다. 명단의 promise 가 던지면 unhandled rejection 이 되고
+//   최종 줄이 **아예 안 찍힌다.** 종료 코드는 1이라 위험하진 않지만 `tail -1` 만
+//   보는 절차에서는 오류 줄만 보인다. 던진 것도 실패 하나로 세고 최종 줄은 찍는다.
+void Promise.all(aiChainChecks)
+  .catch((e) => {
+    fail++
+    console.log(`  ✗ 비동기 단언이 던졌다: ${e instanceof Error ? e.message : String(e)}`)
+  })
+  .then(() => {
+    // 여기서부터 t 는 봉인된다. 늦게 오는 단언은 세어지는 대신 죽는다.
+    sealed = true
+    console.log(`\n최종: ${pass} 통과 / ${fail} 실패`)
+    if (fail > 0) process.exit(1)
+  })

@@ -44,3 +44,6 @@ next-env.d.ts
 *Zone.Identifier
 scoring-server/.venv/
 __pycache__/
+
+# AI 하니스 출력. 관측 원본이라 커밋하지 않는다 — scripts/ai-probe.ts
+ai-probe*.json

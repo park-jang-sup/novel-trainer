@@ -9,10 +9,11 @@
     "lint": "eslint",
     "test:scoring": "tsx lib/scoring/verify.ts",
     "check:numbers": "tsx scripts/stale-numbers.ts",
-    "gen:seed": "tsx scripts/gen-seed.ts"
+    "gen:seed": "tsx scripts/gen-seed.ts",
+    "ai:probe": "NODE_OPTIONS=--conditions=react-server tsx scripts/ai-probe.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.117.1",
+    "@google/genai": "^2.19.0",
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.3",
     "next": "16.3.1",
