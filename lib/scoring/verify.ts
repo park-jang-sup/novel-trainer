@@ -10,7 +10,7 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { combine, findForbidden, mergeForbidChecks, gradeLocal, pendingMorphChecks } from './index'
-import type { Answer, Check, MorphResult, Problem, ProblemType, ScoringMode } from './types'
+import type { Answer, Check, MorphResult, Problem, ProblemType, ScoringConfig, ScoringMode } from './types'
 import { CONVERT_SEEDS } from './fixtures/convert-seeds'
 import {
   SENSORY_BYPASS,
@@ -41,6 +41,24 @@ import {
   validateMonologueItem,
   type MonologueItem,
 } from './fixtures/monologue-insert'
+import {
+  POV_CFG,
+  DEICTIC_REVIEWED_COLLISIONS,
+  POV_INSTRUCTION,
+  POV_INSTRUCTION_BEFORE,
+  POV_INSTRUCTION_EXAMPLE,
+  POV_ITEMS,
+  DEICTIC,
+  MAX_ECHO,
+  echoLen,
+  passageOf,
+  povCleanCases,
+  povBypassCases,
+  povKnownGapCase,
+  validatePovItem,
+  crossCheckPovItems,
+  type PovItem,
+} from './fixtures/pov-lock'
 import {
   checkPassageRules,
   checkPassageSetRules,
@@ -1280,9 +1298,336 @@ console.log('\n[8단계 monologue: 설정 일치 · 키 가드]')
 //
 // 지금은 이 감시가 없으면 다음에 검사를 추가하는 사람이 rule을 빈
 // 문자열로 채우고 넘어가도 타입은 통과하고 화면에서는 빈 줄로 보인다.
-// 아무도 안 본다. 덤프 69문항 전부에 gradeLocal을 두 번(빈 문자열 한 번,
+// 아무도 안 본다. 덤프 문항 전부에 gradeLocal을 두 번(빈 문자열 한 번,
 // 지문으로 한 번) 돌리고, pendingMorphChecks도 함께 본다.
-console.log('\n[rule 누락 감시: 덤프 69문항 전부]')
+
+// ── 9단계 pov_lock: 조망→밀착 ─────────────────────────────────────────
+//
+// morph에 null을 넘긴다 — 이 단계는 형태소가 필요 없다.
+//
+// 설계서 ch02_pov.json의 require_sense_verb를 requireAny로 그대로 옮기면
+// 양쪽으로 틀린다(미검출 5/10 · 오탐 2/8). "보였다"라는 낱말의 유무는
+// 밀착의 지표가 아니기 때문이다. 검사를 더하지 않고 재료를 바꿨다 —
+// requireAny를 시점 인물 이름으로, forbidWords에 조망 표지를 넣어
+// 미검출 1 · 오탐 0으로 내렸다. 남은 미검출 1은 povKnownGapCase다.
+const povCfgOf = (item: PovItem) => ({
+  ...POV_CFG,
+  forbidWords: [...DEICTIC, ...item.relic],
+  requireAny: [item.pov],
+})
+const runPov = (item: PovItem, text: string, cfg: ScoringConfig = povCfgOf(item)) =>
+  combine(
+    { id: item.sourceKey, type: 'convert', scoring_mode: 'hybrid', scoring_config: cfg } as Problem,
+    { text },
+    undefined,
+    null
+  )
+const povExtra = (item: PovItem, key: string, r: ReturnType<typeof runPov>) =>
+  `${item.sourceKey}/${key} 실제=${r.status} fail=${JSON.stringify(r.checks.filter((c) => c.status === 'fail').map((c) => c.key))}`
+
+console.log('\n[9단계 pov_lock: 오탐 감시 · 뚫기 표본 · 알려진 한계 — 8문항 전수]')
+{
+  for (const item of POV_ITEMS) {
+    for (const c of povCleanCases(item)) {
+      const r = runPov(item, c.text)
+      t(`'${item.sourceKey}' clean '${c.key}' → pass`, r.status === 'pass', povExtra(item, c.key, r))
+    }
+    for (const c of povBypassCases(item)) {
+      const r = runPov(item, c.text)
+      t(`'${item.sourceKey}' bypass '${c.key}' → fail`, r.status === 'fail', povExtra(item, c.key, r))
+    }
+    // 알려진 한계: 이름을 박고 내용을 통째로 바꾼 답안. 지금은 pass가 맞다.
+    // 이것이 fail로 바뀌면 누군가 규칙을 조인 것이다 — 바로 아래
+    // 밴드 의존 감시의 오탐 수를 함께 봐라.
+    const g = povKnownGapCase(item)
+    const r = runPov(item, g.text)
+    t(`'${item.sourceKey}' 알려진 한계 '${g.key}' → pass`, r.status === 'pass', povExtra(item, g.key, r))
+  }
+}
+
+console.log('\n[9단계 pov_lock: 밴드 의존 감시]')
+{
+  // 뚫기가 걸렸다는 사실만으로는 설계가 막았다는 뜻이 아니다. 분량 밴드에
+  // 우연히 걸렸을 수 있다. 8단계는 "밴드 없이도 전부 fail"을 요구했지만
+  // 9단계에는 그럴 수 없는 뚫기가 하나 있다 — '이름만 냄'(2자)은 실제로
+  // 길이 문제라 minChars가 잡는 것이 맞다. 그래서 0을 요구하는 대신
+  // 밴드에 기대는 뚫기가 정확히 그 하나인지를 본다. 다른 것이 여기
+  // 끼어들면 설계가 헐거워진 것이다.
+  const BAND_ONLY = new Set(['이름만 냄'])
+  const { minChars, maxChars, ...rest } = POV_CFG
+  void minChars
+  void maxChars
+  for (const item of POV_ITEMS) {
+    for (const c of povBypassCases(item)) {
+      const bare = { ...rest, forbidWords: [...DEICTIC, ...item.relic], requireAny: [item.pov] }
+      const r = runPov(item, c.text, bare)
+      const expected = !BAND_ONLY.has(c.key)
+      t(
+        `'${item.sourceKey}' bypass '${c.key}' → 밴드 없이 ${expected ? 'fail' : 'pass(길이 문제)'}`,
+        (r.status === 'fail') === expected,
+        povExtra(item, c.key, r)
+      )
+    }
+  }
+}
+
+console.log('\n[9단계 pov_lock: minChars 감도 감시]')
+{
+  // 미검출을 밴드로 메우려는 시도를 잡는다. 30이면 좋은 답안 셋이 경계에
+  // 닿고, 40이면 64건 중 52건이 걸린다. 20이 오탐 0인 마지막 값이 아니라
+  // 넓은 빈 구간(2~29) 안쪽이라는 것이 요점이다.
+  const fpAt = (m: number) =>
+    POV_ITEMS.reduce(
+      (n, item) =>
+        n + item.goods.filter((g) => runPov(item, g, { ...povCfgOf(item), minChars: m }).status !== 'pass').length,
+      0
+    )
+  t('minChars 20에서 좋은 답안 오탐 0', fpAt(20) === 0, `실제=${fpAt(20)}`)
+  t('minChars 30이면 좋은 답안 셋이 걸린다', fpAt(30) === 3, `실제=${fpAt(30)}`)
+  t('minChars 40이면 좋은 답안 대부분이 걸린다', fpAt(40) >= 50, `실제=${fpAt(40)}`)
+}
+
+console.log('\n[9단계 pov_lock: requireAny 의존 감시]')
+{
+  // requireAny(시점 인물 이름)를 빼면 어느 뚫기가 새는지. 이름 요구가
+  // 실제로 일하고 있다는 증거다 — 특히 '1인칭으로 바꿈'과
+  // '조망 유지 · 이름 없음'을 잡는 것이 이름 requireAny다.
+  // 그래서 1인칭 검사를 따로 만들지 않는다('나' 80회 · '내' 54회 누출이고
+  // 주어를 생략한 1인칭은 원리적으로 못 잡는다).
+  const NEEDS_NAME = new Set(['조망 유지 · 이름 없음'])
+  for (const item of POV_ITEMS) {
+    for (const c of povBypassCases(item)) {
+      if (!NEEDS_NAME.has(c.key)) continue
+      const noName = { ...POV_CFG, forbidWords: [...DEICTIC, ...item.relic] }
+      const r = runPov(item, c.text, noName)
+      t(
+        `'${item.sourceKey}' bypass '${c.key}' → requireAny 없으면 샌다`,
+        r.status === 'pass',
+        povExtra(item, c.key, r)
+      )
+    }
+  }
+}
+
+console.log('\n[9단계 pov_lock: relic 의존 감시 — 세는 표현이 일한다]')
+{
+  // relic[0](세는 표현)을 빼면 '지시어만 뺌'이 샌다. 종결 표현 쪽인
+  // relic[1]만으로는 못 막는다는 것이 실측이다(미검출 3 대 1).
+  for (const item of POV_ITEMS) {
+    const onlyTail = { ...POV_CFG, forbidWords: [...DEICTIC, item.relic[1]], requireAny: [item.pov] }
+    const c = povBypassCases(item).find((x) => x.key === '세는 표현만 남김')!
+    const r = runPov(item, c.text, onlyTail)
+    t(
+      `'${item.sourceKey}' relic[0]을 빼면 '세는 표현만 남김'이 샌다`,
+      r.status === 'pass',
+      povExtra(item, c.key, r)
+    )
+  }
+}
+
+console.log('\n[9단계 pov_lock: MAX_ECHO 감도 감시]')
+{
+  // 겹침 상한을 조이려는 시도를 잡는다.
+  //
+  // ★ 빈 구간이 8~10 하나뿐이고 폭이 2다. 8단계 maxLineWordRepeat은
+  //   3~15 사이에서 6을 골랐다(폭 12). 아래 좋은 답안 64건의 실제 겹침
+  //   최대는 4자지만 그 수를 믿고 6으로 내리면 안 된다 — 폭 2는 일부러
+  //   재사용을 넣은 표본에서 나온 값이다("여자하나가" 5 · "하늘에별이떠있" 7 ·
+  //   "하늘에별이떠있고" 8은 전부 자연스러운 재작성이다).
+  const echoes = POV_ITEMS.flatMap((i) => i.goods.map((g) => echoLen(g, i.gaze)))
+  const maxEcho = Math.max(...echoes)
+  t('좋은 답안 64건이 전부 MAX_ECHO 미만', maxEcho < MAX_ECHO, `실제 최대=${maxEcho}`)
+  t('MAX_ECHO가 9다 — 폭 2를 모르고 조이지 마라', MAX_ECHO === 9, `실제=${MAX_ECHO}`)
+
+  // 대조 대상을 지문 전체로 넓히면 안 된다는 것을 박아 둔다.
+  // stage까지 넣으면 좋은 답안이 무대 줄을 살렸을 때 걸린다.
+  const wide = POV_ITEMS.flatMap((i) => i.goods.map((g) => echoLen(g, passageOf(i))))
+  t(
+    '대조 대상을 지문 전체로 넓히면 겹침이 커진다 — gaze만 대조하는 이유',
+    Math.max(...wide) > maxEcho,
+    `gaze=${maxEcho} 지문전체=${Math.max(...wide)}`
+  )
+}
+
+console.log('\n[9단계 pov_lock: 지문 규칙 — passage-rules.ts 포팅]')
+{
+  // tone은 scoring_config에 안 들어가 PovItem에도 없다 — 여기서만 쓰는
+  // 검증용 데이터다. genre_tag도 코드가 안 쓴다(gen-seed.ts가 DB로 나르기만
+  // 한다). 8문항짜리 단계 다섯이 전부 fantasy 4 · modern 2 · martial 1 ·
+  // romance 1이라 같은 분포를 따랐다. 설계서 ch02의 3장르 균등은 72문항
+  // (8드릴×3장르×3난이도) 카탈로그의 축이라 여기엔 안 맞는다.
+  const POV_TONE: Record<string, string> = {
+    'pv-star-field': 'planned',
+    'pv-guild-desk': 'planned',
+    'pv-dawn-market': 'impulsive',
+    'pv-drill-yard': 'impulsive',
+    'pv-lantern-night': 'planned',
+    'pv-banquet-hall': 'planned',
+    'pv-broken-gate': 'planned',
+    'pv-frozen-lake': 'impulsive',
+  }
+  // 9단계 지문에는 대사가 없다. dialogueLines를 빈 배열로 넘기면 종결어미
+  // 규칙 둘이 조용히 통과한다 — 그 '조용히'는 validatePovItem의 따옴표
+  // 검사가 막는다.
+  const povPassageInput = (item: PovItem): PassageRuleInput => ({
+    sourceKey: item.sourceKey,
+    keyword: item.pov,
+    passage: passageOf(item),
+    dialogueLines: [],
+    difficulty: item.difficulty,
+    tone: POV_TONE[item.sourceKey],
+  })
+
+  for (const item of POV_ITEMS) {
+    const fails = checkPassageRules(povPassageInput(item))
+    t(`'${item.sourceKey}' 지문 규칙(공용) 통과`, fails.length === 0, JSON.stringify(fails))
+  }
+
+  const setFails = checkPassageSetRules(POV_ITEMS.map(povPassageInput), {
+    difficulty: { 1: 4, 2: 4 },
+    tone: { planned: 5, impulsive: 3 },
+    maxLengthSpread: 20,
+  })
+  t('문항 집합 규칙(분포·중복) 통과', setFails.length === 0, JSON.stringify(setFails))
+
+  for (const item of POV_ITEMS) {
+    const fails = validatePovItem(item)
+    t(`'${item.sourceKey}' 지문 규칙(9단계 전용) 통과`, fails.length === 0, JSON.stringify(fails))
+  }
+
+  // relic을 사람이 문항마다 고른다. 고르는 사람이 자기 지문의 결함을 못 본다 —
+  // 교차로 세는 것이 유일한 방법이다.
+  const cross = crossCheckPovItems(POV_ITEMS)
+  t('문항 사이 교차 검사(relic · 이름) 통과', cross.length === 0, JSON.stringify(cross))
+}
+
+console.log('\n[9단계 pov_lock: 설정 일치 · 키 가드]')
+{
+  t('POV_CFG minChars 20', POV_CFG.minChars === 20, `실제=${POV_CFG.minChars}`)
+  t('POV_CFG maxChars 130', POV_CFG.maxChars === 130, `실제=${POV_CFG.maxChars}`)
+  t('문항 8건', POV_ITEMS.length === 8, `실제=${POV_ITEMS.length}`)
+  t(
+    '좋은 답안 64건',
+    POV_ITEMS.reduce((n, i) => n + i.goods.length, 0) === 64,
+    `실제=${POV_ITEMS.reduce((n, i) => n + i.goods.length, 0)}`
+  )
+  t(
+    "DEICTIC에 '저 '(뒤 공백)가 없다 — 덤프 실측 오탐 2회",
+    !DEICTIC.includes('저 '),
+    JSON.stringify(DEICTIC)
+  )
+  // 키 가드: scoring_config에 넣는 키가 ScoringConfig에 있는 것뿐인지.
+  // 오타가 나면 그 검사는 조용히 사라진다.
+  const KNOWN = new Set(['minChars', 'maxChars', 'forbidWords', 'requireAny'])
+  const unknown = Object.keys(povCfgOf(POV_ITEMS[0])).filter((k) => !KNOWN.has(k))
+  t('scoring_config에 모르는 키가 없다', unknown.length === 0, JSON.stringify(unknown))
+}
+
+// 픽스처와 덤프가 갈리면 위의 감시 전부가 실제 배포물을 안 보는 상태가 된다.
+// 8단계가 같은 가드를 두고 있다. 문항이 덤프에 없으면 건너뛰지 않고 실패시킨다 —
+// 건너뛰면 "아직 안 넣었다"와 "통과"가 구별되지 않는다.
+console.log('\n[9단계 pov_lock: 덤프 대조]')
+{
+  interface DumpProblem {
+    source_key: string
+    skill_key: string
+    passage: string | null
+    instruction: string
+    difficulty: number
+    scoring_config: Record<string, unknown>
+  }
+  const raw = readFileSync(
+    path.join(__dirname, '..', '..', 'seed', 'dump', 'problems.json'), 'utf8').replace(/^﻿/, '')
+  const dump: DumpProblem[] = JSON.parse(raw)
+  const povDump = dump.filter((d) => d.skill_key === 'pov_lock')
+  t('덤프에 pov_lock 8문항', povDump.length === 8, `실제=${povDump.length}`)
+
+  const canon = (o: Record<string, unknown>) => JSON.stringify(o, Object.keys(o).sort())
+  for (const item of POV_ITEMS) {
+    const dp = povDump.find((d) => d.source_key === item.sourceKey)
+    t(`'${item.sourceKey}' 덤프에 있다`, dp !== undefined)
+    if (!dp) continue
+    t(`'${item.sourceKey}' 덤프 passage가 픽스처와 같다`, dp.passage === passageOf(item),
+      `덤프=${JSON.stringify(dp.passage)}`)
+    t(`'${item.sourceKey}' 덤프 instruction이 POV_INSTRUCTION과 같다`,
+      dp.instruction === POV_INSTRUCTION, `덤프=${JSON.stringify(dp.instruction)}`)
+    t(`'${item.sourceKey}' 덤프 scoring_config가 픽스처와 같다`,
+      canon(dp.scoring_config) === canon(povCfgOf(item) as unknown as Record<string, unknown>),
+      `덤프=${canon(dp.scoring_config)}`)
+    t(`'${item.sourceKey}' 덤프 difficulty가 픽스처와 같다`, dp.difficulty === item.difficulty,
+      `덤프=${dp.difficulty}`)
+  }
+}
+
+// findForbidden은 어간이 아니라 순수 부분 문자열이다(local.ts:17~35).
+// DEICTIC이 조망이 아닌 흔한 말을 잡으면 좋은 답안이 미달이 된다.
+// 검토를 마친 넷 말고 새 충돌이 생기면 여기서 걸린다.
+console.log('\n[9단계 pov_lock: DEICTIC 누출 감시]')
+{
+  const PROBE = [
+    '여기저기', '거기', '여기', '저기압', '저기요', '이쪽저쪽', '멀찍하다',
+    '저 사람', '저녁', '저울', '저항', '위쪽', '앞쪽', '너머로', '멀리서',
+    '한쪽 위에', '책상 위에', '눈앞에', '문 앞에', '그 너머', '저마다', '저절로',
+  ]
+  const reviewed = new Set(DEICTIC_REVIEWED_COLLISIONS.map((c) => c.word))
+  const leaked = PROBE.filter((w) => findForbidden(w, DEICTIC).length > 0 && !reviewed.has(w))
+  t('검토하지 않은 DEICTIC 충돌이 없다', leaked.length === 0, JSON.stringify(leaked))
+
+  // triage 기록이 낡지 않았는지. 안 걸리는 말이 목록에 남아 있으면
+  // 다음 사람이 그것을 근거로 DEICTIC을 고칠 수 있다.
+  const stale = DEICTIC_REVIEWED_COLLISIONS.filter((c) => findForbidden(c.word, DEICTIC).length === 0)
+  t('충돌 기록에 죽은 항목이 없다', stale.length === 0, JSON.stringify(stale.map((c) => c.word)))
+
+  // 말뭉치 전수 — 덤프 지문·지시문 + 좋은 답안 64건
+  interface DeicticProbeDump {
+    skill_key: string
+    passage: string | null
+    instruction: string
+  }
+  const corpus: string[] = []
+  const dumpRaw = readFileSync(
+    path.join(__dirname, '..', '..', 'seed', 'dump', 'problems.json'), 'utf8')
+  for (const dp of JSON.parse(dumpRaw) as DeicticProbeDump[]) {
+    // 9단계 자신의 지문·지시문은 뺀다 — 조망 지시어가 들어 있는 것이 지문의
+    // 요건이다. 여기서 재는 것은 '조망이 아닌 글이 걸리는가'다.
+    if (dp.skill_key === 'pov_lock') continue
+    if (dp.passage) corpus.push(dp.passage)
+    if (dp.instruction) corpus.push(dp.instruction)
+  }
+  for (const i of POV_ITEMS) corpus.push(...i.goods)
+  const hits = corpus.filter((c) => findForbidden(c, DEICTIC).length > 0)
+  t(`말뭉치 ${corpus.length}건에서 DEICTIC이 안 걸린다`, hits.length === 0, `실제=${hits.length}`)
+}
+
+// 지시문 예시가 여덟 지문 중 하나로 되돌아가면 '지시문 예시 그대로' 뚫기가
+// 모범 답안이 된다. 8단계가 실측으로 확인한 자리다(미검출 8/8).
+console.log('\n[9단계 pov_lock: 지시문 가드]')
+{
+  for (const item of POV_ITEMS) {
+    t(
+      `지시문 예시에 '${item.pov}'가 없다`,
+      !POV_INSTRUCTION_EXAMPLE.includes(item.pov) && !POV_INSTRUCTION_BEFORE.includes(item.pov),
+      POV_INSTRUCTION_EXAMPLE
+    )
+    t(
+      `지시문 예시가 '${item.sourceKey}'의 지문이 아니다`,
+      !POV_INSTRUCTION_BEFORE.includes(item.gaze) && !POV_INSTRUCTION_EXAMPLE.includes(item.gaze),
+      item.gaze
+    )
+  }
+  t(
+    '지시문 예시(밀착 쪽)에 지시어가 없다',
+    findForbidden(POV_INSTRUCTION_EXAMPLE, DEICTIC).length === 0,
+    JSON.stringify(findForbidden(POV_INSTRUCTION_EXAMPLE, DEICTIC))
+  )
+  t(
+    '지시문 예시(조망 쪽)는 지시어로 시작한다 — 고칠 대상임이 보여야 한다',
+    DEICTIC.some((d) => POV_INSTRUCTION_BEFORE.startsWith(d + ' ')),
+    POV_INSTRUCTION_BEFORE
+  )
+  t('지시문에 예시가 들어 있다', POV_INSTRUCTION.includes(POV_INSTRUCTION_EXAMPLE.split('\n')[0]))
+}
+
 {
   interface DumpProblem {
     source_key: string
@@ -1294,6 +1639,8 @@ console.log('\n[rule 누락 감시: 덤프 69문항 전부]')
   const dumpPath = path.join(__dirname, '..', '..', 'seed', 'dump', 'problems.json')
   const raw = readFileSync(dumpPath, 'utf8').replace(/^\uFEFF/, '')
   const dumpProblems: DumpProblem[] = JSON.parse(raw)
+  // \uBB38\uD56D \uC218\uB97C \uC5EC\uAE30\uC11C \uC77D\uB294\uB2E4 \u2014 \uC0C1\uC218\uB85C \uBC15\uC73C\uBA74 \uBB38\uD56D\uC774 \uB298 \uB54C \uC81C\uBAA9\uB9CC \uC61B \uC218\uB97C \uB9D0\uD55C\uB2E4.
+  console.log(`\n[rule \uB204\uB77D \uAC10\uC2DC: \uB364\uD504 ${dumpProblems.length}\uBB38\uD56D \uC804\uBD80]`)
 
   let checked = 0
   const missing: string[] = []

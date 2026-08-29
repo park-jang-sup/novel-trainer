@@ -1066,6 +1066,190 @@ select
   2, 'mo-siblings-rope'
 where not exists (select 1 from problems p where p.source_key = 'mo-siblings-rope');
 
+-- pv-broken-gate (order_no 9, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'pov_lock'),
+  'convert', 'auto', '한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.
+
+  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.
+  덕수는 둑 위에 서 있었다.
+
+  ↓
+
+  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.
+  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.
+
+1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
+  '멀찍이 무너진 성문 앞에 병사 열이 창을 세우고 늘어섰고, 깨진 돌이 길을 반쯤 막고 있었다.
+규담은 마른 도랑에 엎드려 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","병사 열이","길을 반쯤 막고"],"requireAny":["규담"]}'::jsonb,
+  'original', 'fantasy', 'planned',
+  1, 'pv-broken-gate'
+where not exists (select 1 from problems p where p.source_key = 'pv-broken-gate');
+
+-- pv-drill-yard (order_no 9, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'pov_lock'),
+  'convert', 'auto', '한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.
+
+  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.
+  덕수는 둑 위에 서 있었다.
+
+  ↓
+
+  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.
+  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.
+
+1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
+  '저 멀리 연무장에서는 제자 스물이 목검을 휘둘렀고, 흙먼지가 담장 위로 피어올랐다.
+무결은 회랑 기둥에 기대 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","제자 스물","흙먼지가 담장 위로"],"requireAny":["무결"]}'::jsonb,
+  'original', 'martial', 'impulsive',
+  1, 'pv-drill-yard'
+where not exists (select 1 from problems p where p.source_key = 'pv-drill-yard');
+
+-- pv-guild-desk (order_no 9, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'pov_lock'),
+  'convert', 'auto', '한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.
+
+  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.
+  덕수는 둑 위에 서 있었다.
+
+  ↓
+
+  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.
+  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.
+
+1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
+  '저쪽 길드 사무실에는 모험가 열둘이 모여 있었고, 벽에는 의뢰서가 빼곡히 붙어 있었다.
+하람은 문턱에 서 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","모험가 열둘","의뢰서가 빼곡히"],"requireAny":["하람"]}'::jsonb,
+  'original', 'fantasy', 'planned',
+  1, 'pv-guild-desk'
+where not exists (select 1 from problems p where p.source_key = 'pv-guild-desk');
+
+-- pv-star-field (order_no 9, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'pov_lock'),
+  'convert', 'auto', '한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.
+
+  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.
+  덕수는 둑 위에 서 있었다.
+
+  ↓
+
+  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.
+  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.
+
+1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
+  '저기 하늘에 별이 떠 있고, 남자 둘 여자 하나가 지나가며 이야기를 나누고 있었다.
+태윤은 담장 아래 서 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","남자 둘 여자 하나","이야기를 나누고"],"requireAny":["태윤"]}'::jsonb,
+  'original', 'modern', 'planned',
+  1, 'pv-star-field'
+where not exists (select 1 from problems p where p.source_key = 'pv-star-field');
+
+-- pv-banquet-hall (order_no 9, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'pov_lock'),
+  'convert', 'auto', '한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.
+
+  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.
+  덕수는 둑 위에 서 있었다.
+
+  ↓
+
+  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.
+  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.
+
+1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
+  '저 위 연회장에는 촛대 열둘이 타올랐고, 귀족 예닐곱이 잔을 든 채 낮은 말을 주고받았다.
+유안은 계단 아래 그늘에 서 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","촛대 열둘","귀족 예닐곱이"],"requireAny":["유안"]}'::jsonb,
+  'original', 'fantasy', 'planned',
+  2, 'pv-banquet-hall'
+where not exists (select 1 from problems p where p.source_key = 'pv-banquet-hall');
+
+-- pv-dawn-market (order_no 9, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'pov_lock'),
+  'convert', 'auto', '한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.
+
+  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.
+  덕수는 둑 위에 서 있었다.
+
+  ↓
+
+  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.
+  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.
+
+1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
+  '저 앞 시장에는 좌판 여덟이 늘어섰고, 짐꾼 셋이 상자를 나르며 고함을 주고받고 있었다.
+정순은 골목 어귀에 서 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","좌판 여덟","짐꾼 셋이"],"requireAny":["정순"]}'::jsonb,
+  'original', 'modern', 'impulsive',
+  2, 'pv-dawn-market'
+where not exists (select 1 from problems p where p.source_key = 'pv-dawn-market');
+
+-- pv-frozen-lake (order_no 9, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'pov_lock'),
+  'convert', 'auto', '한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.
+
+  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.
+  덕수는 둑 위에 서 있었다.
+
+  ↓
+
+  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.
+  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.
+
+1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
+  '저기 얼어붙은 호수에는 낚시 구멍 열넷이 뚫려 있었고, 아이 셋이 얼음을 지치며 소리를 질렀다.
+연희는 비탈 위 바위에 앉아 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","낚시 구멍 열넷","아이 셋이"],"requireAny":["연희"]}'::jsonb,
+  'original', 'fantasy', 'impulsive',
+  2, 'pv-frozen-lake'
+where not exists (select 1 from problems p where p.source_key = 'pv-frozen-lake');
+
+-- pv-lantern-night (order_no 9, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'pov_lock'),
+  'convert', 'auto', '한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.
+
+  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.
+  덕수는 둑 위에 서 있었다.
+
+  ↓
+
+  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.
+  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.
+
+1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
+  '저 너머 강가에는 등불 스무 개가 떠갔고, 다리 위에서 연인 넷이 난간에 기대 웃고 있었다.
+소하는 버드나무 그늘에 서 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","등불 스무 개","연인 넷이"],"requireAny":["소하"]}'::jsonb,
+  'original', 'romance', 'planned',
+  2, 'pv-lantern-night'
+where not exists (select 1 from problems p where p.source_key = 'pv-lantern-night');
+
 -- ch-village-approval (order_no 14, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,

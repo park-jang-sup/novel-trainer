@@ -19,7 +19,7 @@
 --
 -- expect는 CTE가 아니라 임시 테이블이다. CTE는 그것이 붙은 statement
 -- 하나에만 유효해서, 검사 넷을 한 do 블록 안에서 나눠 적으려면 매번
--- 69행짜리 values를 다시 적어야 한다. 임시 테이블로 한 번만 채운다.
+-- 77행짜리 values를 다시 적어야 한다. 임시 테이블로 한 번만 채운다.
 --
 -- 마지막 문장이 select인 것은 의도다. Supabase 편집기가 NOTICE를
 -- 안 띄워서, raise notice로 끝내면 "통과"와 "파일이 잘려 안 돌았다"가
@@ -104,6 +104,14 @@ insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) v
   ('mo-gyeonu-bridge', 'b8bc31899f2ffa26eb9992a725e0857c', 187, '10d32f33636fb8d589316c216b8636b6', 99, '{"maxChars":200,"minChars":75,"requireAny":["까치"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb),
   ('mo-rabbit-gate', 'b8bc31899f2ffa26eb9992a725e0857c', 187, '332fa573aca761a846aec48d3d2c690d', 78, '{"maxChars":200,"minChars":75,"requireAny":["용궁"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb),
   ('mo-siblings-rope', 'b8bc31899f2ffa26eb9992a725e0857c', 187, '978da35d3407801ab6fae051f91a6798', 86, '{"maxChars":200,"minChars":75,"requireAny":["어머니"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb),
+  ('pv-broken-gate', '74c90b61bb8cb9f643b3570bcc5844bb', 217, 'c4f92b5a91faffa69a6fd42482d5cedd', 72, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","병사 열이","길을 반쯤 막고"],"requireAny":["규담"]}'::jsonb),
+  ('pv-drill-yard', '74c90b61bb8cb9f643b3570bcc5844bb', 217, '1d76062ca723b97d8f4009d0c197e6cc', 65, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","제자 스물","흙먼지가 담장 위로"],"requireAny":["무결"]}'::jsonb),
+  ('pv-guild-desk', '74c90b61bb8cb9f643b3570bcc5844bb', 217, 'b20b1efa045a257e942a34654913d54b', 63, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","모험가 열둘","의뢰서가 빼곡히"],"requireAny":["하람"]}'::jsonb),
+  ('pv-star-field', '74c90b61bb8cb9f643b3570bcc5844bb', 217, '31b722d53ba5930dd63df1f97aafd008', 63, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","남자 둘 여자 하나","이야기를 나누고"],"requireAny":["태윤"]}'::jsonb),
+  ('pv-banquet-hall', '74c90b61bb8cb9f643b3570bcc5844bb', 217, '8eae85a65ef951d256123b3e4026947e', 71, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","촛대 열둘","귀족 예닐곱이"],"requireAny":["유안"]}'::jsonb),
+  ('pv-dawn-market', '74c90b61bb8cb9f643b3570bcc5844bb', 217, '6820a24800c1b8060fb6adc7c59c1881', 67, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","좌판 여덟","짐꾼 셋이"],"requireAny":["정순"]}'::jsonb),
+  ('pv-frozen-lake', '74c90b61bb8cb9f643b3570bcc5844bb', 217, 'f835e02b9ca70ad41038f4a531efe3b6', 74, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","낚시 구멍 열넷","아이 셋이"],"requireAny":["연희"]}'::jsonb),
+  ('pv-lantern-night', '74c90b61bb8cb9f643b3570bcc5844bb', 217, '048ec67183dc20a6e73e14ac0acc8377', 71, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","등불 스무 개","연인 넷이"],"requireAny":["소하"]}'::jsonb),
   ('ch-village-approval', '424cd68473f72bfa2999257a700f216f', 62, null, null, '{}'::jsonb),
   ('ch-cursed-sword', 'f1831fd166947069b9e047c021b5fa0d', 62, null, null, '{}'::jsonb),
   ('ch-misunderstanding', 'bbcbf8d670bc52057ddf7d316948beae', 57, null, null, '{}'::jsonb),
