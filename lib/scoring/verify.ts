@@ -61,6 +61,17 @@ import {
   type PovItem,
 } from './fixtures/pov-lock'
 import {
+  AT_ITEMS,
+  AT_CFG,
+  AT_D2_EXTRA,
+  AT_TONE,
+  BYPASS_KINDS,
+  actionCfgOf,
+  passageOf as atPassageOf,
+  validateActionItem,
+  type ActionItem,
+} from './fixtures/action-turn'
+import {
   checkPassageRules,
   checkPassageSetRules,
   type PassageRuleInput,
@@ -1584,6 +1595,210 @@ console.log('\n[10단계: requireInLastLine 물기 시험]')
     if (lastLineStatus(c.text) !== 'pass') continue
     t(`'${c.key}' 마지막 줄 pass면 requireAny도 pass`, anyStatus(c.text) === 'pass', `requireAny=${anyStatus(c.text)}`)
   }
+}
+
+
+// ── 10단계 action_turn(전투 서사화) ──────────────────────────────────
+//
+// 난이도를 검사가 아니라 재료로 가른다. 9단계 povCfgOf 가 difficulty 를 안
+// 쓰는 것과 같다 — 8문항 단계 넷이 예외 없이 그렇다. foreshadow 유무가
+// 9단계 groups 자리다.
+//
+// 신설 검사는 requireInLastLine 하나뿐이다. requireAny 는 본문 어디든 보므로
+// 빌드업에 요소를 흘리고 끝을 다른 말로 맺은 답안을 통과시킨다.
+const runAt = (item: ActionItem, text: string, cfg: ScoringConfig = actionCfgOf(item)) =>
+  combine(
+    { id: item.sourceKey, type: 'convert', scoring_mode: 'hybrid', scoring_config: cfg } as Problem,
+    { text },
+    undefined,
+    null
+  )
+const atPasses = (item: ActionItem, text: string, cfg?: ScoringConfig) => runAt(item, text, cfg).status === 'pass'
+const atExtra = (item: ActionItem, key: string, r: ReturnType<typeof runAt>) =>
+  `${item.sourceKey}/${key} 실제=${r.status} fail=${JSON.stringify(r.checks.filter((c) => c.status === 'fail').map((c) => c.key))}`
+
+console.log('\n[10단계 action_turn: 오탐 감시 · 뚫기 · 알려진 한계 — 8문항 전수]')
+{
+  for (const item of AT_ITEMS) {
+    for (const [i, g] of item.goods.entries()) {
+      const r = runAt(item, g)
+      t(`'${item.sourceKey}' 좋은 답안 ${i + 1} → pass`, r.status === 'pass', atExtra(item, `good${i + 1}`, r))
+    }
+    // known 셋은 pass 가 정상이다. 요소도 자리도 줄 수도 맞고 빌드업이 없을 뿐인데,
+    // 그것은 내용이라 규칙이 원리적으로 못 잡는다. fail 로 바뀌면 누가 조인 것이다.
+    for (const b of item.bypasses) {
+      const r = runAt(item, b.text)
+      const want = b.known ? 'pass' : 'fail'
+      t(`'${item.sourceKey}' 뚫기 '${b.key}' → ${want}`, r.status === want, atExtra(item, b.key, r))
+    }
+    // 난이도 2 전용 뚫기. ★ 위 11건과 따로 센다 — 섞으면 난이도 2가 미검출
+    // 4/12 가 되어 난이도 1의 3/11 과 비교가 깨진다.
+    const ex = AT_D2_EXTRA[item.sourceKey]
+    if (ex) {
+      const r = runAt(item, ex.text)
+      t(`'${item.sourceKey}' 전용 뚫기 '${ex.key}' → pass (알려진 한계 넷째)`, r.status === 'pass', atExtra(item, ex.key, r))
+    }
+  }
+}
+
+console.log('\n[10단계 action_turn: requireAny 의 탐지 기여는 0이다]')
+{
+  // 마지막 줄은 본문의 부분 문자열이므로 requireInLastLine 이 pass 면 같은 목록의
+  // requireAny 도 반드시 pass 한다. 원리적으로 반례가 없다 — 텍스트 241개에서
+  // 부분 문자열 26162쌍을 재서 반례 0을 확인했다.
+  // 남기는 이유는 화면에서 두 실패를 가르기 위해서다(요소가 없다 / 끝이 아니다).
+  // 세션 10 §7-1(5) 표는 둘이 각각 잡는 것처럼 읽히게 적혀 있었다. 아니다.
+  for (const item of AT_ITEMS) {
+    const bare: ScoringConfig = { ...AT_CFG, requireInLastLine: [item.element] }
+    const withAny = item.bypasses.filter((b) => atPasses(item, b.text)).length
+    const without = item.bypasses.filter((b) => atPasses(item, b.text, bare)).length
+    t(`'${item.sourceKey}' requireAny 를 빼도 미검출이 같다`, withAny === without, `있을때=${withAny} 뺐을때=${without}`)
+  }
+}
+
+console.log('\n[10단계 action_turn: 마지막 줄 하한 · 겹침을 만들지 않은 근거]')
+{
+  // ★ 이 두 값은 지문 1건에서 재면 뒤집힌다. 이번 세션에서 실제로 두 번 뒤집혔다.
+  //   세션 10 §7-1(5)(7) 이 지문 1건에서 '하한 10 · 폭 2' 를 낸 것이 그 자리다.
+  const noSpace = (x: string) => x.replace(/\s/g, '').length
+  const lastLine = (x: string) => {
+    const ls = x.split('\n').map((l) => l.trim()).filter(Boolean)
+    return ls.length ? ls[ls.length - 1] : ''
+  }
+
+  // 1) 마지막 줄 하한. 미검출은 실제로 준다(8건에서 24 → 16). 만들지 않는 이유는
+  //    줄어드는 것이 전부 known 이라는 것이다 — 길이로 잡는 것이라 마지막 줄을
+  //    한 어절만 늘리면 빠져나간다. 값은 좋아지고 아무것도 안 막는다.
+  //    그리고 하한 8 에서 이미 좋은 답안 오탐이 10건이다. 빈 구간이 없다.
+  const caughtByBand = AT_ITEMS.flatMap((i) =>
+    i.bypasses.filter((b) => atPasses(i, b.text) && noSpace(lastLine(b.text)) < 10)
+  )
+  t(
+    '마지막 줄 하한 10 이 줄이는 미검출은 전부 known 이다 — 길이로 잡는 것이라 뜻이 없다',
+    caughtByBand.length > 0 && caughtByBand.every((b) => b.known === true),
+    JSON.stringify(caughtByBand.map((b) => b.key))
+  )
+  const fpAt8 = AT_ITEMS.reduce(
+    (n, i) => n + i.goods.filter((g) => !atPasses(i, g) || noSpace(lastLine(g)) < 8).length,
+    0
+  )
+  t('마지막 줄 하한은 8 에서 이미 좋은 답안 오탐을 낸다 — 빈 구간이 없다', fpAt8 > 0, `오탐=${fpAt8}/144`)
+
+  // 2) 답안 ↔ 지문 겹침. 9단계 echoLen 을 지문 전체에 댔다.
+  //    지문 1건에서는 베끼기 14 · 좋은 답안 5 로 떨어져 보였다. 8건에서 재니
+  //    좋은 답안 최대 9 · 베끼기 최소 7 로 겹친다 — at-pit-prop 은 8 대 9 로
+  //    방향이 거꾸로고 at-bell-rope 는 7 대 7 이다.
+  //
+  //    ★ 값을 박지 않는다. 지문을 하나만 고쳐도 흔들려서, 감시가 지문 수정을
+  //      막는 족쇄가 된다. 겹치는가만 잰다. 어느 날 이것이 fail 로 바뀌면
+  //      빈 구간이 생겼다는 뜻이고, 그때가 겹침을 다시 판단할 자리다.
+  const goodMax = Math.max(...AT_ITEMS.flatMap((i) => i.goods.map((g) => echoLen(g, atPassageOf(i)))))
+  const copyMin = Math.min(
+    ...AT_ITEMS.map((i) =>
+      echoLen(i.bypasses.find((b) => b.key === '지문의 결정타 줄을 그대로 마지막 줄에')!.text, atPassageOf(i))
+    )
+  )
+  t(
+    '답안↔지문 겹침에 빈 구간이 없다 — 좋은 답안 최대 >= 베끼기 최소',
+    goodMax >= copyMin,
+    `좋은답안최대=${goodMax} 베끼기최소=${copyMin}`
+  )
+}
+
+console.log('\n[10단계 action_turn: 지문 규칙 · 교차 검사]')
+{
+  // 10단계 지문에는 대사가 없다. dialogueLines 를 빈 배열로 넘기면 종결어미
+  // 규칙 둘이 조용히 통과한다 — validateActionItem 의 따옴표 검사가 그것을 막는다.
+  const input = (i: ActionItem): PassageRuleInput => ({
+    sourceKey: i.sourceKey,
+    keyword: i.element,
+    passage: atPassageOf(i),
+    dialogueLines: [],
+    difficulty: i.difficulty,
+    tone: AT_TONE[i.sourceKey],
+  })
+  for (const item of AT_ITEMS) {
+    t(`'${item.sourceKey}' 지문 규칙(공용) 통과`, checkPassageRules(input(item)).length === 0, JSON.stringify(checkPassageRules(input(item))))
+  }
+  for (const item of AT_ITEMS) {
+    t(`'${item.sourceKey}' 지문 규칙(10단계 전용) 통과`, validateActionItem(item).length === 0, JSON.stringify(validateActionItem(item)))
+  }
+  t(
+    '문항 집합 규칙(분포·중복) 통과',
+    checkPassageSetRules(AT_ITEMS.map(input), {
+      difficulty: { 1: 4, 2: 4 },
+      tone: { planned: 5, impulsive: 3 },
+      maxLengthSpread: 20,
+    }).length === 0,
+    JSON.stringify(
+      checkPassageSetRules(AT_ITEMS.map(input), {
+        difficulty: { 1: 4, 2: 4 },
+        tone: { planned: 5, impulsive: 3 },
+        maxLengthSpread: 20,
+      })
+    )
+  )
+  // 9단계 crossCheckPovItems 자리. 재는 것은 '측정을 깨뜨리는 겹침'이다 —
+  // 한 지문의 element·foreshadow 가 다른 지문 표본에 나타나면 그 지문의 뚫기가
+  // 엉뚱한 이유로 잡히거나 샌다. 같은 무대·같은 인물의 겹침은 다양성 문제라
+  // 여기서 안 잰다(at-left-feeler 와 at-pit-prop 이 연희를 함께 쓴다).
+  const cross: string[] = []
+  for (const a of AT_ITEMS)
+    for (const b of AT_ITEMS) {
+      if (a.sourceKey === b.sourceKey) continue
+      const texts = [...b.goods, ...b.bypasses.map((x) => x.text)]
+      if (texts.some((x) => x.includes(a.element))) cross.push(`${a.element} → ${b.sourceKey}`)
+      if (a.foreshadow && texts.some((x) => x.includes(a.foreshadow!))) cross.push(`${a.foreshadow} → ${b.sourceKey}`)
+    }
+  t('지문 사이 교차 오염 0 — element·foreshadow 가 남의 표본에 없다', cross.length === 0, JSON.stringify(cross))
+}
+
+console.log('\n[10단계 action_turn: 지문 꼴 검사는 아직 안 문다 — 설 자리가 오면 뒤집힌다]')
+{
+  // validateActionItem 의 꼴 정규식은 passageOf 가 만든 문자열을 잰다. 만드는
+  // 쪽과 재는 쪽이 같은 조건(foreshadow 유무)을 보므로 원리적으로 늘 통과한다 —
+  // 자기가 만든 것을 자기가 검사한다. 병을 넣어도 안 문다.
+  //
+  // 지우지 마라. 정규식 자체는 맞다(아래 다섯이 그것을 보인다). 덤프 대조가
+  // 붙는 날 덤프 passage 를 재게 되면서 처음 일한다. 그때 첫 감시가 fail 로
+  // 바뀌고, 그것이 '이제 일하기 시작했다'는 신호다.
+  //
+  // 9단계 knownGapCase 와 같은 자리다. 저기는 숨기면 나중에 조인 것을 못
+  // 알아채고, 여기는 숨기면 나중에 일하기 시작한 것을 못 알아챈다.
+  const shapeOf = (i: ActionItem) =>
+    i.foreshadow === undefined
+      ? /^\[상황\] .+\n\[결정타\] .+$/
+      : /^\[상황\] .+\n\[복선\] .+\n\[결정타\] .+$/
+  t('passageOf 출력은 지문 전수에서 꼴 정규식을 통과한다', AT_ITEMS.every((i) => shapeOf(i).test(atPassageOf(i))))
+  const d2 = AT_ITEMS.find((i) => i.foreshadow !== undefined)!
+  t('난이도 2 지문은 passageOf 로는 [복선] 줄을 뺄 수 없다', atPassageOf(d2).includes('\n[복선] '))
+  const handWritten: [string, string][] = [
+    ['[복선] 줄이 빠짐', '[상황] 가.\n[결정타] 나.'],
+    ['[상황] 대신 [장면]', '[장면] 가.\n[복선] 나.\n[결정타] 다.'],
+    ['줄 순서가 뒤바뀜', '[상황] 가.\n[결정타] 나.\n[복선] 다.'],
+    ['대괄호가 없음', '상황 가.\n복선 나.\n결정타 다.'],
+    ['줄이 하나로 붙음', '[상황] 가. [복선] 나. [결정타] 다.'],
+  ]
+  for (const [name, str] of handWritten) {
+    t(`손으로 쓴 '${name}' 은 난이도 2 꼴 정규식이 문다`, !shapeOf(d2).test(str))
+  }
+}
+
+console.log('\n[10단계 action_turn: 설정 일치 · 수 가드]')
+{
+  t('AT_CFG minLines 4', AT_CFG.minLines === 4, `실제=${AT_CFG.minLines}`)
+  t('AT_CFG maxLines 4 — 좋은 답안 144건이 전부 4줄로 들어갔다', AT_CFG.maxLines === 4, `실제=${AT_CFG.maxLines}`)
+  t('AT_CFG maxLineChars 30', AT_CFG.maxLineChars === 30, `실제=${AT_CFG.maxLineChars}`)
+  t('문항 8건', AT_ITEMS.length === 8, `실제=${AT_ITEMS.length}`)
+  const goods = AT_ITEMS.reduce((n, i) => n + i.goods.length, 0)
+  t('좋은 답안 144건', goods === 144, `실제=${goods}`)
+  t('뚫기 갈래 11종', BYPASS_KINDS.length === 11, `실제=${BYPASS_KINDS.length}`)
+  // 난이도가 설정을 안 가른다. 8문항 단계 넷이 예외 없이 그렇다.
+  const shapes = new Set(AT_ITEMS.map((i) => JSON.stringify(Object.keys(actionCfgOf(i)).sort())))
+  t('난이도 1과 2의 scoring_config 키가 같다', shapes.size === 1, JSON.stringify([...shapes]))
+  const KNOWN = new Set(['minLines', 'maxLines', 'maxLineChars', 'requireAny', 'requireInLastLine'])
+  const unknown = Object.keys(actionCfgOf(AT_ITEMS[0])).filter((k) => !KNOWN.has(k))
+  t('scoring_config 에 모르는 키가 없다', unknown.length === 0, JSON.stringify(unknown))
 }
 
 // 픽스처와 덤프가 갈리면 위의 감시 전부가 실제 배포물을 안 보는 상태가 된다.
