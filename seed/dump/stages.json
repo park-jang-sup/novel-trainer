@@ -72,10 +72,10 @@
     "skill_key": "pov_lock"
   },
   {
-    "title": "턴제 액션",
+    "title": "전투 서사화",
     "track": "sentence",
     "is_free": true,
-    "summary": "동작이 원인과 결과로 이어지게 한다",
+    "summary": "빌드업을 쌓고 마지막 한 줄로 승부를 가른다",
     "order_no": 10,
     "skill_key": "action_turn"
   },

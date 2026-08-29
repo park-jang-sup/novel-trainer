@@ -1524,6 +1524,68 @@ console.log('\n[9단계 pov_lock: 설정 일치 · 키 가드]')
   t('scoring_config에 모르는 키가 없다', unknown.length === 0, JSON.stringify(unknown))
 }
 
+// ── requireInLastLine: 검사 자체를 뚫어 본다 ─────────────────────────
+//
+// 10단계 문항이 아직 0건이라 지문 픽스처가 없다. 그렇다고 검사만 넣고
+// 다음 사람에게 넘기면 세션 10 §8-1과 같은 자리가 된다 — 스캐너 주석에
+// "이게 틀리면 아래가 전부 거짓 통과"라고 써 놓고 정작 그 스캐너를 표본
+// 밖으로 안 밀었던 자리다. 여기서는 검사가 서는 날 바로 민다.
+//
+// 지문 픽스처가 들어오면 이 블록을 지우지 마라. 이건 검사의 단위 시험이고,
+// 그쪽은 문항의 감도 시험이다. 다른 것을 잰다.
+console.log('\n[10단계: requireInLastLine 물기 시험]')
+{
+  const EL = '왼발 페인트'
+  const run = (text: string, cfg: ScoringConfig) =>
+    gradeLocal({ id: 'act', type: 'convert', scoring_mode: 'auto', scoring_config: cfg } as Problem, { text })
+  const lastLineStatus = (text: string) =>
+    run(text, { requireInLastLine: [EL] }).find((c) => c.key === 'requireInLastLine')?.status
+  const anyStatus = (text: string) => run(text, { requireAny: [EL] }).find((c) => c.key === 'requireAny')?.status
+
+  const BUILD = '숨이 턱까지 찼다.\n상대가 어깨를 틀었다.\n무게가 앞으로 쏠렸다.'
+  const cases: { key: string; text: string; want: 'pass' | 'fail' }[] = [
+    { key: '요소가 마지막 줄에', text: `${BUILD}\n태윤의 왼발 페인트가 턱을 채갔다.`, want: 'pass' },
+    // 이것이 이 검사를 만든 이유다. requireAny는 여기서 pass한다.
+    { key: '요소가 첫 줄에만', text: `태윤은 왼발 페인트를 떠올렸다.\n상대가 어깨를 틀었다.\n무게가 앞으로 쏠렸다.\n주먹이 허공을 갈랐다.`, want: 'fail' },
+    // 첫 줄만으로는 병 하나가 얇다. '본문 전체를 본다'로 잘못 짜면
+    // 이 둘이 함께 물어야 한다 — 첫 줄 하나로는 물림이 1건이었다.
+    { key: '요소가 가운데 줄에', text: `숨이 턱까지 찼다.\n태윤의 왼발 페인트가 스쳤다.\n무게가 앞으로 쏠렸다.\n주먹이 허공을 갈랐다.`, want: 'fail' },
+    { key: '요소가 아예 없음', text: `${BUILD}\n주먹이 턱을 채갔다.`, want: 'fail' },
+    // 답안 끝의 빈 줄·공백 줄이 판정을 뒤집으면 안 된다. lines가 빈 줄을
+    // 버리는 것에 이 검사가 기대고 있다는 뜻이라 여기 박아 둔다.
+    { key: '끝에 빈 줄이 붙음', text: `${BUILD}\n태윤의 왼발 페인트가 턱을 채갔다.\n\n   \n`, want: 'pass' },
+    { key: '답안이 빔', text: '', want: 'fail' },
+    // ★ 요소가 줄바꿈에 걸치면 fail이다. 검사의 결함이 아니라 지문이
+    //   지켜야 할 요건이다 — 결정타 요소를 한두 어절로 짧게 골라라.
+    //   길게 고르면 좋은 답안이 줄을 나눴다는 이유로 죽는다.
+    { key: '요소가 줄바꿈에 걸침', text: `상대가 어깨를 틀었다.\n무게가 앞으로 쏠렸다.\n숨이 멎었다.\n태윤의 왼발\n페인트가 턱을 채갔다.`, want: 'fail' },
+  ]
+  for (const c of cases) {
+    t(`requireInLastLine '${c.key}' → ${c.want}`, lastLineStatus(c.text) === c.want, `실제=${lastLineStatus(c.text)}`)
+  }
+
+  // 병을 넣어 물린다: 검사를 빼면 '요소가 첫 줄에만'이 새야 한다.
+  // 새지 않으면 다른 검사가 대신 잡고 있는 것이고, 그러면 이 검사가
+  // 무엇을 하는지 아무도 모르는 상태가 된다.
+  const leak = cases.find((c) => c.key === '요소가 첫 줄에만')!
+  t(
+    'requireInLastLine을 빼면 그 뚫기가 샌다 — 이 검사가 하는 일',
+    run(leak.text, { requireAny: [EL] }).every((c) => c.status === 'pass'),
+    JSON.stringify(run(leak.text, { requireAny: [EL] }).filter((c) => c.status !== 'pass').map((c) => c.key))
+  )
+
+  // 포함 관계. 목록이 같으면 requireAny는 탐지에 0을 더한다 —
+  // 마지막 줄은 본문의 부분 문자열이므로 이쪽이 pass면 저쪽도 반드시 pass다.
+  // 덤프 지문·지시문 154건 + 9단계 좋은 답안·뚫기 87건에서 길이 2~6의
+  // 부분 문자열을 요소로 삼아 26162쌍을 재면 반례 0 · 이쪽만 잡는 자리 4580이다.
+  // requireAny를 함께 두는 것은 화면에 두 단계로 알려 주려는 것이지
+  // 두 검사가 각각 잡기 때문이 아니다. 여기 여섯 건으로 그 관계를 박아 둔다.
+  for (const c of cases) {
+    if (lastLineStatus(c.text) !== 'pass') continue
+    t(`'${c.key}' 마지막 줄 pass면 requireAny도 pass`, anyStatus(c.text) === 'pass', `requireAny=${anyStatus(c.text)}`)
+  }
+}
+
 // 픽스처와 덤프가 갈리면 위의 감시 전부가 실제 배포물을 안 보는 상태가 된다.
 // 8단계가 같은 가드를 두고 있다. 문항이 덤프에 없으면 건너뛰지 않고 실패시킨다 —
 // 건너뛰면 "아직 안 넣었다"와 "통과"가 구별되지 않는다.

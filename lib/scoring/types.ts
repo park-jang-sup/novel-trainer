@@ -56,6 +56,12 @@ export interface ScoringConfig {
   /** 한 줄 안에서 같은 어절이 몇 번까지 나올 수 있는가.
    *  maxDuplicateLines는 줄 단위라 한 줄 안을 못 본다. */
   maxLineWordRepeat?: number
+  /** 이 중 하나가 마지막 줄에 있는가. 줄은 '\n'으로 나눈 진짜 줄이다.
+   *  requireAny와 목록이 같으면 requireAny는 탐지에 아무것도 더하지 않는다
+   *  (마지막 줄은 본문의 부분 문자열이므로 이 검사가 통과하면 requireAny도
+   *  반드시 통과한다). 화면에 두 단계로 알려 주려고 남기는 것이지
+   *  두 검사가 각각 잡는 것이 아니다. 형태소 필요 없음 */
+  requireInLastLine?: string[]
   //
   // 아래 넷은 줄이 아니라 따옴표 쌍을 센다 — Lines를 붙이지 않는다.
   // minLines·maxLines·maxLineChars·maxDuplicateLines는 전부 '\n'으로 나눈

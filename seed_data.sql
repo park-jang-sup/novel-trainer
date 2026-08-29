@@ -121,8 +121,8 @@ on conflict (skill_key) do update set
   is_free = excluded.is_free;
 
 insert into stages (track, order_no, title, skill_key, summary, is_free)
-values ('sentence', 10, '턴제 액션', 'action_turn',
-        '동작이 원인과 결과로 이어지게 한다', true)
+values ('sentence', 10, '전투 서사화', 'action_turn',
+        '빌드업을 쌓고 마지막 한 줄로 승부를 가른다', true)
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,

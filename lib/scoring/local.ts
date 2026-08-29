@@ -170,6 +170,29 @@ function lineChecks(text: string, cfg: ScoringConfig): Check[] {
       gating: true,
     })
   }
+  // 요소가 '있는가'가 아니라 '마지막 줄에 있는가'를 본다. requireAny는
+  // 본문 어디든 보므로 빌드업에 요소를 흘리고 끝을 다른 말로 맺은 답안을
+  // 통과시킨다 — 10단계가 막으려는 것이 정확히 그것이다.
+  //
+  // 빈 줄을 버린 뒤의 마지막 줄이다(lines의 정의는 이 함수 머리에 있다).
+  // 답안 끝의 빈 줄이 이 검사를 흔들면 안 된다.
+  if (cfg.requireInLastLine?.length) {
+    const want = cfg.requireInLastLine
+    const last = lines.length > 0 ? lines[lines.length - 1] : ''
+    const found = want.filter((w) => last.includes(w))
+    out.push({
+      key: 'requireInLastLine',
+      label: '마지막 줄',
+      status: found.length > 0 ? 'pass' : 'fail',
+      detail: found.length > 0 ? found.join(', ') : lines.length === 0 ? '답안이 비어 있음' : '마지막 줄에 없음',
+      rule: `마지막 줄에 ${want.join(', ')} 중 하나`,
+      // 마지막 줄 전체를 근거로 낸다. Editor의 markClassFor에 이 key를
+      // 넣지 마라 — 밑줄이 마지막 줄 통째로 그어진다. 틀린 것은 그 줄이
+      // 아니라 그 줄에 없는 것이다.
+      evidence: found.length > 0 || lines.length === 0 ? [] : [last],
+      gating: true,
+    })
+  }
 
   return out
 }
