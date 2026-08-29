@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test:scoring": "tsx lib/scoring/verify.ts",
+    "check:numbers": "tsx scripts/stale-numbers.ts",
     "gen:seed": "tsx scripts/gen-seed.ts"
   },
   "dependencies": {

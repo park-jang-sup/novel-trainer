@@ -91,7 +91,7 @@ export const passageOf = (i: ActionItem) =>
  * 길이로 에둘러 잡는 게 아니라 베낀 자국을 직접 잡는다.
  * 9단계가 조망 표지를 forbidWords 에 넣은 것과 같은 자리다.
  *
- * 실측: 좋은 답안 144건 오탐 0 · 기존 뚫기 미검출 3/11 그대로(덤으로 잡는 것 없음)
+ * 실측: 좋은 답안 144건 오탐 0 · 기존 뚫기 미검출 3/12 그대로(덤으로 잡는 것 없음)
  *       LEAK_PROBE 13건 누출 0 · 표본 전체 출현 0
  *
  * 셋을 다 넣는다. [상황] 만 막으면 나머지 둘로 시작하는 변형이 남는다.
@@ -671,7 +671,7 @@ export function validateActionItem(item: ActionItem): string[] {
     // 갈래 목록 고정. 이름이 두 번 갈렸고 두 번 다 사람 눈이 잡았다.
     const kinds = new Set<string>(BYPASS_KINDS)
     for (const b of item.bypasses) if (!kinds.has(b.key)) fails.push(`목록에 없는 뚫기 갈래 (${b.key})`)
-    // ★ 빠뜨림도 잡는다. 이게 없으면 갈래 하나가 빠져도 3/11 이 3/10 이 될 뿐이라
+    // ★ 빠뜨림도 잡는다. 이게 없으면 갈래 하나가 빠져도 3/12 가 3/11 이 될 뿐이라
     //   미검출 수가 같으면 안 보인다.
     const have = new Set(item.bypasses.map((b) => b.key))
     for (const k of BYPASS_KINDS) if (!have.has(k)) fails.push(`빠진 뚫기 갈래 (${k})`)

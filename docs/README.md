@@ -69,6 +69,7 @@ npx tsc --noEmit            # 0건
 npm run lint                # 깨끗
 npm run gen:seed            # 아무 파일도 안 바뀌어야 한다
 npm run test:scoring        # 1597 통과 / 0 실패
+npm run check:numbers       # 낡은 수 0건 — 주석·md 는 test:scoring 이 안 본다
 npx tsx scripts/at-table.ts # 10단계 배정표
 ```
 
