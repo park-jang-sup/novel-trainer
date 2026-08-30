@@ -11,6 +11,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import path from 'node:path'
 import { combine, countLetters, countSentences, deriveFillParts, fillMarkerMismatch, findForbidden, mergeForbidChecks, gradeLocal, pendingMorphChecks } from './index'
 import { sqlStr, countRawNewlinesInStrings } from '../seed-sql'
+import { nextProblemKey } from '../train-nav'
 import type { Answer, Check, MorphResult, Problem, ProblemType, ScoringConfig, ScoringMode } from './types'
 import { CONVERT_SEEDS } from './fixtures/convert-seeds'
 import {
@@ -2309,6 +2310,48 @@ console.log('\n[10단계 action_reason: fill 시드 대조]')
     fillMarkerMismatch('첫 줄\n①\n둘째 줄\n②\n셋째 줄', ['①', '②']) === null)
   t('물기: deriveFillParts 가 힌트 줄을 고정 줄에서 뺀다',
     deriveFillParts('[상황] 배경\n[복선] 힌트\n\n동작 줄\n①\n결정타 줄').fixedLines.join('|') === '동작 줄|결정타 줄')
+}
+
+// ── 학습 루프: '다음 문항' 계산 (세션 18) ─────────────────────────────
+//
+// 순수 함수 nextProblemKey 만 여기서 문다. 화면(TrainClient)은 이 값으로
+// 링크를 그릴 뿐이다. 목록 순서는 difficulty → source_key — page.tsx 의
+// .order 와 같아야 한다.
+console.log('\n[학습 루프: 다음 문항 계산]')
+{
+  // 목록 순서가 섞여 들어와도(difficulty 2 가 먼저, source_key 도 뒤죽박죽)
+  // 안에서 정렬한다. 그래야 화면이 어떤 순서로 넘겨도 결과가 같다.
+  const P = [
+    { id: 'i-c', source_key: 'ar-c', difficulty: 1 },
+    { id: 'i-a', source_key: 'ar-a', difficulty: 1 },
+    { id: 'i-b', source_key: 'ar-b', difficulty: 1 },
+    { id: 'i-e', source_key: 'ar-e', difficulty: 2 },
+    { id: 'i-d', source_key: 'ar-d', difficulty: 2 },
+  ]
+  // 정렬 결과: ar-a, ar-b, ar-c (난1) · ar-d, ar-e (난2)
+  const none = new Set<string>()
+
+  t('첫 문항 → 다음은 ar-b', nextProblemKey(P, 'ar-a', none) === 'ar-b')
+  t('난이도 경계를 넘는다 (ar-c → ar-d)', nextProblemKey(P, 'ar-c', none) === 'ar-d')
+  t('마지막 문항 → null', nextProblemKey(P, 'ar-e', none) === null)
+  t('목록에 없는 key → null (방어)', nextProblemKey(P, 'ar-z', none) === null)
+
+  // 통과한 것을 건너뛴다
+  t('바로 다음이 통과면 그 다음으로', nextProblemKey(P, 'ar-a', new Set(['i-b'])) === 'ar-c')
+  t('뒤가 다 통과면 null', nextProblemKey(P, 'ar-c', new Set(['i-d', 'i-e'])) === null)
+  t('지금 문항이 통과여도 다음 계산에는 영향 없음', nextProblemKey(P, 'ar-a', new Set(['i-a'])) === 'ar-b')
+
+  // 문항이 하나뿐인 단계
+  t('문항 하나뿐 → null', nextProblemKey([P[0]], 'ar-c', none) === null)
+
+  // 물기: 건너뛰기 로직을 지우면 '바로 다음이 통과면' 시험이 샌다
+  const skipLeaks = (() => {
+    // passedIds 를 무시하는 버전을 흉내 낸다
+    const list = [...P].sort((a, b) => a.difficulty - b.difficulty || a.source_key.localeCompare(b.source_key))
+    const i = list.findIndex((p) => p.source_key === 'ar-a')
+    return list[i + 1]?.source_key ?? null // 'ar-b' — 통과 여부를 안 봄
+  })()
+  t('물기: 건너뛰기를 빼면 통과한 ar-b 로 보낸다 (지금은 ar-c)', skipLeaks === 'ar-b' && nextProblemKey(P, 'ar-a', new Set(['i-b'])) === 'ar-c')
 }
 
 // 픽스처와 덤프가 갈리면 위의 감시 전부가 실제 배포물을 안 보는 상태가 된다.

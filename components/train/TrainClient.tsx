@@ -1,7 +1,9 @@
 'use client'
 
+import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { countChars, mergeForbidChecks, gradeLocal, pendingMorphChecks } from '@/lib/scoring'
+import { nextProblemKey, type NavProblem } from '@/lib/train-nav'
 import type { Check, CheckStatus, CountInput, ProblemType, ScoringConfig } from '@/lib/scoring/types'
 import RuleGauge from './RuleGauge'
 import CheckRow from './CheckRow'
@@ -43,6 +45,16 @@ interface GradeResponse {
   morphAvailable: boolean
   // fill: 규칙 통과 뒤 화면에 보여줄 모범답안(재설계안 11-2 4번). 채점 정답이 아니다.
   reference?: { ord: number; blank_key: string; content: string }[]
+}
+
+interface LoopProps {
+  stageId: string
+  currentSourceKey: string
+  stageProblems: NavProblem[]
+  passedIds: string[]
+  total: number
+  passedInStage: number
+  nextStageId: string | null
 }
 
 const STATUS_LABEL: Record<CheckStatus, string> = {
@@ -115,7 +127,13 @@ function splitInstruction(instruction: string): {
   return { first, caption, example, rest }
 }
 
-export default function TrainClient({ problem }: { problem: PublicProblem }) {
+export default function TrainClient({
+  problem,
+  loop,
+}: {
+  problem: PublicProblem
+  loop: LoopProps
+}) {
   const { publicConfig: cfg } = problem
 
   const [text, setText] = useState('')
@@ -132,6 +150,24 @@ export default function TrainClient({ problem }: { problem: PublicProblem }) {
     () => (result ? mergeForbidChecks(result.checks) : undefined),
     [result]
   )
+
+  // 학습 루프. 제출 결과가 나온 뒤에만 쓴다.
+  const passedThis = result?.status === 'pass'
+  const currentId = useMemo(
+    () => loop.stageProblems.find((p) => p.source_key === loop.currentSourceKey)?.id,
+    [loop]
+  )
+  const nextKey = useMemo(() => {
+    // 지금 문항을 방금 통과했으면 그것도 통과 집합에 넣고 다음을 찾는다 —
+    // 안 그러면 '다음 →' 이 방금 통과한 자기 자신을 가리킬 수 있다.
+    const passed = new Set(loop.passedIds)
+    if (passedThis && currentId) passed.add(currentId)
+    return nextProblemKey(loop.stageProblems, loop.currentSourceKey, passed)
+  }, [loop, passedThis, currentId])
+  const alreadyPassed = currentId ? loop.passedIds.includes(currentId) : false
+  const passedInStageNow =
+    loop.passedInStage + (passedThis && currentId && !alreadyPassed ? 1 : 0)
+  const stageComplete = passedThis && nextKey === null
 
   // 제출 전 기준 목록. gradeLocal('', cfg) + pendingMorphChecks(cfg)가 유일한
   // 출처다 — cfg를 사람 말로 옮기는 표를 따로 짜지 않는다. 답안이 빈 문자열
@@ -551,6 +587,38 @@ export default function TrainClient({ problem }: { problem: PublicProblem }) {
               ))}
             </div>
           )}
+
+          {/* 학습 루프. 통과든 미달이든 앞으로 갈 자리를 준다 — 막히면
+              넘어갈 수 있어야 한다. 단계의 마지막을 통과했을 때만 완료 화면. */}
+          <div className="space-y-2 pt-4" style={{ borderTop: '1px solid var(--rule)' }}>
+            {stageComplete ? (
+              <>
+                <p style={{ color: 'var(--pass)', fontWeight: 700 }}>
+                  단계 완료 {passedInStageNow}/{loop.total}
+                </p>
+                {loop.nextStageId ? (
+                  <Link href={`/train/${loop.nextStageId}`} style={{ color: 'var(--ink)' }}>
+                    다음 단계 →
+                  </Link>
+                ) : (
+                  <Link href="/" style={{ color: 'var(--ink-soft)' }}>
+                    처음으로 →
+                  </Link>
+                )}
+              </>
+            ) : nextKey ? (
+              <Link
+                href={`/train/${loop.stageId}/${nextKey}`}
+                style={{ color: passedThis ? 'var(--ink)' : 'var(--ink-soft)' }}
+              >
+                {passedThis ? '다음 문항 →' : '건너뛰기 →'}
+              </Link>
+            ) : (
+              <Link href={`/train/${loop.stageId}`} style={{ color: 'var(--ink-soft)' }}>
+                단계 목록으로 →
+              </Link>
+            )}
+          </div>
         </div>
       ) : (
         criteriaContent
