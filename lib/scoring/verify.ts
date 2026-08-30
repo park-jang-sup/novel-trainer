@@ -93,7 +93,7 @@ import {
   checkRunBudget,
   type GateDecision,
 } from '../ai/gate'
-import { buildPrompt, elementOf, fourLines, looksLikeC4, parseObservation, passesAt, PROMPT_FRAME, PROMPT_FRAME_CHARS } from '../ai/prompt'
+import { buildPointPrompt, buildPrompt, elementOf, fourLines, looksLikeC4, parseObservation, parsePointObservation, passesAt, PROMPT_FRAME, PROMPT_FRAME_CHARS, PROMPT_FRAME_POINT, PROMPT_FRAME_POINT_CHARS } from '../ai/prompt'
 import { costUsd } from '../ai/pricing'
 import { observeWith } from '../ai/observe'
 import { backoffMs, isRetryable, statusOf } from '../ai/retry'
@@ -2350,6 +2350,67 @@ console.log('\n[AI 마개 — 게이트와 관측]')
   // ★ 틀 길이는 **출력만 한다.** 수를 박으면 문안을 고칠 때마다 낡는다 —
   //   check:numbers 가 세운 규칙과 같다. v1 은 1,010자였다.
   console.log(`  틀 ${PROMPT_FRAME_CHARS}자 (v1 은 1,010자였다 — 비용 계산에 들어간다)`)
+
+  // ── point 문안 ─────────────────────────────────────────────────────
+  //
+  // ★★ point 는 v2 를 **대신하지 않는다.** 곁에 둔다. Pro 에서 지목과 delete 를
+  //   같이 돌려야 등급 탓인지가 갈리고, 그러려면 v2 가 살아 있어야 한다.
+  //   그래서 아래 셋은 **양쪽 다** 문다 — v2 는 위에서, point 는 여기서.
+  console.log('\n[point 문안]')
+  t('point: cue_copied 문안이 v2 와 같다',
+    PROMPT_FRAME_POINT.includes('그 낱말을 자기 문장으로 만들었으면 false, 구절째 놔뒀으면 true.') &&
+    PROMPT_FRAME_POINT.includes('★ 4번 줄이 짧은 것은 true 의 근거가 아니다. 짧게 끊는 것은 권장되는 마무리다.'))
+  t('point: foreshadow_used 문안이 v2 와 같다',
+    PROMPT_FRAME_POINT.includes('지문에 [복선] 줄이 있을 때만 판정한다. 없으면 null.') &&
+    PROMPT_FRAME_POINT.includes('1~3번 줄 중 하나라도 그 복선을 집어 쓰면 true, 한 번도 안 쓰면 false.'))
+  t('point: has_actor 문안이 v2 와 같다',
+    PROMPT_FRAME_POINT.includes('4번 줄에 인물의 행동이나 상태가 있으면 true, 사물·상황만 있는 명사구면 false.'))
+
+  // 바뀐 곳 — 첫 항목 하나뿐이어야 한다.
+  t('point: delete 문안이 안 들어 있다', !PROMPT_FRAME_POINT.includes('길이 3의 boolean 배열'))
+  t('point: 최소로 든다를 적었다', PROMPT_FRAME_POINT.includes('최소로 든다'))
+  t('point: 4번 줄 하나만 잰다 (C-2)',
+    PROMPT_FRAME_POINT.includes('2번 줄과 3번 줄 사이의 근거는 세지 않는다'))
+  t('point: 지시 해소는 근거가 아니다 (C-4)',
+    PROMPT_FRAME_POINT.includes('4번 줄의 주어·주체·대상을 알려 준다'))
+
+  // ★★ null 을 앞세우지 않는다. 앞세우면 남발하고, 그러면 축3(설계안 4-2-1)에
+  //   걸려 축1의 수를 못 쓴다. `없다` 를 명시하는 P2 는 이것이 진 뒤에만 쓴다.
+  t('point: null 안내가 마지막 줄에 있다',
+    PROMPT_FRAME_POINT.indexOf('대지 못하면 null') >
+      PROMPT_FRAME_POINT.indexOf('최소로 든다'))
+  t('병: point 가 없어도 된다를 앞세우지 않는다',
+    !PROMPT_FRAME_POINT.includes('없을 수도 있다') &&
+    !PROMPT_FRAME_POINT.includes('억지로 하나를 고르지 마라'))
+
+  // 파싱 — 고쳐 읽지 않는다. 꼴이 틀리면 틀렸다고 낸다.
+  t('point 파싱: null 을 읽는다',
+    parsePointObservation('{"support":null,"cue_copied":false,"foreshadow_used":null,"has_actor":true,"why":"x"}').ok)
+  t('point 파싱: 1|2|3 을 읽는다',
+    parsePointObservation('{"support":3,"cue_copied":false,"foreshadow_used":null,"has_actor":true,"why":"x"}').ok)
+  t('point 파싱: 0 은 안 받는다',
+    !parsePointObservation('{"support":0,"cue_copied":false,"foreshadow_used":null,"has_actor":true,"why":"x"}').ok)
+  t('point 파싱: 4 는 안 받는다',
+    !parsePointObservation('{"support":4,"cue_copied":false,"foreshadow_used":null,"has_actor":true,"why":"x"}').ok)
+  t('point 파싱: 배열은 안 받는다 (delete 꼴)',
+    !parsePointObservation('{"support":[false,true,false],"cue_copied":false,"foreshadow_used":null,"has_actor":true,"why":"x"}').ok)
+  t('point 파싱: 코드펜스를 벗긴다',
+    parsePointObservation('```json\n{"support":2,"cue_copied":false,"foreshadow_used":null,"has_actor":true,"why":"x"}\n```').ok)
+  {
+    const p = buildPointPrompt({ passage: '[상황] x', lines: ['a', 'b', 'c', 'd'], element: 'e' })
+    t('point 조립: 치환자가 안 남는다', !/\{(passage|line[1-4]|element)\}/.test(p))
+    t('point 조립: 네 줄이 다 들어간다', ['a', 'b', 'c', 'd'].every((l) => p.includes(l)))
+  }
+  console.log(`  틀 ${PROMPT_FRAME_POINT_CHARS}자 (v2 는 ${PROMPT_FRAME_CHARS}자다)`)
+
+  // ★★ 두 문안이 실제로 다른가. 같으면 --prompt 를 갈아도 같은 것을 재게 된다.
+  // ★ 리터럴 타입이라 tsc 가 `겹치지 않는다` 고 한다. 그 말이 곧 통과의 근거인데,
+  //   런타임 검사로도 남긴다 — 나중에 누가 둘을 같게 만들면 여기서 걸려야 한다.
+  t('point: v2 와 문안이 다르다', (PROMPT_FRAME_POINT as string) !== (PROMPT_FRAME as string))
+  t('point: 틀 길이가 v2 와 다르다', PROMPT_FRAME_POINT_CHARS !== PROMPT_FRAME_CHARS)
+  // ★ v2 는 point 를 넣은 뒤에도 그대로여야 한다. 12장의 수를 재현할 길이다.
+  t('병: v2 에 support 가 안 섞였다', !PROMPT_FRAME.includes('support'))
+  t('병: point 에 delete 배열이 안 섞였다', !PROMPT_FRAME_POINT.includes('"delete"'))
 
   // ── 프롬프트와 파싱 ────────────────────────────────────────────────
   //

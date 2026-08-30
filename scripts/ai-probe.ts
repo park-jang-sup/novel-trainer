@@ -40,8 +40,8 @@
 import './load-env'
 import { writeFileSync } from 'node:fs'
 import { AT_ITEMS, AT_D2_EXTRA, passageOf } from '../lib/scoring/fixtures/action-turn'
-import { buildPrompt, fourLines, PROMPT_FRAME_CHARS } from '../lib/ai/prompt'
-import { observeWith, type ObserveOutcome } from '../lib/ai/observe'
+import { buildPointPrompt, buildPrompt, fourLines, PROMPT_FRAME_CHARS, PROMPT_FRAME_POINT_CHARS } from '../lib/ai/prompt'
+import { observePointWith, observeWith, type ObserveOutcome, type PointOutcome } from '../lib/ai/observe'
 import { callGemini, DEFAULT_MODEL, THINKING_LEVEL } from '../lib/ai/gemini'
 import { checkGateBeforeQuota, checkRunBudget } from '../lib/ai/gate'
 import { countTodayRows, logPgError, readFlags, sumSpendTodayUsd } from '../lib/ai/flags'
@@ -174,6 +174,23 @@ async function main() {
   const check = flag('check')
   const n = Number(arg('n', '10'))
   const model = arg('model', DEFAULT_MODEL)
+  // ★ 프롬프트 축. `v2` 는 delete, `point` 는 지목이다(설계안 4-2-1).
+  //   ★★ point 가 v2 를 대신하지 않는다. Pro 에서 둘을 같이 돌려야
+  //     관측 탓인지 등급 탓인지가 갈린다.
+  // ★★ arg 는 `--name=value` 꼴만 읽는다. `--prompt point` 로 쓰면 조용히
+  //   기본값 v2 로 떨어져 **돈을 쓰면서 엉뚱한 문안을 재게 된다.**
+  //   그래서 공백 꼴을 먼저 막는다. 조용히 넘어가는 것보다 죽는 쪽이 낫다.
+  if (process.argv.includes('--prompt')) {
+    console.error('★ --prompt 는 등호로 쓴다: --prompt=point')
+    console.error('  공백 꼴은 조용히 v2 로 떨어진다. 그러면 무엇을 쟀는지 모른다.')
+    process.exit(1)
+  }
+  const prompt = arg('prompt', 'v2')
+  if (prompt !== 'v2' && prompt !== 'point') {
+    console.error(`★ --prompt 는 v2 또는 point 다. 받은 것: ${prompt}`)
+    process.exit(1)
+  }
+  const frameChars = prompt === 'point' ? PROMPT_FRAME_POINT_CHARS : PROMPT_FRAME_CHARS
   const out = arg('out', 'ai-probe.json')
   /** 이 실행의 자기 상한. C 의 `자기 상한` 이 이 수다. n 보다 크게 두지 않는다. */
   const runCap = Number(arg('cap', String(n)))
@@ -182,7 +199,7 @@ async function main() {
   const cases = pick(all, n)
 
   console.log(`표본 전체 ${all.length}건 중 ${cases.length}건`)
-  console.log(`틀 ${PROMPT_FRAME_CHARS}자 · 모델 ${model} · thinking ${THINKING_LEVEL} · 이 실행 상한 ${runCap}회`)
+  console.log(`틀 ${frameChars}자 · 프롬프트 ${prompt} · 모델 ${model} · thinking ${THINKING_LEVEL} · 이 실행 상한 ${runCap}회`)
   if (!PRICES[model]) {
     console.log(`★ 단가표에 없는 모델이다. 비용이 null 로 나간다 — pricing.ts 에 넣어라`)
   } else {
@@ -196,7 +213,9 @@ async function main() {
     console.log('\n--- 프롬프트 한 건 ---')
     const c = cases[0]
     const lines = fourLines(c.text)
-    console.log(lines ? buildPrompt({ passage: c.passage, lines, element: c.element }) : '★ 네 줄이 아니다')
+    // ★ 미리보기가 실제로 나갈 것과 달라지면 --dry 의 뜻이 없다.
+    const build = prompt === 'point' ? buildPointPrompt : buildPrompt
+    console.log(lines ? build({ passage: c.passage, lines, element: c.element }) : '★ 네 줄이 아니다')
     console.log('\n--dry 다. DB 도 Gemini 도 안 탔다. 마개까지 재려면 --check 다.')
     return
   }
@@ -241,7 +260,8 @@ async function main() {
 
   const admin = createAdminClient()
 
-  const results: (Case & { outcome: ObserveOutcome })[] = []
+  // ★ 두 프롬프트의 결과를 한 배열에 담는다. 회차 파일 안의 `prompt` 로 갈린다.
+  const results: (Case & { prompt: string; outcome: ObserveOutcome | PointOutcome })[] = []
   let calls = 0
 
   for (const c of cases) {
@@ -272,7 +292,11 @@ async function main() {
       continue
     }
 
-    const outcome = await observeWith(callGemini, { passage: c.passage, lines, element: c.element }, model)
+    const input = { passage: c.passage, lines, element: c.element }
+    const outcome: ObserveOutcome | PointOutcome =
+      prompt === 'point'
+        ? await observePointWith(callGemini, input, model)
+        : await observeWith(callGemini, input, model)
     calls++
 
     // ★ 돈을 태웠으면 **먼저 적는다.** 관측이 깨졌어도 토큰은 나갔다.
@@ -291,12 +315,14 @@ async function main() {
         console.error('\n★ ai_usage_log 에 못 적었다. 지출을 못 세면 상한이 아니다 — 멈춘다.')
         logPgError('ai_usage_log insert', error)
         console.error('  user_id 가 not null 이면 AI_PROBE_USER_ID 를 주고 다시 돌려라.')
-        results.push({ ...c, outcome })
+        results.push({ ...c, prompt, outcome })
         break
       }
     }
 
-    results.push({ ...c, outcome })
+    // ★★ 회차 파일 안에 `prompt` 를 싣는다. 파일명으로만 갈리면
+    //   12-6장 대응표가 또 필요해진다.
+    results.push({ ...c, prompt, outcome })
     const u = outcome.usage
     console.log(
       `${String(calls).padStart(3)} ${c.sourceKey}/${c.detail}  ` +

@@ -211,3 +211,135 @@ export const C4_MARKERS = [
 export function looksLikeC4(why: string): boolean {
   return C4_MARKERS.some((m) => why.includes(m))
 }
+
+// ─────────────────────────────────────────────────────────────────────────
+// 지목(point) — `delete` 를 **대신하지 않고 곁에 둔다**
+// ─────────────────────────────────────────────────────────────────────────
+
+/**
+ * 프롬프트 **point**. `delete` 대체 후보다(세션13 §9 1순위 · 설계안 4-2-1).
+ *
+ * ★★ **`PROMPT_FRAME`(v2)을 갈아 끼우지 않는다.** 판정선이 통과하면 Pro 에서
+ *   `지목` 과 `delete` 를 **같이** 돌려야 하고, 그때 v2 가 없으면 관측 탓인지
+ *   등급 탓인지를 못 가른다. 그리고 12장의 수를 재현할 길도 없어진다.
+ *   세션 13이 `서 있는 관측을 같이 고치면 무엇이 좋아졌는지 못 가린다` 고 적은
+ *   것의 다음 판이다 — **관측 하나를 바꾸는 것이 아니라 하나를 더 만드는 것**이라
+ *   지울 이유가 없다.
+ *
+ * ★ `cue_copied` · `foreshadow_used` · `has_actor` 는 v2 와 **글자까지 같다.**
+ *   바뀐 것은 첫 항목 하나뿐이다.
+ *
+ * ★★ 왜 `delete` 가 아니라 `지목` 인가
+ *   `delete` 는 반사실이다 — 빼 보고 무너지는지를 세 자리에서 판정한다.
+ *   `low` 에서 `delete[0]` 이 1/180 이었고, `load` 는 22/36 으로 안 섰다(12장).
+ *   `지목` 은 **들어 보는 것**이다. 한 자리만 답하고, 없으면 `없다` 를 낸다.
+ *
+ * ★★★ **`지목` 은 `L` 이 아니다.** 이 문안은 언제나 하나로 접는다 — `L2`·`L3` 을
+ *   못 가른다. `L` 을 재려면 문안이 또 달라져야 한다(경계표본_작성시트 1장).
+ *   `지목 = L` 로 읽으면 `나` 면 정답지를 이 문안으로 채점하게 되고,
+ *   그것은 다른 물음이다.
+ *
+ * ★ `null` 이 선택지라는 것은 알려 준다. 안 알려 주면 `null` 이 가능한 줄도
+ *   모르는 채로 재는 것이라, 모델 성향이 아니라 문안 결함을 재게 된다.
+ *   다만 **`없어도 된다` 를 앞세우지 않는다** — 그러면 남발한다(설계안 4-2-1 축3).
+ *   `없다` 를 명시하는 문안(P2)은 이것이 축1에서 진 뒤에만 쓴다.
+ */
+export const PROMPT_FRAME_POINT = `너는 웹소설 습작 4줄을 읽고 **사실 넷을 보고한다.** 합격 여부는 판정하지 않는다.
+합격선은 사람이 코드에서 건다. 네가 할 일은 재는 것뿐이다.
+
+[지문]
+{passage}
+
+[답안]
+1 {line1}
+2 {line2}
+3 {line3}
+4 {line4}
+
+[결정타 요소] {element}
+
+아래 다섯을 판정해서 JSON 하나만 출력한다. JSON 앞뒤에 아무 말도 쓰지 않는다.
+
+1. support — 1, 2, 3 중 하나 또는 null
+
+   4번 줄의 결정타가 왜 통하는지를 앞 세 줄로 댄다.
+   그 설명에 반드시 있어야 하는 줄 하나의 번호를 낸다.
+   최소로 든다 — 두 줄이 있어야 설명이 되면, 더 결정적인 하나만 낸다.
+
+   ★ 재는 것은 4번 줄 하나다. 2번 줄과 3번 줄 사이의 근거는 세지 않는다.
+   ★ 아래는 근거가 아니다.
+     - 4번 줄의 주어·주체·대상을 알려 준다
+     - 문장이 매끄럽게 이어진다
+     - 장면이나 분위기를 만든다
+
+   앞 세 줄 중 어느 것도 4번 줄이 왜 통하는지를 대지 못하면 null.
+
+2. cue_copied — boolean
+   4번 줄이 지문의 [결정타] 줄을 옮겨 놓은 것이면 true.
+   ★ [결정타] 줄의 낱말을 가져다 쓰는 것 자체는 true 가 아니다. 그러라고 준 것이다.
+     그 낱말을 자기 문장으로 만들었으면 false, 구절째 놔뒀으면 true.
+   ★ 4번 줄이 짧은 것은 true 의 근거가 아니다. 짧게 끊는 것은 권장되는 마무리다.
+
+3. foreshadow_used — boolean 또는 null
+   지문에 [복선] 줄이 있을 때만 판정한다. 없으면 null.
+   1~3번 줄 중 하나라도 그 복선을 집어 쓰면 true, 한 번도 안 쓰면 false.
+
+4. has_actor — boolean
+   4번 줄에 인물의 행동이나 상태가 있으면 true, 사물·상황만 있는 명사구면 false.
+   ★ 이것만으로 합격이 갈리지 않는다. 사실만 적어라.
+
+5. why — 한국어 한 줄. 40자 이내. 위 넷 중 가장 갈리기 쉬운 하나의 근거만 적는다.
+
+출력 형식(이 꼴 그대로):
+{"support":2,"cue_copied":false,"foreshadow_used":null,
+ "has_actor":true,"why":"..."}`
+
+/** 치환자를 뺀 순수 틀의 길이. 비용 계산에 들어간다(설계안 8-1). */
+export const PROMPT_FRAME_POINT_CHARS = PROMPT_FRAME_POINT.replace(
+  /\{(passage|line1|line2|line3|line4|element)\}/g,
+  ''
+).length
+
+export function buildPointPrompt(i: PromptInput): string {
+  return PROMPT_FRAME_POINT.replace('{passage}', i.passage)
+    .replace('{line1}', i.lines[0])
+    .replace('{line2}', i.lines[1])
+    .replace('{line3}', i.lines[2])
+    .replace('{line4}', i.lines[3])
+    .replace('{element}', i.element)
+}
+
+/**
+ * 지목 관측.
+ *
+ * ★ `support` 는 `1|2|3|null` 이다. `0` 을 `없다` 로 쓰지 않는다 —
+ *   숫자로 두면 `0번 줄` 로 읽힐 여지가 있고, `null` 은 꼴이 달라 눈에 띈다.
+ * ★ 나머지 넷은 `ObservationSchema` 와 같다. 같은 것을 두 번 적었지만
+ *   묶지 않았다 — 묶으면 한쪽 문안을 고칠 때 다른 쪽이 조용히 따라 움직인다.
+ */
+export const PointObservationSchema = z.object({
+  support: z.union([z.literal(1), z.literal(2), z.literal(3)]).nullable(),
+  cue_copied: z.boolean(),
+  foreshadow_used: z.boolean().nullable(),
+  has_actor: z.boolean(),
+  why: z.string().max(200),
+})
+export type PointObservation = z.infer<typeof PointObservationSchema>
+
+export type PointParseResult =
+  | { ok: true; observation: PointObservation }
+  | { ok: false; reason: 'not_json' | 'bad_shape'; raw: string }
+
+/** `parseObservation` 과 같은 규칙이다. 꼴이 틀리면 고쳐 읽지 않고 틀렸다고 낸다. */
+export function parsePointObservation(raw: string): PointParseResult {
+  const trimmed = raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/```$/, '').trim()
+  let json: unknown
+  try {
+    json = JSON.parse(trimmed)
+  } catch {
+    return { ok: false, reason: 'not_json', raw }
+  }
+  const parsed = PointObservationSchema.safeParse(json)
+  if (!parsed.success) return { ok: false, reason: 'bad_shape', raw }
+  return { ok: true, observation: parsed.data }
+}

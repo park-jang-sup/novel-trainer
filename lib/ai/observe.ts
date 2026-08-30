@@ -9,7 +9,15 @@
  *   태웠다. 그래서 usage 는 결과 종류와 상관없이 늘 실려 나간다 — 호출부가
  *   그걸 ai_usage_log 에 적어야 지출 상한이 다음 호출에서 맞는다.
  */
-import { buildPrompt, parseObservation, type Observation, type PromptInput } from './prompt'
+import {
+  buildPointPrompt,
+  buildPrompt,
+  parseObservation,
+  parsePointObservation,
+  type Observation,
+  type PointObservation,
+  type PromptInput,
+} from './prompt'
 import { costUsd, type TokenUsage } from './pricing'
 
 export interface GeminiReply {
@@ -81,6 +89,65 @@ export async function observeWith(
 
   const cost = costUsd(reply.model, reply.usage)
   const parsed = parseObservation(reply.text)
+
+  if (!parsed.ok) {
+    return {
+      ok: false,
+      observation: null,
+      error: parsed.reason,
+      usage: reply.usage,
+      costUsd: cost,
+      model: reply.model,
+      raw: parsed.raw.slice(0, 500),
+      detail: parsed.reason === 'not_json' ? 'JSON 이 아니다' : '꼴이 다르다',
+    }
+  }
+
+  return {
+    ok: true,
+    observation: parsed.observation,
+    error: null,
+    usage: reply.usage,
+    costUsd: cost,
+    model: reply.model,
+    raw: null,
+    detail: null,
+  }
+}
+
+/**
+ * 지목(point) 관측. **`observeWith` 를 안 건드리고 곁에 둔다.**
+ *
+ * ★★ 마개(gate)와 비용 경로는 그대로다. 이 함수는 `buildPointPrompt` 로 틀을
+ *   짜고 `parsePointObservation` 으로 읽을 뿐, 나머지는 `observeWith` 와 같다.
+ * ★ 둘을 하나로 묶지 않았다. 묶으면 한쪽 문안을 고칠 때 다른 쪽이 조용히
+ *   따라 움직인다 — 세션 13이 `서 있는 관측을 같이 고치면 못 가린다` 로
+ *   적은 자리와 같다.
+ */
+export interface PointOutcome extends Omit<ObserveOutcome, 'observation'> {
+  observation: PointObservation | null
+}
+
+export async function observePointWith(
+  call: GeminiCall,
+  input: PromptInput,
+  model: string
+): Promise<PointOutcome> {
+  const prompt = buildPointPrompt(input)
+
+  let reply: GeminiReply
+  try {
+    reply = await call(prompt, model)
+  } catch (e) {
+    return {
+      ok: false, observation: null, error: 'call_failed',
+      usage: null, costUsd: null, model, raw: null,
+      detail: detailOf(e),
+    }
+  }
+
+  const cost = costUsd(reply.model, reply.usage)
+  const parsed = parsePointObservation(reply.text)
 
   if (!parsed.ok) {
     return {
