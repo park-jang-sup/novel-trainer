@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { fillSituation } from '@/lib/scoring'
 
 // order_no는 트랙마다 번호 구간이 달라 전역 번호가 성립하지 않는다.
 // structure는 11부터 시작하고 sentence도 11까지 있어 11번이 두 개다.
@@ -145,7 +146,11 @@ export default async function TrainStagePage(props: PageProps<'/train/[stageId]'
                 className="min-w-0 flex-1 truncate"
                 style={{ fontFamily: 'var(--font-display)' }}
               >
-                {firstSentence(p.passage ?? p.instruction)}
+                {/* fill 은 지문이 [상황] 머리로 시작한다 — 그 머리표를 뗀
+                    첫 문장을 라벨로 쓴다. */}
+                {p.type === 'fill' && p.passage
+                  ? fillSituation(p.passage)
+                  : firstSentence(p.passage ?? p.instruction)}
               </span>
               <span
                 className="whitespace-nowrap font-mono text-sm"

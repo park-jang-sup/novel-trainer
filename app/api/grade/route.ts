@@ -17,6 +17,8 @@ const GradeRequestSchema = z.object({
   choiceIndex: z.number().int().optional(),
   order: z.array(z.number().int()).optional(),
   values: z.record(z.string(), z.number()).optional(),
+  // fill 유형. 빈칸 key(①②) → 채운 글. 한 칸 500자면 넉넉하다(maxChars 60).
+  blanks: z.record(z.string(), z.string().max(500)).optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -35,7 +37,7 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return Response.json({ error: 'invalid_request' }, { status: 400 })
   }
-  const { problemId, text, choiceIndex, order, values } = parsed.data
+  const { problemId, text, choiceIndex, order, values, blanks } = parsed.data
 
   // 3. 문항 조회 — 사용자 세션으로 읽는다. RLS가 is_active를 걸러준다.
   const { data: problem } = await supabase
@@ -70,19 +72,34 @@ export async function POST(request: NextRequest) {
   }
 
   // 5. 형태소 분석 호출 — 실패해도 계속. morph = null
+  //    fill 은 text 가 없고 형태소 검사도 없다 — analyze 를 부르지 않는다.
   const morph = text ? await analyze(text) : null
 
   // 6. combine() 실행 — 규칙 채점
-  const sub: Submission = { text, choiceIndex, order, values }
+  const sub: Submission = { text, choiceIndex, order, values, blanks }
   const result = combine(problem, sub, answer, morph)
+
+  // fill 은 빈칸을 선언 순서대로 이어 붙여 submissions.content 에 남긴다.
+  // 나중에 사람이 답안을 되짚을 때 어느 칸에 뭘 썼는지 보이게 표식을 붙인다.
+  let content = text ?? null
+  if (problem.type === 'fill' && blanks) {
+    const cfg = (problem.scoring_config ?? {}) as { blanks?: { key: string }[] }
+    const order = (cfg.blanks ?? []).map((b) => b.key)
+    const joined = order
+      .map((k) => (blanks[k] ?? '').trim())
+      .map((v, i) => (v ? `${order[i]}  ${v}` : null))
+      .filter(Boolean)
+      .join('\n')
+    content = joined || null
+  }
 
   // 7. submissions 저장 — 실패해도 응답은 정상 반환
   try {
     const { error } = await supabase.from('submissions').insert({
       user_id: user.id,
       problem_id: problemId,
-      content: text ?? null,
-      char_count: text ? countChars(text) : null,
+      content,
+      char_count: content ? countChars(content) : null,
       auto_result: { checks: result.checks, morphAvailable: morph !== null },
       passed: result.status === 'pass',
     })
@@ -100,11 +117,30 @@ export async function POST(request: NextRequest) {
     console.error('submissions insert failed', err)
   }
 
-  // 8. 응답 — checks와 status만. 정답·scoring_config는 실리지 않는다.
+  // 8. fill: 모범답안을 읽어 함께 내려보낸다(stage2 자기점검이 화면에
+  //    보여줄 것). RLS 정책이 방금 넣은 submissions 행을 보고 통과시킨다 —
+  //    제출이 저장되지 않았으면 0행이 온다. 채점 정답이 아니므로 pass/fail
+  //    과 무관하게 내려보내고, 언제 보여줄지는 화면이 정한다.
+  let reference: { ord: number; blank_key: string; content: string }[] | undefined
+  if (problem.type === 'fill') {
+    const { data, error } = await supabase
+      .from('reference_answers')
+      .select('ord, blank_key, content')
+      .eq('problem_id', problemId)
+      .order('ord')
+      .order('blank_key')
+    if (error) {
+      console.error('reference_answers select failed', 'message=' + error.message)
+    }
+    reference = data ?? []
+  }
+
+  // 9. 응답 — checks와 status만. 정답·scoring_config는 실리지 않는다.
   return Response.json({
     status: result.status,
     checks: result.checks,
     needsAi: result.needsAi,
     morphAvailable: morph !== null,
+    ...(reference !== undefined ? { reference } : {}),
   })
 }

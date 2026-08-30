@@ -6,6 +6,9 @@ import type { Check, CheckStatus, CountInput, ProblemType, ScoringConfig } from 
 import RuleGauge from './RuleGauge'
 import CheckRow from './CheckRow'
 import Editor from './Editor'
+import FillBody from './FillBody'
+import SelfCheck from './SelfCheck'
+import type { FillBlank } from './FillBlank'
 
 interface PublicConfig {
   maxChars: number | null
@@ -15,6 +18,7 @@ interface PublicConfig {
   maxLen: number | null
   inputs: CountInput[] | null
   minLines: number | null
+  blanks: FillBlank[] | null
 }
 
 interface PublicProblem {
@@ -37,6 +41,8 @@ interface GradeResponse {
   checks: Check[]
   needsAi: boolean
   morphAvailable: boolean
+  // fill: 규칙 통과 뒤 화면에 보여줄 모범답안(재설계안 11-2 4번). 채점 정답이 아니다.
+  reference?: { ord: number; blank_key: string; content: string }[]
 }
 
 const STATUS_LABEL: Record<CheckStatus, string> = {
@@ -116,6 +122,7 @@ export default function TrainClient({ problem }: { problem: PublicProblem }) {
   const [choiceIndex, setChoiceIndex] = useState<number | null>(null)
   const [order, setOrder] = useState<number[]>([])
   const [values, setValues] = useState<Record<string, number | undefined>>({})
+  const [blankValues, setBlankValues] = useState<Record<string, string>>({})
 
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<GradeResponse | null>(null)
@@ -192,6 +199,13 @@ export default function TrainClient({ problem }: { problem: PublicProblem }) {
         return !!cfg.cards && order.length === cfg.cards.length
       case 'count':
         return !!cfg.inputs && cfg.inputs.every((i) => typeof values[i.key] === 'number')
+      case 'fill':
+        return (
+          !!cfg.blanks &&
+          cfg.blanks
+            .filter((b) => !b.optional)
+            .every((b) => (blankValues[b.key] ?? '').trim().length > 0)
+        )
       default:
         return false
     }
@@ -206,6 +220,7 @@ export default function TrainClient({ problem }: { problem: PublicProblem }) {
       if (problem.type === 'choice') body.choiceIndex = choiceIndex
       if (problem.type === 'order') body.order = order
       if (problem.type === 'count') body.values = values
+      if (problem.type === 'fill') body.blanks = blankValues
 
       const res = await fetch('/api/grade', {
         method: 'POST',
@@ -251,7 +266,7 @@ export default function TrainClient({ problem }: { problem: PublicProblem }) {
         )}
       </div>
 
-      {problem.passage && (
+      {problem.passage && problem.type !== 'fill' && (
         <div className="space-y-1">
           <p className="text-sm" style={{ color: 'var(--ink-soft)' }}>{passageLabel}</p>
           <div
@@ -266,6 +281,16 @@ export default function TrainClient({ problem }: { problem: PublicProblem }) {
             {problem.passage}
           </div>
         </div>
+      )}
+
+      {problem.type === 'fill' && problem.passage && cfg.blanks && (
+        <FillBody
+          passage={problem.passage}
+          blanks={cfg.blanks}
+          values={blankValues}
+          onChange={(k, v) => setBlankValues((prev) => ({ ...prev, [k]: v }))}
+          disabled={submitting || result?.status === 'pass'}
+        />
       )}
 
       {isTextType && (
@@ -503,11 +528,29 @@ export default function TrainClient({ problem }: { problem: PublicProblem }) {
               규칙 검사는 통과했습니다. 내용 심사는 아직 준비 중입니다.
             </p>
           )}
-          <div>
-            {displayChecks?.map((c) => (
-              <CheckRow key={c.key} check={c} />
-            ))}
-          </div>
+          {/* fill: 규칙을 통과하면 모범답안 + 자기점검이 판정을 대신한다.
+              규칙 목록(전부 ○)은 그 아래에 접어 둔다. */}
+          {problem.type === 'fill' && result.status === 'pass' && result.reference?.length ? (
+            <>
+              <SelfCheck reference={result.reference} />
+              <details className="pt-2">
+                <summary className="cursor-pointer text-sm" style={{ color: 'var(--ink-soft)' }}>
+                  규칙 검사 {displayChecks?.length ?? 0}개
+                </summary>
+                <div>
+                  {displayChecks?.map((c) => (
+                    <CheckRow key={c.key} check={c} />
+                  ))}
+                </div>
+              </details>
+            </>
+          ) : (
+            <div>
+              {displayChecks?.map((c) => (
+                <CheckRow key={c.key} check={c} />
+              ))}
+            </div>
+          )}
         </div>
       ) : (
         criteriaContent

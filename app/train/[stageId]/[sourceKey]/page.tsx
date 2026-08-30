@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import TrainClient from '@/components/train/TrainClient'
-import type { ProblemType } from '@/lib/scoring/types'
+import type { BlankSpec, ProblemType } from '@/lib/scoring/types'
 
 export default async function TrainProblemPage(
   props: PageProps<'/train/[stageId]/[sourceKey]'>
@@ -46,6 +46,17 @@ export default async function TrainProblemPage(
     inputs: cfg.inputs ?? null,
     // 화면 표시용이 아니다 — 입력창 높이(rows)를 정하는 데만 쓴다.
     minLines: cfg.minLines ?? null,
+    // fill: 빈칸 명세. key·label·글자수·문장수는 화면이 입력칸을 그리는 데
+    // 쓴다. fixedLines·forbidWords 는 안 보낸다 — 채점 결과에 어차피 나온다.
+    blanks:
+      (cfg.blanks as BlankSpec[] | undefined)?.map((b) => ({
+        key: b.key,
+        label: b.label,
+        maxChars: b.maxChars ?? null,
+        minSentences: b.minSentences ?? null,
+        maxSentences: b.maxSentences ?? null,
+        optional: b.optional ?? false,
+      })) ?? null,
   }
 
   // 두 칸 레이아웃 대상인가. cards·inputs는 order/count의 재료지 채점
