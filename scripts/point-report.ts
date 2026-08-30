@@ -22,12 +22,20 @@ const files = process.argv.slice(2)
 if (files.length === 0) { console.error('회차 파일을 하나 이상 줘라'); process.exit(1) }
 const runs: Row[][] = files.map((f) => JSON.parse(readFileSync(f, 'utf-8')))
 
-// ★ prompt 가 point 가 아닌 파일이 섞이면 멈춘다. 섞여서 세면 무엇을 쟀는지 모른다.
+// ★★ 한 문안만 있어야 한다. point 와 point2 는 C-1 마개 한 문장이 다르고,
+//   섞어 세면 무엇을 쟀는지 모른다. **어느 쪽이든 받되 섞이면 멈춘다.**
+const PROMPTS = new Set<string>()
 for (const [i, r] of runs.entries()) {
-  const bad = r.filter((x) => x.prompt !== undefined && x.prompt !== 'point')
-  if (bad.length) { console.error(`★ ${files[i]} 에 point 가 아닌 행이 ${bad.length}건 있다`); process.exit(1) }
+  const bad = r.filter((x) => x.prompt !== undefined && x.prompt !== 'point' && x.prompt !== 'point2')
+  if (bad.length) { console.error(`★ ${files[i]} 에 지목 문안이 아닌 행이 ${bad.length}건 있다`); process.exit(1) }
+  for (const x of r) if (x.prompt !== undefined) PROMPTS.add(x.prompt)
   if (r.some((x) => x.prompt === undefined)) console.error(`★ ${files[i]} 에 prompt 가 안 실려 있다 (옛 형식)`)
 }
+if (PROMPTS.size > 1) {
+  console.error(`★★ 문안이 섞였다: ${[...PROMPTS].join(' · ')} — 섞어 세면 무엇을 쟀는지 모른다`)
+  process.exit(1)
+}
+const PROMPT = [...PROMPTS][0] ?? '(안 실림)'
 
 const key = (x: Row) => x.sourceKey + '|' + x.kind
 const KINDS = ['good', '낱낱 나열', '빌드업 없이 압축', '지문의 결정타 줄을 그대로 마지막 줄에', '전용 복선미사용']
@@ -35,7 +43,7 @@ const KINDS = ['good', '낱낱 나열', '빌드업 없이 압축', '지문의 �
 const sup = (x: Row) => (x.outcome.ok && x.outcome.observation ? x.outcome.observation.support : undefined)
 
 // ── 파싱 ──────────────────────────────────────────────────────────
-console.log(`회차 ${runs.length} · 파일 ${files.join(' ')}`)
+console.log(`회차 ${runs.length} · 문안 ${PROMPT} · 파일 ${files.join(' ')}`)
 for (const [i, r] of runs.entries()) {
   const ok = r.filter((x) => x.outcome.ok).length
   console.log(`  ${files[i]}  관측 ${ok}/${r.length}`)
