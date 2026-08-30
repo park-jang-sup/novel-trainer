@@ -343,3 +343,43 @@ export function parsePointObservation(raw: string): PointParseResult {
   if (!parsed.success) return { ok: false, reason: 'bad_shape', raw }
   return { ok: true, observation: parsed.data }
 }
+
+/**
+ * 프롬프트 **point2 (P1b)**. `point` 에서 **`C-1` 마개 한 문장만** 더한 것이다.
+ *
+ * ★★ 왜 `point` 를 안 갈아 끼우는가 — `p1~p5` 가 `$0.123` 짜리 실측이다.
+ *   갈아 끼우면 그 수를 낸 문안이 코드에서 사라지고, `P1 대 P1b` 비교도 못 한다.
+ *   `point` 를 v2 곁에 둔 것과 같은 이유다.
+ *
+ * ★★★ 무엇이 빠져 있었나 — **이전(移轉) 결함**이다.
+ *   `v2` 의 `delete` 문안은 `C-1`·`C-2`·`C-4` 를 각각 막는 문장 셋을 갖고,
+ *   `verify` 가 그 셋을 물고 있었다. `point` 로 옮기며 `C-2`·`C-4` 는 옮겼는데
+ *   `C-1` 만 빠졌다. 그 결과 `support = 1` 이 180건에서 **0건**이다(설계안 4-2-2).
+ *   `v1` 에서 `delete[0]` 이 `0/36` 이던 그 병이 그대로 재발했다.
+ *
+ * ★ 그래서 이 문안은 `point` 에서 **문자열 치환 하나로 파생시킨다.**
+ *   따로 적으면 다른 데가 같이 달라져도 모른다. 파생시키면 `한 문장만 다르다` 가
+ *   구조로 보장되고, `verify` 가 그것을 다시 문다.
+ */
+const C1_GUARD =
+  '   ★ 1번 줄도 후보다. 맨 앞이라 안 걸린다고 넘기지 마라.\n' +
+  '   ★ 재는 것은 4번 줄 하나다.'
+
+export const PROMPT_FRAME_POINT2 = PROMPT_FRAME_POINT.replace(
+  '   ★ 재는 것은 4번 줄 하나다.',
+  C1_GUARD
+)
+
+export const PROMPT_FRAME_POINT2_CHARS = PROMPT_FRAME_POINT2.replace(
+  /\{(passage|line1|line2|line3|line4|element)\}/g,
+  ''
+).length
+
+export function buildPoint2Prompt(i: PromptInput): string {
+  return PROMPT_FRAME_POINT2.replace('{passage}', i.passage)
+    .replace('{line1}', i.lines[0])
+    .replace('{line2}', i.lines[1])
+    .replace('{line3}', i.lines[2])
+    .replace('{line4}', i.lines[3])
+    .replace('{element}', i.element)
+}

@@ -93,7 +93,7 @@ import {
   checkRunBudget,
   type GateDecision,
 } from '../ai/gate'
-import { buildPointPrompt, buildPrompt, elementOf, fourLines, looksLikeC4, parseObservation, parsePointObservation, passesAt, PROMPT_FRAME, PROMPT_FRAME_CHARS, PROMPT_FRAME_POINT, PROMPT_FRAME_POINT_CHARS } from '../ai/prompt'
+import { buildPoint2Prompt, buildPointPrompt, buildPrompt, elementOf, fourLines, looksLikeC4, parseObservation, parsePointObservation, passesAt, PROMPT_FRAME, PROMPT_FRAME_CHARS, PROMPT_FRAME_POINT, PROMPT_FRAME_POINT2, PROMPT_FRAME_POINT2_CHARS, PROMPT_FRAME_POINT_CHARS } from '../ai/prompt'
 import { costUsd } from '../ai/pricing'
 import { observeWith } from '../ai/observe'
 import { backoffMs, isRetryable, statusOf } from '../ai/retry'
@@ -2411,6 +2411,41 @@ console.log('\n[AI 마개 — 게이트와 관측]')
   // ★ v2 는 point 를 넣은 뒤에도 그대로여야 한다. 12장의 수를 재현할 길이다.
   t('병: v2 에 support 가 안 섞였다', !PROMPT_FRAME.includes('support'))
   t('병: point 에 delete 배열이 안 섞였다', !PROMPT_FRAME_POINT.includes('"delete"'))
+
+  // ── ★★★ 마개 이전(移轉) 검사 ─────────────────────────────────────
+  //
+  // v2 의 delete 문안은 C-1·C-2·C-4 를 각각 막는 문장 셋을 갖는다. point 로
+  // 옮기며 **C-1 만 빠졌고**, support=1 이 180건에서 0건이 됐다(설계안 4-2-2).
+  // ★★ 문안 결함이 아니라 이전 결함이다. 새 문안을 만들 때마다 **셋을 다**
+  //   물어야 한다. 하나씩 검사하면 다음에도 하나가 빠진다.
+  console.log('\n[마개 이전 — C-1·C-2·C-4]')
+  const GUARDS: Array<[string, (f: string) => boolean]> = [
+    ['C-1 1번 줄도 판정한다', (f) => /1번 줄도 (반드시 판정한다|후보다)/.test(f)],
+    ['C-2 4번 줄 하나만 잰다', (f) => f.includes('2번 줄과 3번 줄 사이의 근거는 세지 않는다')],
+    ['C-4 지시 해소는 근거가 아니다', (f) => /주어·주체·대상(이 누구인지 모호해진다|을 알려 준다)/.test(f)],
+  ]
+  for (const [name, has] of GUARDS) {
+    t(`v2: ${name}`, has(PROMPT_FRAME))
+    t(`point2: ${name}`, has(PROMPT_FRAME_POINT2))
+  }
+  // ★ point(P1)는 C-1 이 **빠진 채로 남는다.** 그것이 4-2-2 를 낸 문안이다.
+  //   고치면 그 수를 낸 문안이 사라진다. 빠져 있다는 것을 검사가 기억한다.
+  t('point(P1): C-1 이 빠져 있다 — 4-2-2 를 낸 문안이다',
+    !/1번 줄도 (반드시 판정한다|후보다)/.test(PROMPT_FRAME_POINT))
+
+  // point2 는 point 에서 한 줄만 다르다. 파생이라 구조로 보장되는데, 검사로도 문다.
+  {
+    const a = PROMPT_FRAME_POINT.split('\n')
+    const b = PROMPT_FRAME_POINT2.split('\n')
+    t('point2: point 에서 한 줄만 늘었다', b.length === a.length + 1)
+    t('point2: 늘어난 줄이 C-1 마개다',
+      b.filter((l) => !a.includes(l)).join('') === '   ★ 1번 줄도 후보다. 맨 앞이라 안 걸린다고 넘기지 마라.')
+  }
+  {
+    const p = buildPoint2Prompt({ passage: '[상황] x', lines: ['a', 'b', 'c', 'd'], element: 'e' })
+    t('point2 조립: 치환자가 안 남는다', !/\{(passage|line[1-4]|element)\}/.test(p))
+  }
+  console.log(`  틀 point ${PROMPT_FRAME_POINT_CHARS}자 · point2 ${PROMPT_FRAME_POINT2_CHARS}자`)
 
   // ── 프롬프트와 파싱 ────────────────────────────────────────────────
   //

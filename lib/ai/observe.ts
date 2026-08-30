@@ -10,6 +10,7 @@
  *   그걸 ai_usage_log 에 적어야 지출 상한이 다음 호출에서 맞는다.
  */
 import {
+  buildPoint2Prompt,
   buildPointPrompt,
   buildPrompt,
   parseObservation,
@@ -128,12 +129,17 @@ export interface PointOutcome extends Omit<ObserveOutcome, 'observation'> {
   observation: PointObservation | null
 }
 
+/**
+ * ★ `variant` 로 틀만 고른다. 나머지는 같다 — 파싱 꼴이 같기 때문이다.
+ *   `point` 와 `point2` 는 `C-1` 마개 한 문장만 다르다(prompt.ts).
+ */
 export async function observePointWith(
   call: GeminiCall,
   input: PromptInput,
-  model: string
+  model: string,
+  variant: 'point' | 'point2' = 'point'
 ): Promise<PointOutcome> {
-  const prompt = buildPointPrompt(input)
+  const prompt = variant === 'point2' ? buildPoint2Prompt(input) : buildPointPrompt(input)
 
   let reply: GeminiReply
   try {

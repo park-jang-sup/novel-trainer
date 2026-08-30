@@ -40,7 +40,7 @@
 import './load-env'
 import { writeFileSync } from 'node:fs'
 import { AT_ITEMS, AT_D2_EXTRA, passageOf } from '../lib/scoring/fixtures/action-turn'
-import { buildPointPrompt, buildPrompt, fourLines, PROMPT_FRAME_CHARS, PROMPT_FRAME_POINT_CHARS } from '../lib/ai/prompt'
+import { buildPoint2Prompt, buildPointPrompt, buildPrompt, fourLines, PROMPT_FRAME_CHARS, PROMPT_FRAME_POINT2_CHARS, PROMPT_FRAME_POINT_CHARS } from '../lib/ai/prompt'
 import { observePointWith, observeWith, type ObserveOutcome, type PointOutcome } from '../lib/ai/observe'
 import { callGemini, DEFAULT_MODEL, THINKING_LEVEL } from '../lib/ai/gemini'
 import { checkGateBeforeQuota, checkRunBudget } from '../lib/ai/gate'
@@ -186,11 +186,14 @@ async function main() {
     process.exit(1)
   }
   const prompt = arg('prompt', 'v2')
-  if (prompt !== 'v2' && prompt !== 'point') {
-    console.error(`★ --prompt 는 v2 또는 point 다. 받은 것: ${prompt}`)
+  if (prompt !== 'v2' && prompt !== 'point' && prompt !== 'point2') {
+    console.error(`★ --prompt 는 v2 · point · point2 다. 받은 것: ${prompt}`)
     process.exit(1)
   }
-  const frameChars = prompt === 'point' ? PROMPT_FRAME_POINT_CHARS : PROMPT_FRAME_CHARS
+  const frameChars =
+    prompt === 'point2' ? PROMPT_FRAME_POINT2_CHARS
+    : prompt === 'point' ? PROMPT_FRAME_POINT_CHARS
+    : PROMPT_FRAME_CHARS
   const out = arg('out', 'ai-probe.json')
   /** 이 실행의 자기 상한. C 의 `자기 상한` 이 이 수다. n 보다 크게 두지 않는다. */
   const runCap = Number(arg('cap', String(n)))
@@ -214,7 +217,10 @@ async function main() {
     const c = cases[0]
     const lines = fourLines(c.text)
     // ★ 미리보기가 실제로 나갈 것과 달라지면 --dry 의 뜻이 없다.
-    const build = prompt === 'point' ? buildPointPrompt : buildPrompt
+    const build =
+      prompt === 'point2' ? buildPoint2Prompt
+      : prompt === 'point' ? buildPointPrompt
+      : buildPrompt
     console.log(lines ? build({ passage: c.passage, lines, element: c.element }) : '★ 네 줄이 아니다')
     console.log('\n--dry 다. DB 도 Gemini 도 안 탔다. 마개까지 재려면 --check 다.')
     return
@@ -294,8 +300,8 @@ async function main() {
 
     const input = { passage: c.passage, lines, element: c.element }
     const outcome: ObserveOutcome | PointOutcome =
-      prompt === 'point'
-        ? await observePointWith(callGemini, input, model)
+      prompt === 'point' || prompt === 'point2'
+        ? await observePointWith(callGemini, input, model, prompt)
         : await observeWith(callGemini, input, model)
     calls++
 
