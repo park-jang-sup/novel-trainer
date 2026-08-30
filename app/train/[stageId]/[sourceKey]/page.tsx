@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import TrainClient from '@/components/train/TrainClient'
+import { nextStageId } from '@/lib/train-nav'
 import type { BlankSpec, ProblemType } from '@/lib/scoring/types'
 
 export default async function TrainProblemPage(
@@ -79,11 +80,11 @@ export default async function TrainProblemPage(
   // 활성 문항 전부를 한 번에 가져온다(53행뿐이라 왕복이 싸다). 이 단계의
   // 목록 · 다른 단계에 문항이 있는지 · 두 곳(app/page.tsx)과 같은 통과 수를
   // 여기서 모두 뽑는다.
-  const [{ data: activeProblems }, { data: passedRows }, { data: thisStage }] =
+  const [{ data: activeProblems }, { data: passedRows }, { data: allStages }] =
     await Promise.all([
       supabase.from('problems').select('id, source_key, difficulty, stage_id').not('is_active', 'is', false),
       supabase.from('submissions').select('problem_id').eq('passed', true),
-      supabase.from('stages').select('track, order_no').eq('id', actualStageId).maybeSingle(),
+      supabase.from('stages').select('id, track, order_no'),
     ])
 
   const stageProblems = (activeProblems ?? [])
@@ -91,20 +92,13 @@ export default async function TrainProblemPage(
     .map((p) => ({ id: String(p.id), source_key: p.source_key as string, difficulty: p.difficulty as number }))
   const passedIds = new Set((passedRows ?? []).map((r) => String(r.problem_id)))
 
-  // 같은 트랙에서 문항이 있는 다음 단계
-  let nextStageId: string | null = null
-  if (thisStage) {
-    const stagesWithProblems = new Set((activeProblems ?? []).map((p) => String(p.stage_id)))
-    const { data: trackStages } = await supabase
-      .from('stages')
-      .select('id, order_no')
-      .eq('track', thisStage.track)
-      .order('order_no')
-    const later = (trackStages ?? []).find(
-      (s) => s.order_no > thisStage.order_no && stagesWithProblems.has(String(s.id))
-    )
-    nextStageId = later ? String(later.id) : null
-  }
+  // 다음 단계는 전체 순서(sentence → structure → start)에서 문항 있는 다음 것.
+  const stagesWithProblems = new Set((activeProblems ?? []).map((p) => String(p.stage_id)))
+  const navStages = (allStages ?? []).map((s) => ({
+    id: String(s.id),
+    track: s.track as string,
+    order_no: s.order_no as number,
+  }))
 
   const loop = {
     stageId: actualStageId,
@@ -112,8 +106,7 @@ export default async function TrainProblemPage(
     stageProblems,
     passedIds: [...passedIds],
     total: stageProblems.length,
-    passedInStage: stageProblems.filter((p) => passedIds.has(p.id)).length,
-    nextStageId,
+    nextStageId: nextStageId(navStages, actualStageId, stagesWithProblems),
   }
 
   return (

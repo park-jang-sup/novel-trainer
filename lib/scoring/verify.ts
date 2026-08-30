@@ -11,7 +11,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import path from 'node:path'
 import { combine, countLetters, countSentences, deriveFillParts, fillMarkerMismatch, findForbidden, mergeForbidChecks, gradeLocal, pendingMorphChecks } from './index'
 import { sqlStr, countRawNewlinesInStrings } from '../seed-sql'
-import { nextProblemKey } from '../train-nav'
+import { nextProblemKey, nextStageId } from '../train-nav'
 import type { Answer, Check, MorphResult, Problem, ProblemType, ScoringConfig, ScoringMode } from './types'
 import { CONVERT_SEEDS } from './fixtures/convert-seeds'
 import {
@@ -2352,6 +2352,34 @@ console.log('\n[학습 루프: 다음 문항 계산]')
     return list[i + 1]?.source_key ?? null // 'ar-b' — 통과 여부를 안 봄
   })()
   t('물기: 건너뛰기를 빼면 통과한 ar-b 로 보낸다 (지금은 ar-c)', skipLeaks === 'ar-b' && nextProblemKey(P, 'ar-a', new Set(['i-b'])) === 'ar-c')
+}
+
+console.log('\n[학습 루프: 다음 단계 계산]')
+{
+  const S = [
+    { id: 's-a', track: 'sentence', order_no: 10 },
+    { id: 's-b', track: 'sentence', order_no: 11 },
+    { id: 's-c', track: 'sentence', order_no: 12 },
+    { id: 's-d', track: 'structure', order_no: 11 },
+    { id: 's-e', track: 'structure', order_no: 14 },
+    { id: 's-f', track: 'start', order_no: 1 },
+  ]
+  const has = (...ids: string[]) => new Set(ids)
+
+  t('바로 다음 단계에 문항 있으면 그것', nextStageId(S, 's-a', has('s-b')) === 's-b')
+  t('빈 단계를 건너뛴다', nextStageId(S, 's-a', has('s-d')) === 's-d')
+  t('트랙 경계 — sentence 12 다음은 structure 11 (order_no 11 < 12 여도)',
+    nextStageId(S, 's-c', has('s-d', 's-e')) === 's-d')
+  t('structure 끝 → start 로', nextStageId(S, 's-e', has('s-f')) === 's-f')
+  t('뒤가 전부 빈 단계면 null', nextStageId(S, 's-a', has('s-a')) === null)
+  t('마지막 단계면 null', nextStageId(S, 's-f', has('s-f')) === null)
+  t('목록에 없는 단계면 null (방어)', nextStageId(S, 's-z', has('s-b')) === null)
+
+  // 물기: 트랙을 안 보고 order_no 만으로 정렬하면 sentence 12 다음에 structure 11 이
+  //       안 온다(11 < 12 라 앞에 있다). 위 '트랙 경계' 시험이 그것을 잡는다.
+  const byOrderOnly = [...S].sort((a, b) => a.order_no - b.order_no)
+  const iC = byOrderOnly.findIndex((s) => s.id === 's-c')
+  t('물기: order_no 만 보면 s-c 다음에 s-d 가 없다', !byOrderOnly.slice(iC + 1).some((s) => s.id === 's-d'))
 }
 
 // 픽스처와 덤프가 갈리면 위의 감시 전부가 실제 배포물을 안 보는 상태가 된다.

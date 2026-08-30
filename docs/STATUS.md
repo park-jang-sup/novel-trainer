@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 18 · 커밋 `133058a` 위
+마지막 갱신: 세션 18 · 커밋 `9e8e3ff` 위
 
 ---
 
@@ -13,7 +13,8 @@
 ```
 단계 26 · 문항 93 (fill 8 추가) · 화면이 붙은 유형 11단계분 (문장 1~11, 구성 14·17·19·20)
 학습자 흐름   로그인 → 단계 목록 → 문항 → 제출 → 통과/미달 → (fill 통과 시) 모범답안+자기점검 →
-             '다음 문항 →'(미달이면 '건너뛰기 →') → … → 마지막 통과 시 '단계 완료 N/N' + '다음 단계 →'
+             '다음 문항 →'(미달 '건너뛰기 →') → … → 다 통과면 '단계 완료 N/N'+'다음 단계 →',
+             건너뛴 게 있으면 'N/M · 건너뛴 문항 k개'+첫 건너뛴 문항 링크
 없는 것       도입 트랙 전부 · streak·XP·복습·하트·진도 저장 테이블(안 만든다 — submissions 로만 센다)
 ★ 10단계는 새 skill_key `action_reason`(fill 8). 옛 `action_turn`(convert 8)은 is_active=false — 화면에 '준비 중'
 ```
@@ -97,16 +98,23 @@ fill 화면 + 자기점검 (재설계안 11-2 4번 · 세션 18)
   ★ DB 는 안 건드렸다 — 시드 blanks 에 minChars 가 없어 기본값 8 이 그대로 선다
 
 학습 루프 (세션 18)
-  lib/train-nav.ts   nextProblemKey(problems, currentKey, passedIds) — 순수 함수.
-                     목록 순서(difficulty→source_key) · 통과한 것 건너뜀 · 마지막이면 null
-  page.tsx           활성 문항 전부 + 통과 행 + 트랙 단계를 한 번에 읽어 loop 재료를 만든다.
-                     N/N 은 app/page.tsx 와 같은 식(서로 다른 problem_id 의 통과 수)
-  TrainClient        제출 결과 아래에 링크 하나. 통과 '다음 문항 →' · 미달 '건너뛰기 →' ·
-                     마지막 통과 시 '단계 완료 N/N' + '다음 단계 →'(문항 있는 다음 단계). 모든 유형
-  verify             nextProblemKey 9건 — 마지막→null · 통과 건너뜀 · 문항 하나뿐 · 물기
-  ★ 확인함: SSR 에 loop 직렬화 · ar-broken-gate 통과 후 형제 문항 페이지에 passedIds 반영
-  ★ 완료 조건(박 님): 브라우저에서 10단계 여덟을 '다음 문항' 만 눌러 완주 → '단계 완료 8/8'
-    fill-smoke 계정엔 테스트 제출이 쌓였다 — 완주 시연은 새 계정으로(submissions 는 지울 API 가 없다)
+  lib/train-nav.ts   nextProblemKey — 순수. 목록 순서(difficulty→source_key) · 통과한 것 건너뜀 · 마지막 null
+                     nextStageId  — 순수. 전체 순서(sentence→structure→start) 에서 문항 있는 다음 단계.
+                                    같은 트랙에 안 매인다. 없으면 null(홈으로)
+  page.tsx           활성 문항 전부 + 통과 행 + 단계 전부를 한 번에 읽어 loop 재료. N/N 은
+                     app/page.tsx 와 같은 식(서로 다른 problem_id 통과 수)
+  TrainClient        제출 결과 아래 링크 하나.
+                       통과+다음 있음   '다음 문항 →'
+                       미달+다음 있음   '건너뛰기 →'
+                       통과+다음 없음+건너뛴 것 0   '단계 완료 N/N' + '다음 단계 →'
+                       통과+다음 없음+건너뛴 것 k   'N/M · 건너뛴 문항 k개' + 첫 건너뛴 문항 링크
+                       미달+다음 없음   '단계 목록으로 →'
+  verify             nextProblemKey 9건 · nextStageId 8건 (트랙 경계 넘김 · 전부 빈 단계 · 물기)
+  ★ 확인함: nextStageId 가 10단계(action_reason) 다음으로 stage 14 `궤도 이탈 찾기`(구성 14, off_track)
+    를 낸다 — SSR props 에서 확인 · ar-broken-gate 통과 후 형제 페이지에 passedIds 반영
+  ★ 완료 조건(박 님): 브라우저 두 화면 — (1) 건너뛴 채 마지막까지 → 'N/M · 건너뛴 문항 k개' ·
+    (2) 8/8 화면의 '다음 단계 →' 가 구성 14로 가는지
+    fill-smoke 계정엔 테스트 제출이 쌓였다(broken-gate 통과) — 다른 문항을 건너뛰어 시연하거나 새 계정
 ```
 
 ★ 주 단위 기준 하나 — **학습자가 새로 할 수 있게 된 것**이 없는 주는 실패다.
@@ -117,6 +125,8 @@ fill 화면 + 자기점검 (재설계안 11-2 4번 · 세션 18)
 at-left-feint fill 재료      상황 본문 · 빈칸 위치 · 모범답안 3건. 재설계안 7-5 목록 열둘을 먼저
                             읽고 짠다. 그때 3×3(장르 셋씩)이 찬다
 ar-left-feeler 모범답안       재설계안 7-7 에 가·나·다가 없다. stage2 가 보여줄 것이 없다
+fill 지시문 예시 접기         단계에서 첫 문항만 예시를 펼치고 뒤 문항에선 접는다(길다)
+'fill' 표기                  화면의 유형 표시 'fill' 을 '빈칸 채우기' 로
 fill minChars 8 은 코드 기본값  feint 시드 때 blanks 마다 minChars 를 명시하고 `?? 8` 기본값을 뺀다
 fill 은 인물·사물을 안 본다     덕수 답이 세연 문항을 통과한다. 자기점검이 그 자리. 규칙으로 잡으려면
                             blanks 에 requireAny 정도 — 지금은 안 한다

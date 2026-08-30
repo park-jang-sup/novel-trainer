@@ -53,7 +53,6 @@ interface LoopProps {
   stageProblems: NavProblem[]
   passedIds: string[]
   total: number
-  passedInStage: number
   nextStageId: string | null
 }
 
@@ -157,17 +156,30 @@ export default function TrainClient({
     () => loop.stageProblems.find((p) => p.source_key === loop.currentSourceKey)?.id,
     [loop]
   )
-  const nextKey = useMemo(() => {
-    // 지금 문항을 방금 통과했으면 그것도 통과 집합에 넣고 다음을 찾는다 —
-    // 안 그러면 '다음 →' 이 방금 통과한 자기 자신을 가리킬 수 있다.
-    const passed = new Set(loop.passedIds)
-    if (passedThis && currentId) passed.add(currentId)
-    return nextProblemKey(loop.stageProblems, loop.currentSourceKey, passed)
-  }, [loop, passedThis, currentId])
-  const alreadyPassed = currentId ? loop.passedIds.includes(currentId) : false
-  const passedInStageNow =
-    loop.passedInStage + (passedThis && currentId && !alreadyPassed ? 1 : 0)
-  const stageComplete = passedThis && nextKey === null
+  // 지금 문항을 방금 통과했으면 그것도 통과로 친다 — 안 그러면 '다음 →' 이
+  // 방금 통과한 자기 자신을 가리키고, 완료 수도 하나 모자란다.
+  const livePassed = useMemo(() => {
+    const s = new Set(loop.passedIds)
+    if (passedThis && currentId) s.add(currentId)
+    return s
+  }, [loop.passedIds, passedThis, currentId])
+  const orderedStage = useMemo(
+    () =>
+      [...loop.stageProblems].sort(
+        (a, b) => a.difficulty - b.difficulty || a.source_key.localeCompare(b.source_key)
+      ),
+    [loop.stageProblems]
+  )
+  const nextKey = useMemo(
+    () => nextProblemKey(loop.stageProblems, loop.currentSourceKey, livePassed),
+    [loop.stageProblems, loop.currentSourceKey, livePassed]
+  )
+  // 앞으로 갈 문항이 없을 때: 통과 못 한 채 남겨 둔(건너뛴) 문항들.
+  const skipped = useMemo(
+    () => orderedStage.filter((p) => !livePassed.has(p.id)),
+    [orderedStage, livePassed]
+  )
+  const passedInStageNow = loop.total - skipped.length
 
   // 제출 전 기준 목록. gradeLocal('', cfg) + pendingMorphChecks(cfg)가 유일한
   // 출처다 — cfg를 사람 말로 옮기는 표를 따로 짜지 않는다. 답안이 빈 문자열
@@ -589,9 +601,17 @@ export default function TrainClient({
           )}
 
           {/* 학습 루프. 통과든 미달이든 앞으로 갈 자리를 준다 — 막히면
-              넘어갈 수 있어야 한다. 단계의 마지막을 통과했을 때만 완료 화면. */}
+              넘어갈 수 있어야 한다. '단계 완료' 는 건너뛴 문항이 하나도
+              없을 때만. */}
           <div className="space-y-2 pt-4" style={{ borderTop: '1px solid var(--rule)' }}>
-            {stageComplete ? (
+            {nextKey ? (
+              <Link
+                href={`/train/${loop.stageId}/${nextKey}`}
+                style={{ color: passedThis ? 'var(--ink)' : 'var(--ink-soft)' }}
+              >
+                {passedThis ? '다음 문항 →' : '건너뛰기 →'}
+              </Link>
+            ) : passedThis && skipped.length === 0 ? (
               <>
                 <p style={{ color: 'var(--pass)', fontWeight: 700 }}>
                   단계 완료 {passedInStageNow}/{loop.total}
@@ -602,17 +622,22 @@ export default function TrainClient({
                   </Link>
                 ) : (
                   <Link href="/" style={{ color: 'var(--ink-soft)' }}>
-                    처음으로 →
+                    홈으로 →
                   </Link>
                 )}
               </>
-            ) : nextKey ? (
-              <Link
-                href={`/train/${loop.stageId}/${nextKey}`}
-                style={{ color: passedThis ? 'var(--ink)' : 'var(--ink-soft)' }}
-              >
-                {passedThis ? '다음 문항 →' : '건너뛰기 →'}
-              </Link>
+            ) : passedThis ? (
+              <>
+                <p style={{ fontWeight: 700 }}>
+                  {passedInStageNow}/{loop.total} · 건너뛴 문항 {skipped.length}개
+                </p>
+                <Link
+                  href={`/train/${loop.stageId}/${skipped[0].source_key}`}
+                  style={{ color: 'var(--ink)' }}
+                >
+                  건너뛴 문항으로 →
+                </Link>
+              </>
             ) : (
               <Link href={`/train/${loop.stageId}`} style={{ color: 'var(--ink-soft)' }}>
                 단계 목록으로 →
