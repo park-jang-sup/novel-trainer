@@ -43,9 +43,29 @@ export function nextStageId(
 }
 
 function ordered(problems: NavProblem[]): NavProblem[] {
-  return [...problems].sort(
-    (a, b) => a.difficulty - b.difficulty || a.source_key.localeCompare(b.source_key)
-  )
+  // difficulty 가 null 이나 문자열로 와도(유형마다 시드가 다르다) 순서가 서게
+  // Number 로 눌러 둔다 — NaN 이면 0 으로 본다.
+  const d = (p: NavProblem) => {
+    const n = Number(p.difficulty)
+    return Number.isFinite(n) ? n : 0
+  }
+  return [...problems].sort((a, b) => d(a) - d(b) || a.source_key.localeCompare(b.source_key))
+}
+
+/**
+ * 한 단계의 진도. 유형과 무관하게 통과한 problem_id 만 센다 —
+ * choice·order·count·fill 다 같은 식이다(app/page.tsx 의 집계와 같아야 한다).
+ *   passed  통과한 문항 수 (정수)
+ *   total   활성 문항 수
+ *   skipped 통과 안 한 문항, 목록 순서로
+ */
+export function stageProgress(
+  problems: NavProblem[],
+  passedIds: ReadonlySet<string>
+): { passed: number; total: number; skipped: NavProblem[] } {
+  const list = ordered(problems)
+  const skipped = list.filter((p) => !passedIds.has(p.id))
+  return { passed: list.length - skipped.length, total: list.length, skipped }
 }
 
 /**

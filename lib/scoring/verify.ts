@@ -11,7 +11,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import path from 'node:path'
 import { combine, countLetters, countSentences, deriveFillParts, fillMarkerMismatch, findForbidden, mergeForbidChecks, gradeLocal, pendingMorphChecks } from './index'
 import { sqlStr, countRawNewlinesInStrings } from '../seed-sql'
-import { nextProblemKey, nextStageId } from '../train-nav'
+import { nextProblemKey, nextStageId, stageProgress } from '../train-nav'
 import type { Answer, Check, MorphResult, Problem, ProblemType, ScoringConfig, ScoringMode } from './types'
 import { CONVERT_SEEDS } from './fixtures/convert-seeds'
 import {
@@ -2380,6 +2380,57 @@ console.log('\n[학습 루프: 다음 단계 계산]')
   const byOrderOnly = [...S].sort((a, b) => a.order_no - b.order_no)
   const iC = byOrderOnly.findIndex((s) => s.id === 's-c')
   t('물기: order_no 만 보면 s-c 다음에 s-d 가 없다', !byOrderOnly.slice(iC + 1).some((s) => s.id === 's-d'))
+}
+
+console.log('\n[학습 루프: 진도 세기 — 유형과 무관]')
+{
+  // stageProgress 는 유형을 안 본다 — 통과한 problem_id 만 센다. choice·order·
+  // count 는 실제로 difficulty 가 섞여 있어(ae-* 는 [2,2,1,1]) 정렬 뒤 세는지 본다.
+  // 세션 18: choice 단계에서 완료 화면이 'NaN/4' 였다.
+  const choiceStage = [
+    { id: 'q-kongjwi', source_key: 'ae-kongjwi-jar', difficulty: 2 },
+    { id: 'q-axe', source_key: 'ae-axe-drop', difficulty: 2 },
+    { id: 'q-gyeonu', source_key: 'ae-gyeonu-bridge', difficulty: 1 },
+    { id: 'q-rabbit', source_key: 'ae-rabbit-gate', difficulty: 1 },
+  ]
+  const p0 = stageProgress(choiceStage, new Set())
+  t('choice 4문항 · 통과 0 → 0/4', p0.passed === 0 && p0.total === 4)
+  t('choice · 통과 0 → passed 는 수다(NaN 아님)', Number.isInteger(p0.passed))
+  t('choice · skipped 가 목록 순서(난1 먼저, 그 안에서 source_key)', p0.skipped.map((p) => p.source_key).join(',') === 'ae-gyeonu-bridge,ae-rabbit-gate,ae-axe-drop,ae-kongjwi-jar')
+
+  const pAll = stageProgress(choiceStage, new Set(['q-kongjwi', 'q-axe', 'q-gyeonu', 'q-rabbit']))
+  t('choice · 전부 통과 → 4/4 · skipped 0', pAll.passed === 4 && pAll.total === 4 && pAll.skipped.length === 0)
+
+  const pSome = stageProgress(choiceStage, new Set(['q-gyeonu', 'q-axe']))
+  t('choice · 둘 통과 → 2/4', pSome.passed === 2 && pSome.total === 4)
+  t('choice · 남은 둘이 skipped', pSome.skipped.map((p) => p.id).sort().join(',') === 'q-kongjwi,q-rabbit')
+
+  // order 3문항 · count 2문항 — 같은 식
+  const orderStage = [
+    { id: 'o-1', source_key: 'od-a', difficulty: 1 },
+    { id: 'o-2', source_key: 'od-b', difficulty: 1 },
+    { id: 'o-3', source_key: 'od-c', difficulty: 2 },
+  ]
+  t('order 3 · 통과 2 → 2/3', stageProgress(orderStage, new Set(['o-1', 'o-3'])).passed === 2)
+  const countStage = [
+    { id: 'n-1', source_key: 'be-a', difficulty: 1 },
+    { id: 'n-2', source_key: 'be-b', difficulty: 2 },
+  ]
+  t('count 2 · 통과 1 → 1/2', stageProgress(countStage, new Set(['n-2'])).passed === 1)
+  t('count · 통과 없음의 passed 는 0 (undefined·NaN 아님)', stageProgress(countStage, new Set()).passed === 0)
+
+  // difficulty 가 null·문자열로 와도 안 깨진다
+  const messy = [
+    { id: 'm-1', source_key: 'x-b', difficulty: null as unknown as number },
+    { id: 'm-2', source_key: 'x-a', difficulty: '2' as unknown as number },
+  ]
+  const pm = stageProgress(messy, new Set(['m-1']))
+  t('difficulty null·문자열 → passed 1/2, skipped 는 x-a', pm.passed === 1 && pm.total === 2 && pm.skipped[0].source_key === 'x-a')
+
+  // 물기: total 을 passedIds 크기로 세면(유형별로 다른 자리에서 세던 흔적)
+  //       이 단계에 없는 통과가 섞여 수가 부푼다
+  const withStranger = stageProgress(choiceStage, new Set(['q-gyeonu', 'not-in-this-stage']))
+  t('물기: 이 단계 밖의 통과는 안 센다', withStranger.passed === 1 && withStranger.total === 4)
 }
 
 // 픽스처와 덤프가 갈리면 위의 감시 전부가 실제 배포물을 안 보는 상태가 된다.

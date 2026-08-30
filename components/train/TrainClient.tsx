@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { countChars, mergeForbidChecks, gradeLocal, pendingMorphChecks } from '@/lib/scoring'
-import { nextProblemKey, type NavProblem } from '@/lib/train-nav'
+import { nextProblemKey, stageProgress, type NavProblem } from '@/lib/train-nav'
 import type { Check, CheckStatus, CountInput, ProblemType, ScoringConfig } from '@/lib/scoring/types'
 import RuleGauge from './RuleGauge'
 import CheckRow from './CheckRow'
@@ -52,7 +52,6 @@ interface LoopProps {
   currentSourceKey: string
   stageProblems: NavProblem[]
   passedIds: string[]
-  total: number
   nextStageId: string | null
 }
 
@@ -163,23 +162,17 @@ export default function TrainClient({
     if (passedThis && currentId) s.add(currentId)
     return s
   }, [loop.passedIds, passedThis, currentId])
-  const orderedStage = useMemo(
-    () =>
-      [...loop.stageProblems].sort(
-        (a, b) => a.difficulty - b.difficulty || a.source_key.localeCompare(b.source_key)
-      ),
-    [loop.stageProblems]
-  )
   const nextKey = useMemo(
     () => nextProblemKey(loop.stageProblems, loop.currentSourceKey, livePassed),
     [loop.stageProblems, loop.currentSourceKey, livePassed]
   )
-  // 앞으로 갈 문항이 없을 때: 통과 못 한 채 남겨 둔(건너뛴) 문항들.
-  const skipped = useMemo(
-    () => orderedStage.filter((p) => !livePassed.has(p.id)),
-    [orderedStage, livePassed]
+  // 진도. 유형과 무관하게 통과한 problem_id 만 센다(lib/train-nav 의 stageProgress —
+  // verify 가 문다). skipped = 통과 못 한 문항, 목록 순서.
+  const progress = useMemo(
+    () => stageProgress(loop.stageProblems, livePassed),
+    [loop.stageProblems, livePassed]
   )
-  const passedInStageNow = loop.total - skipped.length
+  const { passed: passedInStageNow, total: stageTotal, skipped } = progress
 
   // 제출 전 기준 목록. gradeLocal('', cfg) + pendingMorphChecks(cfg)가 유일한
   // 출처다 — cfg를 사람 말로 옮기는 표를 따로 짜지 않는다. 답안이 빈 문자열
@@ -614,7 +607,7 @@ export default function TrainClient({
             ) : passedThis && skipped.length === 0 ? (
               <>
                 <p style={{ color: 'var(--pass)', fontWeight: 700 }}>
-                  단계 완료 {passedInStageNow}/{loop.total}
+                  단계 완료 {passedInStageNow}/{stageTotal}
                 </p>
                 {loop.nextStageId ? (
                   <Link href={`/train/${loop.nextStageId}`} style={{ color: 'var(--ink)' }}>
@@ -629,7 +622,7 @@ export default function TrainClient({
             ) : passedThis ? (
               <>
                 <p style={{ fontWeight: 700 }}>
-                  {passedInStageNow}/{loop.total} · 건너뛴 문항 {skipped.length}개
+                  {passedInStageNow}/{stageTotal} · 건너뛴 문항 {skipped.length}개
                 </p>
                 <Link
                   href={`/train/${loop.stageId}/${skipped[0].source_key}`}

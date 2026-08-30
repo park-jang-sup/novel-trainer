@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { stageProgress, type NavProblem } from '@/lib/train-nav'
 
 // app/train/[stageId]/page.tsx 와 같은 규칙: order_no는 트랙마다 번호
 // 구간이 달라 전역 번호가 성립하지 않는다. 화면에는 같은 track 안에서
@@ -32,7 +33,7 @@ export default async function Home() {
   // 쿼리에서만 빠지는 어긋남이 생긴다.
   const { data: problems, error: problemsError } = await supabase
     .from('problems')
-    .select('id, stage_id')
+    .select('id, stage_id, source_key, difficulty')
     .not('is_active', 'is', false)
 
   if (problemsError) {
@@ -62,15 +63,28 @@ export default async function Home() {
       'raw=' + JSON.stringify(submissionsError)
     )
   }
-  const passedProblemIds = new Set((passedSubmissions ?? []).map((s) => s.problem_id))
+  const passedProblemIds = new Set(
+    (passedSubmissions ?? []).map((s) => String(s.problem_id))
+  )
 
-  const progressByStage = new Map<string, { total: number; passed: number }>()
+  // 통과 수는 lib/train-nav 의 stageProgress 로만 센다 — 문항 화면의 완료
+  // 표시('단계 완료 N/N')와 같은 함수라 두 곳이 다른 수를 낼 수 없다.
+  const byStage = new Map<string, NavProblem[]>()
   for (const p of problems ?? []) {
-    const entry = progressByStage.get(p.stage_id) ?? { total: 0, passed: 0 }
-    entry.total += 1
-    if (passedProblemIds.has(p.id)) entry.passed += 1
-    progressByStage.set(p.stage_id, entry)
+    const k = String(p.stage_id)
+    if (!byStage.has(k)) byStage.set(k, [])
+    byStage.get(k)!.push({
+      id: String(p.id),
+      source_key: p.source_key as string,
+      difficulty: p.difficulty as number,
+    })
   }
+  const progressByStage = new Map(
+    [...byStage].map(([k, ps]) => {
+      const { passed, total } = stageProgress(ps, passedProblemIds)
+      return [k, { total, passed }]
+    })
+  )
 
   return (
     <main className="mx-auto max-w-2xl space-y-8 p-6">
@@ -95,7 +109,7 @@ export default async function Home() {
             </h2>
             <div>
               {trackStages.map((s, i) => {
-                const progress = progressByStage.get(s.id)
+                const progress = progressByStage.get(String(s.id))
                 const count = progress?.total ?? 0
                 const relativeNo = i + 1
 

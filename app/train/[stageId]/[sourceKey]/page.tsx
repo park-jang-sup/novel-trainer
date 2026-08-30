@@ -105,7 +105,6 @@ export default async function TrainProblemPage(
     currentSourceKey: sourceKey,
     stageProblems,
     passedIds: [...passedIds],
-    total: stageProblems.length,
     nextStageId: nextStageId(navStages, actualStageId, stagesWithProblems),
   }
 
