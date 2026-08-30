@@ -77,6 +77,26 @@ if (runs.length >= 2) {
   console.log(`       4회 이상 같은 줄  ${maj4}/${base.length}   (참고)`)
 }
 
+// ── 흔들림이 몰렸는가 ─────────────────────────────────────────────
+// ★ delete 는 갈린 14건이 지문 8건에 고르게 퍼져 있었다(3·3·2·2·1·1·1·1).
+//   표본 몇 건이 이상한 것이 아니라 관측 자체가 떠는 것이다.
+//   지목도 같은 각도로 본다 — 몰려 있으면 표본 쪽을 봐야 한다.
+if (runs.length >= 2) {
+  const bySrc = new Map<string, number>()
+  const byKind = new Map<string, number>()
+  for (const x of base) {
+    const vs = runs.map((r) => r.find((y) => key(y) === key(x))).map((y) => (y ? sup(y) : undefined))
+    const seen = vs.filter((v) => v !== undefined)
+    if (seen.length < runs.length) continue
+    if (seen.every((v) => v === seen[0])) continue
+    bySrc.set(x.sourceKey, (bySrc.get(x.sourceKey) ?? 0) + 1)
+    byKind.set(x.kind, (byKind.get(x.kind) ?? 0) + 1)
+  }
+  console.log('\n[흔들림이 몰렸는가]  ★ 몰려 있으면 표본 쪽을 봐라')
+  console.log('  지문별  ' + [...bySrc.entries()].sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k}:${v}`).join(' · '))
+  console.log('  갈래별  ' + [...byKind.entries()].sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k}:${v}`).join(' · '))
+}
+
 // ── good 의 지목 줄 — 정답지가 생기면 다시 센다 ──────────────────────
 console.log('\n[good 여덟] 지목한 줄 — ★ 지금은 정오를 못 잰다. 정답지가 생기면 다시 센다')
 for (const x of base.filter((y) => y.kind === 'good')) {
