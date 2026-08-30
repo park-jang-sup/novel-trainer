@@ -28,7 +28,7 @@ export default function SelfCheck({ reference }: { reference: RefRow[] }) {
       <div className="space-y-3">
         <p style={{ fontWeight: 700 }}>다르게 쓴 답 {ords.length}가지</p>
         <p className="text-sm" style={{ color: 'var(--ink-soft)' }}>
-          정답이 아니다. 같은 자리를 다른 방식으로 채운 예다.
+          정해진 답은 없다. 같은 자리를 다른 방식으로 채운 예다.
         </p>
         {ords.map((ord, i) => (
           <div

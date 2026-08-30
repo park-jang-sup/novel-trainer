@@ -523,8 +523,9 @@ export function gradeLocal(
           continue
         }
 
-        // 2) 분량. 공백 제외.
-        const n = countChars(raw)
+        // 2) 분량. 한 칸에 글자 수는 하나다 — 최대·최소 둘 다 countLetters 로
+        //    센다(한글·영문·숫자만, 구두점·공백 제외). '.' 만 넣은 제출은 0자.
+        const n = countLetters(raw)
         if (b.maxChars !== undefined) {
           checks.push({
             key: `fill:${b.key}:maxChars`,
@@ -535,17 +536,14 @@ export function gradeLocal(
             gating: true,
           })
         }
-        // 최소 분량. b.minChars 가 없으면 기본 8자 — 빈칸을 진짜로 채우게
-        // 한다. 글자는 한글·영문·숫자만 센다(구두점·공백 제외) — '.' 만 넣은
-        // 제출을 0자로 만든다.
+        // 최소 분량. b.minChars 가 없으면 기본 8자 — 빈칸을 진짜로 채우게 한다.
         const minChars = b.minChars ?? 8
         if (minChars > 0) {
-          const letters = countLetters(raw)
           checks.push({
             key: `fill:${b.key}:minChars`,
             label: `${b.key} 최소 분량`,
-            status: letters >= minChars ? 'pass' : 'fail',
-            detail: `${letters}자 / ${minChars}자 이상`,
+            status: n >= minChars ? 'pass' : 'fail',
+            detail: `${n}자 / ${minChars}자 이상`,
             rule: `${b.key}: ${minChars}자 이상`,
             gating: true,
           })

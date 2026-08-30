@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { countChars, countSentences, fillPassageParts } from '@/lib/scoring'
+import { countLetters, countSentences, fillPassageParts } from '@/lib/scoring'
 import type { FillBlank } from './FillBlank'
 
 // fill 문항의 지문 + 입력. 고정 줄 사이에 빈칸(①②)이 번갈아 오고,
@@ -20,7 +20,7 @@ function BlankField({
   onChange: (v: string) => void
   disabled?: boolean
 }) {
-  const n = countChars(value)
+  const n = countLetters(value)
   const s = countSentences(value)
   const overChars = spec?.maxChars != null && n > spec.maxChars
   const overSent = spec?.maxSentences != null && s > spec.maxSentences

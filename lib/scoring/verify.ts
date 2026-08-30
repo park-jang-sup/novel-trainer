@@ -9,7 +9,7 @@
 
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import path from 'node:path'
-import { combine, countChars, countLetters, countSentences, deriveFillParts, fillMarkerMismatch, findForbidden, mergeForbidChecks, gradeLocal, pendingMorphChecks } from './index'
+import { combine, countLetters, countSentences, deriveFillParts, fillMarkerMismatch, findForbidden, mergeForbidChecks, gradeLocal, pendingMorphChecks } from './index'
 import { sqlStr, countRawNewlinesInStrings } from '../seed-sql'
 import type { Answer, Check, MorphResult, Problem, ProblemType, ScoringConfig, ScoringMode } from './types'
 import { CONVERT_SEEDS } from './fixtures/convert-seeds'
@@ -1720,7 +1720,7 @@ console.log('\n[10단계 fill: 빈칸 채점 물기 시험]')
   }
 
   // ── 물기 병 넷 ──
-  const LONG = '가'.repeat(60) + '.' // 공백 제외 61자, 1문장
+  const LONG = '가'.repeat(61) // 글자 61자, 1문장 (maxChars 60 초과)
   const bottles: { key: string; blanks: Record<string, string>; failKey: string }[] = [
     {
       key: '빈칸 하나 비움',
@@ -1811,6 +1811,9 @@ console.log('\n[10단계 fill: 빈칸 채점 물기 시험]')
       s1?.status === 'fail' && m1?.status === 'fail' && s2?.status === 'fail' && m2?.status === 'fail',
       failKeys(r))
     t("최소 분량 rule 에 '8자 이상' · detail 0자", m2?.rule === '②: 8자 이상' && m2?.detail === '0자 / 8자 이상', `rule=${m2?.rule} detail=${m2?.detail}`)
+    // 한 칸에 글자 수는 하나다 — maxChars 도 countLetters 로 센다.
+    t("fill 병 '구두점만' → ① 분량(maxChars) 도 0자", r.find((c) => c.key === 'fill:①:maxChars')?.detail === '0자 / 60자 이하',
+      r.find((c) => c.key === 'fill:①:maxChars')?.detail)
   }
   {
     // {②:'...'} (① 생략) → ② 가 fail
@@ -2270,16 +2273,15 @@ console.log('\n[10단계 action_reason: fill 시드 대조]')
       const b = blanks.find((x) => x.key === r.blank_key)
       if (!b) continue
       const s = countSentences(r.content)
-      const n = countChars(r.content)
-      const letters = countLetters(r.content)
+      const letters = countLetters(r.content) // fill 의 분량 검사는 글자만 센다
       const minChars = b.minChars ?? 8
       t(
         `모범답안 '${sk}' ord${r.ord} ${r.blank_key} 이 제 빈칸 규칙을 지킨다`,
         s >= (b.minSentences ?? 1) &&
           s <= (b.maxSentences ?? 99) &&
-          n <= (b.maxChars ?? 9999) &&
+          letters <= (b.maxChars ?? 9999) &&
           letters >= minChars,
-        `${s}문장 ${n}자(글자 ${letters}) / ≤${b.maxSentences}문장 ≤${b.maxChars}자 ≥${minChars}자: "${r.content}"`
+        `${s}문장 ${letters}자 / ${b.minSentences}~${b.maxSentences}문장 ${minChars}~${b.maxChars}자: "${r.content}"`
       )
       // 모범답안이 고정 줄을 그대로 베끼지 않는다(forbidCopyOfFixedLines 의 취지)
       const fixed = new Set(deriveFillParts(d.passage ?? '').fixedLines)

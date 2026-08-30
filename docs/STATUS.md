@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 18 · 커밋 `cd349bd` 위
+마지막 갱신: 세션 18 · 커밋 `f15b1bf` 위
 
 ---
 
@@ -35,8 +35,10 @@ AI 심판                 세션 13~16. delete · 지목 · 결합(AND·OR·합�
 10단계는 빈칸(fill) 문항이다     재설계안 11장. 지문 여덟(feint 뺌) · ①② (bell-rope 만 ①②③)
 stage2 는 자기점검이다           모범답안 2~3건 + 체크 둘. AI 아님. 사람 아님. reference_answers 테이블
 단계 이름                       `동작에 이유 넣기` (skill_key action_reason)
+fill 분량은 글자만 센다          countLetters — 한글·영문·숫자만. 최대·최소 한 수로. 구두점·공백은 0
 AI 는 피드백이지 심판이 아니다     위 재개 조건 전까지
 문서는 이 파일 하나              STATUS 를 덮어쓴다. 인수인계를 새로 안 쓴다
+fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀 때 뺀다
 ```
 
 ## 하는 중
@@ -48,11 +50,10 @@ AI 는 피드백이지 심판이 아니다     위 재개 조건 전까지
 ## 다음 — 순서대로. 하나가 verify 에서 물리기 전에 다음을 안 한다
 
 ```
-1  학습 루프             다음 문항 자동 이동 · 단계 완료 화면. 10단계가 첫 손님
+1  학습 루프             통과 뒤 '다음 문항' 링크 + 마지막 문항이면 '단계 완료 N/N'. 그 둘만.
+                        ★ streak · XP · 복습 아니다. 10단계가 첫 손님
 2  빈 단계 채우기         도입 4단계 → 구성 빈 6단계 → 절단신공. 단계당 4~6. 기존 유형만
 ```
-
-★ fill 화면은 브라우저 눈검사가 남았다 — 박 님이 직접 본다. API·SSR 로는 확인함(아래).
 
 ### 끝난 것 — 세션 18
 
@@ -82,20 +83,18 @@ fill 화면 + 자기점검 (재설계안 11-2 4번 · 세션 18)
   TrainClient  fill 분기 — 지문 대신 FillBody, 통과 시 SelfCheck
   FillBody     [상황]/[복선]/[결정타] 머리와 본문을 fillPassageParts 로 가른다. 본문은 고정 줄과
                입력칸(①②)이 번갈아. 칸마다 문장·글자 수 표시
-  SelfCheck    모범답안을 ord(가·나·다)로 묶어 보여주고 체크 둘(채점 아님)
+  SelfCheck    모범답안을 ord(가·나·다)로 묶어 보여주고 체크 둘(채점 아님).
+               캡션 "정해진 답은 없다"
   목록 라벨      fillSituation — [상황] 머리표를 뗀 첫 문장
-  ★ 확인함: SSR 렌더(머리·라벨·placeholder) · POST /api/grade {blanks} → pass + reference 4행 ·
-    실패 다섯(② 비움·대괄호·고정줄 베낌·61자·구두점만) 다 fail · ① 비움(optional) → pass ·
-    종결부호 없는 8자+ → pass(꼬리 규칙)
-  ★ 안 함: 브라우저 눈검사 — playwright 시스템 라이브러리(sudo)를 안 깔기로 함. 박 님이 화면을 직접 본다
+  ★ 눈검사 완료 (박 님) — '.' → 아직 미달.
 
-구두점만 넣은 제출을 막았다 (세션 18 후기 — 빠졌던 다섯째 병)
+구두점만 넣은 제출을 막았다 (세션 18 후기)
   countSentences  종결부호로 조각낸 뒤 글자(한글·영문·숫자) 든 조각만 센다.
                   '.' '...' '?!' '…' → 0. 종결부호 없는 꼬리는 글자 있으면 1 (규칙 유지)
-  fill minChars   b.minChars 가 없으면 기본 8자. 글자만 센다(countLetters — 구두점·공백 제외).
-                  rule 에 '8자 이상' 이 나간다
-  verify          {①:'.',②:'.'} → sentences·minChars 넷 다 fail · {②:'...'} → fail ·
-                  종결부호 없는 8자+ → pass. 병 넣어 무는 것 봄(되돌리면 9건 샌다)
+  fill 분량       최대·최소 둘 다 countLetters. b.minChars 없으면 기본 8자. rule 에 '8자 이상'.
+                  화면 카운터도 같은 수 — 한 칸에 글자 수 하나
+  verify          {①:'.',②:'.'} → maxChars·minChars·sentences 다 0자/fail · {②:'...'} → fail ·
+                  종결부호 없는 8자+ → pass. 병 넣어 무는 것 봄(되돌리면 새는 것 확인)
   ★ DB 는 안 건드렸다 — 시드 blanks 에 minChars 가 없어 기본값 8 이 그대로 선다
 ```
 
@@ -107,6 +106,11 @@ fill 화면 + 자기점검 (재설계안 11-2 4번 · 세션 18)
 at-left-feint fill 재료      상황 본문 · 빈칸 위치 · 모범답안 3건. 재설계안 7-5 목록 열둘을 먼저
                             읽고 짠다. 그때 3×3(장르 셋씩)이 찬다
 ar-left-feeler 모범답안       재설계안 7-7 에 가·나·다가 없다. stage2 가 보여줄 것이 없다
+fill minChars 8 은 코드 기본값  feint 시드 때 blanks 마다 minChars 를 명시하고 `?? 8` 기본값을 뺀다
+fill 은 인물·사물을 안 본다     덕수 답이 세연 문항을 통과한다. 자기점검이 그 자리. 규칙으로 잡으려면
+                            blanks 에 requireAny 정도 — 지금은 안 한다
+모범답안 베낌은 통과한다        본 뒤 그대로 붙이면 forbidCopyOfFixedLines 를 안 탄다. reference_answers
+                            줄도 베낌 검사에 넣을 수 있다(서버가 이미 읽는다). 학습 루프 뒤
 seed_data 는 갱신을 안 한다    문항 insert 가 `where not exists` 라 기존 행을 안 고친다. 덤프의
                             passage·scoring_config 를 바꾸면 seed_data 만으로는 DB 에 안 들어간다 —
                             DB update 를 따로 돌리고 seed_check 를 실제로 돌려 대조가 통과하는지 본다
