@@ -101,7 +101,7 @@ export function mergeForbidChecks(checks: Check[]): Check[] {
     .map((c) => (c.key === 'forbidWords' ? merged : c))
 }
 
-export { gradeLocal, pendingMorphChecks, countChars, countSentences, findForbidden } from './local'
+export { gradeLocal, pendingMorphChecks, countChars, countLetters, countSentences, findForbidden } from './local'
 export { gradeMorph } from './morph'
 export { deriveFillParts, fillMarkerMismatch, fillPassageParts, fillSituation } from './fill'
 export type { FillParts, FillSegment } from './fill'

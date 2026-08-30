@@ -9,7 +9,7 @@
 
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import path from 'node:path'
-import { combine, countChars, countSentences, deriveFillParts, fillMarkerMismatch, findForbidden, mergeForbidChecks, gradeLocal, pendingMorphChecks } from './index'
+import { combine, countChars, countLetters, countSentences, deriveFillParts, fillMarkerMismatch, findForbidden, mergeForbidChecks, gradeLocal, pendingMorphChecks } from './index'
 import { sqlStr, countRawNewlinesInStrings } from '../seed-sql'
 import type { Answer, Check, MorphResult, Problem, ProblemType, ScoringConfig, ScoringMode } from './types'
 import { CONVERT_SEEDS } from './fixtures/convert-seeds'
@@ -1788,6 +1788,41 @@ console.log('\n[10단계 fill: 빈칸 채점 물기 시험]')
     const ok = combine(p, { blanks: CLEAN[0] }, undefined, null)
     t('combine: 좋은 답안 → pass (fill 은 auto 라 needsAi false)', ok.status === 'pass' && ok.needsAi === false, `status=${ok.status}`)
   }
+
+  // ── 구두점만 넣은 제출 (세션 18 후기 — 빠졌던 다섯째 병) ──
+  // countSentences 가 '.' 을 1문장으로 세고, minChars 가 없어 '.' 이 통과했다.
+  t("countSentences('.') === 0", countSentences('.') === 0, `실제=${countSentences('.')}`)
+  t("countSentences('...') === 0", countSentences('...') === 0, `실제=${countSentences('...')}`)
+  t("countSentences('?!') === 0", countSentences('?!') === 0, `실제=${countSentences('?!')}`)
+  t("countSentences('…') === 0", countSentences('…') === 0, `실제=${countSentences('…')}`)
+  t('countSentences 꼬리 규칙 — 종결부호 없는 조각도 글자 있으면 1문장',
+    countSentences('역린이 드러났다') === 1, `실제=${countSentences('역린이 드러났다')}`)
+  t('countSentences 두 문장', countSentences('동생이 죽었다. 손이 떨렸다.') === 2)
+
+  {
+    // {①:'.', ②:'.'} → 문장 수 0 · 최소 분량 0 으로 둘 다 fail
+    const r = run({ '①': '.', '②': '.' })
+    const s1 = r.find((c) => c.key === 'fill:①:sentences')
+    const m1 = r.find((c) => c.key === 'fill:①:minChars')
+    const s2 = r.find((c) => c.key === 'fill:②:sentences')
+    const m2 = r.find((c) => c.key === 'fill:②:minChars')
+    t("fill 병 '구두점만' → 전체 fail", statusOfRun(r) === 'fail', failKeys(r))
+    t("fill 병 '구두점만' → sentences·minChars 넷 다 fail",
+      s1?.status === 'fail' && m1?.status === 'fail' && s2?.status === 'fail' && m2?.status === 'fail',
+      failKeys(r))
+    t("최소 분량 rule 에 '8자 이상' · detail 0자", m2?.rule === '②: 8자 이상' && m2?.detail === '0자 / 8자 이상', `rule=${m2?.rule} detail=${m2?.detail}`)
+  }
+  {
+    // {②:'...'} (① 생략) → ② 가 fail
+    const r = run({ '②': '...' })
+    t("fill 병 '점점점' → 전체 fail", statusOfRun(r) === 'fail', failKeys(r))
+    t("fill 병 '점점점' → ② 문장 수 fail", r.find((c) => c.key === 'fill:②:sentences')?.status === 'fail')
+  }
+  {
+    // ② 에 종결부호 없이 8자 이상 — 꼬리 규칙이 살아 있어 통과해야 한다
+    const r = run({ '②': '목을 덮은 비늘 사이로 역린이 드러났다' })
+    t('fill 종결부호 없는 8자 이상 → pass (꼬리 문장 규칙이 안 깨졌다)', statusOfRun(r) === 'pass', failKeys(r))
+  }
 }
 
 
@@ -2120,6 +2155,7 @@ console.log('\n[10단계 action_reason: fill 시드 대조]')
     label: string
     minSentences?: number
     maxSentences?: number
+    minChars?: number
     maxChars?: number
     optional?: boolean
   }
@@ -2235,10 +2271,15 @@ console.log('\n[10단계 action_reason: fill 시드 대조]')
       if (!b) continue
       const s = countSentences(r.content)
       const n = countChars(r.content)
+      const letters = countLetters(r.content)
+      const minChars = b.minChars ?? 8
       t(
         `모범답안 '${sk}' ord${r.ord} ${r.blank_key} 이 제 빈칸 규칙을 지킨다`,
-        s >= (b.minSentences ?? 1) && s <= (b.maxSentences ?? 99) && n <= (b.maxChars ?? 9999),
-        `${s}문장 ${n}자 / ≤${b.maxSentences}문장 ≤${b.maxChars}자: "${r.content}"`
+        s >= (b.minSentences ?? 1) &&
+          s <= (b.maxSentences ?? 99) &&
+          n <= (b.maxChars ?? 9999) &&
+          letters >= minChars,
+        `${s}문장 ${n}자(글자 ${letters}) / ≤${b.maxSentences}문장 ≤${b.maxChars}자 ≥${minChars}자: "${r.content}"`
       )
       // 모범답안이 고정 줄을 그대로 베끼지 않는다(forbidCopyOfFixedLines 의 취지)
       const fixed = new Set(deriveFillParts(d.passage ?? '').fixedLines)
