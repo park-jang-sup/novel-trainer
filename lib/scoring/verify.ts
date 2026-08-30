@@ -9,7 +9,7 @@
 
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import path from 'node:path'
-import { combine, findForbidden, mergeForbidChecks, gradeLocal, pendingMorphChecks } from './index'
+import { combine, countChars, countSentences, deriveFillParts, fillMarkerMismatch, findForbidden, mergeForbidChecks, gradeLocal, pendingMorphChecks } from './index'
 import { sqlStr, countRawNewlinesInStrings } from '../seed-sql'
 import type { Answer, Check, MorphResult, Problem, ProblemType, ScoringConfig, ScoringMode } from './types'
 import { CONVERT_SEEDS } from './fixtures/convert-seeds'
@@ -2104,6 +2104,170 @@ console.log('\n[10단계 action_turn: 덤프 대조]')
   )
 }
 
+// ── 10단계 action_reason(동작에 이유 넣기): fill 시드 대조 ──────────────
+//
+// 재설계안 11-2·11-3·세션 18. 새 skill_key `action_reason` 에 fill 문항
+// 여덟(재설계안 7-6·7-7·7-10-2). 옛 action_turn 여덟은 그대로 두고
+// is_active=false 로 내려간다(deactivate.json).
+//
+// seed_check.sql 이 DB 쪽에서 빈칸↔표식을 보지만 여기서는 못 돌린다 —
+// 이 블록이 그 TS 짝이다. fixedLines 를 손으로 안 적었는지, gen-seed 의
+// 파생이 서는지, 모범답안이 제 규칙을 지키는지를 잰다.
+console.log('\n[10단계 action_reason: fill 시드 대조]')
+{
+  interface DumpBlank {
+    key: string
+    label: string
+    minSentences?: number
+    maxSentences?: number
+    maxChars?: number
+    optional?: boolean
+  }
+  interface DumpFillProblem {
+    source_key: string
+    skill_key: string
+    type: string
+    passage: string | null
+    instruction: string
+    order_no: number
+    scoring_mode: string
+    scoring_config: {
+      blanks?: DumpBlank[]
+      forbidWords?: string[]
+      forbidCopyOfFixedLines?: boolean
+      fixedLines?: unknown
+    }
+  }
+  interface DumpRef {
+    source_key: string
+    ord: number
+    blank_key: string
+    content: string
+  }
+  const seedDir = path.join(__dirname, '..', '..', 'seed', 'dump')
+  const readDump = <T,>(f: string): T =>
+    JSON.parse(readFileSync(path.join(seedDir, f), 'utf8').replace(/^﻿/, '')) as T
+
+  const allProblems = readDump<DumpFillProblem[]>('problems.json')
+  const fill = allProblems.filter((d) => d.skill_key === 'action_reason')
+  const answersDump = readDump<{ reference?: DumpRef[] }>('answers.json')
+  const refs = answersDump.reference ?? []
+  const deactivate = readDump<{ source_keys: string[] }>('deactivate.json')
+
+  t('덤프에 action_reason 8문항', fill.length === 8, `실제=${fill.length}`)
+  t('전부 fill 유형', fill.every((d) => d.type === 'fill'), JSON.stringify(fill.map((d) => `${d.source_key}:${d.type}`)))
+  t('전부 order_no 10', fill.every((d) => d.order_no === 10))
+  t('전부 scoring_mode auto (stage2 는 자기점검)', fill.every((d) => d.scoring_mode === 'auto'))
+
+  const keysOf = (d: DumpFillProblem) => (d.scoring_config.blanks ?? []).map((b) => b.key)
+
+  for (const d of fill) {
+    const cfg = d.scoring_config
+    const blanks = cfg.blanks ?? []
+    const keys = keysOf(d)
+
+    // fixedLines 를 JSON 에 손으로 안 적었다 — gen-seed 가 passage 에서 만든다
+    t(`'${d.source_key}': fixedLines 를 JSON 에 안 적었다`, cfg.fixedLines === undefined, JSON.stringify(cfg.fixedLines))
+    // 대괄호 금지어 · 고정 줄 베낌 금지
+    t(`'${d.source_key}': forbidWords 가 대괄호 셋`, JSON.stringify(cfg.forbidWords) === JSON.stringify(['[상황]', '[복선]', '[결정타]']))
+    t(`'${d.source_key}': forbidCopyOfFixedLines true`, cfg.forbidCopyOfFixedLines === true)
+
+    // 빈칸 ↔ 지문 표식이 순서까지 같다
+    const mismatch = fillMarkerMismatch(d.passage ?? '', keys)
+    t(`'${d.source_key}': 빈칸 ↔ 지문 표식 일치`, mismatch === null, mismatch ?? '')
+
+    // 파생된 고정 줄이 둘 이상이고 힌트 줄이 안 섞였다
+    const { fixedLines } = deriveFillParts(d.passage ?? '')
+    t(`'${d.source_key}': 고정 줄 ≥ 2`, fixedLines.length >= 2, `${fixedLines.length}`)
+    t(`'${d.source_key}': 고정 줄에 대괄호 힌트가 없다`, fixedLines.every((l) => !l.startsWith('[')), JSON.stringify(fixedLines))
+
+    // 빈칸 규칙
+    for (const b of blanks) {
+      t(`'${d.source_key}/${b.key}': maxChars 60`, b.maxChars === 60)
+      t(`'${d.source_key}/${b.key}': minSentences 1`, b.minSentences === 1)
+      t(`'${d.source_key}/${b.key}': maxSentences 2~3`, b.maxSentences === 2 || b.maxSentences === 3, `${b.maxSentences}`)
+      t(`'${d.source_key}/${b.key}': label 이 있다`, typeof b.label === 'string' && b.label.length > 0)
+    }
+  }
+
+  // 지시문은 한 종으로 공유하되, 여덟 지문의 재료(고정 줄·모범답안)를 안 흘린다
+  const instrs = new Set(fill.map((d) => d.instruction))
+  t('지시문이 한 종이다', instrs.size === 1, `실제=${instrs.size}`)
+  const theInstr = [...instrs][0] ?? ''
+  const leaks: string[] = []
+  for (const d of fill) {
+    for (const l of deriveFillParts(d.passage ?? '').fixedLines) {
+      if (theInstr.includes(l)) leaks.push(`${d.source_key}: 고정 줄`)
+    }
+  }
+  for (const r of refs) if (theInstr.includes(r.content)) leaks.push(`${r.source_key} ord${r.ord}: 모범답안`)
+  t('지시문이 여덟 지문의 재료를 안 쓴다', leaks.length === 0, JSON.stringify(leaks))
+
+  // gen-seed 가 seed_data.sql 에 fixedLines 를 주입했다
+  const seedSql = readFileSync(path.join(__dirname, '..', '..', 'seed_data.sql'), 'utf8')
+  t('seed_data.sql 에 fill 8건의 fixedLines 가 주입됐다', (seedSql.match(/"fixedLines":\[/g) ?? []).length === 8, `${(seedSql.match(/"fixedLines":\[/g) ?? []).length}`)
+  // 옛 action_turn 여덟이 비활성으로 내려간다 — deactivate.json 이 덤프의
+  // action_turn source_key 와 정확히 같아야 한다(빠뜨리면 화면에 유령이 남는다).
+  const atKeys = allProblems.filter((d) => d.skill_key === 'action_turn').map((d) => d.source_key).sort()
+  t('deactivate.json 이 덤프의 action_turn 8건과 정확히 같다',
+    JSON.stringify([...deactivate.source_keys].sort()) === JSON.stringify(atKeys),
+    `deactivate=${JSON.stringify([...deactivate.source_keys].sort())} action_turn=${JSON.stringify(atKeys)}`)
+  t('seed_data.sql 이 그 8건을 is_active=false 로 내린다',
+    deactivate.source_keys.every((k) => seedSql.includes(`'${k}'`)) &&
+      /update problems set is_active = false/.test(seedSql))
+
+  // ── 모범답안(reference_answers) 무결성 ──
+  const bySource = new Map<string, DumpRef[]>()
+  for (const r of refs) {
+    if (!bySource.has(r.source_key)) bySource.set(r.source_key, [])
+    bySource.get(r.source_key)!.push(r)
+  }
+  for (const [sk, rs] of bySource) {
+    const d = fill.find((x) => x.source_key === sk)
+    t(`모범답안 '${sk}' 이 fill 문항을 가리킨다`, !!d, '가리키는 문항이 없다')
+    if (!d) continue
+    const blanks = d.scoring_config.blanks ?? []
+    const keySet = new Set(blanks.map((b) => b.key))
+    const required = blanks.filter((b) => !b.optional).map((b) => b.key)
+    for (const r of rs) {
+      t(`모범답안 '${sk}' ord${r.ord} ${r.blank_key} 의 blank_key 가 실재`, keySet.has(r.blank_key), r.blank_key)
+      const b = blanks.find((x) => x.key === r.blank_key)
+      if (!b) continue
+      const s = countSentences(r.content)
+      const n = countChars(r.content)
+      t(
+        `모범답안 '${sk}' ord${r.ord} ${r.blank_key} 이 제 빈칸 규칙을 지킨다`,
+        s >= (b.minSentences ?? 1) && s <= (b.maxSentences ?? 99) && n <= (b.maxChars ?? 9999),
+        `${s}문장 ${n}자 / ≤${b.maxSentences}문장 ≤${b.maxChars}자: "${r.content}"`
+      )
+      // 모범답안이 고정 줄을 그대로 베끼지 않는다(forbidCopyOfFixedLines 의 취지)
+      const fixed = new Set(deriveFillParts(d.passage ?? '').fixedLines)
+      t(`모범답안 '${sk}' ord${r.ord} ${r.blank_key} 이 고정 줄을 안 베낀다`,
+        r.content.split('\n').map((l) => l.trim()).every((l) => !fixed.has(l)))
+    }
+    const ords = [...new Set(rs.map((r) => r.ord))]
+    for (const o of ords) {
+      const filledKeys = new Set(rs.filter((r) => r.ord === o).map((r) => r.blank_key))
+      t(`모범답안 '${sk}' ord${o} 가 필수 빈칸을 다 채운다`, required.every((k) => filledKeys.has(k)), `필수=${required} 채움=${[...filledKeys]}`)
+    }
+  }
+  // 모범답안이 없는 문항은 그것대로 둔다 — 다만 목록으로 남긴다(재설계안 7-7 feeler)
+  const noRef = fill.filter((d) => !bySource.has(d.source_key)).map((d) => d.source_key)
+  console.log(`  모범답안 없는 fill 문항: ${noRef.length > 0 ? noRef.join(', ') : '없음'}`)
+
+  // ── 물기: 빈칸↔표식 대조가 실제로 문다 ──
+  t('물기: 표식 하나가 빠진 지문은 불일치로 잡힌다',
+    fillMarkerMismatch('[상황] x\n\n첫 줄\n①\n둘째 줄\n셋째 줄', ['①', '②']) !== null)
+  t('물기: 순서가 뒤바뀐 표식은 불일치로 잡힌다',
+    fillMarkerMismatch('첫 줄\n②\n둘째 줄\n①\n셋째 줄', ['①', '②']) !== null)
+  t('물기: 표식이 남아도는 지문은 불일치로 잡힌다',
+    fillMarkerMismatch('첫 줄\n①\n둘째 줄\n②\n셋째 줄\n③\n넷째 줄', ['①', '②']) !== null)
+  t('물기: 맞는 지문은 통과한다',
+    fillMarkerMismatch('첫 줄\n①\n둘째 줄\n②\n셋째 줄', ['①', '②']) === null)
+  t('물기: deriveFillParts 가 힌트 줄을 고정 줄에서 뺀다',
+    deriveFillParts('[상황] 배경\n[복선] 힌트\n\n동작 줄\n①\n결정타 줄').fixedLines.join('|') === '동작 줄|결정타 줄')
+}
+
 // 픽스처와 덤프가 갈리면 위의 감시 전부가 실제 배포물을 안 보는 상태가 된다.
 // 8단계가 같은 가드를 두고 있다. 문항이 덤프에 없으면 건너뛰지 않고 실패시킨다 —
 // 건너뛰면 "아직 안 넣었다"와 "통과"가 구별되지 않는다.
@@ -2361,6 +2525,7 @@ console.log('\n[덤프 ↔ 생성된 SQL: 줄바꿈 · 최신 여부]')
   //
   //     32  8단계 mo-* (instruction 8 + passage 3) · 9단계 pv-* (instruction 10 + passage 1)
   //     48  + 10단계 at-* (instruction 8 + passage 8)
+  //     64  + 10단계 ar-* fill (instruction 8[한 종을 여덟이 나눠 쓴다] + passage 8)
   //
   //     세션 10 §6-1 이 sqlStr 을 고친 뒤로 줄바꿈을 가진 문항이 하나도 안
   //     들어왔다. 10단계가 그 고침이 실전에서 처음 걸린 자리다.

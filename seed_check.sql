@@ -19,7 +19,7 @@
 --
 -- expect는 CTE가 아니라 임시 테이블이다. CTE는 그것이 붙은 statement
 -- 하나에만 유효해서, 검사 넷을 한 do 블록 안에서 나눠 적으려면 매번
--- 85행짜리 values를 다시 적어야 한다. 임시 테이블로 한 번만 채운다.
+-- 93행짜리 values를 다시 적어야 한다. 임시 테이블로 한 번만 채운다.
 --
 -- 마지막 문장이 select인 것은 의도다. Supabase 편집기가 NOTICE를
 -- 안 띄워서, raise notice로 끝내면 "통과"와 "파일이 잘려 안 돌았다"가
@@ -112,10 +112,18 @@ insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) v
   ('pv-dawn-market', '74c90b61bb8cb9f643b3570bcc5844bb', 217, '6820a24800c1b8060fb6adc7c59c1881', 67, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","좌판 여덟","짐꾼 셋이"],"requireAny":["정순"]}'::jsonb),
   ('pv-frozen-lake', '74c90b61bb8cb9f643b3570bcc5844bb', 217, 'f835e02b9ca70ad41038f4a531efe3b6', 74, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","낚시 구멍 열넷","아이 셋이"],"requireAny":["연희"]}'::jsonb),
   ('pv-lantern-night', '74c90b61bb8cb9f643b3570bcc5844bb', 217, '048ec67183dc20a6e73e14ac0acc8377', 71, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","등불 스무 개","연인 넷이"],"requireAny":["소하"]}'::jsonb),
+  ('ar-cracked-ice', '1f6b95ba07be4b99aaaca798ebda772c', 380, '7a2e5d28bdb3b4252598eaa5f2a03bb5', 199, '{"blanks":[{"key":"①","label":"도경이 물러설 곳을 어떻게 골랐는지","minSentences":1,"maxSentences":2,"maxChars":60},{"key":"②","label":"늑대가 왜 따라 들어왔는지","minSentences":1,"maxSentences":2,"maxChars":60}],"forbidWords":["[상황]","[복선]","[결정타]"],"forbidCopyOfFixedLines":true,"fixedLines":["늑대 여섯이 원을 좁혀 왔다.","도경은 강 한가운데로 물러섰다.","갈라진 얼음이 늑대를 삼켰다."]}'::jsonb),
+  ('ar-dragon-jaw', '1f6b95ba07be4b99aaaca798ebda772c', 380, '2cb2e4dae84bebc48102c0c6d8a355e5', 198, '{"blanks":[{"key":"①","label":"태윤이 이 순간 무엇을 하는지","minSentences":1,"maxSentences":2,"maxChars":60,"optional":true},{"key":"②","label":"태윤이 무엇을 보고 턱을 노렸는지","minSentences":1,"maxSentences":2,"maxChars":60}],"forbidWords":["[상황]","[복선]","[결정타]"],"forbidCopyOfFixedLines":true,"fixedLines":["괴물이 팔을 휘두르며 덮쳐 왔다.","태윤은 고개를 숙여 그 아래로 들어갔다.","주먹이 괴물의 턱에 꽂혔다."]}'::jsonb),
+  ('ar-dull-blade', '1f6b95ba07be4b99aaaca798ebda772c', 380, 'adde7f851ec5c7be4376dcdb0f2f3104', 190, '{"blanks":[{"key":"①","label":"무결이 무엇을 하기로 했는지","minSentences":1,"maxSentences":2,"maxChars":60},{"key":"②","label":"받아친 뒤에 무엇이 일어났는지","minSentences":1,"maxSentences":2,"maxChars":60}],"forbidWords":["[상황]","[복선]","[결정타]"],"forbidCopyOfFixedLines":true,"fixedLines":["중검의 묘리를 담은 칼이 천천히 위에서 아래로 떨어졌다.","무결은 검을 들어 받아쳤다.","사부의 검이 무결의 목젖 위에 있었다."]}'::jsonb),
+  ('ar-left-feeler', '1f6b95ba07be4b99aaaca798ebda772c', 380, '683248610a9e78770c0e93e407d445a6', 220, '{"blanks":[{"key":"①","label":"연희가 어느 쪽으로 붙을지 어떻게 정했는지","minSentences":1,"maxSentences":2,"maxChars":60},{"key":"②","label":"등불을 던진 것이 무엇을 만들었는지","minSentences":1,"maxSentences":2,"maxChars":60}],"forbidWords":["[상황]","[복선]","[결정타]"],"forbidCopyOfFixedLines":true,"fixedLines":["마수가 머리를 흔들며 갱도를 좁혀 왔다.","연희는 등불을 오른쪽 벽으로 던졌다.","곡괭이가 왼쪽 더듬이를 잘라 냈다."]}'::jsonb),
   ('at-cracked-ice', 'b2cd91e973687aef56c316448ce23e47', 276, '4bef9a1e8146392e1adb3f64d1d9717d', 51, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["갈라진 얼음"],"requireInLastLine":["갈라진 얼음"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb),
   ('at-left-feeler', 'b2cd91e973687aef56c316448ce23e47', 276, '67d80ef72c708e66051c9029da981875', 55, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["왼쪽 더듬이"],"requireInLastLine":["왼쪽 더듬이"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb),
   ('at-left-feint', 'b2cd91e973687aef56c316448ce23e47', 276, 'a73394c2476d78e42951fc6d724ad90e', 58, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["왼발 페인트"],"requireInLastLine":["왼발 페인트"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb),
   ('at-look-back', 'b2cd91e973687aef56c316448ce23e47', 276, 'a688a5491b0033c66bfba485b8c150f0', 60, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["돌아보지 않겠다"],"requireInLastLine":["돌아보지 않겠다"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb),
+  ('ar-bell-rope', '1f6b95ba07be4b99aaaca798ebda772c', 380, '8de7b204e8123926fb579211c381c2c1', 309, '{"blanks":[{"key":"①","label":"서린이 이 순간 무엇을 하는지","minSentences":1,"maxSentences":3,"maxChars":60},{"key":"②","label":"볼을 베인 서린이 무엇을 느끼거나 깨닫는지","minSentences":1,"maxSentences":3,"maxChars":60},{"key":"③","label":"서린의 손이 무엇에 닿았는지","minSentences":1,"maxSentences":3,"maxChars":60}],"forbidWords":["[상황]","[복선]","[결정타]"],"forbidCopyOfFixedLines":true,"fixedLines":["추격자가 등 뒤로 바짝 쫓아오고 있다.","칼끝이 서린의 볼을 스치고 벽에 부딪쳤다.","서린은 뒤로 물러서며 막다른 벽에 등을 붙였다.","종줄이 당겨지고 종이 울렸다."]}'::jsonb),
+  ('ar-broken-gate', '1f6b95ba07be4b99aaaca798ebda772c', 380, 'ae029852c6821f8f8ce01c0f3ef15831', 258, '{"blanks":[{"key":"①","label":"세연이 이 순간 무엇을 하는지","minSentences":1,"maxSentences":2,"maxChars":60,"optional":true},{"key":"②","label":"세연이 무엇을 보고 목을 노리기로 했는지","minSentences":1,"maxSentences":2,"maxChars":60}],"forbidWords":["[상황]","[복선]","[결정타]"],"forbidCopyOfFixedLines":true,"fixedLines":["마수의 앞발이 세연을 성문 잔해로 밀어붙였다.","세연은 부러진 창끝을 두 손으로 고쳐 쥐었다.","마수가 몸을 낮추고 머리를 들이밀었다.","창끝이 마수의 목을 찔렀다."]}'::jsonb),
+  ('ar-left-draw', '1f6b95ba07be4b99aaaca798ebda772c', 380, '49cc7d8ecd6dc1b0bc9e28fcbab34b98', 179, '{"blanks":[{"key":"①","label":"무결이 오른쪽으로 도는 상대를 보고 무엇을 생각하는지","minSentences":1,"maxSentences":2,"maxChars":60},{"key":"②","label":"오른팔이 이 순간 무엇을 하는지","minSentences":1,"maxSentences":2,"maxChars":60}],"forbidWords":["[상황]","[복선]","[결정타]"],"forbidCopyOfFixedLines":true,"fixedLines":["상대가 무결의 오른쪽으로 크게 돌아 들어왔다.","무결은 오른팔을 들어 올렸다.","왼손의 검이 상대의 목으로 들어갔다."]}'::jsonb),
+  ('ar-wind-gate', '1f6b95ba07be4b99aaaca798ebda772c', 380, '8705ab126aec019dd671580fe9391b5f', 177, '{"blanks":[{"key":"①","label":"연희가 먼저 무엇을 했는지","minSentences":1,"maxSentences":2,"maxChars":60},{"key":"②","label":"진형이 무너진 것이 무엇을 만들었는지","minSentences":1,"maxSentences":2,"maxChars":60}],"forbidWords":["[상황]","[복선]","[결정타]"],"forbidCopyOfFixedLines":true,"fixedLines":["화살이 아군 머리 위로 쏟아졌다.","바람의 칼날이 적의 진형을 갈랐다.","압축한 바람이 성문을 뚫었다."]}'::jsonb),
   ('at-bell-rope', '3bb15c8a9e7d79578a6b4a70ba59e01f', 337, '627ddaa0c39b10d9c437ac6eb3ba75a8', 61, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["종줄"],"requireInLastLine":["종줄"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb),
   ('at-broken-gate', '3bb15c8a9e7d79578a6b4a70ba59e01f', 337, '340a0da31431ccb48aa1056c172f77cb', 72, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["창끝"],"requireInLastLine":["창끝"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb),
   ('at-edit-log', '3bb15c8a9e7d79578a6b4a70ba59e01f', 337, '030184dfe54da5fe9141a53a94a616f2', 68, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["수정 기록"],"requireInLastLine":["수정 기록"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb),
@@ -181,6 +189,44 @@ begin
    where p.scoring_config is distinct from e.cfg;
   if v_bad is not null then
     raise exception '[대조] scoring_config 가 어긋남: %', v_bad;
+  end if;
+
+  -- (5) fill 문항: scoring_config.blanks 의 모든 key 가 passage 에 제 줄로
+  --     있어야 한다. 빈칸과 지문 표식이 갈리면 화면이 못 그린다(재설계안 11-5).
+  select string_agg(p.source_key || ' (' || k.key || ')', ', ') into v_bad
+    from problems p
+    cross join lateral jsonb_to_recordset(
+           coalesce(p.scoring_config->'blanks', '[]'::jsonb)) as k(key text)
+   where p.type = 'fill'
+     and strpos(E'\n' || p.passage || E'\n', E'\n' || k.key || E'\n') = 0;
+  if v_bad is not null then
+    raise exception '[대조 5] fill blanks 키가 지문에 줄로 없음: %', v_bad;
+  end if;
+
+  -- (5b) fill 문항: 지문의 표식 줄(①②③ …만 있는 줄) 수가 blanks 개수와 같아야
+  --      한다. (5)와 함께면 선언한 key 가 지문에 딱 그만큼 있다는 뜻이 된다.
+  select string_agg(
+           p.source_key || ' (표식 ' || m.n || ' / 빈칸 ' ||
+           jsonb_array_length(coalesce(p.scoring_config->'blanks', '[]'::jsonb)) || ')', ', '
+         ) into v_bad
+    from problems p
+    cross join lateral (
+           select count(*) filter (where trim(line) ~ '^[①-⑳]$') as n
+             from regexp_split_to_table(coalesce(p.passage, ''), E'\n') as line
+         ) m
+   where p.type = 'fill'
+     and m.n <> jsonb_array_length(coalesce(p.scoring_config->'blanks', '[]'::jsonb));
+  if v_bad is not null then
+    raise exception '[대조 5b] fill 표식 줄 수 ≠ 빈칸 수: %', v_bad;
+  end if;
+
+  -- (6) reference_answers 에 SELECT 정책이 있어야 한다. 없으면 모범답안이
+  --     제출 전 학습자에게 새거나(정책 없이 GRANT 만) 0행으로만 온다.
+  if not exists (
+    select 1 from pg_policies
+     where schemaname = 'public' and tablename = 'reference_answers' and cmd = 'SELECT'
+  ) then
+    raise exception '[대조 6] reference_answers 에 SELECT 정책이 없다';
   end if;
 
   select count(*) into v_cnt from expect;

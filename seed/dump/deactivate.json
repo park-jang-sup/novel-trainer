@@ -1,0 +1,13 @@
+{
+  "note": "옛 action_turn convert 8건. 재설계안 11-4·세션 18. 재료·픽스처는 11-5 픽스처 갈아엎기 때 삭제.",
+  "source_keys": [
+    "at-left-feint",
+    "at-left-draw",
+    "at-left-feeler",
+    "at-broken-gate",
+    "at-cracked-ice",
+    "at-bell-rope",
+    "at-look-back",
+    "at-edit-log"
+  ]
+}

@@ -110,6 +110,36 @@ create policy "authed read problems" on problems
   for select to authenticated
   using (is_active is not false);   -- null 도 활성으로 본다
 
+-- fill 문항의 모범답안. stage2 자기점검이 화면에 보여줄 것이다(재설계안 11-2 4번).
+-- ★ problem_answers 와 다르다. 저쪽은 채점 정답이라 service_role 전용이지만,
+--   이쪽은 학습자가 봐야 한다 — 단, 그 문항을 제출한 뒤에만.
+-- ord 는 답안 세트 번호(7-10-2 의 가·나·다 = 1·2·3), 세트 안에서 빈칸마다 한 줄.
+create table if not exists reference_answers (
+  id         uuid primary key default gen_random_uuid(),
+  problem_id uuid not null references problems(id) on delete cascade,
+  ord        int  not null,
+  blank_key  text not null,
+  content    text not null,
+  unique (problem_id, ord, blank_key)
+);
+alter table reference_answers enable row level security;
+
+-- 제출한 뒤에만 보인다. problem_answers 와 달리 GRANT 를 준다 —
+-- 정책이 막을 것을 GRANT 로도 한 번 더 막지 않는다(모범답안은 비밀이 아니라
+-- '먼저 본인이 써 보고 나서' 볼 것이다).
+grant select on public.reference_answers to authenticated;
+
+drop policy if exists "reference after submit" on reference_answers;
+create policy "reference after submit" on reference_answers
+  for select to authenticated
+  using (
+    exists (
+      select 1 from submissions s
+       where s.user_id = auth.uid()
+         and s.problem_id = reference_answers.problem_id
+    )
+  );
+
 -- 프롬프트를 고칠 때마다 이것을 돌려 판정이 유지되는지 본다.
 create table if not exists golden_cases (
   id         uuid primary key default gen_random_uuid(),

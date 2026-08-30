@@ -103,5 +103,7 @@ export function mergeForbidChecks(checks: Check[]): Check[] {
 
 export { gradeLocal, pendingMorphChecks, countChars, countSentences, findForbidden } from './local'
 export { gradeMorph } from './morph'
+export { deriveFillParts, fillMarkerMismatch } from './fill'
+export type { FillParts } from './fill'
 export * from './types'
 // analyze는 server-only다. 라우트에서 './remote'로 직접 import한다.

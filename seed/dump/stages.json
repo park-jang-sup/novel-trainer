@@ -72,11 +72,19 @@
     "skill_key": "pov_lock"
   },
   {
+    "title": "동작에 이유 넣기",
+    "track": "sentence",
+    "is_free": true,
+    "summary": "동작 사이에 왜 그렇게 했는지를 끼운다",
+    "order_no": 10,
+    "skill_key": "action_reason"
+  },
+  {
     "title": "전투 서사화",
     "track": "sentence",
     "is_free": true,
     "summary": "빌드업을 쌓고 마지막 한 줄로 승부를 가른다",
-    "order_no": 10,
+    "order_no": 12,
     "skill_key": "action_turn"
   },
   {

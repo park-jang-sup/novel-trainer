@@ -156,11 +156,25 @@ begin
     raise exception '[불변식 9] stage_id 가 null 인 문항: %', v_bad;
   end if;
 
+  -- (10) reference_answers(fill 모범답안)는 자기 문항의 blanks 에 있는
+  --      blank_key 만 쓴다. 없는 key 를 가리키면 화면이 그 줄을 못 붙인다.
+  select string_agg(distinct r.problem_id::text || ':' || r.blank_key, ', ') into v_bad
+    from reference_answers r
+    join problems p on p.id = r.problem_id
+   where not exists (
+     select 1
+       from jsonb_array_elements(p.scoring_config->'blanks') b
+      where b->>'key' = r.blank_key
+   );
+  if v_bad is not null then
+    raise exception '[불변식 10] 모범답안이 없는 빈칸을 가리킴: %', v_bad;
+  end if;
+
   select count(*) into v_cnt from problems;
-  raise notice '불변식 9건 통과. 문항 % 개', v_cnt;
+  raise notice '불변식 10건 통과. 문항 % 개', v_cnt;
 end $$;
 
-select '불변식 9건 통과' as 결과, count(*) as 문항수 from problems;
+select '불변식 10건 통과' as 결과, count(*) as 문항수 from problems;
 
 
 -- ── 확인 쿼리 (필요하면 따로 돌린다) ─────────────────────────────────

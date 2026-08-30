@@ -19,6 +19,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import path from 'node:path'
 import { sqlStr, countRawNewlinesInStrings } from '../lib/seed-sql'
+import { deriveFillParts, fillMarkerMismatch } from '../lib/scoring/fill'
 
 interface DumpStage {
   title: string
@@ -50,6 +51,16 @@ interface DumpAnswer {
   answer: Record<string, unknown>
 }
 
+// fill 문항의 모범답안. problem_answers 가 아니다 — 채점 정답이 아니라
+// stage2 자기점검이 화면에 보여줄 것이다(재설계안 11-2 4번). ord 는 답안
+// 세트 번호(7-10-2 의 가·나·다 = 1·2·3), 한 세트 안에서 빈칸마다 한 줄.
+interface DumpReference {
+  source_key: string
+  ord: number
+  blank_key: string
+  content: string
+}
+
 interface DumpGolden {
   note: string | null
   content: string
@@ -60,6 +71,12 @@ interface DumpGolden {
 interface DumpAnswers {
   golden: DumpGolden[]
   answers: DumpAnswer[]
+  reference?: DumpReference[]
+}
+
+interface DumpDeactivate {
+  note: string
+  source_keys: string[]
 }
 
 const ROOT = path.join(__dirname, '..')
@@ -108,7 +125,33 @@ function assertNoRawNewlines(name: string, sql: string): void {
 
 const stages = readJson<DumpStage[]>('seed/dump/stages.json')
 const problems = readJson<DumpProblem[]>('seed/dump/problems.json')
-const { golden, answers } = readJson<DumpAnswers>('seed/dump/answers.json')
+const { golden, answers, reference = [] } = readJson<DumpAnswers>('seed/dump/answers.json')
+const deactivate = readJson<DumpDeactivate>('seed/dump/deactivate.json')
+
+// ── fill: scoring_config.fixedLines 를 passage 에서 만든다 ────────────────
+//
+// fixedLines 는 시드 JSON 에 손으로 적지 않는다(재설계안 11-3). passage 의
+// 힌트 줄([상황] 등)도 빈칸 표식(①②)도 아닌 줄이 fixedLines 다. 여기서
+// 한 번 주입하면 seed_data.sql 과 seed_check.sql 의 expect 가 같은 값을 본다.
+for (const p of problems) {
+  if (p.type !== 'fill') continue
+  const blanks = (p.scoring_config.blanks ?? []) as { key: string }[]
+  const keys = blanks.map((b) => b.key)
+  if ('fixedLines' in p.scoring_config) {
+    throw new Error(
+      `fill 문항 ${p.source_key}: fixedLines 를 JSON 에 손으로 적지 마라 — gen-seed 가 passage 에서 만든다`
+    )
+  }
+  const mismatch = fillMarkerMismatch(p.passage ?? '', keys)
+  if (mismatch) {
+    throw new Error(`fill 문항 ${p.source_key}: 빈칸과 passage 표식이 안 맞는다 — ${mismatch}`)
+  }
+  const { fixedLines } = deriveFillParts(p.passage ?? '')
+  if (fixedLines.length < 2) {
+    throw new Error(`fill 문항 ${p.source_key}: 고정 줄이 ${fixedLines.length}개뿐이다`)
+  }
+  p.scoring_config = { ...p.scoring_config, fixedLines }
+}
 
 // 트랙 순서는 원래 손으로 쓰던 목록(sentence → structure → start)을 그대로
 // 따른다. order_no만으로는 트랙 간 순서를 알 수 없다 — sentence와 start는
@@ -141,6 +184,9 @@ function bySourceKeyRank<T extends { source_key: string }>(a: T, b: T): number {
 }
 const answersSorted = [...answers].sort(bySourceKeyRank)
 const goldenSorted = [...golden].sort(bySourceKeyRank)
+const referenceSorted = [...reference].sort(
+  (a, b) => bySourceKeyRank(a, b) || a.ord - b.ord || a.blank_key.localeCompare(b.blank_key)
+)
 
 const out: string[] = []
 
@@ -244,6 +290,39 @@ for (const g of goldenSorted) {
   )
 }
 
+out.push(
+  '-- ── fill 모범답안 ──────────────────────────────────────────────────',
+  '--',
+  '-- problem_answers 가 아니다 — 채점 정답이 아니라 stage2 자기점검이',
+  '-- 화면에 보여줄 것이다(재설계안 11-2 4번). RLS 는 seed_schema.sql 이',
+  '-- 건다: 그 문항에 제출 기록이 있는 학습자만 읽는다.',
+  ''
+)
+for (const r of referenceSorted) {
+  out.push(
+    `-- ${r.source_key} ord ${r.ord} ${r.blank_key}`,
+    'insert into reference_answers (problem_id, ord, blank_key, content)',
+    `select p.id, ${sqlInt(r.ord)}, ${sqlStr(r.blank_key)}, ${sqlStr(r.content)}`,
+    'from problems p',
+    `where p.source_key = ${sqlStr(r.source_key)}`,
+    'on conflict (problem_id, ord, blank_key) do nothing;',
+    ''
+  )
+}
+
+out.push(
+  '-- ── 비활성 ─────────────────────────────────────────────────────────',
+  `-- ${deactivate.note}`,
+  ''
+)
+if (deactivate.source_keys.length > 0) {
+  out.push(
+    'update problems set is_active = false',
+    ` where source_key in (${deactivate.source_keys.map((k) => sqlStr(k)).join(', ')});`,
+    ''
+  )
+}
+
 out.push('commit;', '')
 
 // 다음에 무엇을 할지 사람이 보는 자리에 뜬다. Supabase 편집기는 NOTICE를
@@ -263,7 +342,8 @@ writeFileSync(path.join(ROOT, 'seed_data.sql'), sql, 'utf8')
 console.log(
   `seed_data.sql 생성 완료 — 단계 ${stagesSorted.length}개, ` +
     `문항 ${problemsSorted.length}개, 정답 ${answersSorted.length}개, ` +
-    `골든셋 ${goldenSorted.length}개`
+    `골든셋 ${goldenSorted.length}개, 모범답안 ${referenceSorted.length}행, ` +
+    `비활성 ${deactivate.source_keys.length}건`
 )
 
 // ── seed_check.sql: 덤프 ↔ DB 대조 ────────────────────────────────────
@@ -390,6 +470,44 @@ checkOut.push(
   '   where p.scoring_config is distinct from e.cfg;',
   '  if v_bad is not null then',
   "    raise exception '[대조] scoring_config 가 어긋남: %', v_bad;",
+  '  end if;',
+  '',
+  '  -- (5) fill 문항: scoring_config.blanks 의 모든 key 가 passage 에 제 줄로',
+  '  --     있어야 한다. 빈칸과 지문 표식이 갈리면 화면이 못 그린다(재설계안 11-5).',
+  "  select string_agg(p.source_key || ' (' || k.key || ')', ', ') into v_bad",
+  '    from problems p',
+  '    cross join lateral jsonb_to_recordset(',
+  "           coalesce(p.scoring_config->'blanks', '[]'::jsonb)) as k(key text)",
+  "   where p.type = 'fill'",
+  "     and strpos(E'\\n' || p.passage || E'\\n', E'\\n' || k.key || E'\\n') = 0;",
+  '  if v_bad is not null then',
+  "    raise exception '[대조 5] fill blanks 키가 지문에 줄로 없음: %', v_bad;",
+  '  end if;',
+  '',
+  '  -- (5b) fill 문항: 지문의 표식 줄(①②③ …만 있는 줄) 수가 blanks 개수와 같아야',
+  '  --      한다. (5)와 함께면 선언한 key 가 지문에 딱 그만큼 있다는 뜻이 된다.',
+  '  select string_agg(',
+  "           p.source_key || ' (표식 ' || m.n || ' / 빈칸 ' ||",
+  "           jsonb_array_length(coalesce(p.scoring_config->'blanks', '[]'::jsonb)) || ')', ', '",
+  '         ) into v_bad',
+  '    from problems p',
+  '    cross join lateral (',
+  "           select count(*) filter (where trim(line) ~ '^[①-⑳]$') as n",
+  "             from regexp_split_to_table(coalesce(p.passage, ''), E'\\n') as line",
+  '         ) m',
+  "   where p.type = 'fill'",
+  "     and m.n <> jsonb_array_length(coalesce(p.scoring_config->'blanks', '[]'::jsonb));",
+  '  if v_bad is not null then',
+  "    raise exception '[대조 5b] fill 표식 줄 수 ≠ 빈칸 수: %', v_bad;",
+  '  end if;',
+  '',
+  '  -- (6) reference_answers 에 SELECT 정책이 있어야 한다. 없으면 모범답안이',
+  '  --     제출 전 학습자에게 새거나(정책 없이 GRANT 만) 0행으로만 온다.',
+  '  if not exists (',
+  '    select 1 from pg_policies',
+  "     where schemaname = 'public' and tablename = 'reference_answers' and cmd = 'SELECT'",
+  '  ) then',
+  "    raise exception '[대조 6] reference_answers 에 SELECT 정책이 없다';",
   '  end if;',
   '',
   '  select count(*) into v_cnt from expect;',

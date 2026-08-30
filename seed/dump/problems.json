@@ -2437,5 +2437,318 @@
         "[결정타]"
       ]
     }
+  },
+  {
+    "type": "fill",
+    "choices": null,
+    "passage": "[상황] 연희가 좁은 갱도에서 마수와 마주친다. 갱도는 등불 하나뿐이라 어둡다. 마수는 눈이 퇴화했고 머리 양옆의 더듬이로 공기의 흔들림을 읽는다. 연희는 광부라 그 짐승을 안다.\n[복선] 앞서 마수가 오른쪽 벽만 훑고 지나간 것\n[결정타] 곡괭이로 잘라 낸 왼쪽 더듬이\n\n마수가 머리를 흔들며 갱도를 좁혀 왔다.\n①\n연희는 등불을 오른쪽 벽으로 던졌다.\n②\n곡괭이가 왼쪽 더듬이를 잘라 냈다.",
+    "order_no": 10,
+    "tone_tag": "impulsive",
+    "genre_tag": "fantasy",
+    "skill_key": "action_reason",
+    "difficulty": 1,
+    "source_key": "ar-left-feeler",
+    "source_tag": "original",
+    "instruction": "고정된 줄 사이에 뚫린 빈칸을 채우시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  사내는 앞서 오른쪽 다리를 절뚝였습니다.\n\n  사내가 어깨를 들이밀며 다가왔다.\n  ①\n  덕수는 왼발을 반 보 뒤로 뺐다.\n  ②\n  덕수의 발이 사내의 절뚝인 걸음을 걸어 넘겼다.\n\n  ↓\n\n  ①  주먹을 쥐어 봐야 힘에서 진다. 덕수는 다른 것을 보기로 했다.\n  ②  사내는 걸음마다 오른쪽이 반 박자 늦었다. 덕수는 그것을 세 번 세었다.\n\n빈칸마다 한 문장에서 두 문장으로 씁니다.\n앞뒤 줄을 그대로 옮겨 적지 않습니다.\n무엇을 했는지가 아니라 왜 그렇게 했는지를 씁니다.\n[상황]·[복선]·[결정타]는 힌트일 뿐이고, 답에 그 대괄호를 쓰지 않습니다.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "blanks": [
+        {
+          "key": "①",
+          "label": "연희가 어느 쪽으로 붙을지 어떻게 정했는지",
+          "minSentences": 1,
+          "maxSentences": 2,
+          "maxChars": 60
+        },
+        {
+          "key": "②",
+          "label": "등불을 던진 것이 무엇을 만들었는지",
+          "minSentences": 1,
+          "maxSentences": 2,
+          "maxChars": 60
+        }
+      ],
+      "forbidWords": [
+        "[상황]",
+        "[복선]",
+        "[결정타]"
+      ],
+      "forbidCopyOfFixedLines": true
+    }
+  },
+  {
+    "type": "fill",
+    "choices": null,
+    "passage": "[상황] 도경이 얼어붙은 강을 건너다 늑대 무리에 둘러싸인다. 강 한가운데는 물살이 빨라 얼음이 얇고 색이 검다. 도경은 그 자리를 지나왔다. 늑대는 여섯이고, 무리로 붙어 몰아붙인다.\n[복선] 지나오며 발밑에서 들은 금 가는 소리\n[결정타] 갈라진 얼음\n\n늑대 여섯이 원을 좁혀 왔다.\n①\n도경은 강 한가운데로 물러섰다.\n②\n갈라진 얼음이 늑대를 삼켰다.",
+    "order_no": 10,
+    "tone_tag": "impulsive",
+    "genre_tag": "fantasy",
+    "skill_key": "action_reason",
+    "difficulty": 1,
+    "source_key": "ar-cracked-ice",
+    "source_tag": "original",
+    "instruction": "고정된 줄 사이에 뚫린 빈칸을 채우시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  사내는 앞서 오른쪽 다리를 절뚝였습니다.\n\n  사내가 어깨를 들이밀며 다가왔다.\n  ①\n  덕수는 왼발을 반 보 뒤로 뺐다.\n  ②\n  덕수의 발이 사내의 절뚝인 걸음을 걸어 넘겼다.\n\n  ↓\n\n  ①  주먹을 쥐어 봐야 힘에서 진다. 덕수는 다른 것을 보기로 했다.\n  ②  사내는 걸음마다 오른쪽이 반 박자 늦었다. 덕수는 그것을 세 번 세었다.\n\n빈칸마다 한 문장에서 두 문장으로 씁니다.\n앞뒤 줄을 그대로 옮겨 적지 않습니다.\n무엇을 했는지가 아니라 왜 그렇게 했는지를 씁니다.\n[상황]·[복선]·[결정타]는 힌트일 뿐이고, 답에 그 대괄호를 쓰지 않습니다.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "blanks": [
+        {
+          "key": "①",
+          "label": "도경이 물러설 곳을 어떻게 골랐는지",
+          "minSentences": 1,
+          "maxSentences": 2,
+          "maxChars": 60
+        },
+        {
+          "key": "②",
+          "label": "늑대가 왜 따라 들어왔는지",
+          "minSentences": 1,
+          "maxSentences": 2,
+          "maxChars": 60
+        }
+      ],
+      "forbidWords": [
+        "[상황]",
+        "[복선]",
+        "[결정타]"
+      ],
+      "forbidCopyOfFixedLines": true
+    }
+  },
+  {
+    "type": "fill",
+    "choices": null,
+    "passage": "[상황] 각성자 태윤이 던전에서 용의 형상을 한 괴물과 마주친다. 괴물은 크고 팔이 길어 정면에서는 닿지 않는다. 태윤의 각성 등급으로는 한 방을 제대로 넣어야 끝난다.\n[복선] 괴물이 팔을 휘두를 때마다 턱이 앞으로 나오는 것\n[결정타] 턱\n\n괴물이 팔을 휘두르며 덮쳐 왔다.\n①\n태윤은 고개를 숙여 그 아래로 들어갔다.\n②\n주먹이 괴물의 턱에 꽂혔다.",
+    "order_no": 10,
+    "tone_tag": "planned",
+    "genre_tag": "modern",
+    "skill_key": "action_reason",
+    "difficulty": 1,
+    "source_key": "ar-dragon-jaw",
+    "source_tag": "original",
+    "instruction": "고정된 줄 사이에 뚫린 빈칸을 채우시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  사내는 앞서 오른쪽 다리를 절뚝였습니다.\n\n  사내가 어깨를 들이밀며 다가왔다.\n  ①\n  덕수는 왼발을 반 보 뒤로 뺐다.\n  ②\n  덕수의 발이 사내의 절뚝인 걸음을 걸어 넘겼다.\n\n  ↓\n\n  ①  주먹을 쥐어 봐야 힘에서 진다. 덕수는 다른 것을 보기로 했다.\n  ②  사내는 걸음마다 오른쪽이 반 박자 늦었다. 덕수는 그것을 세 번 세었다.\n\n빈칸마다 한 문장에서 두 문장으로 씁니다.\n앞뒤 줄을 그대로 옮겨 적지 않습니다.\n무엇을 했는지가 아니라 왜 그렇게 했는지를 씁니다.\n[상황]·[복선]·[결정타]는 힌트일 뿐이고, 답에 그 대괄호를 쓰지 않습니다.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "blanks": [
+        {
+          "key": "①",
+          "label": "태윤이 이 순간 무엇을 하는지",
+          "minSentences": 1,
+          "maxSentences": 2,
+          "maxChars": 60,
+          "optional": true
+        },
+        {
+          "key": "②",
+          "label": "태윤이 무엇을 보고 턱을 노렸는지",
+          "minSentences": 1,
+          "maxSentences": 2,
+          "maxChars": 60
+        }
+      ],
+      "forbidWords": [
+        "[상황]",
+        "[복선]",
+        "[결정타]"
+      ],
+      "forbidCopyOfFixedLines": true
+    }
+  },
+  {
+    "type": "fill",
+    "choices": null,
+    "passage": "[상황] 무결이 저번 싸움에서 자신을 벤 상대와 다시 마주한다. 그때 오른팔 힘줄이 끊겼다. 검은 왼손에 있다. 상대도 그것을 안다.\n[복선] 힘이 안 들어가는 오른팔\n[결정타] 왼손이 목을 찌른다\n\n상대가 무결의 오른쪽으로 크게 돌아 들어왔다.\n①\n무결은 오른팔을 들어 올렸다.\n②\n왼손의 검이 상대의 목으로 들어갔다.",
+    "order_no": 10,
+    "tone_tag": "planned",
+    "genre_tag": "martial",
+    "skill_key": "action_reason",
+    "difficulty": 2,
+    "source_key": "ar-left-draw",
+    "source_tag": "original",
+    "instruction": "고정된 줄 사이에 뚫린 빈칸을 채우시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  사내는 앞서 오른쪽 다리를 절뚝였습니다.\n\n  사내가 어깨를 들이밀며 다가왔다.\n  ①\n  덕수는 왼발을 반 보 뒤로 뺐다.\n  ②\n  덕수의 발이 사내의 절뚝인 걸음을 걸어 넘겼다.\n\n  ↓\n\n  ①  주먹을 쥐어 봐야 힘에서 진다. 덕수는 다른 것을 보기로 했다.\n  ②  사내는 걸음마다 오른쪽이 반 박자 늦었다. 덕수는 그것을 세 번 세었다.\n\n빈칸마다 한 문장에서 두 문장으로 씁니다.\n앞뒤 줄을 그대로 옮겨 적지 않습니다.\n무엇을 했는지가 아니라 왜 그렇게 했는지를 씁니다.\n[상황]·[복선]·[결정타]는 힌트일 뿐이고, 답에 그 대괄호를 쓰지 않습니다.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "blanks": [
+        {
+          "key": "①",
+          "label": "무결이 오른쪽으로 도는 상대를 보고 무엇을 생각하는지",
+          "minSentences": 1,
+          "maxSentences": 2,
+          "maxChars": 60
+        },
+        {
+          "key": "②",
+          "label": "오른팔이 이 순간 무엇을 하는지",
+          "minSentences": 1,
+          "maxSentences": 2,
+          "maxChars": 60
+        }
+      ],
+      "forbidWords": [
+        "[상황]",
+        "[복선]",
+        "[결정타]"
+      ],
+      "forbidCopyOfFixedLines": true
+    }
+  },
+  {
+    "type": "fill",
+    "choices": null,
+    "passage": "[상황] 무결이 사부와 대련한다. 사부는 중검을 쓴다. 빠르지 않고 무겁기만 한 검이다. 무결은 그 느린 검을 막을 수 있다고 생각했다.\n[복선] 막을 수 있다는 생각\n[결정타] 목젖 — 사부의 검이 닿는다\n\n중검의 묘리를 담은 칼이 천천히 위에서 아래로 떨어졌다.\n①\n무결은 검을 들어 받아쳤다.\n②\n사부의 검이 무결의 목젖 위에 있었다.",
+    "order_no": 10,
+    "tone_tag": "planned",
+    "genre_tag": "martial",
+    "skill_key": "action_reason",
+    "difficulty": 1,
+    "source_key": "ar-dull-blade",
+    "source_tag": "original",
+    "instruction": "고정된 줄 사이에 뚫린 빈칸을 채우시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  사내는 앞서 오른쪽 다리를 절뚝였습니다.\n\n  사내가 어깨를 들이밀며 다가왔다.\n  ①\n  덕수는 왼발을 반 보 뒤로 뺐다.\n  ②\n  덕수의 발이 사내의 절뚝인 걸음을 걸어 넘겼다.\n\n  ↓\n\n  ①  주먹을 쥐어 봐야 힘에서 진다. 덕수는 다른 것을 보기로 했다.\n  ②  사내는 걸음마다 오른쪽이 반 박자 늦었다. 덕수는 그것을 세 번 세었다.\n\n빈칸마다 한 문장에서 두 문장으로 씁니다.\n앞뒤 줄을 그대로 옮겨 적지 않습니다.\n무엇을 했는지가 아니라 왜 그렇게 했는지를 씁니다.\n[상황]·[복선]·[결정타]는 힌트일 뿐이고, 답에 그 대괄호를 쓰지 않습니다.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "blanks": [
+        {
+          "key": "①",
+          "label": "무결이 무엇을 하기로 했는지",
+          "minSentences": 1,
+          "maxSentences": 2,
+          "maxChars": 60
+        },
+        {
+          "key": "②",
+          "label": "받아친 뒤에 무엇이 일어났는지",
+          "minSentences": 1,
+          "maxSentences": 2,
+          "maxChars": 60
+        }
+      ],
+      "forbidWords": [
+        "[상황]",
+        "[복선]",
+        "[결정타]"
+      ],
+      "forbidCopyOfFixedLines": true
+    }
+  },
+  {
+    "type": "fill",
+    "choices": null,
+    "passage": "[상황] 세연이 무너진 성문 아래서 마수와 마주친다. 그 마수가 지나간 자리에는 번개 모양 자국이 남는다. 작년 동생의 시신 옆 나무에도 그 자국이 있었다. 세연은 숲 어귀에서 같은 자국을 찾아 사흘을 따라 들어왔다.\n[복선] 사흘을 따라온 번개 모양 자국\n[결정타] 목 — 비늘 사이의 역린\n\n마수의 앞발이 세연을 성문 잔해로 밀어붙였다.\n①\n세연은 부러진 창끝을 두 손으로 고쳐 쥐었다.\n마수가 몸을 낮추고 머리를 들이밀었다.\n②\n창끝이 마수의 목을 찔렀다.",
+    "order_no": 10,
+    "tone_tag": "planned",
+    "genre_tag": "martial",
+    "skill_key": "action_reason",
+    "difficulty": 2,
+    "source_key": "ar-broken-gate",
+    "source_tag": "original",
+    "instruction": "고정된 줄 사이에 뚫린 빈칸을 채우시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  사내는 앞서 오른쪽 다리를 절뚝였습니다.\n\n  사내가 어깨를 들이밀며 다가왔다.\n  ①\n  덕수는 왼발을 반 보 뒤로 뺐다.\n  ②\n  덕수의 발이 사내의 절뚝인 걸음을 걸어 넘겼다.\n\n  ↓\n\n  ①  주먹을 쥐어 봐야 힘에서 진다. 덕수는 다른 것을 보기로 했다.\n  ②  사내는 걸음마다 오른쪽이 반 박자 늦었다. 덕수는 그것을 세 번 세었다.\n\n빈칸마다 한 문장에서 두 문장으로 씁니다.\n앞뒤 줄을 그대로 옮겨 적지 않습니다.\n무엇을 했는지가 아니라 왜 그렇게 했는지를 씁니다.\n[상황]·[복선]·[결정타]는 힌트일 뿐이고, 답에 그 대괄호를 쓰지 않습니다.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "blanks": [
+        {
+          "key": "①",
+          "label": "세연이 이 순간 무엇을 하는지",
+          "minSentences": 1,
+          "maxSentences": 2,
+          "maxChars": 60,
+          "optional": true
+        },
+        {
+          "key": "②",
+          "label": "세연이 무엇을 보고 목을 노리기로 했는지",
+          "minSentences": 1,
+          "maxSentences": 2,
+          "maxChars": 60
+        }
+      ],
+      "forbidWords": [
+        "[상황]",
+        "[복선]",
+        "[결정타]"
+      ],
+      "forbidCopyOfFixedLines": true
+    }
+  },
+  {
+    "type": "fill",
+    "choices": null,
+    "passage": "[상황] 서린이 종탑 꼭대기에서 추격자와 마주 선다. 추격자의 이마에는 검은 표식이 있다. 누이를 죽인 자다. 이 마을에는 오래된 설화가 있다. 종이 울리면 마을의 수호신이 내려와 성 안의 부정한 것을 거둔다. 서린과 누이는 어릴 적부터 그 종탑에 공물을 올렸다. 아무도 그 설화를 믿지 않는다. 서린도 믿지 않았다.\n[복선] 누이와 함께 종탑에 공물을 올리던 일\n[결정타] 종줄\n\n추격자가 등 뒤로 바짝 쫓아오고 있다.\n①\n칼끝이 서린의 볼을 스치고 벽에 부딪쳤다.\n②\n서린은 뒤로 물러서며 막다른 벽에 등을 붙였다.\n③\n종줄이 당겨지고 종이 울렸다.",
+    "order_no": 10,
+    "tone_tag": "impulsive",
+    "genre_tag": "fantasy",
+    "skill_key": "action_reason",
+    "difficulty": 2,
+    "source_key": "ar-bell-rope",
+    "source_tag": "original",
+    "instruction": "고정된 줄 사이에 뚫린 빈칸을 채우시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  사내는 앞서 오른쪽 다리를 절뚝였습니다.\n\n  사내가 어깨를 들이밀며 다가왔다.\n  ①\n  덕수는 왼발을 반 보 뒤로 뺐다.\n  ②\n  덕수의 발이 사내의 절뚝인 걸음을 걸어 넘겼다.\n\n  ↓\n\n  ①  주먹을 쥐어 봐야 힘에서 진다. 덕수는 다른 것을 보기로 했다.\n  ②  사내는 걸음마다 오른쪽이 반 박자 늦었다. 덕수는 그것을 세 번 세었다.\n\n빈칸마다 한 문장에서 두 문장으로 씁니다.\n앞뒤 줄을 그대로 옮겨 적지 않습니다.\n무엇을 했는지가 아니라 왜 그렇게 했는지를 씁니다.\n[상황]·[복선]·[결정타]는 힌트일 뿐이고, 답에 그 대괄호를 쓰지 않습니다.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "blanks": [
+        {
+          "key": "①",
+          "label": "서린이 이 순간 무엇을 하는지",
+          "minSentences": 1,
+          "maxSentences": 3,
+          "maxChars": 60
+        },
+        {
+          "key": "②",
+          "label": "볼을 베인 서린이 무엇을 느끼거나 깨닫는지",
+          "minSentences": 1,
+          "maxSentences": 3,
+          "maxChars": 60
+        },
+        {
+          "key": "③",
+          "label": "서린의 손이 무엇에 닿았는지",
+          "minSentences": 1,
+          "maxSentences": 3,
+          "maxChars": 60
+        }
+      ],
+      "forbidWords": [
+        "[상황]",
+        "[복선]",
+        "[결정타]"
+      ],
+      "forbidCopyOfFixedLines": true
+    }
+  },
+  {
+    "type": "fill",
+    "choices": null,
+    "passage": "[상황] 마법사 연희가 아군이 밀리는 전장에 선다. 적은 성문 뒤에 진을 치고 화살을 쏟아붓는다. 성문을 뚫지 못하면 아군이 오늘 안에 무너진다.\n[복선] 적의 진형이 성문 앞에 몰려 있는 것\n[결정타] 성문\n\n화살이 아군 머리 위로 쏟아졌다.\n①\n바람의 칼날이 적의 진형을 갈랐다.\n②\n압축한 바람이 성문을 뚫었다.",
+    "order_no": 10,
+    "tone_tag": "planned",
+    "genre_tag": "fantasy",
+    "skill_key": "action_reason",
+    "difficulty": 2,
+    "source_key": "ar-wind-gate",
+    "source_tag": "original",
+    "instruction": "고정된 줄 사이에 뚫린 빈칸을 채우시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  사내는 앞서 오른쪽 다리를 절뚝였습니다.\n\n  사내가 어깨를 들이밀며 다가왔다.\n  ①\n  덕수는 왼발을 반 보 뒤로 뺐다.\n  ②\n  덕수의 발이 사내의 절뚝인 걸음을 걸어 넘겼다.\n\n  ↓\n\n  ①  주먹을 쥐어 봐야 힘에서 진다. 덕수는 다른 것을 보기로 했다.\n  ②  사내는 걸음마다 오른쪽이 반 박자 늦었다. 덕수는 그것을 세 번 세었다.\n\n빈칸마다 한 문장에서 두 문장으로 씁니다.\n앞뒤 줄을 그대로 옮겨 적지 않습니다.\n무엇을 했는지가 아니라 왜 그렇게 했는지를 씁니다.\n[상황]·[복선]·[결정타]는 힌트일 뿐이고, 답에 그 대괄호를 쓰지 않습니다.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "blanks": [
+        {
+          "key": "①",
+          "label": "연희가 먼저 무엇을 했는지",
+          "minSentences": 1,
+          "maxSentences": 2,
+          "maxChars": 60
+        },
+        {
+          "key": "②",
+          "label": "진형이 무너진 것이 무엇을 만들었는지",
+          "minSentences": 1,
+          "maxSentences": 2,
+          "maxChars": 60
+        }
+      ],
+      "forbidWords": [
+        "[상황]",
+        "[복선]",
+        "[결정타]"
+      ],
+      "forbidCopyOfFixedLines": true
+    }
   }
 ]

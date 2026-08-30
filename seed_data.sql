@@ -28,7 +28,7 @@ begin;
 -- 행의 order_no가 갱신되지 않아 지금과 같은 격차가 그대로 남는다.
 
 update stages set order_no = order_no + 1000
- where skill_key in ('reduce_adverb', 'emotion_action', 'trim_padding', 'reduce_repeat', 'adverb_exception', 'sensory', 'rhythm', 'dialogue_ratio', 'pov_lock', 'action_turn', 'cliffhanger', 'lack', 'contrast_char', 'likability', 'off_track', 'info_gap', 'cliffhanger_adv', 'reverse_design', 'first_hook', 'genre_coinage', 'branch_estimate', 'start_choose', 'start_write', 'start_extend', 'start_episode');
+ where skill_key in ('reduce_adverb', 'emotion_action', 'trim_padding', 'reduce_repeat', 'adverb_exception', 'sensory', 'rhythm', 'dialogue_ratio', 'pov_lock', 'action_reason', 'cliffhanger', 'action_turn', 'lack', 'contrast_char', 'likability', 'off_track', 'info_gap', 'cliffhanger_adv', 'reverse_design', 'first_hook', 'genre_coinage', 'branch_estimate', 'start_choose', 'start_write', 'start_extend', 'start_episode');
 
 insert into stages (track, order_no, title, skill_key, summary, is_free)
 values ('sentence', 1, '부사 줄이기', 'reduce_adverb',
@@ -121,8 +121,8 @@ on conflict (skill_key) do update set
   is_free = excluded.is_free;
 
 insert into stages (track, order_no, title, skill_key, summary, is_free)
-values ('sentence', 10, '전투 서사화', 'action_turn',
-        '빌드업을 쌓고 마지막 한 줄로 승부를 가른다', true)
+values ('sentence', 10, '동작에 이유 넣기', 'action_reason',
+        '동작 사이에 왜 그렇게 했는지를 끼운다', true)
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
@@ -133,6 +133,16 @@ on conflict (skill_key) do update set
 insert into stages (track, order_no, title, skill_key, summary, is_free)
 values ('sentence', 11, '절단신공', 'cliffhanger',
         '마지막 줄이 다음을 부르게 한다', true)
+on conflict (skill_key) do update set
+  track = excluded.track,
+  order_no = excluded.order_no,
+  title = excluded.title,
+  summary = excluded.summary,
+  is_free = excluded.is_free;
+
+insert into stages (track, order_no, title, skill_key, summary, is_free)
+values ('sentence', 12, '전투 서사화', 'action_turn',
+        '빌드업을 쌓고 마지막 한 줄로 승부를 가른다', true)
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
@@ -1074,6 +1084,54 @@ select
   2, 'pv-lantern-night'
 where not exists (select 1 from problems p where p.source_key = 'pv-lantern-night');
 
+-- ar-cracked-ice (order_no 10, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'action_reason'),
+  'fill', 'auto', E'고정된 줄 사이에 뚫린 빈칸을 채우시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  사내는 앞서 오른쪽 다리를 절뚝였습니다.\n\n  사내가 어깨를 들이밀며 다가왔다.\n  ①\n  덕수는 왼발을 반 보 뒤로 뺐다.\n  ②\n  덕수의 발이 사내의 절뚝인 걸음을 걸어 넘겼다.\n\n  ↓\n\n  ①  주먹을 쥐어 봐야 힘에서 진다. 덕수는 다른 것을 보기로 했다.\n  ②  사내는 걸음마다 오른쪽이 반 박자 늦었다. 덕수는 그것을 세 번 세었다.\n\n빈칸마다 한 문장에서 두 문장으로 씁니다.\n앞뒤 줄을 그대로 옮겨 적지 않습니다.\n무엇을 했는지가 아니라 왜 그렇게 했는지를 씁니다.\n[상황]·[복선]·[결정타]는 힌트일 뿐이고, 답에 그 대괄호를 쓰지 않습니다.',
+  E'[상황] 도경이 얼어붙은 강을 건너다 늑대 무리에 둘러싸인다. 강 한가운데는 물살이 빨라 얼음이 얇고 색이 검다. 도경은 그 자리를 지나왔다. 늑대는 여섯이고, 무리로 붙어 몰아붙인다.\n[복선] 지나오며 발밑에서 들은 금 가는 소리\n[결정타] 갈라진 얼음\n\n늑대 여섯이 원을 좁혀 왔다.\n①\n도경은 강 한가운데로 물러섰다.\n②\n갈라진 얼음이 늑대를 삼켰다.', null, '{"blanks":[{"key":"①","label":"도경이 물러설 곳을 어떻게 골랐는지","minSentences":1,"maxSentences":2,"maxChars":60},{"key":"②","label":"늑대가 왜 따라 들어왔는지","minSentences":1,"maxSentences":2,"maxChars":60}],"forbidWords":["[상황]","[복선]","[결정타]"],"forbidCopyOfFixedLines":true,"fixedLines":["늑대 여섯이 원을 좁혀 왔다.","도경은 강 한가운데로 물러섰다.","갈라진 얼음이 늑대를 삼켰다."]}'::jsonb,
+  'original', 'fantasy', 'impulsive',
+  1, 'ar-cracked-ice'
+where not exists (select 1 from problems p where p.source_key = 'ar-cracked-ice');
+
+-- ar-dragon-jaw (order_no 10, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'action_reason'),
+  'fill', 'auto', E'고정된 줄 사이에 뚫린 빈칸을 채우시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  사내는 앞서 오른쪽 다리를 절뚝였습니다.\n\n  사내가 어깨를 들이밀며 다가왔다.\n  ①\n  덕수는 왼발을 반 보 뒤로 뺐다.\n  ②\n  덕수의 발이 사내의 절뚝인 걸음을 걸어 넘겼다.\n\n  ↓\n\n  ①  주먹을 쥐어 봐야 힘에서 진다. 덕수는 다른 것을 보기로 했다.\n  ②  사내는 걸음마다 오른쪽이 반 박자 늦었다. 덕수는 그것을 세 번 세었다.\n\n빈칸마다 한 문장에서 두 문장으로 씁니다.\n앞뒤 줄을 그대로 옮겨 적지 않습니다.\n무엇을 했는지가 아니라 왜 그렇게 했는지를 씁니다.\n[상황]·[복선]·[결정타]는 힌트일 뿐이고, 답에 그 대괄호를 쓰지 않습니다.',
+  E'[상황] 각성자 태윤이 던전에서 용의 형상을 한 괴물과 마주친다. 괴물은 크고 팔이 길어 정면에서는 닿지 않는다. 태윤의 각성 등급으로는 한 방을 제대로 넣어야 끝난다.\n[복선] 괴물이 팔을 휘두를 때마다 턱이 앞으로 나오는 것\n[결정타] 턱\n\n괴물이 팔을 휘두르며 덮쳐 왔다.\n①\n태윤은 고개를 숙여 그 아래로 들어갔다.\n②\n주먹이 괴물의 턱에 꽂혔다.', null, '{"blanks":[{"key":"①","label":"태윤이 이 순간 무엇을 하는지","minSentences":1,"maxSentences":2,"maxChars":60,"optional":true},{"key":"②","label":"태윤이 무엇을 보고 턱을 노렸는지","minSentences":1,"maxSentences":2,"maxChars":60}],"forbidWords":["[상황]","[복선]","[결정타]"],"forbidCopyOfFixedLines":true,"fixedLines":["괴물이 팔을 휘두르며 덮쳐 왔다.","태윤은 고개를 숙여 그 아래로 들어갔다.","주먹이 괴물의 턱에 꽂혔다."]}'::jsonb,
+  'original', 'modern', 'planned',
+  1, 'ar-dragon-jaw'
+where not exists (select 1 from problems p where p.source_key = 'ar-dragon-jaw');
+
+-- ar-dull-blade (order_no 10, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'action_reason'),
+  'fill', 'auto', E'고정된 줄 사이에 뚫린 빈칸을 채우시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  사내는 앞서 오른쪽 다리를 절뚝였습니다.\n\n  사내가 어깨를 들이밀며 다가왔다.\n  ①\n  덕수는 왼발을 반 보 뒤로 뺐다.\n  ②\n  덕수의 발이 사내의 절뚝인 걸음을 걸어 넘겼다.\n\n  ↓\n\n  ①  주먹을 쥐어 봐야 힘에서 진다. 덕수는 다른 것을 보기로 했다.\n  ②  사내는 걸음마다 오른쪽이 반 박자 늦었다. 덕수는 그것을 세 번 세었다.\n\n빈칸마다 한 문장에서 두 문장으로 씁니다.\n앞뒤 줄을 그대로 옮겨 적지 않습니다.\n무엇을 했는지가 아니라 왜 그렇게 했는지를 씁니다.\n[상황]·[복선]·[결정타]는 힌트일 뿐이고, 답에 그 대괄호를 쓰지 않습니다.',
+  E'[상황] 무결이 사부와 대련한다. 사부는 중검을 쓴다. 빠르지 않고 무겁기만 한 검이다. 무결은 그 느린 검을 막을 수 있다고 생각했다.\n[복선] 막을 수 있다는 생각\n[결정타] 목젖 — 사부의 검이 닿는다\n\n중검의 묘리를 담은 칼이 천천히 위에서 아래로 떨어졌다.\n①\n무결은 검을 들어 받아쳤다.\n②\n사부의 검이 무결의 목젖 위에 있었다.', null, '{"blanks":[{"key":"①","label":"무결이 무엇을 하기로 했는지","minSentences":1,"maxSentences":2,"maxChars":60},{"key":"②","label":"받아친 뒤에 무엇이 일어났는지","minSentences":1,"maxSentences":2,"maxChars":60}],"forbidWords":["[상황]","[복선]","[결정타]"],"forbidCopyOfFixedLines":true,"fixedLines":["중검의 묘리를 담은 칼이 천천히 위에서 아래로 떨어졌다.","무결은 검을 들어 받아쳤다.","사부의 검이 무결의 목젖 위에 있었다."]}'::jsonb,
+  'original', 'martial', 'planned',
+  1, 'ar-dull-blade'
+where not exists (select 1 from problems p where p.source_key = 'ar-dull-blade');
+
+-- ar-left-feeler (order_no 10, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'action_reason'),
+  'fill', 'auto', E'고정된 줄 사이에 뚫린 빈칸을 채우시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  사내는 앞서 오른쪽 다리를 절뚝였습니다.\n\n  사내가 어깨를 들이밀며 다가왔다.\n  ①\n  덕수는 왼발을 반 보 뒤로 뺐다.\n  ②\n  덕수의 발이 사내의 절뚝인 걸음을 걸어 넘겼다.\n\n  ↓\n\n  ①  주먹을 쥐어 봐야 힘에서 진다. 덕수는 다른 것을 보기로 했다.\n  ②  사내는 걸음마다 오른쪽이 반 박자 늦었다. 덕수는 그것을 세 번 세었다.\n\n빈칸마다 한 문장에서 두 문장으로 씁니다.\n앞뒤 줄을 그대로 옮겨 적지 않습니다.\n무엇을 했는지가 아니라 왜 그렇게 했는지를 씁니다.\n[상황]·[복선]·[결정타]는 힌트일 뿐이고, 답에 그 대괄호를 쓰지 않습니다.',
+  E'[상황] 연희가 좁은 갱도에서 마수와 마주친다. 갱도는 등불 하나뿐이라 어둡다. 마수는 눈이 퇴화했고 머리 양옆의 더듬이로 공기의 흔들림을 읽는다. 연희는 광부라 그 짐승을 안다.\n[복선] 앞서 마수가 오른쪽 벽만 훑고 지나간 것\n[결정타] 곡괭이로 잘라 낸 왼쪽 더듬이\n\n마수가 머리를 흔들며 갱도를 좁혀 왔다.\n①\n연희는 등불을 오른쪽 벽으로 던졌다.\n②\n곡괭이가 왼쪽 더듬이를 잘라 냈다.', null, '{"blanks":[{"key":"①","label":"연희가 어느 쪽으로 붙을지 어떻게 정했는지","minSentences":1,"maxSentences":2,"maxChars":60},{"key":"②","label":"등불을 던진 것이 무엇을 만들었는지","minSentences":1,"maxSentences":2,"maxChars":60}],"forbidWords":["[상황]","[복선]","[결정타]"],"forbidCopyOfFixedLines":true,"fixedLines":["마수가 머리를 흔들며 갱도를 좁혀 왔다.","연희는 등불을 오른쪽 벽으로 던졌다.","곡괭이가 왼쪽 더듬이를 잘라 냈다."]}'::jsonb,
+  'original', 'fantasy', 'impulsive',
+  1, 'ar-left-feeler'
+where not exists (select 1 from problems p where p.source_key = 'ar-left-feeler');
+
 -- at-cracked-ice (order_no 10, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
@@ -1121,6 +1179,54 @@ select
   'original', 'romance', 'planned',
   1, 'at-look-back'
 where not exists (select 1 from problems p where p.source_key = 'at-look-back');
+
+-- ar-bell-rope (order_no 10, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'action_reason'),
+  'fill', 'auto', E'고정된 줄 사이에 뚫린 빈칸을 채우시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  사내는 앞서 오른쪽 다리를 절뚝였습니다.\n\n  사내가 어깨를 들이밀며 다가왔다.\n  ①\n  덕수는 왼발을 반 보 뒤로 뺐다.\n  ②\n  덕수의 발이 사내의 절뚝인 걸음을 걸어 넘겼다.\n\n  ↓\n\n  ①  주먹을 쥐어 봐야 힘에서 진다. 덕수는 다른 것을 보기로 했다.\n  ②  사내는 걸음마다 오른쪽이 반 박자 늦었다. 덕수는 그것을 세 번 세었다.\n\n빈칸마다 한 문장에서 두 문장으로 씁니다.\n앞뒤 줄을 그대로 옮겨 적지 않습니다.\n무엇을 했는지가 아니라 왜 그렇게 했는지를 씁니다.\n[상황]·[복선]·[결정타]는 힌트일 뿐이고, 답에 그 대괄호를 쓰지 않습니다.',
+  E'[상황] 서린이 종탑 꼭대기에서 추격자와 마주 선다. 추격자의 이마에는 검은 표식이 있다. 누이를 죽인 자다. 이 마을에는 오래된 설화가 있다. 종이 울리면 마을의 수호신이 내려와 성 안의 부정한 것을 거둔다. 서린과 누이는 어릴 적부터 그 종탑에 공물을 올렸다. 아무도 그 설화를 믿지 않는다. 서린도 믿지 않았다.\n[복선] 누이와 함께 종탑에 공물을 올리던 일\n[결정타] 종줄\n\n추격자가 등 뒤로 바짝 쫓아오고 있다.\n①\n칼끝이 서린의 볼을 스치고 벽에 부딪쳤다.\n②\n서린은 뒤로 물러서며 막다른 벽에 등을 붙였다.\n③\n종줄이 당겨지고 종이 울렸다.', null, '{"blanks":[{"key":"①","label":"서린이 이 순간 무엇을 하는지","minSentences":1,"maxSentences":3,"maxChars":60},{"key":"②","label":"볼을 베인 서린이 무엇을 느끼거나 깨닫는지","minSentences":1,"maxSentences":3,"maxChars":60},{"key":"③","label":"서린의 손이 무엇에 닿았는지","minSentences":1,"maxSentences":3,"maxChars":60}],"forbidWords":["[상황]","[복선]","[결정타]"],"forbidCopyOfFixedLines":true,"fixedLines":["추격자가 등 뒤로 바짝 쫓아오고 있다.","칼끝이 서린의 볼을 스치고 벽에 부딪쳤다.","서린은 뒤로 물러서며 막다른 벽에 등을 붙였다.","종줄이 당겨지고 종이 울렸다."]}'::jsonb,
+  'original', 'fantasy', 'impulsive',
+  2, 'ar-bell-rope'
+where not exists (select 1 from problems p where p.source_key = 'ar-bell-rope');
+
+-- ar-broken-gate (order_no 10, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'action_reason'),
+  'fill', 'auto', E'고정된 줄 사이에 뚫린 빈칸을 채우시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  사내는 앞서 오른쪽 다리를 절뚝였습니다.\n\n  사내가 어깨를 들이밀며 다가왔다.\n  ①\n  덕수는 왼발을 반 보 뒤로 뺐다.\n  ②\n  덕수의 발이 사내의 절뚝인 걸음을 걸어 넘겼다.\n\n  ↓\n\n  ①  주먹을 쥐어 봐야 힘에서 진다. 덕수는 다른 것을 보기로 했다.\n  ②  사내는 걸음마다 오른쪽이 반 박자 늦었다. 덕수는 그것을 세 번 세었다.\n\n빈칸마다 한 문장에서 두 문장으로 씁니다.\n앞뒤 줄을 그대로 옮겨 적지 않습니다.\n무엇을 했는지가 아니라 왜 그렇게 했는지를 씁니다.\n[상황]·[복선]·[결정타]는 힌트일 뿐이고, 답에 그 대괄호를 쓰지 않습니다.',
+  E'[상황] 세연이 무너진 성문 아래서 마수와 마주친다. 그 마수가 지나간 자리에는 번개 모양 자국이 남는다. 작년 동생의 시신 옆 나무에도 그 자국이 있었다. 세연은 숲 어귀에서 같은 자국을 찾아 사흘을 따라 들어왔다.\n[복선] 사흘을 따라온 번개 모양 자국\n[결정타] 목 — 비늘 사이의 역린\n\n마수의 앞발이 세연을 성문 잔해로 밀어붙였다.\n①\n세연은 부러진 창끝을 두 손으로 고쳐 쥐었다.\n마수가 몸을 낮추고 머리를 들이밀었다.\n②\n창끝이 마수의 목을 찔렀다.', null, '{"blanks":[{"key":"①","label":"세연이 이 순간 무엇을 하는지","minSentences":1,"maxSentences":2,"maxChars":60,"optional":true},{"key":"②","label":"세연이 무엇을 보고 목을 노리기로 했는지","minSentences":1,"maxSentences":2,"maxChars":60}],"forbidWords":["[상황]","[복선]","[결정타]"],"forbidCopyOfFixedLines":true,"fixedLines":["마수의 앞발이 세연을 성문 잔해로 밀어붙였다.","세연은 부러진 창끝을 두 손으로 고쳐 쥐었다.","마수가 몸을 낮추고 머리를 들이밀었다.","창끝이 마수의 목을 찔렀다."]}'::jsonb,
+  'original', 'martial', 'planned',
+  2, 'ar-broken-gate'
+where not exists (select 1 from problems p where p.source_key = 'ar-broken-gate');
+
+-- ar-left-draw (order_no 10, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'action_reason'),
+  'fill', 'auto', E'고정된 줄 사이에 뚫린 빈칸을 채우시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  사내는 앞서 오른쪽 다리를 절뚝였습니다.\n\n  사내가 어깨를 들이밀며 다가왔다.\n  ①\n  덕수는 왼발을 반 보 뒤로 뺐다.\n  ②\n  덕수의 발이 사내의 절뚝인 걸음을 걸어 넘겼다.\n\n  ↓\n\n  ①  주먹을 쥐어 봐야 힘에서 진다. 덕수는 다른 것을 보기로 했다.\n  ②  사내는 걸음마다 오른쪽이 반 박자 늦었다. 덕수는 그것을 세 번 세었다.\n\n빈칸마다 한 문장에서 두 문장으로 씁니다.\n앞뒤 줄을 그대로 옮겨 적지 않습니다.\n무엇을 했는지가 아니라 왜 그렇게 했는지를 씁니다.\n[상황]·[복선]·[결정타]는 힌트일 뿐이고, 답에 그 대괄호를 쓰지 않습니다.',
+  E'[상황] 무결이 저번 싸움에서 자신을 벤 상대와 다시 마주한다. 그때 오른팔 힘줄이 끊겼다. 검은 왼손에 있다. 상대도 그것을 안다.\n[복선] 힘이 안 들어가는 오른팔\n[결정타] 왼손이 목을 찌른다\n\n상대가 무결의 오른쪽으로 크게 돌아 들어왔다.\n①\n무결은 오른팔을 들어 올렸다.\n②\n왼손의 검이 상대의 목으로 들어갔다.', null, '{"blanks":[{"key":"①","label":"무결이 오른쪽으로 도는 상대를 보고 무엇을 생각하는지","minSentences":1,"maxSentences":2,"maxChars":60},{"key":"②","label":"오른팔이 이 순간 무엇을 하는지","minSentences":1,"maxSentences":2,"maxChars":60}],"forbidWords":["[상황]","[복선]","[결정타]"],"forbidCopyOfFixedLines":true,"fixedLines":["상대가 무결의 오른쪽으로 크게 돌아 들어왔다.","무결은 오른팔을 들어 올렸다.","왼손의 검이 상대의 목으로 들어갔다."]}'::jsonb,
+  'original', 'martial', 'planned',
+  2, 'ar-left-draw'
+where not exists (select 1 from problems p where p.source_key = 'ar-left-draw');
+
+-- ar-wind-gate (order_no 10, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'action_reason'),
+  'fill', 'auto', E'고정된 줄 사이에 뚫린 빈칸을 채우시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  사내는 앞서 오른쪽 다리를 절뚝였습니다.\n\n  사내가 어깨를 들이밀며 다가왔다.\n  ①\n  덕수는 왼발을 반 보 뒤로 뺐다.\n  ②\n  덕수의 발이 사내의 절뚝인 걸음을 걸어 넘겼다.\n\n  ↓\n\n  ①  주먹을 쥐어 봐야 힘에서 진다. 덕수는 다른 것을 보기로 했다.\n  ②  사내는 걸음마다 오른쪽이 반 박자 늦었다. 덕수는 그것을 세 번 세었다.\n\n빈칸마다 한 문장에서 두 문장으로 씁니다.\n앞뒤 줄을 그대로 옮겨 적지 않습니다.\n무엇을 했는지가 아니라 왜 그렇게 했는지를 씁니다.\n[상황]·[복선]·[결정타]는 힌트일 뿐이고, 답에 그 대괄호를 쓰지 않습니다.',
+  E'[상황] 마법사 연희가 아군이 밀리는 전장에 선다. 적은 성문 뒤에 진을 치고 화살을 쏟아붓는다. 성문을 뚫지 못하면 아군이 오늘 안에 무너진다.\n[복선] 적의 진형이 성문 앞에 몰려 있는 것\n[결정타] 성문\n\n화살이 아군 머리 위로 쏟아졌다.\n①\n바람의 칼날이 적의 진형을 갈랐다.\n②\n압축한 바람이 성문을 뚫었다.', null, '{"blanks":[{"key":"①","label":"연희가 먼저 무엇을 했는지","minSentences":1,"maxSentences":2,"maxChars":60},{"key":"②","label":"진형이 무너진 것이 무엇을 만들었는지","minSentences":1,"maxSentences":2,"maxChars":60}],"forbidWords":["[상황]","[복선]","[결정타]"],"forbidCopyOfFixedLines":true,"fixedLines":["화살이 아군 머리 위로 쏟아졌다.","바람의 칼날이 적의 진형을 갈랐다.","압축한 바람이 성문을 뚫었다."]}'::jsonb,
+  'original', 'fantasy', 'planned',
+  2, 'ar-wind-gate'
+where not exists (select 1 from problems p where p.source_key = 'ar-wind-gate');
 
 -- at-bell-rope (order_no 10, difficulty 2)
 insert into problems
@@ -1466,6 +1572,291 @@ where p.source_key = 'dragon-king-anger'
     select 1 from golden_cases gc
      where gc.problem_id = p.id and gc.content = '용왕이 술잔을 바닥에 내려놓았다. 잔이 두 조각으로 갈라졌다.'
   );
+
+-- ── fill 모범답안 ──────────────────────────────────────────────────
+--
+-- problem_answers 가 아니다 — 채점 정답이 아니라 stage2 자기점검이
+-- 화면에 보여줄 것이다(재설계안 11-2 4번). RLS 는 seed_schema.sql 이
+-- 건다: 그 문항에 제출 기록이 있는 학습자만 읽는다.
+
+-- ar-cracked-ice ord 1 ①
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '①', '건너올 때 저 자리에서 발밑이 울렸다. 도경은 그 소리를 기억했다.'
+from problems p
+where p.source_key = 'ar-cracked-ice'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-cracked-ice ord 1 ②
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '②', '늑대는 물러서는 먹이를 그냥 두지 않는다. 여섯이 한 덩어리로 따라붙었다.'
+from problems p
+where p.source_key = 'ar-cracked-ice'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-cracked-ice ord 2 ①
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '①', '강 한가운데만 얼음이 검었다. 아래로 물이 흐르고 있다는 뜻이다.'
+from problems p
+where p.source_key = 'ar-cracked-ice'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-cracked-ice ord 2 ②
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '②', '도경이 등을 보이자 늑대들이 거리를 좁혔다. 무리는 흩어질 줄을 몰랐다.'
+from problems p
+where p.source_key = 'ar-cracked-ice'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-cracked-ice ord 3 ①
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 3, '①', '도경은 발을 헛디딘 척 뒤로 밀렸다. 물러서는 것처럼 보여야 했다.'
+from problems p
+where p.source_key = 'ar-cracked-ice'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-cracked-ice ord 3 ②
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 3, '②', '앞선 두 마리가 뛰어들자 나머지도 따라붙었다. 여섯이 한 자리에 모였다.'
+from problems p
+where p.source_key = 'ar-cracked-ice'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-dragon-jaw ord 1 ②
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '②', '휘두른 팔을 따라 상체가 앞으로 쏠렸다. 턱이 그만큼 내려와 있었다.'
+from problems p
+where p.source_key = 'ar-dragon-jaw'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-dragon-jaw ord 2 ①
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '①', '태윤은 숨을 멈추고 발끝에 무게를 옮겼다.'
+from problems p
+where p.source_key = 'ar-dragon-jaw'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-dragon-jaw ord 2 ②
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '②', '주변 소리가 멀어질 만큼 집중이 올라갔다. 느리게 흐르는 시야 안에서 턱이 눈앞에 있었다.'
+from problems p
+where p.source_key = 'ar-dragon-jaw'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-dragon-jaw ord 3 ①
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 3, '①', '한 방을 제대로 넣지 못하면 끝난다. 거리를 좁혀 안으로 파고 들어간다.'
+from problems p
+where p.source_key = 'ar-dragon-jaw'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-dragon-jaw ord 3 ②
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 3, '②', '괴물은 팔을 휘두를 때마다 턱을 앞으로 내밀었다. 세 번을 세었다.'
+from problems p
+where p.source_key = 'ar-dragon-jaw'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-dull-blade ord 1 ①
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '①', '느린 검이었다. 받아치면 막을 수 있다고 보았다.'
+from problems p
+where p.source_key = 'ar-dull-blade'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-dull-blade ord 1 ②
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '②', '가공할 힘이 검을 짓눌렀다. 자세가 무너지는 데 한 호흡도 걸리지 않았다.'
+from problems p
+where p.source_key = 'ar-dull-blade'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-dull-blade ord 2 ①
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '①', '사부의 검은 빠르지 않다. 무결은 정면으로 맞받기로 했다.'
+from problems p
+where p.source_key = 'ar-dull-blade'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-dull-blade ord 2 ②
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '②', '검을 통해 내려온 무게가 손목을 꺾고 무릎을 땅에 붙였다.'
+from problems p
+where p.source_key = 'ar-dull-blade'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-dull-blade ord 3 ①
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 3, '①', '무결은 피하는 대신 검을 세웠다. 여기서 물러서면 배울 것이 없었다.'
+from problems p
+where p.source_key = 'ar-dull-blade'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-dull-blade ord 3 ②
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 3, '②', '검에 중검의 묘리가 스며들었다. 그것을 알았을 때는 이미 늦었다.'
+from problems p
+where p.source_key = 'ar-dull-blade'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-bell-rope ord 1 ①
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '①', '서린은 몸을 낮추고 옆으로 굴렀다. 등 뒤는 이미 벽이었다.'
+from problems p
+where p.source_key = 'ar-bell-rope'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-bell-rope ord 1 ②
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '②', '뺨을 타고 뜨거운 것이 흘러내렸다.'
+from problems p
+where p.source_key = 'ar-bell-rope'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-bell-rope ord 1 ③
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '③', '등이 닿은 자리에 굵은 줄이 걸려 있었다. 누이와 공물을 올리던 날에도 이 줄은 그 자리에 있었다.'
+from problems p
+where p.source_key = 'ar-bell-rope'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-bell-rope ord 2 ①
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '①', '서린은 두 팔로 머리를 감싸고 벽을 따라 돌았다.'
+from problems p
+where p.source_key = 'ar-bell-rope'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-bell-rope ord 2 ②
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '②', '피가 턱을 타고 내려왔다. 맞서 봐야 이길 수 없다. 어릴 적 누이가 해 준 이야기가 그때 떠올랐다.'
+from problems p
+where p.source_key = 'ar-bell-rope'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-bell-rope ord 2 ③
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '③', '벽을 더듬던 손끝에 젖은 삼줄이 걸렸다. 서린은 두 손으로 그것을 감았다.'
+from problems p
+where p.source_key = 'ar-bell-rope'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-broken-gate ord 1 ①
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '①', '등이 돌무더기에 처박혔다. 숨이 한 번에 빠져나갔다.'
+from problems p
+where p.source_key = 'ar-broken-gate'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-broken-gate ord 1 ②
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '②', '목을 덮은 비늘 사이로 역린이 드러났다.'
+from problems p
+where p.source_key = 'ar-broken-gate'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-broken-gate ord 2 ①
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '①', '세연은 잔해에 손을 짚고 몸을 일으켰다. 팔이 말을 듣지 않았다.'
+from problems p
+where p.source_key = 'ar-broken-gate'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-broken-gate ord 2 ②
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '②', '들이미는 머리에 따라 빈틈이 보였다. 목 아래 비늘이 얇은 자리가 거기였다.'
+from problems p
+where p.source_key = 'ar-broken-gate'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-left-draw ord 1 ①
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '①', '저 칼을 한 손으로는 버틸 수 없다. 상대도 그걸 알고 도는 것이다.'
+from problems p
+where p.source_key = 'ar-left-draw'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-left-draw ord 1 ②
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '②', '무결은 팔뚝을 세워 검을 받았다. 반쯤 베였지만 검은 거기서 멈췄다.'
+from problems p
+where p.source_key = 'ar-left-draw'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-left-draw ord 2 ①
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '①', '저번과 같은 자세다. 같은 기술이 온다.'
+from problems p
+where p.source_key = 'ar-left-draw'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-left-draw ord 2 ②
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '②', '무결은 끊긴 힘줄에 내공을 밀어 넣어 억지로 손을 접었다. 억지로 이어 붙인 자리가 타들어가는 느낌이 들었다.'
+from problems p
+where p.source_key = 'ar-left-draw'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-left-draw ord 3 ①
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 3, '①', '저 칼을 막을 수 없다. 그러면 막지 않으면 된다.'
+from problems p
+where p.source_key = 'ar-left-draw'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-left-draw ord 3 ②
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 3, '②', '무결은 오른팔을 상대의 검 앞으로 들이밀었다. 팔이 베이며 생긴 그 짧은 틈에 왼손이 들어갔다.'
+from problems p
+where p.source_key = 'ar-left-draw'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-wind-gate ord 1 ①
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '①', '연희는 바람을 벽처럼 세워 화살을 막고, 그 바람을 그대로 앞으로 밀었다.'
+from problems p
+where p.source_key = 'ar-wind-gate'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-wind-gate ord 1 ②
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '②', '갈라진 자리로 성문까지 곧게 길이 났다.'
+from problems p
+where p.source_key = 'ar-wind-gate'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-wind-gate ord 2 ①
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '①', '머리 위로 손을 뻗어 공기를 눕히자 화살이 방향을 잃었다. 연희는 그 공기를 모아 날을 세웠다.'
+from problems p
+where p.source_key = 'ar-wind-gate'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-wind-gate ord 2 ②
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '②', '성문 앞을 메우던 병사들이 물러났다. 남은 것은 문 하나였다.'
+from problems p
+where p.source_key = 'ar-wind-gate'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-wind-gate ord 3 ①
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 3, '①', '막기만 해서는 오늘을 못 넘긴다. 연희는 화살을 걷어 내며 손을 앞으로 뻗었다.'
+from problems p
+where p.source_key = 'ar-wind-gate'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ar-wind-gate ord 3 ②
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 3, '②', '진형이 흩어지자 성문이 그대로 드러났다.'
+from problems p
+where p.source_key = 'ar-wind-gate'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ── 비활성 ─────────────────────────────────────────────────────────
+-- 옛 action_turn convert 8건. 재설계안 11-4·세션 18. 재료·픽스처는 11-5 픽스처 갈아엎기 때 삭제.
+
+update problems set is_active = false
+ where source_key in ('at-left-feint', 'at-left-draw', 'at-left-feeler', 'at-broken-gate', 'at-cracked-ice', 'at-bell-rope', 'at-look-back', 'at-edit-log');
 
 commit;
 
