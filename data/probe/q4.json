@@ -1,0 +1,1082 @@
+[
+  {
+    "sourceKey": "at-left-feint",
+    "difficulty": 1,
+    "passage": "[상황] 태윤이 자신보다 머리 하나 큰 상대와 맞붙는다.\n[결정타] 상대가 앞서 한 번 보인 왼발 페인트",
+    "element": "왼발 페인트",
+    "kind": "good",
+    "detail": "good",
+    "text": "숨이 목까지 차올랐다.\n상대의 어깨가 아까와 똑같이 기울었다.\n태윤은 그 각도를 기억하고 있었다.\n왼발 페인트가 상대의 무게를 앞으로 끌어냈다.",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 2,
+        "cue_copied": false,
+        "foreshadow_used": null,
+        "has_actor": true,
+        "why": "2번 줄이 결정타의 신호(어깨 기울임)를 제시함"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 701,
+        "cachedTokens": 0,
+        "outputTokens": 46
+      },
+      "costUsd": 0.00069825,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-left-feint",
+    "difficulty": 1,
+    "passage": "[상황] 태윤이 자신보다 머리 하나 큰 상대와 맞붙는다.\n[결정타] 상대가 앞서 한 번 보인 왼발 페인트",
+    "element": "왼발 페인트",
+    "kind": "지문의 결정타 줄을 그대로 마지막 줄에",
+    "detail": "지문의 결정타 줄을 그대로 마지막 줄에",
+    "text": "숨이 목까지 차올랐다.\n상대의 어깨가 아까와 똑같이 기울었다.\n태윤은 그 각도를 기억하고 있었다.\n상대가 앞서 한 번 보인 왼발 페인트",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 2,
+        "cue_copied": true,
+        "foreshadow_used": null,
+        "has_actor": false,
+        "why": "4번 줄이 지문의 결정타 구절을 그대로 옮겨 적음"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 699,
+        "cachedTokens": 0,
+        "outputTokens": 44
+      },
+      "costUsd": 0.00068925,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-left-feint",
+    "difficulty": 1,
+    "passage": "[상황] 태윤이 자신보다 머리 하나 큰 상대와 맞붙는다.\n[결정타] 상대가 앞서 한 번 보인 왼발 페인트",
+    "element": "왼발 페인트",
+    "kind": "낱낱 나열",
+    "detail": "낱낱 나열",
+    "text": "태윤이 잽을 두 번 던졌다.\n상대가 팔로 막고 오른손을 냈다.\n태윤이 고개를 젖혀 피했다.\n태윤의 왼발 페인트가 상대의 턱에 닿았다.",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": null,
+        "cue_copied": false,
+        "foreshadow_used": null,
+        "has_actor": true,
+        "why": "1~3번 줄에 결정타가 통하는 근거가 없음"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 706,
+        "cachedTokens": 0,
+        "outputTokens": 43
+      },
+      "costUsd": 0.00069075,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-left-feint",
+    "difficulty": 1,
+    "passage": "[상황] 태윤이 자신보다 머리 하나 큰 상대와 맞붙는다.\n[결정타] 상대가 앞서 한 번 보인 왼발 페인트",
+    "element": "왼발 페인트",
+    "kind": "빌드업 없이 압축",
+    "detail": "빌드업 없이 압축",
+    "text": "공이 울렸다.\n둘이 달려들었다.\n주먹이 오갔다.\n왼발 페인트가 승부를 갈랐다.",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": null,
+        "cue_copied": false,
+        "foreshadow_used": null,
+        "has_actor": false,
+        "why": "1~3번 줄에 페인트가 통하게 된 사전 경과가 없음"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 684,
+        "cachedTokens": 0,
+        "outputTokens": 45
+      },
+      "costUsd": 0.00068175,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-left-draw",
+    "difficulty": 2,
+    "passage": "[상황] 무결이 지난달 자신을 벤 상대와 다시 마주한다.\n[복선] 그때 부러진 오른팔\n[결정타] 한 달을 감춘 왼손 발도",
+    "element": "왼손 발도",
+    "kind": "전용 복선미사용",
+    "detail": "복선(오른팔)을 안 씀",
+    "text": "검집이 허리에서 낮게 울었다.\n두 사람 사이가 세 걸음으로 줄었다.\n상대가 먼저 검을 들었다.\n왼손 발도가 그보다 빨랐다.",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 3,
+        "cue_copied": false,
+        "foreshadow_used": false,
+        "has_actor": true,
+        "why": "3번 줄의 선제 공격이 4번 줄의 빠른 발도가 통하는 이유임"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 704,
+        "cachedTokens": 0,
+        "outputTokens": 67
+      },
+      "costUsd": 0.00077925,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-left-draw",
+    "difficulty": 2,
+    "passage": "[상황] 무결이 지난달 자신을 벤 상대와 다시 마주한다.\n[복선] 그때 부러진 오른팔\n[결정타] 한 달을 감춘 왼손 발도",
+    "element": "왼손 발도",
+    "kind": "good",
+    "detail": "good",
+    "text": "오른팔은 아직 제 힘을 못 냈다.\n상대는 그 팔을 먼저 보고 있었다.\n무결은 어깨를 일부러 낮췄다.\n왼손 발도가 상대의 허리를 그었다.",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 2,
+        "cue_copied": false,
+        "foreshadow_used": true,
+        "has_actor": true,
+        "why": "2번 줄이 상대 시선을 끌어 왼손 발도의 기습 성공을 설명함"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 707,
+        "cachedTokens": 0,
+        "outputTokens": 47
+      },
+      "costUsd": 0.0007065,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-left-draw",
+    "difficulty": 2,
+    "passage": "[상황] 무결이 지난달 자신을 벤 상대와 다시 마주한다.\n[복선] 그때 부러진 오른팔\n[결정타] 한 달을 감춘 왼손 발도",
+    "element": "왼손 발도",
+    "kind": "지문의 결정타 줄을 그대로 마지막 줄에",
+    "detail": "지문의 결정타 줄을 그대로 마지막 줄에",
+    "text": "오른팔은 아직 제 힘을 못 냈다.\n상대는 그 팔을 먼저 보고 있었다.\n무결은 어깨를 일부러 낮췄다.\n한 달을 감춘 왼손 발도",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 2,
+        "cue_copied": true,
+        "foreshadow_used": true,
+        "has_actor": false,
+        "why": "4번 줄이 지문의 결정타 구절을 그대로 옮김"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 705,
+        "cachedTokens": 0,
+        "outputTokens": 42
+      },
+      "costUsd": 0.00068625,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-left-draw",
+    "difficulty": 2,
+    "passage": "[상황] 무결이 지난달 자신을 벤 상대와 다시 마주한다.\n[복선] 그때 부러진 오른팔\n[결정타] 한 달을 감춘 왼손 발도",
+    "element": "왼손 발도",
+    "kind": "낱낱 나열",
+    "detail": "낱낱 나열",
+    "text": "무결이 검집을 당겼다.\n상대가 검을 내리쳤다.\n무결이 몸을 틀어 피했다.\n왼손 발도가 상대의 허리를 그었다.",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 3,
+        "cue_copied": false,
+        "foreshadow_used": false,
+        "has_actor": true,
+        "why": "3번 줄의 회피 행동이 왼손 발도의 성공 근거가 됨"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 704,
+        "cachedTokens": 0,
+        "outputTokens": 46
+      },
+      "costUsd": 0.0007005,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-left-draw",
+    "difficulty": 2,
+    "passage": "[상황] 무결이 지난달 자신을 벤 상대와 다시 마주한다.\n[복선] 그때 부러진 오른팔\n[결정타] 한 달을 감춘 왼손 발도",
+    "element": "왼손 발도",
+    "kind": "빌드업 없이 압축",
+    "detail": "빌드업 없이 압축",
+    "text": "둘이 마주 섰다.\n검이 부딪쳤다.\n먼지가 일었다.\n왼손 발도가 갈랐다.",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": null,
+        "cue_copied": false,
+        "foreshadow_used": false,
+        "has_actor": true,
+        "why": "1~3번 줄에 부러진 오른팔 복선이 없음"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 692,
+        "cachedTokens": 0,
+        "outputTokens": 43
+      },
+      "costUsd": 0.00068025,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-broken-gate",
+    "difficulty": 2,
+    "passage": "[상황] 세연이 무너진 성문 아래서 마수와 갑자기 마주친다.\n[복선] 작년에 동생을 문 이빨\n[결정타] 잔해에서 주운 부러진 창끝",
+    "element": "창끝",
+    "kind": "전용 복선미사용",
+    "detail": "복선(이빨)을 안 씀",
+    "text": "마수가 성문 아래를 막고 섰다.\n세연은 물러설 데가 없었다.\n손에 잡히는 것을 아무거나 쥐었다.\n세연이 창끝을 휘둘렀다.",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 3,
+        "cue_copied": false,
+        "foreshadow_used": false,
+        "has_actor": true,
+        "why": "3번 줄에서 쥔 것이 4번의 창끝이 됨"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 715,
+        "cachedTokens": 0,
+        "outputTokens": 44
+      },
+      "costUsd": 0.00070125,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-left-feeler",
+    "difficulty": 1,
+    "passage": "[상황] 연희가 좁은 갱도에서 마수와 갑자기 마주친다.\n[결정타] 움직임을 읽는 마수의 왼쪽 더듬이",
+    "element": "왼쪽 더듬이",
+    "kind": "good",
+    "detail": "good",
+    "text": "등 뒤 갱도는 이미 무너져 있었다.\n마수가 머리를 좌우로 흔들었다.\n그때마다 두 더듬이가 공기를 훑었다.\n연희의 곡괭이가 왼쪽 더듬이를 쳐냈다.",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 3,
+        "cue_copied": false,
+        "foreshadow_used": null,
+        "has_actor": true,
+        "why": "3번 줄이 더듬이의 탐지 행동을 설명해 공격 근거가 됨"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 708,
+        "cachedTokens": 0,
+        "outputTokens": 48
+      },
+      "costUsd": 0.000711,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-left-feeler",
+    "difficulty": 1,
+    "passage": "[상황] 연희가 좁은 갱도에서 마수와 갑자기 마주친다.\n[결정타] 움직임을 읽는 마수의 왼쪽 더듬이",
+    "element": "왼쪽 더듬이",
+    "kind": "지문의 결정타 줄을 그대로 마지막 줄에",
+    "detail": "지문의 결정타 줄을 그대로 마지막 줄에",
+    "text": "등 뒤 갱도는 이미 무너져 있었다.\n마수가 머리를 좌우로 흔들었다.\n그때마다 두 더듬이가 공기를 훑었다.\n움직임을 읽는 마수의 왼쪽 더듬이",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 3,
+        "cue_copied": true,
+        "foreshadow_used": null,
+        "has_actor": false,
+        "why": "4번 줄이 지문의 [결정타]를 그대로 복사함"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 702,
+        "cachedTokens": 0,
+        "outputTokens": 44
+      },
+      "costUsd": 0.0006915,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-left-feeler",
+    "difficulty": 1,
+    "passage": "[상황] 연희가 좁은 갱도에서 마수와 갑자기 마주친다.\n[결정타] 움직임을 읽는 마수의 왼쪽 더듬이",
+    "element": "왼쪽 더듬이",
+    "kind": "낱낱 나열",
+    "detail": "낱낱 나열",
+    "text": "연희가 곡괭이를 들었다.\n마수가 앞발을 내리쳤다.\n연희가 옆으로 굴렀다.\n곡괭이가 왼쪽 더듬이를 쳐냈다.",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 3,
+        "cue_copied": false,
+        "foreshadow_used": null,
+        "has_actor": true,
+        "why": "옆으로 굴러 공격을 피했기에 더듬이를 칠 수 있음"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 702,
+        "cachedTokens": 0,
+        "outputTokens": 45
+      },
+      "costUsd": 0.00069525,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-left-feeler",
+    "difficulty": 1,
+    "passage": "[상황] 연희가 좁은 갱도에서 마수와 갑자기 마주친다.\n[결정타] 움직임을 읽는 마수의 왼쪽 더듬이",
+    "element": "왼쪽 더듬이",
+    "kind": "빌드업 없이 압축",
+    "detail": "빌드업 없이 압축",
+    "text": "마수가 나타났다.\n연희가 달려들었다.\n먼지가 일었다.\n왼쪽 더듬이가 꺾였다.",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 2,
+        "cue_copied": false,
+        "foreshadow_used": null,
+        "has_actor": true,
+        "why": "2번 줄의 공격 행동이 결정타인 더듬이가 꺾이는 계기를 제공함"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 683,
+        "cachedTokens": 0,
+        "outputTokens": 48
+      },
+      "costUsd": 0.00069225,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-bell-rope",
+    "difficulty": 2,
+    "passage": "[상황] 서린이 종탑 꼭대기에서 추격자와 마주 선다.\n[복선] 추격자가 죽인 누이\n[결정타] 마지막 층의 종줄",
+    "element": "종줄",
+    "kind": "전용 복선미사용",
+    "detail": "복선(누이)을 안 씀",
+    "text": "서린은 종탑 꼭대기에 섰다.\n추격자가 층계를 올라왔다.\n둘 사이가 세 걸음으로 줄었다.\n서린이 종줄을 잡아당겼다.",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 1,
+        "cue_copied": false,
+        "foreshadow_used": false,
+        "has_actor": true,
+        "why": "4번 줄은 1번 줄의 종탑 위라는 공간적 배경 덕분에 성립함"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 704,
+        "cachedTokens": 0,
+        "outputTokens": 49
+      },
+      "costUsd": 0.00071175,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-broken-gate",
+    "difficulty": 2,
+    "passage": "[상황] 세연이 무너진 성문 아래서 마수와 갑자기 마주친다.\n[복선] 작년에 동생을 문 이빨\n[결정타] 잔해에서 주운 부러진 창끝",
+    "element": "창끝",
+    "kind": "good",
+    "detail": "good",
+    "text": "마수의 아가리가 먼저 열렸다.\n작년에 동생을 문 이빨이 그대로 있었다.\n세연은 그것을 잊은 적이 없다.\n부러진 창끝이 그 이빨 사이로 들어갔다.",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 2,
+        "cue_copied": false,
+        "foreshadow_used": true,
+        "has_actor": true,
+        "why": "2번 줄이 복선 이빨을 언급하여 4번 줄 공격의 유효성을 뒷받침함"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 717,
+        "cachedTokens": 0,
+        "outputTokens": 52
+      },
+      "costUsd": 0.00073275,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-broken-gate",
+    "difficulty": 2,
+    "passage": "[상황] 세연이 무너진 성문 아래서 마수와 갑자기 마주친다.\n[복선] 작년에 동생을 문 이빨\n[결정타] 잔해에서 주운 부러진 창끝",
+    "element": "창끝",
+    "kind": "지문의 결정타 줄을 그대로 마지막 줄에",
+    "detail": "지문의 결정타 줄을 그대로 마지막 줄에",
+    "text": "마수의 아가리가 먼저 열렸다.\n작년에 동생을 문 이빨이 그대로 있었다.\n세연은 그것을 잊은 적이 없다.\n잔해에서 주운 부러진 창끝",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 2,
+        "cue_copied": true,
+        "foreshadow_used": true,
+        "has_actor": false,
+        "why": "4번 줄이 지문의 결정타 구절을 그대로 복사함"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 712,
+        "cachedTokens": 0,
+        "outputTokens": 43
+      },
+      "costUsd": 0.00069525,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-broken-gate",
+    "difficulty": 2,
+    "passage": "[상황] 세연이 무너진 성문 아래서 마수와 갑자기 마주친다.\n[복선] 작년에 동생을 문 이빨\n[결정타] 잔해에서 주운 부러진 창끝",
+    "element": "창끝",
+    "kind": "낱낱 나열",
+    "detail": "낱낱 나열",
+    "text": "세연이 창을 들었다.\n마수가 앞발을 내리쳤다.\n세연이 옆으로 굴렀다.\n부러진 창끝이 이빨을 찔렀다.",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 3,
+        "cue_copied": false,
+        "foreshadow_used": false,
+        "has_actor": true,
+        "why": "3번 줄의 회피 행동으로 4번 줄의 공격 성공 근거를 제공함"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 711,
+        "cachedTokens": 0,
+        "outputTokens": 48
+      },
+      "costUsd": 0.00071325,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-broken-gate",
+    "difficulty": 2,
+    "passage": "[상황] 세연이 무너진 성문 아래서 마수와 갑자기 마주친다.\n[복선] 작년에 동생을 문 이빨\n[결정타] 잔해에서 주운 부러진 창끝",
+    "element": "창끝",
+    "kind": "빌드업 없이 압축",
+    "detail": "빌드업 없이 압축",
+    "text": "마수가 나타났다.\n세연이 달려들었다.\n먼지가 일었다.\n창끝이 박혔다.",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 2,
+        "cue_copied": false,
+        "foreshadow_used": false,
+        "has_actor": true,
+        "why": "2번 줄의 공격 행동이 창끝이 박힌 결정타의 직접 원인임."
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 693,
+        "cachedTokens": 0,
+        "outputTokens": 48
+      },
+      "costUsd": 0.00069975,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-edit-log",
+    "difficulty": 2,
+    "passage": "[상황] 민재가 기획안을 가로챈 팀장과 마주 앉는다.\n[복선] 회의 전에 공유해 둔 초안\n[결정타] 초안에 남은 수정 기록",
+    "element": "수정 기록",
+    "kind": "전용 복선미사용",
+    "detail": "복선(초안)을 안 씀",
+    "text": "팀장이 발표를 마쳤다.\n부장이 고개를 끄덕였다.\n민재는 자리에서 일어서지 않았다.\n민재가 수정 기록을 띄웠다.",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 1,
+        "cue_copied": false,
+        "foreshadow_used": false,
+        "has_actor": true,
+        "why": "1번의 팀장 발표 마무리가 수정 기록 제시의 직접 계기임"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 703,
+        "cachedTokens": 0,
+        "outputTokens": 45
+      },
+      "costUsd": 0.000696,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-cracked-ice",
+    "difficulty": 1,
+    "passage": "[상황] 도경이 얼어붙은 강 위에서 늑대 무리에 둘러싸인다.\n[결정타] 발밑에서 갈라진 얼음",
+    "element": "갈라진 얼음",
+    "kind": "good",
+    "detail": "good",
+    "text": "등 뒤로 물러설 강기슭이 없었다.\n늑대 여섯이 반원으로 좁혀 왔다.\n발밑에서 무언가 길게 우는 소리가 났다.\n갈라진 얼음이 늑대 셋을 삼켰다.",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 3,
+        "cue_copied": false,
+        "foreshadow_used": null,
+        "has_actor": true,
+        "why": "3번의 얼음 우는 소리가 4번 얼음 갈라짐의 직전 근거임"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 713,
+        "cachedTokens": 0,
+        "outputTokens": 51
+      },
+      "costUsd": 0.000726,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-cracked-ice",
+    "difficulty": 1,
+    "passage": "[상황] 도경이 얼어붙은 강 위에서 늑대 무리에 둘러싸인다.\n[결정타] 발밑에서 갈라진 얼음",
+    "element": "갈라진 얼음",
+    "kind": "지문의 결정타 줄을 그대로 마지막 줄에",
+    "detail": "지문의 결정타 줄을 그대로 마지막 줄에",
+    "text": "등 뒤로 물러설 강기슭이 없었다.\n늑대 여섯이 반원으로 좁혀 왔다.\n발밑에서 무언가 길게 우는 소리가 났다.\n발밑에서 갈라진 얼음",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 2,
+        "cue_copied": true,
+        "foreshadow_used": null,
+        "has_actor": false,
+        "why": "4번 줄이 지문의 [결정타]를 그대로 복사함"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 705,
+        "cachedTokens": 0,
+        "outputTokens": 44
+      },
+      "costUsd": 0.00069375,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-cracked-ice",
+    "difficulty": 1,
+    "passage": "[상황] 도경이 얼어붙은 강 위에서 늑대 무리에 둘러싸인다.\n[결정타] 발밑에서 갈라진 얼음",
+    "element": "갈라진 얼음",
+    "kind": "낱낱 나열",
+    "detail": "낱낱 나열",
+    "text": "도경이 창을 찔렀다.\n늑대가 옆으로 피했다.\n도경이 창을 다시 당겼다.\n갈라진 얼음이 늑대를 삼켰다.",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 2,
+        "cue_copied": false,
+        "foreshadow_used": null,
+        "has_actor": true,
+        "why": "2번의 피하는 행동이 4번의 얼음 삼킴으로 이어짐"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 698,
+        "cachedTokens": 0,
+        "outputTokens": 46
+      },
+      "costUsd": 0.000696,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-cracked-ice",
+    "difficulty": 1,
+    "passage": "[상황] 도경이 얼어붙은 강 위에서 늑대 무리에 둘러싸인다.\n[결정타] 발밑에서 갈라진 얼음",
+    "element": "갈라진 얼음",
+    "kind": "빌드업 없이 압축",
+    "detail": "빌드업 없이 압축",
+    "text": "늑대가 나타났다.\n도경이 뛰었다.\n소리가 났다.\n갈라진 얼음이 삼켰다.",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 2,
+        "cue_copied": false,
+        "foreshadow_used": null,
+        "has_actor": true,
+        "why": "2번의 뛰는 행동이 얼음을 깨뜨린 직접적 원인임"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 684,
+        "cachedTokens": 0,
+        "outputTokens": 45
+      },
+      "costUsd": 0.00068175,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-bell-rope",
+    "difficulty": 2,
+    "passage": "[상황] 서린이 종탑 꼭대기에서 추격자와 마주 선다.\n[복선] 추격자가 죽인 누이\n[결정타] 마지막 층의 종줄",
+    "element": "종줄",
+    "kind": "good",
+    "detail": "good",
+    "text": "서린은 뒤를 돌아보지 않았다.\n누이가 죽던 밤에도 이 종은 울리지 않았다.\n추격자가 층계 끝에서 걸음을 멈췄다.\n서린이 종줄을 두 손으로 잡아당겼다.",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 2,
+        "cue_copied": false,
+        "foreshadow_used": true,
+        "has_actor": true,
+        "why": "2번 줄이 종과 울림에 대한 전사를 제공함"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 713,
+        "cachedTokens": 0,
+        "outputTokens": 42
+      },
+      "costUsd": 0.00069225,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-bell-rope",
+    "difficulty": 2,
+    "passage": "[상황] 서린이 종탑 꼭대기에서 추격자와 마주 선다.\n[복선] 추격자가 죽인 누이\n[결정타] 마지막 층의 종줄",
+    "element": "종줄",
+    "kind": "지문의 결정타 줄을 그대로 마지막 줄에",
+    "detail": "지문의 결정타 줄을 그대로 마지막 줄에",
+    "text": "서린은 뒤를 돌아보지 않았다.\n발판은 올라오면서 이미 끊어 두었다.\n추격자가 그 위에서 걸음을 멈췄다.\n마지막 층의 종줄",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 2,
+        "cue_copied": true,
+        "foreshadow_used": false,
+        "has_actor": false,
+        "why": "4번 줄이 지문의 [결정타] 구절을 그대로 복사함"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 702,
+        "cachedTokens": 0,
+        "outputTokens": 46
+      },
+      "costUsd": 0.000699,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-bell-rope",
+    "difficulty": 2,
+    "passage": "[상황] 서린이 종탑 꼭대기에서 추격자와 마주 선다.\n[복선] 추격자가 죽인 누이\n[결정타] 마지막 층의 종줄",
+    "element": "종줄",
+    "kind": "낱낱 나열",
+    "detail": "낱낱 나열",
+    "text": "서린이 몸을 틀었다.\n추격자가 칼을 내리쳤다.\n서린이 옆으로 피했다.\n서린이 종줄을 잡아당겼다.",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 2,
+        "cue_copied": false,
+        "foreshadow_used": false,
+        "has_actor": true,
+        "why": "2번 줄의 칼을 내리치는 공격이 4번 종줄을 당기는 계기가 된다."
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 698,
+        "cachedTokens": 0,
+        "outputTokens": 51
+      },
+      "costUsd": 0.00071475,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-bell-rope",
+    "difficulty": 2,
+    "passage": "[상황] 서린이 종탑 꼭대기에서 추격자와 마주 선다.\n[복선] 추격자가 죽인 누이\n[결정타] 마지막 층의 종줄",
+    "element": "종줄",
+    "kind": "빌드업 없이 압축",
+    "detail": "빌드업 없이 압축",
+    "text": "추격자가 올라왔다.\n서린이 뛰었다.\n종이 울렸다.\n종줄이 끊겼다.",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 2,
+        "cue_copied": false,
+        "foreshadow_used": false,
+        "has_actor": true,
+        "why": "2번의 뛰는 행동이 종줄이 끊어진 직접 원인이다"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 686,
+        "cachedTokens": 0,
+        "outputTokens": 44
+      },
+      "costUsd": 0.0006795,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-look-back",
+    "difficulty": 1,
+    "passage": "[상황] 수하가 저승 문턱에서 자신을 돌려보내려는 문지기와 마주 선다.\n[결정타] 뒤를 돌아보지 않겠다는 말",
+    "element": "돌아보지 않겠다",
+    "kind": "good",
+    "detail": "good",
+    "text": "문지기는 수하의 손목을 잡지 않았다.\n대신 뒤를 한 번 보라고 했다.\n보면 잃는다는 것을 수하도 알았다.\n수하는 돌아보지 않겠다고 말했다.",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 3,
+        "cue_copied": false,
+        "foreshadow_used": null,
+        "has_actor": true,
+        "why": "3번 줄이 뒤를 돌아보면 잃는다는 기회비용을 제시해 4번의 결의를 뒷받침함"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 704,
+        "cachedTokens": 0,
+        "outputTokens": 58
+      },
+      "costUsd": 0.0007455,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-look-back",
+    "difficulty": 1,
+    "passage": "[상황] 수하가 저승 문턱에서 자신을 돌려보내려는 문지기와 마주 선다.\n[결정타] 뒤를 돌아보지 않겠다는 말",
+    "element": "돌아보지 않겠다",
+    "kind": "지문의 결정타 줄을 그대로 마지막 줄에",
+    "detail": "지문의 결정타 줄을 그대로 마지막 줄에",
+    "text": "문지기는 수하의 손목을 잡지 않았다.\n대신 뒤를 한 번 보라고 했다.\n보면 잃는다는 것을 수하도 알았다.\n뒤를 돌아보지 않겠다는 말",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 2,
+        "cue_copied": true,
+        "foreshadow_used": null,
+        "has_actor": false,
+        "why": "4번 줄은 지문의 결정타 구절을 그대로 가져왔고 인물의 행동/상태가 없는 명사구임"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 702,
+        "cachedTokens": 0,
+        "outputTokens": 55
+      },
+      "costUsd": 0.00073275,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-look-back",
+    "difficulty": 1,
+    "passage": "[상황] 수하가 저승 문턱에서 자신을 돌려보내려는 문지기와 마주 선다.\n[결정타] 뒤를 돌아보지 않겠다는 말",
+    "element": "돌아보지 않겠다",
+    "kind": "낱낱 나열",
+    "detail": "낱낱 나열",
+    "text": "문지기가 물었다.\n수하가 답했다.\n문지기가 다시 물었다.\n수하는 돌아보지 않겠다고 답했다.",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 3,
+        "cue_copied": false,
+        "foreshadow_used": null,
+        "has_actor": true,
+        "why": "4번 줄은 3번 줄의 질문에 대한 답변으로成立함"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 690,
+        "cachedTokens": 0,
+        "outputTokens": 44
+      },
+      "costUsd": 0.0006825,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-look-back",
+    "difficulty": 1,
+    "passage": "[상황] 수하가 저승 문턱에서 자신을 돌려보내려는 문지기와 마주 선다.\n[결정타] 뒤를 돌아보지 않겠다는 말",
+    "element": "돌아보지 않겠다",
+    "kind": "빌드업 없이 압축",
+    "detail": "빌드업 없이 압축",
+    "text": "문이 열렸다.\n둘이 마주 섰다.\n말이 오갔다.\n돌아보지 않겠다로 끝났다.",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 3,
+        "cue_copied": false,
+        "foreshadow_used": null,
+        "has_actor": true,
+        "why": "4번의 발화 내용이 3번의 대화 상황에 직접 이어짐"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 687,
+        "cachedTokens": 0,
+        "outputTokens": 46
+      },
+      "costUsd": 0.00068775,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-edit-log",
+    "difficulty": 2,
+    "passage": "[상황] 민재가 기획안을 가로챈 팀장과 마주 앉는다.\n[복선] 회의 전에 공유해 둔 초안\n[결정타] 초안에 남은 수정 기록",
+    "element": "수정 기록",
+    "kind": "good",
+    "detail": "good",
+    "text": "팀장은 발표 내내 자료를 안 봤다.\n그 자료의 초안은 민재가 쓴 것이었다.\n민재는 아무 말도 하지 않았다.\n마지막에 초안의 수정 기록을 띄웠다.",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 2,
+        "cue_copied": false,
+        "foreshadow_used": true,
+        "has_actor": true,
+        "why": "2번 줄이 초안의 주인을 밝혀 수정 기록의 유효성을 뒷받침함"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 712,
+        "cachedTokens": 0,
+        "outputTokens": 49
+      },
+      "costUsd": 0.00071775,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-edit-log",
+    "difficulty": 2,
+    "passage": "[상황] 민재가 기획안을 가로챈 팀장과 마주 앉는다.\n[복선] 회의 전에 공유해 둔 초안\n[결정타] 초안에 남은 수정 기록",
+    "element": "수정 기록",
+    "kind": "지문의 결정타 줄을 그대로 마지막 줄에",
+    "detail": "지문의 결정타 줄을 그대로 마지막 줄에",
+    "text": "팀장은 발표 내내 자료를 안 봤다.\n그 자료의 초안은 민재가 쓴 것이었다.\n민재는 아무 말도 하지 않았다.\n초안에 남은 수정 기록",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 2,
+        "cue_copied": true,
+        "foreshadow_used": true,
+        "has_actor": false,
+        "why": "4번 줄이 지문 결정타 구절을 그대로 가져옴"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 706,
+        "cachedTokens": 0,
+        "outputTokens": 42
+      },
+      "costUsd": 0.000687,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-edit-log",
+    "difficulty": 2,
+    "passage": "[상황] 민재가 기획안을 가로챈 팀장과 마주 앉는다.\n[복선] 회의 전에 공유해 둔 초안\n[결정타] 초안에 남은 수정 기록",
+    "element": "수정 기록",
+    "kind": "낱낱 나열",
+    "detail": "낱낱 나열",
+    "text": "팀장이 화면을 넘겼다.\n민재가 화면을 보았다.\n팀장이 다시 넘겼다.\n민재가 수정 기록을 띄웠다.",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": 2,
+        "cue_copied": false,
+        "foreshadow_used": false,
+        "has_actor": true,
+        "why": "2번 줄에서 화면을 확인했기에 4번의 수정 기록 제시가 유효함"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 699,
+        "cachedTokens": 0,
+        "outputTokens": 48
+      },
+      "costUsd": 0.00070425,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  },
+  {
+    "sourceKey": "at-edit-log",
+    "difficulty": 2,
+    "passage": "[상황] 민재가 기획안을 가로챈 팀장과 마주 앉는다.\n[복선] 회의 전에 공유해 둔 초안\n[결정타] 초안에 남은 수정 기록",
+    "element": "수정 기록",
+    "kind": "빌드업 없이 압축",
+    "detail": "빌드업 없이 압축",
+    "text": "회의가 열렸다.\n발표가 있었다.\n말이 오갔다.\n수정 기록으로 끝났다.",
+    "prompt": "point2",
+    "outcome": {
+      "ok": true,
+      "observation": {
+        "support": null,
+        "cue_copied": false,
+        "foreshadow_used": false,
+        "has_actor": true,
+        "why": "4번 줄에 인물의 행동(끝났다)이 포함됨"
+      },
+      "error": null,
+      "usage": {
+        "inputTokens": 686,
+        "cachedTokens": 0,
+        "outputTokens": 42
+      },
+      "costUsd": 0.000672,
+      "model": "gemini-3.6-flash",
+      "raw": null,
+      "detail": null
+    }
+  }
+]
