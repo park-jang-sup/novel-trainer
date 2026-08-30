@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 18 · 커밋 `9e8e3ff` 위
+마지막 갱신: 세션 18 · 커밋 `0e1c906` 위
 
 ---
 
@@ -101,15 +101,18 @@ fill 화면 + 자기점검 (재설계안 11-2 4번 · 세션 18)
   lib/train-nav.ts   nextProblemKey — 순수. 목록 순서(difficulty→source_key) · 통과한 것 건너뜀 · 마지막 null
                      nextStageId  — 순수. 전체 순서(sentence→structure→start) 에서 문항 있는 다음 단계.
                                     같은 트랙에 안 매인다. 없으면 null(홈으로)
-  page.tsx           활성 문항 전부 + 통과 행 + 단계 전부를 한 번에 읽어 loop 재료. N/N 은
-                     app/page.tsx 와 같은 식(서로 다른 problem_id 통과 수)
+                     stageProgress — 순수. {passed,total,skipped}. 유형과 무관하게 통과한 problem_id 만
+                                    센다(정수 보장 — NaN 안 남). app/page.tsx 와 문항 화면이 이 하나를 쓴다
+  page.tsx           활성 문항 전부 + 통과 행 + 단계 전부를 한 번에 읽어 loop 재료
   TrainClient        제출 결과 아래 링크 하나.
                        통과+다음 있음   '다음 문항 →'
                        미달+다음 있음   '건너뛰기 →'
                        통과+다음 없음+건너뛴 것 0   '단계 완료 N/N' + '다음 단계 →'
                        통과+다음 없음+건너뛴 것 k   'N/M · 건너뛴 문항 k개' + 첫 건너뛴 문항 링크
                        미달+다음 없음   '단계 목록으로 →'
-  verify             nextProblemKey 9건 · nextStageId 8건 (트랙 경계 넘김 · 전부 빈 단계 · 물기)
+  verify             nextProblemKey 9건 · nextStageId 8건 · stageProgress (choice·order·count 로 완료 수 · 물기)
+  ★ 세션 18 후기: choice 단계 완료 화면이 'NaN/4' 였다. loop.total - skipped.length 를 stageProgress 로
+    바꿔 정수만 나오게 함. app/page.tsx 도 같은 함수를 쓴다(홈의 N/M 과 완료 화면이 갈릴 수 없다)
   ★ 확인함: nextStageId 가 10단계(action_reason) 다음으로 stage 14 `궤도 이탈 찾기`(구성 14, off_track)
     를 낸다 — SSR props 에서 확인 · ar-broken-gate 통과 후 형제 페이지에 passedIds 반영
   ★ 완료 조건(박 님): 브라우저 두 화면 — (1) 건너뛴 채 마지막까지 → 'N/M · 건너뛴 문항 k개' ·
@@ -122,6 +125,9 @@ fill 화면 + 자기점검 (재설계안 11-2 4번 · 세션 18)
 ## 미결 — 급하지 않다. 위가 끝나기 전엔 안 연다
 
 ```
+★ 형태소 서버              지금 로컬뿐(scoring-server, 상태 확인 참조). 안 떠 있으면 6단계 46문항이
+                          통과 불가(pending). 배포 시 이것도 같이 올린다(Cloud Run 이든 뭐든) —
+                          .env 의 SCORING_SERVER_URL·SCORING_SERVER_SECRET 을 그쪽으로 맞춘다
 at-left-feint fill 재료      상황 본문 · 빈칸 위치 · 모범답안 3건. 재설계안 7-5 목록 열둘을 먼저
                             읽고 짠다. 그때 3×3(장르 셋씩)이 찬다
 ar-left-feeler 모범답안       재설계안 7-7 에 가·나·다가 없다. stage2 가 보여줄 것이 없다
@@ -144,6 +150,9 @@ combo-report 감시(세션 16 7-1)  ·  503 로그  ·  UTC 하루 경계  ·  3
 ## 상태 확인
 
 ```bash
+# 형태소 서버 — 별도 터미널. 안 떠 있으면 6단계 46문항이 pending 이다.
+cd scoring-server && source .venv/bin/activate && SCORING_SECRET=dev uvicorn main:app --port 8000
+
 npx next typegen && npx tsc --noEmit     # 0건
 npm run test:scoring | tail -1           # 0 실패만 본다
 npm run check:numbers | tail -1          # 낡은 수 0건
