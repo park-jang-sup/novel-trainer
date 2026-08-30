@@ -1,0 +1,85 @@
+/**
+ * 지목(point) 회차 리포트. **`ai-report.ts` 와 안 묶는다** —
+ * 묶으면 한쪽을 고칠 때 다른 쪽이 흔들린다. `load` 열두 자리는 그대로 살아 있어야
+ * `data/probe` 11개를 계속 센다.
+ *
+ * ★ 판정선은 `docs/AI심사_설계안.md` 4-2-1 이 단일 출처다. 여기서 선을 옮기지 마라.
+ *
+ *   npx tsx scripts/point-report.ts data/probe/p1.json [p2.json ...]
+ */
+import { readFileSync } from 'node:fs'
+import type { PointObservation } from '../lib/ai/prompt'
+
+type Row = {
+  sourceKey: string
+  kind: string
+  detail: string
+  prompt?: string
+  outcome: { ok: boolean; observation: PointObservation | null; error: string | null }
+}
+
+const files = process.argv.slice(2)
+if (files.length === 0) { console.error('회차 파일을 하나 이상 줘라'); process.exit(1) }
+const runs: Row[][] = files.map((f) => JSON.parse(readFileSync(f, 'utf-8')))
+
+// ★ prompt 가 point 가 아닌 파일이 섞이면 멈춘다. 섞여서 세면 무엇을 쟀는지 모른다.
+for (const [i, r] of runs.entries()) {
+  const bad = r.filter((x) => x.prompt !== undefined && x.prompt !== 'point')
+  if (bad.length) { console.error(`★ ${files[i]} 에 point 가 아닌 행이 ${bad.length}건 있다`); process.exit(1) }
+  if (r.some((x) => x.prompt === undefined)) console.error(`★ ${files[i]} 에 prompt 가 안 실려 있다 (옛 형식)`)
+}
+
+const key = (x: Row) => x.sourceKey + '|' + x.kind
+const KINDS = ['good', '낱낱 나열', '빌드업 없이 압축', '지문의 결정타 줄을 그대로 마지막 줄에', '전용 복선미사용']
+
+const sup = (x: Row) => (x.outcome.ok && x.outcome.observation ? x.outcome.observation.support : undefined)
+
+// ── 파싱 ──────────────────────────────────────────────────────────
+console.log(`회차 ${runs.length} · 파일 ${files.join(' ')}`)
+for (const [i, r] of runs.entries()) {
+  const ok = r.filter((x) => x.outcome.ok).length
+  console.log(`  ${files[i]}  관측 ${ok}/${r.length}`)
+}
+
+// ── 축 1 · 축 3 ───────────────────────────────────────────────────
+console.log('\n[축 1] null 을 낸 건수 (회차 다수결)')
+const base = runs[0]
+const nullMaj = (k: string) => {
+  const vs = runs.map((r) => r.find((x) => key(x) === k)).map((x) => (x ? sup(x) : undefined))
+  const seen = vs.filter((v) => v !== undefined)
+  const n = seen.filter((v) => v === null).length
+  return { maj: n * 2 > seen.length, n, of: seen.length }
+}
+let nullTotal = 0, seenTotal = 0
+for (const kind of KINDS) {
+  const g = base.filter((x) => x.kind === kind)
+  if (!g.length) continue
+  const m = g.map((x) => nullMaj(key(x)))
+  const cnt = m.filter((x) => x.maj).length
+  console.log(`  ${kind.padEnd(26)} n=${g.length}  null ${cnt}/${g.length}`)
+}
+for (const r of runs) for (const x of r) { const s = sup(x); if (s !== undefined) { seenTotal++; if (s === null) nullTotal++ } }
+console.log(`\n[축 3] 전체 null 비율  ${nullTotal}/${seenTotal} = ${(nullTotal / seenTotal * 100).toFixed(1)}%  (40% 초과면 축1의 수를 못 쓴다)`)
+
+// ── 축 2 ──────────────────────────────────────────────────────────
+if (runs.length >= 2) {
+  let all = 0, maj4 = 0
+  for (const x of base) {
+    const vs = runs.map((r) => r.find((y) => key(y) === key(x))).map((y) => (y ? sup(y) : undefined))
+    const seen = vs.filter((v) => v !== undefined)
+    if (seen.length < runs.length) continue
+    const first = seen[0]
+    const same = seen.filter((v) => v === first).length
+    if (same === seen.length) all++
+    if (same >= seen.length - 1) maj4++
+  }
+  console.log(`\n[축 2] 5회 내내 같은 줄  ${all}/${base.length}   (판정선 ≥27. load 는 22/36)`)
+  console.log(`       4회 이상 같은 줄  ${maj4}/${base.length}   (참고)`)
+}
+
+// ── good 의 지목 줄 — 정답지가 생기면 다시 센다 ──────────────────────
+console.log('\n[good 여덟] 지목한 줄 — ★ 지금은 정오를 못 잰다. 정답지가 생기면 다시 센다')
+for (const x of base.filter((y) => y.kind === 'good')) {
+  const vs = runs.map((r) => r.find((y) => key(y) === key(x))).map((y) => (y ? sup(y) : '-'))
+  console.log(`  ${x.sourceKey.padEnd(18)} ${JSON.stringify(vs)}`)
+}
