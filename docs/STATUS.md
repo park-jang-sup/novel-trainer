@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 18 · 커밋 `10fca7d` 위
+마지막 갱신: 세션 18 · 커밋 `d42dd1f` 위
 
 ---
 
@@ -63,7 +63,7 @@ fill 유형 (재설계안 11-3)   lib/scoring/types · local · index · verify
   local      case 'fill' — 빈칸마다 채움·분량·문장수·고정줄베낌, 전체에 forbidWords. countSentences(종결부호)
   verify     물기 시험 넷 다 물림 (빈칸 비움 · 고정 줄 베낌 · 61자 · 대괄호)
 
-fill 여덟 시드 (재설계안 11-5 · 7-6·7-7·7-10-2)
+fill 여덟 시드 (재설계안 11-5 · 7-6·7-7·7-10-2)   ★ DB 적용 완료 · seed_check 통과
   stages     새 skill_key `action_reason` order_no 10 · 옛 action_turn 은 12 로 밀림
   problems   ar-broken-gate·left-draw·cracked-ice·left-feeler·dragon-jaw·dull-blade·bell-rope·wind-gate
              ★ at-left-feint 은 뺐다 (재설계안에 fill 재료가 없다 — 미결 참조)
@@ -86,6 +86,9 @@ fill 여덟 시드 (재설계안 11-5 · 7-6·7-7·7-10-2)
 at-left-feint fill 재료      상황 본문 · 빈칸 위치 · 모범답안 3건. 재설계안 7-5 목록 열둘을 먼저
                             읽고 짠다. 그때 3×3(장르 셋씩)이 찬다
 ar-left-feeler 모범답안       재설계안 7-7 에 가·나·다가 없다. stage2 가 보여줄 것이 없다
+seed_data 는 갱신을 안 한다    문항 insert 가 `where not exists` 라 기존 행을 안 고친다. 덤프의
+                            passage·scoring_config 를 바꾸면 seed_data 만으로는 DB 에 안 들어간다 —
+                            DB update 를 따로 돌리고 seed_check 를 실제로 돌려 대조가 통과하는지 본다
 action_turn 옛 것 삭제        옛 단계(order_no 12) · convert 8건 · action-turn.ts 픽스처 · verify 블록 여섯 —
                             재설계안 11-5 픽스처 갈아엎기 때 한꺼번에 지운다
 combo-report 감시(세션 16 7-1)  ·  503 로그  ·  UTC 하루 경계  ·  30자와 문형
