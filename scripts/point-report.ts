@@ -3,7 +3,7 @@
  * 묶으면 한쪽을 고칠 때 다른 쪽이 흔들린다. `load` 열두 자리는 그대로 살아 있어야
  * `data/probe` 11개를 계속 센다.
  *
- * ★ 판정선은 `docs/AI심사_설계안.md` 4-2-1 이 단일 출처다. 여기서 선을 옮기지 마라.
+ * ★ 판정선은 `docs/archive/AI심사_설계안.md` 4-2-1 이 단일 출처다. 여기서 선을 옮기지 마라.
  *
  *   npx tsx scripts/point-report.ts data/probe/p1.json [p2.json ...]
  */
