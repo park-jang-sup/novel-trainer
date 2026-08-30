@@ -13,6 +13,20 @@ import type {
 
 export const countChars = (t: string) => t.replace(/\s/g, '').length
 
+/**
+ * 종결부호(. ! ? …)로 문장을 센다. 형태소가 필요 없다.
+ *
+ * fill 빈칸 답안은 "한 문장에서 두 문장"이라 짧고, 지문 조건도 그 범위다.
+ * 끝에 종결부호가 없는 꼬리도 한 문장으로 센다 — 안 그러면 종결부호를 뺀
+ * 답안이 0문장으로 잡혀 minSentences 에 억울하게 걸린다.
+ */
+export function countSentences(text: string): number {
+  const t = text.trim()
+  if (!t) return 0
+  const marks = t.match(/[.!?…]+/g)?.length ?? 0
+  return /[.!?…]$/.test(t) ? Math.max(marks, 1) : marks + 1
+}
+
 /** 어간 매칭. "기뻤"은 기뻤다·기뻤고·기뻤지만을 모두 잡는다. */
 export function findForbidden(text: string, stems: string[]): string[] {
   const hits: string[] = []
@@ -479,6 +493,108 @@ export function gradeLocal(
           evidence: [...new Set(dup)],
         })
       }
+      break
+    }
+
+    case 'fill': {
+      const blanks = cfg.blanks ?? []
+      const filled = sub.blanks ?? {}
+      const fixedLines = (cfg.fixedLines ?? [])
+        .map((l) => l.trim())
+        .filter(Boolean)
+
+      for (const b of blanks) {
+        const raw = (filled[b.key] ?? '').trim()
+
+        // 1) 빈칸을 채웠는가. optional 이면 비워도 통과(7-10-2 '가').
+        if (!raw) {
+          checks.push({
+            key: `fill:${b.key}:filled`,
+            label: `${b.key} 채움`,
+            status: b.optional ? 'pass' : 'fail',
+            detail: b.optional ? '비움(선택 입력)' : '비어 있음',
+            rule: b.optional ? `${b.key}: 선택 입력` : `${b.key}: 반드시 채운다`,
+            gating: true,
+          })
+          continue
+        }
+
+        // 2) 분량. 공백 제외.
+        const n = countChars(raw)
+        if (b.maxChars !== undefined) {
+          checks.push({
+            key: `fill:${b.key}:maxChars`,
+            label: `${b.key} 분량`,
+            status: n <= b.maxChars ? 'pass' : 'fail',
+            detail: `${n}자 / ${b.maxChars}자 이하`,
+            rule: `${b.key}: ${b.maxChars}자 이하`,
+            gating: true,
+          })
+        }
+        if (b.minChars !== undefined && b.minChars > 0) {
+          checks.push({
+            key: `fill:${b.key}:minChars`,
+            label: `${b.key} 최소 분량`,
+            status: n >= b.minChars ? 'pass' : 'fail',
+            detail: `${n}자 / ${b.minChars}자 이상`,
+            rule: `${b.key}: ${b.minChars}자 이상`,
+            gating: true,
+          })
+        }
+
+        // 3) 문장 수. 종결부호로 센다 — 형태소 필요 없음.
+        if (b.minSentences !== undefined || b.maxSentences !== undefined) {
+          const s = countSentences(raw)
+          const lo = b.minSentences ?? 1
+          const hi = b.maxSentences
+          const ok = s >= lo && (hi === undefined || s <= hi)
+          const range =
+            hi === undefined ? `${lo}문장 이상` : lo === hi ? `${lo}문장` : `${lo}~${hi}문장`
+          checks.push({
+            key: `fill:${b.key}:sentences`,
+            label: `${b.key} 문장 수`,
+            status: ok ? 'pass' : 'fail',
+            detail: `${s}문장 / ${range}`,
+            rule: `${b.key}: ${range}`,
+            gating: true,
+          })
+        }
+
+        // 4) 고정 줄을 그대로 베꼈는가. cue_copied 를 규칙으로 내린 것.
+        if (cfg.forbidCopyOfFixedLines && fixedLines.length > 0) {
+          const answerLines = raw
+            .split('\n')
+            .map((l) => l.trim())
+            .filter(Boolean)
+          const copied = answerLines.filter((l) => fixedLines.includes(l))
+          checks.push({
+            key: `fill:${b.key}:copy`,
+            label: `${b.key} 고정 줄 베낌`,
+            status: copied.length === 0 ? 'pass' : 'fail',
+            detail: copied.length === 0 ? '없음' : `${copied.length}줄`,
+            rule: `${b.key}: 앞뒤 고정 줄을 그대로 옮기지 않는다`,
+            evidence: copied,
+            gating: true,
+          })
+        }
+      }
+
+      // 5) 금지어 — 대괄호 표지([상황]·[복선]·[결정타] 등). 빈칸을 이어
+      //    붙여 한 번에 본다. 어간 매칭이라 대괄호도 그대로 잡힌다.
+      if (cfg.forbidWords?.length) {
+        const joined = blanks.map((b) => filled[b.key] ?? '').join('\n')
+        const hits = findForbidden(joined, cfg.forbidWords)
+        checks.push({
+          key: 'forbidWords',
+          label: '쓰지 않을 말',
+          status: hits.length === 0 ? 'pass' : 'fail',
+          detail: hits.length === 0 ? '없음' : `${hits.length}개`,
+          rule: `쓰지 않음: ${cfg.forbidWords.join(', ')}`,
+          evidence: hits,
+          gating: true,
+        })
+      }
+
       break
     }
 

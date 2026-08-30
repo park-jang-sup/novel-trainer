@@ -101,7 +101,7 @@ export function mergeForbidChecks(checks: Check[]): Check[] {
     .map((c) => (c.key === 'forbidWords' ? merged : c))
 }
 
-export { gradeLocal, pendingMorphChecks, countChars, findForbidden } from './local'
+export { gradeLocal, pendingMorphChecks, countChars, countSentences, findForbidden } from './local'
 export { gradeMorph } from './morph'
 export * from './types'
 // analyze는 server-only다. 라우트에서 './remote'로 직접 import한다.

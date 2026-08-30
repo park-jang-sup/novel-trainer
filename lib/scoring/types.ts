@@ -30,6 +30,7 @@ export type ProblemType =
   | 'order'
   | 'coinage'
   | 'count'
+  | 'fill'
 
 export type ScoringMode = 'auto' | 'ai' | 'hybrid'
 
@@ -41,6 +42,24 @@ export interface CountInput {
   label: string
   min: number
   max: number
+}
+
+// fill 유형. 고정 줄 사이에 뚫린 빈칸 하나. 재설계안 11-3장.
+//
+// 자유 서술형(remove/convert)의 검사를 빈칸 단위로 재사용한다 — 새 축을
+// 만들지 않는다. minSentences/maxSentences 만 fill 전용이고, 그것도
+// 형태소 없이 종결부호로 센다(local.ts countSentences).
+export interface BlankSpec {
+  key: string // 지문에 박히는 표식. '①' '②' 처럼 한 글자
+  label: string // 무엇이 들어가는지. 화면과 rule 에 그대로 나간다
+  /** 최소 문장 수. 종결부호로 센다. 기본 1 */
+  minSentences?: number
+  /** 최대 문장 수. "한 문장에서 두 문장" 조건이 이걸로 내려온다 */
+  maxSentences?: number
+  minChars?: number // 공백 제외
+  maxChars?: number // 공백 제외
+  /** true 면 비워도 통과. 7-10-2 '가'(①이 없음)를 살린다 */
+  optional?: boolean
 }
 
 export interface ScoringConfig {
@@ -96,6 +115,16 @@ export interface ScoringConfig {
   // count
   inputs?: CountInput[]
   op?: CountOp
+  // fill — 재설계안 11-3장
+  /** 뚫린 빈칸의 목록. 채점은 빈칸마다 위 줄 검사를 재사용한다 */
+  blanks?: BlankSpec[]
+  /** 지문의 고정 줄 원문. forbidCopyOfFixedLines 가 이것과 대조한다.
+   *  gradeLocal 에는 passage 가 안 들어오므로 config 가 실어 나른다.
+   *  시드가 지문에서 뽑아 채운다 */
+  fixedLines?: string[]
+  /** 빈칸에 앞뒤 고정 줄을 그대로 베끼면 fail. cue_copied 관측을
+   *  규칙으로 내린 것이다(재설계안 11-3장) */
+  forbidCopyOfFixedLines?: boolean
 }
 
 export interface Problem {
@@ -117,6 +146,7 @@ export interface Submission {
   choiceIndex?: number
   order?: number[]
   values?: Record<string, number> // count 유형
+  blanks?: Record<string, string> // fill 유형. 빈칸 key → 채운 글
 }
 
 // 형태소 분석 서버 응답

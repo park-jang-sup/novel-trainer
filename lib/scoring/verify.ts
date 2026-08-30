@@ -1663,6 +1663,134 @@ console.log('\n[10단계: requireInLastLine 물기 시험]')
 }
 
 
+// ── 10단계 fill(동작에 이유 넣기): 빈칸 채점 ──────────────────────────
+//
+// 재설계안 11-3장. 고정 줄 사이에 뚫린 빈칸을 채운다. 채점은 빈칸마다
+// 기존 줄 검사(분량·문장 수·금지어)를 재사용하고, 새 규칙은
+// forbidCopyOfFixedLines 하나다.
+//
+// 시드는 아직 없다(재설계안 11-5 2번). 그래서 여기 재료는 재설계안
+// 7-7장 at-broken-gate 를 그대로 옮긴 것이다. 시드가 들어오면 이 블록을
+// 지우지 마라 — 이건 검사의 단위 시험이고, 그쪽은 문항의 감도 시험이다.
+//
+// ★ 물기 시험 넷(재설계안 11-5 1번): 빈칸 하나 비우기 · 고정 줄 베끼기 ·
+//   61자 · 대괄호. 넷이 다 물리는 것을 보고 커밋한다.
+console.log('\n[10단계 fill: 빈칸 채점 물기 시험]')
+{
+  const FIXED = [
+    '마수의 앞발이 세연을 성문 잔해로 밀어붙였다.',
+    '세연은 부러진 창끝을 두 손으로 고쳐 쥐었다.',
+    '마수가 몸을 낮추고 머리를 들이밀었다.',
+    '창끝이 마수의 목을 찔렀다.',
+  ]
+  const CFG: ScoringConfig = {
+    blanks: [
+      { key: '①', label: '세연이 이 순간 무엇을 하는지', minSentences: 1, maxSentences: 2, maxChars: 60, optional: true },
+      { key: '②', label: '무엇을 보고 목을 노렸는지', minSentences: 1, maxSentences: 2, maxChars: 60 },
+    ],
+    fixedLines: FIXED,
+    forbidCopyOfFixedLines: true,
+    forbidWords: ['[상황]', '[복선]', '[결정타]'],
+  }
+  const run = (blanks: Record<string, string>, cfg: ScoringConfig = CFG) =>
+    gradeLocal({ id: 'bg', type: 'fill', scoring_mode: 'auto', scoring_config: cfg } as Problem, { blanks })
+  const statusOfRun = (checks: ReturnType<typeof run>) =>
+    checks.some((c) => c.status === 'fail') ? 'fail' : checks.some((c) => c.status === 'pending') ? 'pending' : 'pass'
+  const failKeys = (checks: ReturnType<typeof run>) =>
+    JSON.stringify(checks.filter((c) => c.status === 'fail').map((c) => c.key))
+
+  // 좋은 답안 둘(7-7장 가·나) — 전부 통과해야 한다.
+  const CLEAN: Record<string, string>[] = [
+    { '①': '등이 돌무더기에 처박혔다. 숨이 한 번에 빠져나갔다.', '②': '목을 덮은 비늘 사이로 역린이 드러났다.' },
+    {
+      '①': '세연은 잔해에 손을 짚고 몸을 일으켰다. 팔이 말을 듣지 않았다.',
+      '②': '들이미는 머리에 따라 빈틈이 보였다. 목 아래 비늘이 얇은 자리가 거기였다.',
+    },
+  ]
+  CLEAN.forEach((blanks, i) => {
+    const r = run(blanks)
+    t(`fill clean ${i + 1} → pass`, statusOfRun(r) === 'pass', failKeys(r))
+  })
+
+  // ①을 아예 안 채운다 — optional 이라 통과해야 한다(7-10-2 '가').
+  {
+    const r = run({ '②': '목을 덮은 비늘 사이로 역린이 드러났다.' })
+    const c = r.find((x) => x.key === 'fill:①:filled')
+    t('fill ① 비움(optional) → pass', c?.status === 'pass' && statusOfRun(r) === 'pass', failKeys(r))
+  }
+
+  // ── 물기 병 넷 ──
+  const LONG = '가'.repeat(60) + '.' // 공백 제외 61자, 1문장
+  const bottles: { key: string; blanks: Record<string, string>; failKey: string }[] = [
+    {
+      key: '빈칸 하나 비움',
+      blanks: { '①': '등이 돌무더기에 처박혔다.', '②': '' },
+      failKey: 'fill:②:filled',
+    },
+    {
+      key: '고정 줄 베낌',
+      blanks: { '①': '등이 돌무더기에 처박혔다.', '②': '마수가 몸을 낮추고 머리를 들이밀었다.' },
+      failKey: 'fill:②:copy',
+    },
+    {
+      key: '61자',
+      blanks: { '①': '등이 돌무더기에 처박혔다.', '②': LONG },
+      failKey: 'fill:②:maxChars',
+    },
+    {
+      key: '대괄호',
+      blanks: { '①': '등이 돌무더기에 처박혔다.', '②': '[결정타] 역린이 드러났다.' },
+      failKey: 'forbidWords',
+    },
+  ]
+  for (const b of bottles) {
+    const r = run(b.blanks)
+    const c = r.find((x) => x.key === b.failKey)
+    t(`fill 병 '${b.key}' → ${b.failKey} fail`, c?.status === 'fail', `실제=${c?.status} ${failKeys(r)}`)
+    t(`fill 병 '${b.key}' → 전체 fail · gating`, statusOfRun(r) === 'fail' && c?.gating === true)
+  }
+
+  // 병을 넣어 물린다: 해당 검사/설정을 빼면 그 병이 새야 한다.
+  // 새지 않으면 다른 검사가 대신 잡고 있는 것이고, 그러면 이 검사가
+  // 무엇을 하는지 아무도 모르는 상태가 된다.
+  {
+    // ②를 optional 로 바꾸면 '빈칸 비움'이 샌다
+    const cfg: ScoringConfig = { ...CFG, blanks: CFG.blanks!.map((b) => (b.key === '②' ? { ...b, optional: true } : b)) }
+    const r = run({ '①': '등이 돌무더기에 처박혔다.', '②': '' }, cfg)
+    t('②가 필수라서 빈칸 비움을 잡는다 (optional 로 바꾸면 pass)', statusOfRun(r) === 'pass', failKeys(r))
+  }
+  {
+    // forbidCopyOfFixedLines 를 빼면 '고정 줄 베낌'이 샌다
+    const { forbidCopyOfFixedLines, ...rest } = CFG
+    void forbidCopyOfFixedLines
+    const r = run({ '①': '등이 돌무더기에 처박혔다.', '②': '마수가 몸을 낮추고 머리를 들이밀었다.' }, rest)
+    t('forbidCopyOfFixedLines 를 빼면 고정 줄 베낌이 샌다 — 이 규칙이 하는 일', statusOfRun(r) === 'pass', failKeys(r))
+  }
+  {
+    // ②의 maxChars 를 빼면 '61자'가 샌다
+    const cfg: ScoringConfig = { ...CFG, blanks: CFG.blanks!.map((b) => (b.key === '②' ? { key: b.key, label: b.label, minSentences: 1, maxSentences: 2 } : b)) }
+    const r = run({ '①': '등이 돌무더기에 처박혔다.', '②': LONG }, cfg)
+    t('②의 maxChars 를 빼면 61자가 샌다', statusOfRun(r) === 'pass', failKeys(r))
+  }
+  {
+    // forbidWords 를 빼면 '대괄호'가 샌다
+    const { forbidWords, ...rest } = CFG
+    void forbidWords
+    const r = run({ '①': '등이 돌무더기에 처박혔다.', '②': '[결정타] 역린이 드러났다.' }, rest)
+    t('forbidWords 를 빼면 대괄호가 샌다', statusOfRun(r) === 'pass', failKeys(r))
+  }
+
+  // combine() 도 같은 판정을 내는가 — status fail · blocked · AI 안 부름
+  {
+    const p: Problem = { id: 'bg', type: 'fill', scoring_mode: 'auto', scoring_config: CFG }
+    const r = combine(p, { blanks: { '①': '등이 돌무더기에 처박혔다.', '②': '' } }, undefined, null)
+    t('combine: 빈칸 비움 → fail · blocked · needsAi false', r.status === 'fail' && r.blocked === true && r.needsAi === false, `status=${r.status} blocked=${r.blocked} needsAi=${r.needsAi}`)
+    const ok = combine(p, { blanks: CLEAN[0] }, undefined, null)
+    t('combine: 좋은 답안 → pass (fill 은 auto 라 needsAi false)', ok.status === 'pass' && ok.needsAi === false, `status=${ok.status}`)
+  }
+}
+
+
 // ── 10단계 action_turn(전투 서사화) ──────────────────────────────────
 //
 // 난이도를 검사가 아니라 재료로 가른다. 9단계 povCfgOf 가 difficulty 를 안

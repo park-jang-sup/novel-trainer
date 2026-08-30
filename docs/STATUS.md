@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 17 · 커밋 `15e91fa` 위
+마지막 갱신: 세션 18 · 커밋 `d6d7e41` 위
 
 ---
 
@@ -47,12 +47,22 @@ AI 는 피드백이지 심판이 아니다     위 재개 조건 전까지
 ## 다음 — 순서대로. 하나가 verify 에서 물리기 전에 다음을 안 한다
 
 ```
-1  fill 유형             lib/scoring/types · local · verify
-                        물기 시험 넷: 빈칸 하나 비움 · 고정 줄 베낌 · 61자 · 대괄호
-2  지문 아홉 시드         seed/dump → gen:seed → seed_check
-3  fill 화면 + 자기점검    고정 줄 사이 입력칸 · 제출 뒤 모범답안 · 체크 둘
-4  학습 루프             다음 문항 자동 이동 · 단계 완료 화면
-5  빈 단계 채우기         도입 4단계 → 구성 빈 6단계 → 절단신공. 단계당 4~6. 기존 유형만
+1  지문 아홉 시드         seed/dump → gen:seed → seed_check
+                        ★ scoring_config 에 blanks · fixedLines · forbidCopyOfFixedLines · forbidWords(대괄호)
+2  fill 화면 + 자기점검    고정 줄 사이 입력칸 · 제출 뒤 모범답안 · 체크 둘
+                        ★ 제출은 {blanks:{'①':…,'②':…}} 꼴. grade/route 가 아직 안 받는다
+3  학습 루프             다음 문항 자동 이동 · 단계 완료 화면
+4  빈 단계 채우기         도입 4단계 → 구성 빈 6단계 → 절단신공. 단계당 4~6. 기존 유형만
+```
+
+### 끝난 것 — 세션 18
+
+```
+fill 유형 (재설계안 11-3)   lib/scoring/types · local · index · verify
+  types      ProblemType 'fill' · BlankSpec · cfg.blanks/fixedLines/forbidCopyOfFixedLines · Submission.blanks
+  local      case 'fill' — 빈칸마다 채움·분량·문장수·고정줄베낌, 전체에 forbidWords. countSentences(종결부호)
+  verify     물기 시험 넷 다 물림 (빈칸 비움 · 고정 줄 베낌 · 61자 · 대괄호). +17건
+  ★ 화면·route·seed 는 안 건드렸다. gradeLocal 에 passage 가 안 와서 fixedLines 를 cfg 가 실어 나른다
 ```
 
 ★ 주 단위 기준 하나 — **학습자가 새로 할 수 있게 된 것**이 없는 주는 실패다.
