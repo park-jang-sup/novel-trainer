@@ -2593,6 +2593,62 @@ console.log('\n[2단계 emotion_action: 모범답안 대조]')
   pushRefMorphCheck('2단계', refs, 'convert', cfgOf)
 }
 
+// ── 3단계 trim_padding(군더더기 빼기): 모범답안 대조 (세션 23) ───────────
+//
+// answers.json 의 reference[] 에 8문항 × ord 1(가)/2(나) = 16행. blank_key ''.
+// 2단계와 같은 결 — 다만 '지우는' 단계라 모범답안의 문장 수가 원문보다 반드시
+// 적어야 한다(추가 단언).
+console.log('\n[3단계 trim_padding: 모범답안 대조]')
+{
+  interface TpProblem {
+    source_key: string
+    skill_key: string
+    type: string
+    passage: string | null
+    scoring_config: ScoringConfig
+  }
+  const seedDir = path.join(__dirname, '..', '..', 'seed', 'dump')
+  const readDump = <T,>(f: string): T =>
+    JSON.parse(readFileSync(path.join(seedDir, f), 'utf8').replace(/^﻿/, '')) as T
+
+  const tp = readDump<TpProblem[]>('problems.json').filter((d) => d.skill_key === 'trim_padding')
+  const tpKeys = new Set(tp.map((d) => d.source_key))
+  const refs = (readDump<{ reference?: RefRow[] }>('answers.json').reference ?? []).filter((r) =>
+    tpKeys.has(r.source_key)
+  )
+  const cfgOf = new Map(tp.map((d) => [d.source_key, d.scoring_config]))
+  const passageOf = new Map(tp.map((d) => [d.source_key, d.passage ?? '']))
+
+  t('덤프에 trim_padding 8문항', tp.length === 8, `실제=${tp.length}`)
+  t('전부 remove 유형', tp.every((d) => d.type === 'remove'))
+  t('모범답안 16행', refs.length === 16, `실제=${refs.length}`)
+  t('모범답안 전부 blank_key 가 빈 문자열', refs.every((r) => r.blank_key === ''),
+    JSON.stringify(refs.filter((r) => r.blank_key !== '').map((r) => r.source_key)))
+
+  for (const d of tp) {
+    const ords = refs.filter((r) => r.source_key === d.source_key).map((r) => r.ord).sort()
+    t(`'${d.source_key}': 가·나 두 세트`, JSON.stringify(ords) === '[1,2]', JSON.stringify(ords))
+  }
+
+  for (const r of refs) {
+    const cfg = cfgOf.get(r.source_key)!
+    const max = (cfg.maxChars as number | undefined) ?? 9999
+    const n = countChars(r.content)
+    const passage = passageOf.get(r.source_key)!
+    t(`'${r.source_key}' ord${r.ord}: 자수 ${n} ≤ ${max}`, n <= max, `"${r.content}"`)
+    t(`'${r.source_key}' ord${r.ord}: 비어 있지 않다`, r.content.trim().length > 0)
+    t(`'${r.source_key}' ord${r.ord}: 지문을 그대로 베끼지 않았다`, r.content.trim() !== passage.trim())
+    // 지우는 단계 — 모범답안의 문장 수가 원문보다 적어야 한다.
+    const sModel = countSentences(r.content)
+    const sPassage = countSentences(passage)
+    t(`'${r.source_key}' ord${r.ord}: 문장 수 ${sModel} < 원문 ${sPassage}`,
+      sModel < sPassage, `"${r.content}"`)
+  }
+
+  // 형태소 규칙(동사·반복) — 서버 있을 때만
+  pushRefMorphCheck('3단계', refs, 'remove', cfgOf)
+}
+
 // ── '쓰지 않을 말' 표시: forbidLabel/forbidDisplay ↔ 채점 (세션 22) ──────
 //
 // scoring_config 에 표시 전용 필드 둘을 더했다. 채점(forbidWords·forbidLemmas)은
@@ -2811,6 +2867,11 @@ console.log('\n[자기점검 self_checks: 시드 ↔ 화면]')
       JSON.stringify(['이 동작만 보고도 무슨 감정인지 남이 맞힐 수 있는가'])
   )
   t(
+    'trim_padding 자기점검 한 줄',
+    JSON.stringify(scOf('trim_padding')) ===
+      JSON.stringify(['지운 문장 중에 이야기가 잃은 것이 있는가'])
+  )
+  t(
     'action_reason 자기점검 두 줄(옛 SelfCheck 문구)',
     JSON.stringify(scOf('action_reason')) ===
       JSON.stringify([
@@ -2818,7 +2879,7 @@ console.log('\n[자기점검 self_checks: 시드 ↔ 화면]')
         '채운 칸들이 앞뒤 고정 줄과 끊기지 않고 이어지는가',
       ])
   )
-  const withSelfChecks = ['reduce_adverb', 'emotion_action', 'action_reason']
+  const withSelfChecks = ['reduce_adverb', 'emotion_action', 'trim_padding', 'action_reason']
   t(
     '나머지 단계는 빈 배열(자기점검 칸이 안 뜬다)',
     stagesDump

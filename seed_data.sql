@@ -54,7 +54,7 @@ on conflict (skill_key) do update set
 
 insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
 values ('sentence', 3, '군더더기 빼기', 'trim_padding',
-        '없어도 되는 문장을 알아본다', true, array[]::text[])
+        '없어도 되는 문장을 알아본다', true, array['지운 문장 중에 이야기가 잃은 것이 있는가']::text[])
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
@@ -1799,6 +1799,118 @@ insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 2, '', '나무꾼은 두 도끼에서 눈을 돌렸다. 목덜미가 달아올라 뒷걸음질을 쳤다.'
 from problems p
 where p.source_key = 'woodcutter-shame'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- tp-axe-water ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '나무꾼은 연못가에 앉았다. 도끼는 보이지 않았다. 소매를 걷고 물에 손을 넣었다.'
+from problems p
+where p.source_key = 'tp-axe-water'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- tp-axe-water ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '나무꾼은 연못가에 앉아 소매를 걷었다. 도끼가 안 보이는 물에 손을 넣었다.'
+from problems p
+where p.source_key = 'tp-axe-water'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- tp-heungbu-yard ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '흥부는 마당에 나갔다. 제비 한 마리가 떨어져 있었다. 흥부는 제비를 들어 올렸다.'
+from problems p
+where p.source_key = 'tp-heungbu-yard'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- tp-heungbu-yard ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '마당에 제비 한 마리가 떨어져 있었다. 흥부는 두 손으로 들어 올렸다.'
+from problems p
+where p.source_key = 'tp-heungbu-yard'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- tp-simcheong-rail ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '심청은 뱃전에 섰다. 심청은 치마를 걷어쥐었다.'
+from problems p
+where p.source_key = 'tp-simcheong-rail'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- tp-simcheong-rail ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '심청은 뱃전에 서서 치마를 걷어쥐었다.'
+from problems p
+where p.source_key = 'tp-simcheong-rail'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- tp-gyeonu-river ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '견우는 강가에 나왔다. 까치들이 하늘을 덮었다. 견우는 강물에 발을 담갔다.'
+from problems p
+where p.source_key = 'tp-gyeonu-river'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- tp-gyeonu-river ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '견우가 강가에 나오자 까치들이 하늘을 덮었다. 그는 강물에 발을 담갔다.'
+from problems p
+where p.source_key = 'tp-gyeonu-river'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- tp-kongjwi-crack ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '콩쥐는 독 앞에 앉았다. 바닥에 금이 가 있었다. 콩쥐는 손바닥으로 눌렀다.'
+from problems p
+where p.source_key = 'tp-kongjwi-crack'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- tp-kongjwi-crack ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '독 바닥에 금이 가 있었다. 콩쥐는 그 자리를 손바닥으로 눌렀다.'
+from problems p
+where p.source_key = 'tp-kongjwi-crack'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- tp-rabbit-gate ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '토끼는 용궁 문 앞에 섰다. 문지기가 창을 내렸다. 토끼는 웃으며 나섰다.'
+from problems p
+where p.source_key = 'tp-rabbit-gate'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- tp-rabbit-gate ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '문지기가 창을 내렸다. 토끼는 웃으며 한 걸음 나섰다.'
+from problems p
+where p.source_key = 'tp-rabbit-gate'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- tp-siblings-floor ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '오누이는 마루 밑에 숨었다. 문밖에서 발소리가 났다. 오라비가 동생의 입을 막았다.'
+from problems p
+where p.source_key = 'tp-siblings-floor'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- tp-siblings-floor ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '마루 밑에서 발소리를 들었다. 오라비가 동생의 입을 막았다.'
+from problems p
+where p.source_key = 'tp-siblings-floor'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- tp-goblin-mark ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '나무꾼은 방망이를 상 위에 올렸다. 검은 자국이 남아 있었다. 그는 다시 집어 들었다.'
+from problems p
+where p.source_key = 'tp-goblin-mark'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- tp-goblin-mark ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '방망이에 검은 자국이 남아 있었다. 나무꾼은 그것을 다시 집어 들었다.'
+from problems p
+where p.source_key = 'tp-goblin-mark'
 on conflict (problem_id, ord, blank_key) do nothing;
 
 -- ar-cracked-ice ord 1 ①

@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 22 · 커밋 `31a83a8` 위
+마지막 갱신: 세션 23 · 커밋 `534aed1` 위
 
 ---
 
@@ -17,7 +17,7 @@
 학습자 흐름   로그인 → 단계 목록 → 문항 → 제출 → 통과/미달 → (모범답안 있는 문항 통과 시)
              모범답안+자기점검 → '다음 문항 →'(미달 '건너뛰기 →') → … → 다 통과면
              '단계 완료 N/N'+'다음 단계 →', 건너뛴 게 있으면 'N/M · 건너뛴 문항 k개'+첫 링크
-★ 모범답안 있는 문항: 10단계 fill 8 (①②) + 1단계 reduce_adverb 8 · 2단계 emotion_action 6 (가·나, blank_key '')
+★ 모범답안 있는 문항: 10단계 fill 8 (①②) + 1단계 reduce_adverb 8 · 2단계 emotion_action 6 · 3단계 trim_padding 8 (가·나, blank_key '')
 없는 것       도입 트랙 전부 · streak·XP·복습·하트·진도 저장 테이블(안 만든다 — submissions 로만 센다)
 ★ 10단계는 새 skill_key `action_reason`(fill 8). 옛 `action_turn`(convert 8)은 is_active=false — 화면에 '준비 중'
 ```
@@ -96,6 +96,15 @@ verify  [쓰지 않을 말 표시] — 14문항 · forbidDisplay 의 각 기본�
     update SQL 이 덤프와 jsonb 로 같다 · RuleText/CheckRow/TrainClient 배선
   ★ scoring_config 바뀜 → DB 반영은 seed/update-forbid-display.sql (덤프에서 뽑은 update 14건) → seed_check
   ★ 눈확인(박 님): /train/2/dragon-king-anger 제출 전 — 라벨 가로 정상 + 범주 한 줄 + 예 몇 개 + 펼침
+
+세션 23 (같이 커밋): 문항 화면 스케일업(위 '앱이…' 참조) · '무엇을 봅니다' 행 밀도(min-h 3.5rem·py-4·
+  font-medium, CheckRow 동일) · RuleText 2줄 고정(visibility) · 3단계 trim_padding 모범답안 16 + self_checks
+  trim_padding: answers.json reference 16행(8문항×가·나·blank_key '') · stages.json self_checks
+    ["지운 문장 중에 이야기가 잃은 것이 있는가"] · verify [3단계 trim_padding: 모범답안 대조]
+    (자수·베낌·가나 두 세트 + ★ 문장 수 < 원문 문장 수 + 형태소는 서버 있을 때만)
+  ★ DB 반영: reference 16행 새 insert(on conflict do nothing) · self_checks do update →
+    seed_data.sql 재실행이면 된다(멱등). update 파일 불필요.
+  ★ 절차(박 님): seed_data.sql → seed_check.sql → 브라우저에서 3단계를 학습자로 완주
 ```
 
 ### 끝난 것 — 세션 21

@@ -28,7 +28,9 @@
     "summary": "없어도 되는 문장을 알아본다",
     "order_no": 3,
     "skill_key": "trim_padding",
-    "self_checks": []
+    "self_checks": [
+      "지운 문장 중에 이야기가 잃은 것이 있는가"
+    ]
   },
   {
     "title": "반복 표현 제거",
