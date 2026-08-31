@@ -2729,6 +2729,18 @@ console.log('\n[쓰지 않을 말 표시: forbidLabel/forbidDisplay ↔ 채점]'
   const ruleTextSrc = readFileSync(path.join(root, 'components', 'train', 'RuleText.tsx'), 'utf8')
   t('RuleText 가 전체 목록을 기본 숨김 + 전체 보기/접기 로 편다',
     /전체 보기/.test(ruleTextSrc) && /접기/.test(ruleTextSrc) && !/예:/.test(ruleTextSrc))
+  // 펼침이 문서 흐름 밖(absolute 팝오버) — 접기/펼치기 때 형제 행이 안 밀린다.
+  const popoverBlock = ruleTextSrc.match(/\{open && \([\s\S]*?\)\}/)?.[0] ?? ''
+  t('RuleText 펼침 목록이 relative 부모 안의 absolute 카드다',
+    /position:\s*'relative'/.test(ruleTextSrc) &&
+      /position:\s*'absolute'/.test(popoverBlock) &&
+      /\{list\.join/.test(popoverBlock))
+  t('RuleText 팝오버에 배경·테두리·그림자·최대폭·겹침',
+    /background:\s*'var\(--panel\)'/.test(popoverBlock) && /boxShadow/.test(popoverBlock) &&
+      /maxWidth/.test(popoverBlock) && /zIndex/.test(popoverBlock))
+  t('RuleText 팝오버가 바깥 클릭·Esc·접기로 닫힌다',
+    /'Escape'/.test(ruleTextSrc) && /mousedown/.test(ruleTextSrc) &&
+      /contains\(/.test(ruleTextSrc) && /'접기'/.test(ruleTextSrc))
   const checkRowSrc = readFileSync(path.join(root, 'components', 'train', 'CheckRow.tsx'), 'utf8')
   t('CheckRow 가 RuleText 를 쓰고 라벨을 nowrap 한다',
     /RuleText/.test(checkRowSrc) && /whitespace-nowrap/.test(checkRowSrc))
