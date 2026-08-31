@@ -2728,10 +2728,14 @@ console.log('\n[쓰지 않을 말 표시: forbidLabel/forbidDisplay ↔ 채점]'
   // 화면 배선 — 사본 없이 RuleText 를 쓴다
   const ruleTextSrc = readFileSync(path.join(root, 'components', 'train', 'RuleText.tsx'), 'utf8')
   // 기본이 펼침(useState(true)) — 처음 화면에 범주 줄 + 기본형 전체 줄이 다 보인다.
-  // '접기'로 2줄이 인라인으로 빠진다(팝오버 아님). '전체 보기'로 다시 편다.
+  // 접기/펼치기는 있되 2줄째 자리는 늘 남긴다(visibility) — 행 높이 불변.
   t('RuleText 가 기본 펼침이다 (useState(true))', /useState\(\s*true\s*\)/.test(ruleTextSrc))
   t('RuleText 가 접기/전체 보기 로 토글한다',
-    /'접기'/.test(ruleTextSrc) && /'전체 보기'/.test(ruleTextSrc) && /open && \(/.test(ruleTextSrc))
+    /'접기'/.test(ruleTextSrc) && /'전체 보기'/.test(ruleTextSrc) && /setOpen\(/.test(ruleTextSrc))
+  // 2줄째는 조건부 렌더가 아니라 늘 그리고 visibility 로만 감춘다 — 접어도 높이 그대로.
+  t('RuleText 2줄째가 접어도 자리를 남긴다 (조건부 렌더 아님 · visibility 토글)',
+    /\{list\.length > 0 && \(\s*<span\s+aria-hidden/.test(ruleTextSrc) &&
+      /visibility:\s*open\s*\?\s*'visible'\s*:\s*'hidden'/.test(ruleTextSrc))
   t('RuleText 2줄째가 기본형 전체 · 옅은 색 · 행 전체(block) · keep-all',
     /\{list\.join\(' · '\)\}/.test(ruleTextSrc) && /color:\s*'var\(--ink-soft\)'/.test(ruleTextSrc) &&
       /wordBreak:\s*'keep-all'/.test(ruleTextSrc))
@@ -2744,6 +2748,13 @@ console.log('\n[쓰지 않을 말 표시: forbidLabel/forbidDisplay ↔ 채점]'
   const trainSrc = readFileSync(path.join(root, 'components', 'train', 'TrainClient.tsx'), 'utf8')
   t("'무엇을 봅니다' 라벨이 nowrap + 긴 규칙만 줄바꿈",
     /whitespace-nowrap[^]*RuleText/.test(trainSrc) && /min-w-0 flex-1/.test(trainSrc))
+  // 패널을 키운다 — 오른쪽 칸 최소 24rem · 규칙 글씨는 본문 급(text-sm 아님)
+  t("'무엇을 봅니다' 오른쪽 칸이 최소 24rem 이다",
+    /lg:grid-cols-\[minmax\(0,1fr\)_minmax\(24rem,[^\]]*\)\]/.test(trainSrc))
+  t("'무엇을 봅니다' 규칙 글씨가 본문 급이다 (text-sm 안 씀)",
+    /min-w-0 flex-1 text-right"/.test(trainSrc) && !/min-w-0 flex-1 text-right text-sm/.test(trainSrc))
+  t('CheckRow 의 RuleText 도 본문 급 (text-sm 벗음)',
+    /examples\?\.length \? \(\s*<div className="pb-3"/.test(checkRowSrc))
 }
 
 // ── 자기점검 self_checks: 스키마 · 시드 · 화면 대조 (세션 19) ────────────

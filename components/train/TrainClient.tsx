@@ -522,18 +522,19 @@ export default function TrainClient({
   // 안 된다. label은 CheckRow와 같은 자리에, rule은 detail이 있던 자리에
   // 놓아서 제출 순간 아이콘·detail만 채워지고 재배치가 없게 한다.
   const criteriaContent = criteriaChecks.length > 0 && (
-    <div className="space-y-2 pt-4" style={{ borderTop: '1px solid var(--rule)' }}>
+    <div className="space-y-3 pt-4" style={{ borderTop: '1px solid var(--rule)' }}>
       <p style={{ fontWeight: 700 }}>무엇을 봅니다</p>
       <div>
         {criteriaChecks.map((c) => (
           <div key={c.key} style={{ borderBottom: '1px solid var(--rule)' }}>
             {/* 라벨은 안 꺾이게 nowrap + 안 줄어들게. 긴 규칙 텍스트만 오른쪽
-                칸에서 줄바꿈한다(min-w-0 이 있어야 flex 칸이 실제로 줄어든다). */}
-            <div className="flex w-full items-start gap-3 py-2">
+                칸에서 줄바꿈한다(min-w-0 이 있어야 flex 칸이 실제로 줄어든다).
+                글씨는 본문 급 — 한 급 작게 두지 않는다(패널을 키운다). */}
+            <div className="flex w-full items-start gap-3 py-2.5">
               <span className="font-mono" style={{ width: '1em', flexShrink: 0 }} aria-hidden />
               <span className="whitespace-nowrap" style={{ flexShrink: 0 }}>{c.label}</span>
               <span
-                className="min-w-0 flex-1 text-right text-sm"
+                className="min-w-0 flex-1 text-right"
                 style={{ color: 'var(--ink-soft)', wordBreak: 'keep-all' }}
               >
                 <RuleText rule={c.rule} examples={c.examples} align="right" />
@@ -672,7 +673,10 @@ export default function TrainClient({
     // 7xl(1280)까지 넓히지 않는 이유는 왼쪽 입력창 한 줄이 길어지면
     // 7단계(maxLineChars 18)의 "짧게 끊는다"는 눈의 감각이 흐려지기 때문이다.
     <main className="mx-auto max-w-6xl p-6">
-      <div className="space-y-6 lg:grid lg:grid-cols-2 lg:items-start lg:gap-8 lg:space-y-0">
+      {/* 오른쪽 칸을 넓힌다 — '무엇을 봅니다'·판정 목록이 앉는 자리다. 최소
+          24rem 을 바닥으로 두고 왼쪽보다 크게(1.3fr). 왼쪽 입력 칸은
+          minmax(0,1fr) 이라 좁은 화면에서 먼저 줄어든다. */}
+      <div className="space-y-6 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(24rem,1.3fr)] lg:items-start lg:gap-8 lg:space-y-0">
         <div className="space-y-6">{leftContent}</div>
         {/* 제출 전에는 비어 있다 — result가 없으면 rightContent 자체가 false다.
             판정을 보며 왼쪽을 스크롤해도 안 따라 올라가게 sticky로 붙이고,

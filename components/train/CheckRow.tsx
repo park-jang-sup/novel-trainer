@@ -50,7 +50,7 @@ export default function CheckRow({ check }: { check: Check }) {
       </button>
 
       {check.examples?.length ? (
-        <div className="pb-3 text-sm" style={{ color: 'var(--ink-soft)' }}>
+        <div className="pb-3" style={{ color: 'var(--ink-soft)' }}>
           <RuleText rule={check.rule} examples={check.examples} />
         </div>
       ) : null}
