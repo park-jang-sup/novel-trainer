@@ -1,63 +1,6 @@
 import { useMemo, useRef, type CSSProperties } from 'react'
 import type { Check } from '@/lib/scoring/types'
-
-interface Mark {
-  start: number
-  end: number
-  className: string
-}
-
-// 검사 key → 밑줄 종류. minVerbs는 부족을 알리는 표시가 아니라
-// "이만큼 찾았다"는 안내라서 mark(교정)가 아닌 rule 색을 쓴다.
-function markClassFor(key: string): string | null {
-  if (key === 'minVerbs') return 'mk-verb'
-  if (
-    key === 'maxModifiers' ||
-    key === 'maxAdverbs' ||
-    key === 'maxRepeat' ||
-    key === 'forbidWords' ||
-    key === 'maxLineChars' ||
-    key === 'maxDuplicateLines' ||
-    key === 'maxLineWordRepeat'
-  ) {
-    return 'mk-mark'
-  }
-  return null
-}
-
-function buildMarks(text: string, checks: Check[] | undefined): Mark[] {
-  if (!checks?.length) return []
-  const raw: Mark[] = []
-
-  for (const c of checks) {
-    if (!c.evidence?.length) continue
-    const className = markClassFor(c.key)
-    if (!className) continue
-
-    for (const item of c.evidence) {
-      // maxRepeat의 evidence는 "제비 3회" 형태다. 표면형만 떼어낸다.
-      const word = c.key === 'maxRepeat' ? item.replace(/ \d+회$/, '') : item
-      if (!word) continue
-      let from = 0
-      while (true) {
-        const i = text.indexOf(word, from)
-        if (i === -1) break
-        raw.push({ start: i, end: i + word.length, className })
-        from = i + word.length
-      }
-    }
-  }
-
-  raw.sort((a, b) => a.start - b.start)
-  const out: Mark[] = []
-  let lastEnd = -1
-  for (const m of raw) {
-    if (m.start < lastEnd) continue // 겹치면 먼저 걸린 표시를 우선한다
-    out.push(m)
-    lastEnd = m.end
-  }
-  return out
-}
+import { buildMarks, type Mark } from './marks'
 
 function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')

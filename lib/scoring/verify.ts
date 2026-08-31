@@ -12,7 +12,8 @@ import path from 'node:path'
 import { combine, countChars, countLetters, countSentences, deriveFillParts, fillMarkerMismatch, findForbidden, mergeForbidChecks, gradeLocal, pendingMorphChecks } from './index'
 import { sqlStr, countRawNewlinesInStrings } from '../seed-sql'
 import { nextProblemKey, nextStageId, stageProgress } from '../train-nav'
-import type { Answer, Check, MorphResult, Problem, ProblemType, ScoringConfig, ScoringMode } from './types'
+import type { Answer, Check, CheckStatus, MorphResult, Problem, ProblemType, ScoringConfig, ScoringMode } from './types'
+import { buildMarks } from '../../components/train/marks'
 import { CONVERT_SEEDS } from './fixtures/convert-seeds'
 import {
   SENSORY_BYPASS,
@@ -2553,6 +2554,62 @@ console.log('\n[자기점검 self_checks: 시드 ↔ 화면]')
     'seed_schema.sql 에 stages.self_checks 컬럼 추가가 있다',
     /alter table stages add column if not exists self_checks text\[\]/.test(schemaSql)
   )
+}
+
+// ── 채점 근거 하이라이트: fail 검사만 본문에 칠한다 (세션 20) ────────────
+//
+// 통과 화면에 밑줄이 남아 있으면 학습자가 "아직 틀렸다"로 읽는다(실사용 혼동).
+// buildMarks 는 status === 'fail' 인 검사의 evidence 만 밑줄로 만든다. 통과·
+// 확인중인 검사의 근거는 오른쪽 검사 목록(CheckRow)의 칩으로만 남는다.
+console.log('\n[채점 근거 하이라이트: fail 만 본문에 칠한다]')
+{
+  const text = '흥부는 몹시 조심스럽게 제비의 다리를 아주 천천히 감쌌다.'
+  const mk = (status: CheckStatus, evidence: string[]): Check => ({
+    key: 'maxAdverbs',
+    label: '부사',
+    status,
+    detail: '',
+    rule: '',
+    evidence,
+  })
+
+  const failMarks = buildMarks(text, [mk('fail', ['몹시', '아주'])])
+  t('fail 검사의 evidence 는 밑줄이 된다', failMarks.length === 2, JSON.stringify(failMarks))
+
+  const passMarks = buildMarks(text, [mk('pass', ['몹시', '아주'])])
+  t('pass 검사의 evidence 는 하이라이트 대상에 안 들어간다', passMarks.length === 0, JSON.stringify(passMarks))
+
+  const pendingMarks = buildMarks(text, [mk('pending', ['몹시', '아주'])])
+  t('pending 검사의 evidence 도 안 들어간다', pendingMarks.length === 0, JSON.stringify(pendingMarks))
+
+  // 통과·미달이 섞이면 미달 것만 남는다
+  const mixed = buildMarks(text, [
+    { ...mk('pass', ['몹시']), key: 'minVerbs', label: '동사' },
+    mk('fail', ['아주']),
+  ])
+  t('섞이면 fail 것만 남는다', mixed.length === 1 && text.slice(mixed[0].start, mixed[0].end) === '아주', JSON.stringify(mixed))
+
+  // 물기: 필터를 지우면(예전 동작) pass evidence 가 밑줄로 샌다
+  t('물기: 필터가 없으면 pass evidence 2개가 샌다', (() => {
+    // buildMarks 안의 status 게이트를 흉내 낸 '필터 없음' 버전
+    const leaked: number[] = []
+    for (const w of ['몹시', '아주']) {
+      let from = 0
+      for (;;) {
+        const i = text.indexOf(w, from)
+        if (i === -1) break
+        leaked.push(i)
+        from = i + w.length
+      }
+    }
+    return leaked.length === 2 && passMarks.length === 0
+  })())
+
+  // Editor.tsx 가 이 순수 모듈을 쓴다 — 사본을 만들지 않았다
+  const editorSrc = readFileSync(
+    path.join(__dirname, '..', '..', 'components', 'train', 'Editor.tsx'), 'utf8')
+  t("Editor.tsx 가 './marks' 의 buildMarks 를 쓴다", /from '\.\/marks'/.test(editorSrc) && /buildMarks/.test(editorSrc))
+  t('Editor.tsx 에 buildMarks 사본이 없다', !/function buildMarks/.test(editorSrc))
 }
 
 // ── 학습 루프: '다음 문항' 계산 (세션 18) ─────────────────────────────
