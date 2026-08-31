@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 20 · 커밋 `841ce0f` 위
+마지막 갱신: 세션 21 · 커밋 `e808fd1` 위
 
 ---
 
@@ -15,7 +15,7 @@
 학습자 흐름   로그인 → 단계 목록 → 문항 → 제출 → 통과/미달 → (모범답안 있는 문항 통과 시)
              모범답안+자기점검 → '다음 문항 →'(미달 '건너뛰기 →') → … → 다 통과면
              '단계 완료 N/N'+'다음 단계 →', 건너뛴 게 있으면 'N/M · 건너뛴 문항 k개'+첫 링크
-★ 모범답안 있는 문항: 10단계 fill 8 (①②) + 1단계 reduce_adverb 8 (가·나, blank_key '')
+★ 모범답안 있는 문항: 10단계 fill 8 (①②) + 1단계 reduce_adverb 8 · 2단계 emotion_action 6 (가·나, blank_key '')
 없는 것       도입 트랙 전부 · streak·XP·복습·하트·진도 저장 테이블(안 만든다 — submissions 로만 센다)
 ★ 10단계는 새 skill_key `action_reason`(fill 8). 옛 `action_turn`(convert 8)은 is_active=false — 화면에 '준비 중'
 ```
@@ -66,6 +66,23 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 1  빈 단계 채우기         도입 4단계 → 구성 빈 6단계 → 절단신공. 단계당 4~6. 기존 유형만
 ```
 
+### 끝난 것 — 세션 21
+
+```
+2단계 emotion_action 모범답안 12 + self_checks (1단계와 같은 절차)
+  answers.json   reference[] 에 6문항 × ord 1 가 / 2 나 = 12행 · blank_key ''
+  stages.json    emotion_action self_checks ["이 동작만 보고도 무슨 감정인지 남이 맞힐 수 있는가"]
+  verify.ts      [2단계 emotion_action: 모범답안 대조] — 12행 · 가·나 두 세트 · 자수 ≤ maxChars ·
+                 지문 베낌 아님 · 금지어(forbidWords) 미포함(형태소 없이 문자열) ·
+                 물기(지문은 감정어에 걸린다) · 형태소 규칙은 서버 있을 때만(pushRefMorphCheck)
+                 self_checks 블록에 emotion_action 한 줄 단언 추가
+  refactor       scoringServer·morphAnalyze·pushRefMorphCheck 를 모듈 스코프로 — 1·2단계가 공유
+  ★ scoring_config·problems.json 은 안 건드림. emotion_action 은 convert 유형(hybrid)
+  ★ DB 반영: reference 12행은 새 insert(on conflict do nothing), self_checks 는 do update —
+    seed_data.sql 재실행이면 된다(멱등). update 파일 불필요.
+  ★ 절차(박 님): seed_data.sql → seed_check.sql → 브라우저 2단계 한 문항 통과 화면
+```
+
 ### 끝난 것 — 세션 20
 
 ```
@@ -86,34 +103,17 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
   ★ 커밋 후 절차(박 님): update-reduce-adverb-passages.sql 실행 → seed_check.sql
 ```
 
-### 끝난 것 — 세션 19
+### 끝난 것 — 세션 19 (요약, 대시보드 적용 · 눈검사 완료)
 
 ```
-모범답안·자기점검을 fill 밖으로 (재설계안 11-2 · 채팅 지시)
+모범답안·자기점검을 fill 밖으로 (재설계안 11-2)
   seed_schema   stages.self_checks text[] not null default '{}'
-  stages.json   self_checks 26단계분. reduce_adverb 한 줄 · action_reason 두 줄(옛 SelfCheck
-                QUESTIONS 를 이리로) · 나머지 []
-  gen-seed      sqlTextArray 헬퍼. stages insert + do update 에 self_checks
-  answers.json  reference[] 에 rm-* 16행 (8문항 × ord 1 가 / 2 나 · blank_key '')
-  seed_verify   (10) 을 넓힘 — fill 은 실재 빈칸, 비-fill 은 blank_key '' 여야 한다 (case 분기)
-  route.ts      reference_answers 를 유형 안 가리고 읽어 응답에 싣는다(RLS 가 제출 여부로 막음)
-  page.tsx      현재 단계의 self_checks 를 TrainClient 로
-  TrainClient   통과 + reference 있으면(fill 아니어도) 모범답안 + SelfCheck. selfChecks prop
-  SelfCheck     selfChecks prop 으로 문구를 받는다. 빈 배열이면 '스스로 확인' 칸 없음.
-                blank_key '' 면 표식 span 을 안 그린다
-  verify.ts     [1단계 reduce_adverb: 모범답안 대조] — 16행 · blank_key '' · 가·나 두 세트 ·
-                자수 ≤ maxChars · 지문 베낌 아님 · 물기(원문 내면 자수 초과 미달).
-                형태소 규칙(부사·관형·동사·반복)은 로컬 서버 떠 있을 때만 도는 선택 검사 —
-                없으면 morphSkipped 로 세어 최종 줄에 "형태소 검사 N건 건너뜀(서버 없음)"
-                [자기점검 self_checks: 시드 ↔ 화면] — 시드·SelfCheck·seed_data·seed_schema 대조
-                action_reason 블록: refs 를 action_reason source_key 로 필터(비-fill 이 안 섞이게)
-  ★ 형태소 서버 띄우고 test:scoring → 2137 통과 / 0 실패 (16 형태소 검사 다 물림).
-    서버 없이 → 2121 통과 / 0 실패 / 형태소 16건 건너뜀 표시.
-  ★ 대시보드 적용 완료 · 눈검사 완료(박 님): 1단계 통과 화면에 모범답안 가·나 + 자기점검 +
-    '다음 문항 →'. 원문 그대로 제출 시 부사 7개가 칩으로 뜸.
-  ★ 1단계 모범답안 16건은 잠정 통과다. 화면에서 풀며 고칠 수 있다 — 고치면 answers.json 수정 +
-    DB update + seed_check 재실행이 절차다(seed_data 의 reference insert 는 on conflict do
-    nothing 이라 기존 행을 안 고친다. self_checks 는 do update 라 재시드로 갱신됨).
+  화면          route.ts 가 유형 안 가리고 reference_answers 를 읽고(RLS 가 제출 여부로 막음),
+                TrainClient 는 통과 + reference 있으면 모범답안 + SelfCheck. SelfCheck 는
+                stages.self_checks 를 prop 으로 받는다(하드코딩 걷음). blank_key '' 면 표식 없음
+  seed_verify   (10) 을 case 로 넓힘 — fill 은 실재 빈칸, 비-fill 은 blank_key ''
+  ★ 1단계 모범답안 16건은 잠정 통과. 고치려면 answers.json + seed_data.sql 재실행(reference
+    insert 는 on conflict do nothing 이라 기존 행 안 고침 — 값 바꾸려면 별도 update 필요) + seed_check
 ```
 
 ★ 주 단위 기준 하나 — **학습자가 새로 할 수 있게 된 것**이 없는 주는 실패다.

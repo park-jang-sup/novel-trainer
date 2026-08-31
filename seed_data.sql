@@ -43,7 +43,7 @@ on conflict (skill_key) do update set
 
 insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
 values ('sentence', 2, '감정을 동작으로', 'emotion_action',
-        '감정을 서술하지 않고 몸으로 드러낸다', true, array[]::text[])
+        '감정을 서술하지 않고 몸으로 드러낸다', true, array['이 동작만 보고도 무슨 감정인지 남이 맞힐 수 있는가']::text[])
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
@@ -1715,6 +1715,90 @@ insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 2, '', '나무꾼은 방망이를 들었다. 손이 떨렸다. 그가 내리치자 곡식이 쏟아졌다.'
 from problems p
 where p.source_key = 'rm-goblin-club'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- heungbu-joy ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '흥부는 금은보화를 한 움큼 쥐었다가 놓쳤다. 손이 자꾸 벌어졌다.'
+from problems p
+where p.source_key = 'heungbu-joy'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- heungbu-joy ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '흥부는 주먹으로 입을 막았다. 어깨가 들썩이는 것을 누르지 못했다.'
+from problems p
+where p.source_key = 'heungbu-joy'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- sim-cheong-fear ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '심청은 치맛자락을 움켜쥐었다. 발이 뱃전 앞에서 멈췄다.'
+from problems p
+where p.source_key = 'sim-cheong-fear'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- sim-cheong-fear ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '심청은 숨을 들이켰다. 손끝이 하얗게 되도록 치마를 쥐었다.'
+from problems p
+where p.source_key = 'sim-cheong-fear'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- dragon-king-anger ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '용왕이 옥좌의 팔걸이를 내리쳤다. 산호 술잔이 바닥에 굴렀다.'
+from problems p
+where p.source_key = 'dragon-king-anger'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- dragon-king-anger ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '용왕은 수염을 부르르 떨며 일어섰다. 목소리가 대전 기둥을 울렸다.'
+from problems p
+where p.source_key = 'dragon-king-anger'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- kongjwi-grief ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '콩쥐는 깨진 독의 조각을 하나씩 주워 모았다. 조각이 손에서 자꾸 미끄러졌다.'
+from problems p
+where p.source_key = 'kongjwi-grief'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- kongjwi-grief ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '콩쥐는 마당 한가운데 섰다. 잔치 소리가 담 너머에서 들려왔다. 그녀는 깨진 독을 바라보았다.'
+from problems p
+where p.source_key = 'kongjwi-grief'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- gyeonu-longing ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '견우는 소를 몰다 말고 강가에 앉았다. 물에 비친 하늘만 오래 바라보았다.'
+from problems p
+where p.source_key = 'gyeonu-longing'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- gyeonu-longing ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '견우는 달력 대신 강물을 보러 갔다. 다리가 놓일 자리를 손가락으로 그어 보았다.'
+from problems p
+where p.source_key = 'gyeonu-longing'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- woodcutter-shame ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '나무꾼은 고개를 들지 못했다. 손이 제 낡은 도끼자루만 만지작거렸다.'
+from problems p
+where p.source_key = 'woodcutter-shame'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- woodcutter-shame ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '나무꾼은 두 도끼에서 눈을 돌렸다. 목덜미가 달아올라 뒷걸음질을 쳤다.'
+from problems p
+where p.source_key = 'woodcutter-shame'
 on conflict (problem_id, ord, blank_key) do nothing;
 
 -- ar-cracked-ice ord 1 ①

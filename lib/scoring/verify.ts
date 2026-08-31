@@ -163,6 +163,105 @@ const emptyMorph = (o: Partial<MorphResult> = {}): MorphResult => ({
   adverbs: [], modifiers: [], verbs: [], propers: [], repeats: [], lemmas: [], sentences: 1, ...o,
 })
 
+// ── 형태소 서버(로컬) 짝. remote.ts 는 server-only 라 여기서 import 못 한다
+//    (파일 첫 주석). 1·2단계 모범답안 대조가 부사·동사·반복 규칙을 서버 있을
+//    때만 재는 데 쓴다. 없으면 morphSkipped 로 세어 최종 줄에 남긴다(세션 5).
+function scoringServer(): { url: string; secret: string } {
+  let url = process.env.SCORING_SERVER_URL
+  let secret = process.env.SCORING_SERVER_SECRET
+  if (!url || !secret) {
+    try {
+      const raw = readFileSync(path.join(__dirname, '..', '..', '.env.local'), 'utf8')
+      for (const line of raw.split('\n')) {
+        const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/)
+        if (!m) continue
+        const val = m[2].replace(/^["']|["']$/g, '')
+        if (m[1] === 'SCORING_SERVER_URL') url = url || val
+        if (m[1] === 'SCORING_SERVER_SECRET') secret = secret || val
+      }
+    } catch {
+      /* .env.local 이 없다 — 기본값으로 간다 */
+    }
+  }
+  return { url: url || 'http://localhost:8000', secret: secret || 'dev' }
+}
+async function morphAnalyze(text: string): Promise<MorphResult | null> {
+  const { url, secret } = scoringServer()
+  const ac = new AbortController()
+  const timer = setTimeout(() => ac.abort(), 4000)
+  try {
+    const res = await fetch(`${url}/analyze`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-scoring-secret': secret },
+      body: JSON.stringify({ text }),
+      signal: ac.signal,
+    })
+    if (!res.ok) return null
+    const raw = (await res.json()) as Partial<MorphResult>
+    if (!Array.isArray(raw.adverbs) || !Array.isArray(raw.verbs)) return null
+    return {
+      adverbs: raw.adverbs,
+      modifiers: Array.isArray(raw.modifiers) ? raw.modifiers : [],
+      verbs: raw.verbs,
+      propers: raw.propers ?? [],
+      repeats: Array.isArray(raw.repeats) ? raw.repeats : [],
+      lemmas: raw.lemmas ?? [],
+      sentences: raw.sentences ?? 0,
+    }
+  } catch {
+    return null
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+interface RefRow {
+  source_key: string
+  ord: number
+  blank_key: string
+  content: string
+}
+
+// 모범답안이 자기 문항 규칙을 형태소까지 지키는지 — 서버 있을 때만 도는 선택
+// 검사. combine 을 그대로 써서 출하 코드와 갈리지 않는다. aiChainChecks 에
+// 실어 최종 줄 전에 기다리게 한다.
+function pushRefMorphCheck(
+  label: string,
+  refs: RefRow[],
+  ptype: ProblemType,
+  cfgOf: Map<string, ScoringConfig>
+): void {
+  aiChainChecks.push(
+    (async () => {
+      const probe = refs.length > 0 ? await morphAnalyze(refs[0].content) : null
+      if (!probe) {
+        morphSkipped += refs.length
+        console.log(`  – 형태소 서버 없음: ${label} 모범답안 ${refs.length}건의 형태소 규칙 검사를 건너뜀`)
+        return
+      }
+      for (const r of refs) {
+        const morph = r === refs[0] ? probe : await morphAnalyze(r.content)
+        if (!morph) {
+          morphSkipped++
+          console.log(`  – '${r.source_key}' ord${r.ord}: 형태소 응답 없음, 건너뜀`)
+          continue
+        }
+        const res = combine(
+          { id: r.source_key, type: ptype, scoring_mode: 'auto', scoring_config: cfgOf.get(r.source_key)! },
+          { text: r.content },
+          undefined,
+          morph
+        )
+        t(
+          `${label} '${r.source_key}' ord${r.ord}: 형태소 규칙 전부 통과`,
+          res.status === 'pass',
+          JSON.stringify(res.checks.filter((c) => c.status !== 'pass').map((c) => `${c.key}:${c.status} ${c.detail ?? ''}`))
+        )
+      }
+    })()
+  )
+}
+
 // ── 1단계 remove ────────────────────────────────────────────────
 const p1: Problem = {
   id: 'p1', type: 'remove', scoring_mode: 'auto',
@@ -2429,93 +2528,69 @@ console.log('\n[1단계 reduce_adverb: 모범답안 대조]')
     }
   }
 
-  // ── 선택 검사: 형태소 규칙(부사·관형·동사·반복) ──
-  // remote.ts 는 server-only 라 여기서 import 못 한다(파일 첫 주석). 짧은 짝을 둔다.
-  const scoringServer = (): { url: string; secret: string } => {
-    let url = process.env.SCORING_SERVER_URL
-    let secret = process.env.SCORING_SERVER_SECRET
-    if (!url || !secret) {
-      try {
-        const raw = readFileSync(path.join(__dirname, '..', '..', '.env.local'), 'utf8')
-        for (const line of raw.split('\n')) {
-          const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/)
-          if (!m) continue
-          const val = m[2].replace(/^["']|["']$/g, '')
-          if (m[1] === 'SCORING_SERVER_URL') url = url || val
-          if (m[1] === 'SCORING_SERVER_SECRET') secret = secret || val
-        }
-      } catch {
-        /* .env.local 이 없다 — 기본값으로 간다 */
-      }
-    }
-    return { url: url || 'http://localhost:8000', secret: secret || 'dev' }
+  // ── 선택 검사: 형태소 규칙(부사·관형·동사·반복) — 서버 있을 때만 ──
+  pushRefMorphCheck('1단계', refs, 'remove', cfgOf)
+}
+
+// ── 2단계 emotion_action(감정을 동작으로): 모범답안 대조 (세션 21) ────────
+//
+// answers.json 의 reference[] 에 6문항 × ord 1(가)/2(나) = 12행. blank_key ''.
+// 1단계와 같은 결 — 다만 emotion_action 은 convert 유형이라 forbidWords(감정어)
+// 검사가 핵심이다. forbidWords 는 형태소 없이 문자열로 재므로 서버가 없어도
+// 돈다 — 모범답안이 제 금지 목록에 걸리면 그 자리에서 실패다.
+console.log('\n[2단계 emotion_action: 모범답안 대조]')
+{
+  interface EaProblem {
+    source_key: string
+    skill_key: string
+    type: string
+    passage: string | null
+    scoring_config: ScoringConfig
   }
-  const morphAnalyze = async (text: string): Promise<MorphResult | null> => {
-    const { url, secret } = scoringServer()
-    const ac = new AbortController()
-    const timer = setTimeout(() => ac.abort(), 4000)
-    try {
-      const res = await fetch(`${url}/analyze`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-scoring-secret': secret },
-        body: JSON.stringify({ text }),
-        signal: ac.signal,
-      })
-      if (!res.ok) return null
-      const raw = (await res.json()) as Partial<MorphResult>
-      if (!Array.isArray(raw.adverbs) || !Array.isArray(raw.verbs)) return null
-      return {
-        adverbs: raw.adverbs,
-        modifiers: Array.isArray(raw.modifiers) ? raw.modifiers : [],
-        verbs: raw.verbs,
-        propers: raw.propers ?? [],
-        repeats: Array.isArray(raw.repeats) ? raw.repeats : [],
-        lemmas: raw.lemmas ?? [],
-        sentences: raw.sentences ?? 0,
-      }
-    } catch {
-      return null
-    } finally {
-      clearTimeout(timer)
-    }
+  const seedDir = path.join(__dirname, '..', '..', 'seed', 'dump')
+  const readDump = <T,>(f: string): T =>
+    JSON.parse(readFileSync(path.join(seedDir, f), 'utf8').replace(/^﻿/, '')) as T
+
+  const ea = readDump<EaProblem[]>('problems.json').filter((d) => d.skill_key === 'emotion_action')
+  const eaKeys = new Set(ea.map((d) => d.source_key))
+  const refs = (readDump<{ reference?: RefRow[] }>('answers.json').reference ?? []).filter((r) =>
+    eaKeys.has(r.source_key)
+  )
+  const cfgOf = new Map(ea.map((d) => [d.source_key, d.scoring_config]))
+  const passageOf = new Map(ea.map((d) => [d.source_key, d.passage ?? '']))
+
+  t('덤프에 emotion_action 6문항', ea.length === 6, `실제=${ea.length}`)
+  t('전부 convert 유형', ea.every((d) => d.type === 'convert'))
+  t('모범답안 12행', refs.length === 12, `실제=${refs.length}`)
+  t('모범답안 전부 blank_key 가 빈 문자열', refs.every((r) => r.blank_key === ''),
+    JSON.stringify(refs.filter((r) => r.blank_key !== '').map((r) => r.source_key)))
+
+  for (const d of ea) {
+    const ords = refs.filter((r) => r.source_key === d.source_key).map((r) => r.ord).sort()
+    t(`'${d.source_key}': 가·나 두 세트`, JSON.stringify(ords) === '[1,2]', JSON.stringify(ords))
   }
 
-  aiChainChecks.push(
-    (async () => {
-      const probe = await morphAnalyze(refs[0].content)
-      if (!probe) {
-        morphSkipped += refs.length
-        console.log(
-          `  – 형태소 서버 없음: 모범답안 ${refs.length}건의 부사·관형·동사·반복 검사를 건너뜀`
-        )
-        return
-      }
-      for (const r of refs) {
-        const morph = r === refs[0] ? probe : await morphAnalyze(r.content)
-        if (!morph) {
-          morphSkipped++
-          console.log(`  – '${r.source_key}' ord${r.ord}: 형태소 응답 없음, 건너뜀`)
-          continue
-        }
-        const prob: Problem = {
-          id: r.source_key,
-          type: 'remove',
-          scoring_mode: 'auto',
-          scoring_config: cfgOf.get(r.source_key)!,
-        }
-        const res = combine(prob, { text: r.content }, undefined, morph)
-        t(
-          `'${r.source_key}' ord${r.ord}: 형태소 규칙 전부 통과 (부사 0~1 등)`,
-          res.status === 'pass',
-          JSON.stringify(
-            res.checks
-              .filter((c) => c.status !== 'pass')
-              .map((c) => `${c.key}:${c.status} ${c.detail ?? ''}`)
-          )
-        )
-      }
-    })()
-  )
+  for (const r of refs) {
+    const cfg = cfgOf.get(r.source_key)!
+    const max = (cfg.maxChars as number | undefined) ?? 9999
+    const n = countChars(r.content)
+    t(`'${r.source_key}' ord${r.ord}: 자수 ${n} ≤ ${max}`, n <= max, `"${r.content}"`)
+    t(`'${r.source_key}' ord${r.ord}: 비어 있지 않다`, r.content.trim().length > 0)
+    t(`'${r.source_key}' ord${r.ord}: 지문을 그대로 베끼지 않았다`,
+      r.content.trim() !== passageOf.get(r.source_key)!.trim())
+    // 금지어(감정어) — 형태소 없이 문자열로. 모범답안이 자기 목록에 걸리면 실패다.
+    const hits = findForbidden(r.content, (cfg.forbidWords as string[] | undefined) ?? [])
+    t(`'${r.source_key}' ord${r.ord}: 금지 감정어가 없다`, hits.length === 0, JSON.stringify(hits))
+  }
+
+  // 물기: 지문은 감정어를 품고 있어 forbidWords 에 걸린다(그래서 훈련이 성립한다)
+  for (const d of ea) {
+    const hits = findForbidden(d.passage ?? '', (d.scoring_config.forbidWords as string[] | undefined) ?? [])
+    t(`물기: '${d.source_key}' 지문은 감정어에 걸린다`, hits.length > 0, `"${d.passage}"`)
+  }
+
+  // 형태소 규칙(동사·부사·관형·반복) — 서버 있을 때만
+  pushRefMorphCheck('2단계', refs, 'convert', cfgOf)
 }
 
 // ── 자기점검 self_checks: 스키마 · 시드 · 화면 대조 (세션 19) ────────────
@@ -2542,6 +2617,11 @@ console.log('\n[자기점검 self_checks: 시드 ↔ 화면]')
     JSON.stringify(scOf('reduce_adverb')) === JSON.stringify(['부사가 하던 일을 동작이 하고 있는가'])
   )
   t(
+    'emotion_action 자기점검 한 줄',
+    JSON.stringify(scOf('emotion_action')) ===
+      JSON.stringify(['이 동작만 보고도 무슨 감정인지 남이 맞힐 수 있는가'])
+  )
+  t(
     'action_reason 자기점검 두 줄(옛 SelfCheck 문구)',
     JSON.stringify(scOf('action_reason')) ===
       JSON.stringify([
@@ -2549,10 +2629,11 @@ console.log('\n[자기점검 self_checks: 시드 ↔ 화면]')
         '채운 칸들이 앞뒤 고정 줄과 끊기지 않고 이어지는가',
       ])
   )
+  const withSelfChecks = ['reduce_adverb', 'emotion_action', 'action_reason']
   t(
     '나머지 단계는 빈 배열(자기점검 칸이 안 뜬다)',
     stagesDump
-      .filter((s) => !['reduce_adverb', 'action_reason'].includes(s.skill_key))
+      .filter((s) => !withSelfChecks.includes(s.skill_key))
       .every((s) => Array.isArray(s.self_checks) && (s.self_checks as string[]).length === 0)
   )
 

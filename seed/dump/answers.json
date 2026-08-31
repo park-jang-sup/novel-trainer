@@ -156,6 +156,78 @@
       "content": "나무꾼은 방망이를 들었다. 손이 떨렸다. 그가 내리치자 곡식이 쏟아졌다."
     },
     {
+      "source_key": "heungbu-joy",
+      "ord": 1,
+      "blank_key": "",
+      "content": "흥부는 금은보화를 한 움큼 쥐었다가 놓쳤다. 손이 자꾸 벌어졌다."
+    },
+    {
+      "source_key": "heungbu-joy",
+      "ord": 2,
+      "blank_key": "",
+      "content": "흥부는 주먹으로 입을 막았다. 어깨가 들썩이는 것을 누르지 못했다."
+    },
+    {
+      "source_key": "sim-cheong-fear",
+      "ord": 1,
+      "blank_key": "",
+      "content": "심청은 치맛자락을 움켜쥐었다. 발이 뱃전 앞에서 멈췄다."
+    },
+    {
+      "source_key": "sim-cheong-fear",
+      "ord": 2,
+      "blank_key": "",
+      "content": "심청은 숨을 들이켰다. 손끝이 하얗게 되도록 치마를 쥐었다."
+    },
+    {
+      "source_key": "dragon-king-anger",
+      "ord": 1,
+      "blank_key": "",
+      "content": "용왕이 옥좌의 팔걸이를 내리쳤다. 산호 술잔이 바닥에 굴렀다."
+    },
+    {
+      "source_key": "dragon-king-anger",
+      "ord": 2,
+      "blank_key": "",
+      "content": "용왕은 수염을 부르르 떨며 일어섰다. 목소리가 대전 기둥을 울렸다."
+    },
+    {
+      "source_key": "kongjwi-grief",
+      "ord": 1,
+      "blank_key": "",
+      "content": "콩쥐는 깨진 독의 조각을 하나씩 주워 모았다. 조각이 손에서 자꾸 미끄러졌다."
+    },
+    {
+      "source_key": "kongjwi-grief",
+      "ord": 2,
+      "blank_key": "",
+      "content": "콩쥐는 마당 한가운데 섰다. 잔치 소리가 담 너머에서 들려왔다. 그녀는 깨진 독을 바라보았다."
+    },
+    {
+      "source_key": "gyeonu-longing",
+      "ord": 1,
+      "blank_key": "",
+      "content": "견우는 소를 몰다 말고 강가에 앉았다. 물에 비친 하늘만 오래 바라보았다."
+    },
+    {
+      "source_key": "gyeonu-longing",
+      "ord": 2,
+      "blank_key": "",
+      "content": "견우는 달력 대신 강물을 보러 갔다. 다리가 놓일 자리를 손가락으로 그어 보았다."
+    },
+    {
+      "source_key": "woodcutter-shame",
+      "ord": 1,
+      "blank_key": "",
+      "content": "나무꾼은 고개를 들지 못했다. 손이 제 낡은 도끼자루만 만지작거렸다."
+    },
+    {
+      "source_key": "woodcutter-shame",
+      "ord": 2,
+      "blank_key": "",
+      "content": "나무꾼은 두 도끼에서 눈을 돌렸다. 목덜미가 달아올라 뒷걸음질을 쳤다."
+    },
+    {
       "source_key": "ar-cracked-ice",
       "ord": 1,
       "blank_key": "①",
