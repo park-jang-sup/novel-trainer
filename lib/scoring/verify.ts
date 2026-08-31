@@ -2391,18 +2391,43 @@ console.log('\n[1단계 reduce_adverb: 모범답안 대조]')
     )
   }
 
-  // 물기: 자수 검사가 실제로 문다 — 부사 든 원문을 답안으로 내면 초과로 미달
-  t('물기: 지문 원문을 답안으로 내면 자수 초과로 미달', (() => {
-    const d = ra[0]
-    const prob: Problem = {
-      id: d.source_key,
-      type: 'remove',
-      scoring_mode: 'auto',
-      scoring_config: cfgOf.get(d.source_key)!,
+  // 원문 여덟은 자기 maxChars 를 넘어야 한다 — 안 넘으면 원문을 그대로 붙여
+  // 넣어도 통과해 걷어내기 훈련이 성립하지 않는다(seed_verify (1) 의 TS 짝).
+  // 세션 20: 원문을 박 님 판(희화화 완화)으로 갈았다. 부사는 줄었지만 자수
+  // 초과는 유지된다 — 여기서 여덟 건 다 잰다.
+  for (const d of ra) {
+    const cfg = cfgOf.get(d.source_key)!
+    const max = cfg.maxChars as number
+    const n = countChars(d.passage ?? '')
+    t(`'${d.source_key}': 원문 ${n}자 > 상한 ${max}`, n > max, `"${d.passage}"`)
+    const res = combine(
+      { id: d.source_key, type: 'remove', scoring_mode: 'auto', scoring_config: cfg },
+      { text: d.passage ?? '' },
+      undefined,
+      null
+    )
+    t(
+      `'${d.source_key}': 원문 그대로 제출은 maxChars 로 미달`,
+      res.checks.find((c) => c.key === 'maxChars')?.status === 'fail'
+    )
+  }
+
+  // DB update SQL 이 덤프와 갈리지 않았는지. seed_data.sql 은 기존 행의 passage
+  // 를 안 고쳐서 seed/update-reduce-adverb-passages.sql 을 손으로 낸다 — 그
+  // 파일의 여덟 update 가 problems.json 과 글자까지 같아야 한다.
+  {
+    const updSql = readFileSync(
+      path.join(__dirname, '..', '..', 'seed', 'update-reduce-adverb-passages.sql'), 'utf8')
+    const pairs = [...updSql.matchAll(
+      /update problems set passage = '([^']*)'\s*\n\s*where source_key = '([^']*)';/g
+    )].map((m) => ({ passage: m[1], source_key: m[2] }))
+    t('update SQL 에 8건이 있다', pairs.length === 8, `실제=${pairs.length}`)
+    for (const d of ra) {
+      const row = pairs.find((p) => p.source_key === d.source_key)
+      t(`update SQL '${d.source_key}' 의 passage 가 덤프와 같다`, row?.passage === d.passage,
+        `SQL=${JSON.stringify(row?.passage)} 덤프=${JSON.stringify(d.passage)}`)
     }
-    const res = combine(prob, { text: d.passage ?? '' }, undefined, null)
-    return res.checks.find((c) => c.key === 'maxChars')?.status === 'fail'
-  })())
+  }
 
   // ── 선택 검사: 형태소 규칙(부사·관형·동사·반복) ──
   // remote.ts 는 server-only 라 여기서 import 못 한다(파일 첫 주석). 짧은 짝을 둔다.

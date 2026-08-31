@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 19 · 커밋 `81913cc` 위
+마지막 갱신: 세션 20 · 커밋 `841ce0f` 위
 
 ---
 
@@ -39,6 +39,11 @@ AI 심판                 세션 13~16. delete · 지목 · 결합(AND·OR·합�
 stage2 는 자기점검이다           모범답안 2~3건 + 체크. AI 아님. 사람 아님. reference_answers 테이블
 자기점검 문구는 단계마다 다르다   stages.self_checks(text[]). reduce_adverb 한 줄 · action_reason 두 줄 ·
                               나머지 빈 배열(칸이 안 뜨고 모범답안만). SelfCheck.tsx 하드코딩 걷음
+채점 근거 밑줄은 fail 만 친다     통과·확인중 검사의 evidence 는 본문에서 뺀다 — 밑줄이 남으면
+                              학습자가 "아직 틀렸다"로 읽는다(실사용). 근거는 검사 목록 칩으로만.
+                              buildMarks 는 components/train/marks.ts(순수, verify 가 문다)
+원문은 희화화하지 않는다          부사 3~4개의 그럴듯한 문장이면 걷어내기 훈련은 성립한다. 더하기
+                              빼기 수준으로 낮추지 않는다(세션 20, 실사용 판단)
 reference_answers 는 저장소에 둔다  제출 뒤 학습자에게 보이는 것이라 비밀이 아니다. 세션 3 2-5 의
                               '모범답안 저장소 금지'는 problem_answers(채점 정답)·골든에만 적용된다.
                               비-fill 모범답안은 blank_key '' · ord 로만 세트(가·나…)를 가른다
@@ -59,6 +64,26 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 
 ```
 1  빈 단계 채우기         도입 4단계 → 구성 빈 6단계 → 절단신공. 단계당 4~6. 기존 유형만
+```
+
+### 끝난 것 — 세션 20
+
+```
+가  채점 근거 하이라이트는 fail 검사만 본문에 칠한다
+  marks.ts        buildMarks·markClassFor 를 Editor.tsx 에서 뗀 순수 모듈. status !== 'fail' 이면
+                  evidence 를 밑줄에서 뺀다. Editor.tsx 는 사본 지우고 import
+  verify          [채점 근거 하이라이트: fail 만 본문에 칠한다] — pass·pending evidence 0개 ·
+                  섞이면 fail 것만 · 물기(필터 없으면 pass evidence 샜을 것) · Editor 사본 없음
+  ★ 눈검사: 밑줄 규칙만 승인. 통과 화면에서 실제로 사라지는지는 다음 눈검사 때
+
+나  1단계 원문 여덟을 박 님 판으로 (희화화 완화)
+  problems.json   passage 8건 교체. scoring_config·모범답안은 그대로
+  update SQL      seed/update-reduce-adverb-passages.sql — 덤프에서 뽑은 update 8건.
+                  seed_data 는 기존 행 passage 를 안 고쳐서 따로 낸다
+  verify          reduce_adverb 블록: 원문 8건이 다 자기 maxChars 초과 · 원문 제출은 미달 ·
+                  update SQL 의 8건 passage 가 덤프와 글자까지 같다
+  ★ 박 님이 형태소 서버로 실측: 새 원문 전부 자수 초과 + 부사 2~5 → 원문 제출 여전히 미달
+  ★ 커밋 후 절차(박 님): update-reduce-adverb-passages.sql 실행 → seed_check.sql
 ```
 
 ### 끝난 것 — 세션 19
@@ -89,18 +114,6 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
   ★ 1단계 모범답안 16건은 잠정 통과다. 화면에서 풀며 고칠 수 있다 — 고치면 answers.json 수정 +
     DB update + seed_check 재실행이 절차다(seed_data 의 reference insert 는 on conflict do
     nothing 이라 기존 행을 안 고친다. self_checks 는 do update 라 재시드로 갱신됨).
-```
-
-### 끝난 것 — 세션 18 (요약, 이제 '앱이 지금 할 수 있는 것' 에 들어감)
-
-```
-fill 유형·시드·화면      10단계 action_reason fill 8 (①②, bell-rope 만 ①②③). types·local·index,
-                        seed_schema 의 reference_answers 테이블 + RLS('제출한 뒤에만'), FillBody·SelfCheck.
-                        옛 action_turn 8 은 is_active=false. ★ ar-left-feeler 는 모범답안 없음(미결)
-구두점만 제출 막음        countSentences 종결부호 조각 중 글자 든 것만. fill 분량 최대·최소 다 countLetters,
-                        b.minChars 없으면 기본 8
-학습 루프               lib/train-nav 순수 셋(nextProblemKey·nextStageId·stageProgress). TrainClient 결과
-                        아래 링크 하나. nextStageId 가 action_reason 다음 → 구성 14 off_track
 ```
 
 ★ 주 단위 기준 하나 — **학습자가 새로 할 수 있게 된 것**이 없는 주는 실패다.

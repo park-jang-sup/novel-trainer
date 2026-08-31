@@ -2,7 +2,7 @@
   {
     "type": "remove",
     "choices": null,
-    "passage": "나무꾼은 정말 힘껏 도끼를 휘둘렀다. 자루가 갑자기 아주 쉽게 빠졌고, 도끼는 굉장히 빠르게 연못으로 떨어졌다.",
+    "passage": "나무꾼은 힘껏 도끼를 휘둘렀다. 자루가 갑자기 빠졌고, 도끼는 빠르게 연못으로 떨어졌다.",
     "order_no": 1,
     "tone_tag": "planned",
     "genre_tag": "fantasy",
@@ -23,7 +23,7 @@
   {
     "type": "remove",
     "choices": null,
-    "passage": "흥부는 몹시 조심스럽게 제비의 다리를 아주 천천히 감쌌다. 그는 정말 간절하게 제비가 얼른 낫기를 바랐다.",
+    "passage": "흥부는 조심스럽게 제비의 다리를 감쌌다. 그는 간절하게 제비가 얼른 낫기를 바랐다.",
     "order_no": 1,
     "tone_tag": "planned",
     "genre_tag": "fantasy",
@@ -44,7 +44,7 @@
   {
     "type": "remove",
     "choices": null,
-    "passage": "콩쥐는 깨진 독에 정말 열심히 물을 부었지만 물은 계속 아주 빠르게 새어 나갔다. 그녀는 몹시 지친 얼굴로 천천히 주저앉았다.",
+    "passage": "콩쥐는 깨진 독에 열심히 물을 부었지만 물은 계속 빠르게 새어 나갔다. 그녀는 몹시 지친 얼굴로 천천히 주저앉았다.",
     "order_no": 1,
     "tone_tag": "planned",
     "genre_tag": "modern",
@@ -65,7 +65,7 @@
   {
     "type": "remove",
     "choices": null,
-    "passage": "심청은 아주 천천히 뱃전으로 걸어갔다. 사람들은 몹시 안타깝게 그녀를 바라보았고, 뱃사공은 굉장히 무겁게 고개를 돌렸다.",
+    "passage": "심청은 천천히 뱃전으로 걸어갔다. 사람들은 안타깝게 그녀를 바라보았고, 뱃사공은 무겁게 고개를 돌렸다.",
     "order_no": 1,
     "tone_tag": "planned",
     "genre_tag": "modern",
@@ -86,7 +86,7 @@
   {
     "type": "remove",
     "choices": null,
-    "passage": "까치들은 굉장히 부지런하게 날아와 아주 촘촘하게 몸을 이었다. 견우는 정말 조심스럽게 그 위에 발을 얹었다.",
+    "passage": "까치들은 부지런하게 날아와 아주 촘촘하게 몸을 이었다. 견우는 조심스럽게 그 위에 발을 얹었다.",
     "order_no": 1,
     "tone_tag": "planned",
     "genre_tag": "romance",
@@ -107,7 +107,7 @@
   {
     "type": "remove",
     "choices": null,
-    "passage": "토끼는 아주 태연하게 웃으며 말했다. 용왕은 몹시 다급하게 몸을 일으켰고, 신하들은 정말 어리둥절하게 서로를 바라보았다.",
+    "passage": "토끼는 태연하게 웃으며 말했다. 용왕은 다급하게 몸을 일으켰고, 신하들은 어리둥절한 표정으로 서로를 바라보았다.",
     "order_no": 1,
     "tone_tag": "impulsive",
     "genre_tag": "martial",
@@ -128,7 +128,7 @@
   {
     "type": "remove",
     "choices": null,
-    "passage": "오누이는 굉장히 급하게 나무 위로 올라갔다. 호랑이는 아래에서 계속 아주 사납게 나무를 흔들었고, 아이들은 몹시 세게 가지를 붙잡았다.",
+    "passage": "오누이는 급하게 나무 위로 올라갔다. 호랑이는 아래에서 계속 사납게 나무를 흔들었고, 아이들은 몹시 세게 가지를 붙잡았다.",
     "order_no": 1,
     "tone_tag": "impulsive",
     "genre_tag": "fantasy",
@@ -149,7 +149,7 @@
   {
     "type": "remove",
     "choices": null,
-    "passage": "나무꾼은 아주 조심스럽게 방망이를 들었다. 그는 몹시 떨리는 손으로 천천히 그것을 내리쳤고, 곡식이 굉장히 갑자기 쏟아져 나왔다.",
+    "passage": "나무꾼은 조심스럽게 방망이를 들었다. 그는 몹시 떨리는 손으로 천천히 그것을 내리쳤고, 곡식이 갑자기 쏟아져 나왔다.",
     "order_no": 1,
     "tone_tag": "impulsive",
     "genre_tag": "fantasy",

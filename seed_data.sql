@@ -325,7 +325,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'reduce_adverb'),
   'remove', 'auto', '꾸미는 말을 걷어내고 다시 쓰시오. 도끼가 물에 빠지는 순간만 남길 것. 여기서는 일부러 부사를 전부 막습니다. 실제 소설에서는 쓰셔도 됩니다 — 언제 쓰는지는 뒤에서 다룹니다.',
-  '나무꾼은 정말 힘껏 도끼를 휘둘렀다. 자루가 갑자기 아주 쉽게 빠졌고, 도끼는 굉장히 빠르게 연못으로 떨어졌다.', null, '{"maxChars":36,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb,
+  '나무꾼은 힘껏 도끼를 휘둘렀다. 자루가 갑자기 빠졌고, 도끼는 빠르게 연못으로 떨어졌다.', null, '{"maxChars":36,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb,
   'folktale', 'fantasy', 'planned',
   1, 'rm-axe-pond'
 where not exists (select 1 from problems p where p.source_key = 'rm-axe-pond');
@@ -337,7 +337,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'reduce_adverb'),
   'remove', 'auto', '꾸미는 말을 걷어내고 다시 쓰시오. 뜻은 그대로 두되, 동작으로 대신할 것. 여기서는 일부러 부사를 전부 막습니다. 실제 소설에서는 쓰셔도 됩니다 — 언제 쓰는지는 뒤에서 다룹니다.',
-  '흥부는 몹시 조심스럽게 제비의 다리를 아주 천천히 감쌌다. 그는 정말 간절하게 제비가 얼른 낫기를 바랐다.', null, '{"maxChars":34,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":2}'::jsonb,
+  '흥부는 조심스럽게 제비의 다리를 감쌌다. 그는 간절하게 제비가 얼른 낫기를 바랐다.', null, '{"maxChars":34,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":2}'::jsonb,
   'folktale', 'fantasy', 'planned',
   1, 'rm-heungbu-swallow'
 where not exists (select 1 from problems p where p.source_key = 'rm-heungbu-swallow');
@@ -349,7 +349,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'reduce_adverb'),
   'remove', 'auto', '꾸미는 말을 걷어내고 다시 쓰시오. 깨진 독은 그대로 두고, 콩쥐가 무엇을 하는지만 보이게 할 것. 여기서는 일부러 부사를 전부 막습니다. 실제 소설에서는 쓰셔도 됩니다 — 언제 쓰는지는 뒤에서 다룹니다.',
-  '콩쥐는 깨진 독에 정말 열심히 물을 부었지만 물은 계속 아주 빠르게 새어 나갔다. 그녀는 몹시 지친 얼굴로 천천히 주저앉았다.', null, '{"maxChars":39,"minVerbs":4,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":2}'::jsonb,
+  '콩쥐는 깨진 독에 열심히 물을 부었지만 물은 계속 빠르게 새어 나갔다. 그녀는 몹시 지친 얼굴로 천천히 주저앉았다.', null, '{"maxChars":39,"minVerbs":4,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":2}'::jsonb,
   'folktale', 'modern', 'planned',
   1, 'rm-kongjwi-jar'
 where not exists (select 1 from problems p where p.source_key = 'rm-kongjwi-jar');
@@ -361,7 +361,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'reduce_adverb'),
   'remove', 'auto', '꾸미는 말을 걷어내고 다시 쓰시오. 여기서는 일부러 부사를 전부 막습니다. 실제 소설에서는 쓰셔도 됩니다 — 언제 쓰는지는 뒤에서 다룹니다.',
-  '심청은 아주 천천히 뱃전으로 걸어갔다. 사람들은 몹시 안타깝게 그녀를 바라보았고, 뱃사공은 굉장히 무겁게 고개를 돌렸다.', null, '{"maxChars":40,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb,
+  '심청은 천천히 뱃전으로 걸어갔다. 사람들은 안타깝게 그녀를 바라보았고, 뱃사공은 무겁게 고개를 돌렸다.', null, '{"maxChars":40,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb,
   'folktale', 'modern', 'planned',
   1, 'rm-simcheong-deck'
 where not exists (select 1 from problems p where p.source_key = 'rm-simcheong-deck');
@@ -373,7 +373,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'reduce_adverb'),
   'remove', 'auto', '꾸미는 말을 걷어내고 다시 쓰시오. 까치들이 다리를 만드는 장면만 남길 것. 여기서는 일부러 부사를 전부 막습니다. 실제 소설에서는 쓰셔도 됩니다 — 언제 쓰는지는 뒤에서 다룹니다.',
-  '까치들은 굉장히 부지런하게 날아와 아주 촘촘하게 몸을 이었다. 견우는 정말 조심스럽게 그 위에 발을 얹었다.', null, '{"maxChars":34,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb,
+  '까치들은 부지런하게 날아와 아주 촘촘하게 몸을 이었다. 견우는 조심스럽게 그 위에 발을 얹었다.', null, '{"maxChars":34,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb,
   'folktale', 'romance', 'planned',
   2, 'rm-magpie-bridge'
 where not exists (select 1 from problems p where p.source_key = 'rm-magpie-bridge');
@@ -385,7 +385,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'reduce_adverb'),
   'remove', 'auto', '꾸미는 말을 걷어내고 다시 쓰시오. 여기서는 일부러 부사를 전부 막습니다. 실제 소설에서는 쓰셔도 됩니다 — 언제 쓰는지는 뒤에서 다룹니다.',
-  '토끼는 아주 태연하게 웃으며 말했다. 용왕은 몹시 다급하게 몸을 일으켰고, 신하들은 정말 어리둥절하게 서로를 바라보았다.', null, '{"maxChars":40,"minVerbs":3,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb,
+  '토끼는 태연하게 웃으며 말했다. 용왕은 다급하게 몸을 일으켰고, 신하들은 어리둥절한 표정으로 서로를 바라보았다.', null, '{"maxChars":40,"minVerbs":3,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb,
   'folktale', 'martial', 'impulsive',
   2, 'rm-rabbit-court'
 where not exists (select 1 from problems p where p.source_key = 'rm-rabbit-court');
@@ -397,7 +397,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'reduce_adverb'),
   'remove', 'auto', '꾸미는 말을 걷어내고 다시 쓰시오. 여기서는 일부러 부사를 전부 막습니다. 실제 소설에서는 쓰셔도 됩니다 — 언제 쓰는지는 뒤에서 다룹니다.',
-  '오누이는 굉장히 급하게 나무 위로 올라갔다. 호랑이는 아래에서 계속 아주 사납게 나무를 흔들었고, 아이들은 몹시 세게 가지를 붙잡았다.', null, '{"maxChars":44,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb,
+  '오누이는 급하게 나무 위로 올라갔다. 호랑이는 아래에서 계속 사납게 나무를 흔들었고, 아이들은 몹시 세게 가지를 붙잡았다.', null, '{"maxChars":44,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb,
   'folktale', 'fantasy', 'impulsive',
   2, 'rm-siblings-tree'
 where not exists (select 1 from problems p where p.source_key = 'rm-siblings-tree');
@@ -409,7 +409,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'reduce_adverb'),
   'remove', 'auto', '꾸미는 말을 걷어내고 다시 쓰시오. 남는 문장은 두 개 이하로. 여기서는 일부러 부사를 전부 막습니다. 실제 소설에서는 쓰셔도 됩니다 — 언제 쓰는지는 뒤에서 다룹니다.',
-  '나무꾼은 아주 조심스럽게 방망이를 들었다. 그는 몹시 떨리는 손으로 천천히 그것을 내리쳤고, 곡식이 굉장히 갑자기 쏟아져 나왔다.', null, '{"maxChars":42,"minVerbs":3,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":2}'::jsonb,
+  '나무꾼은 조심스럽게 방망이를 들었다. 그는 몹시 떨리는 손으로 천천히 그것을 내리쳤고, 곡식이 갑자기 쏟아져 나왔다.', null, '{"maxChars":42,"minVerbs":3,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":2}'::jsonb,
   'folktale', 'fantasy', 'impulsive',
   3, 'rm-goblin-club'
 where not exists (select 1 from problems p where p.source_key = 'rm-goblin-club');

@@ -46,14 +46,14 @@ create temporary table expect (
 );
 
 insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) values
-  ('rm-axe-pond', '767bce97ba0984cb0aaa18ad470b183b', 99, '2c65b441663ec150c627365e39708a9f', 62, '{"maxChars":36,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb),
-  ('rm-heungbu-swallow', '422bcd35e5ed12611f1c159741b8d284', 101, '2dcb8b9092502f143857cdda7ff024c3', 59, '{"maxChars":34,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":2}'::jsonb),
-  ('rm-kongjwi-jar', '3fc7a0a23aea08179dbcc07b8b58fd04', 114, '76363c982ce50c71dd3ab65e924c75c1', 70, '{"maxChars":39,"minVerbs":4,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":2}'::jsonb),
-  ('rm-simcheong-deck', 'c4a134de4c38ba8c8649c03ac9c494bd', 78, '5c836e23962c677e05f909a85d9b476e', 67, '{"maxChars":40,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb),
-  ('rm-magpie-bridge', '8c9989ae73ed1155503dbb3a1f20ae19', 101, '8c970496911d1c24ce3236f28adebec6', 60, '{"maxChars":34,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb),
-  ('rm-rabbit-court', 'c4a134de4c38ba8c8649c03ac9c494bd', 78, '646ddf59216468d0668b58e4a403059b', 67, '{"maxChars":40,"minVerbs":3,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb),
-  ('rm-siblings-tree', 'c4a134de4c38ba8c8649c03ac9c494bd', 78, '91a0481d324253c330663e1f636b0a8a', 75, '{"maxChars":44,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb),
-  ('rm-goblin-club', '4af82dadf8273d39e9012e06a7199f05', 94, 'e085bd79ebcf931ffe3e3fce73a51852', 72, '{"maxChars":42,"minVerbs":3,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":2}'::jsonb),
+  ('rm-axe-pond', '767bce97ba0984cb0aaa18ad470b183b', 99, 'f32376318db1d3b5936bc5bdaed0f9f7', 49, '{"maxChars":36,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb),
+  ('rm-heungbu-swallow', '422bcd35e5ed12611f1c159741b8d284', 101, '6c9ffa5102ba47bf88f994870c85a89a', 46, '{"maxChars":34,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":2}'::jsonb),
+  ('rm-kongjwi-jar', '3fc7a0a23aea08179dbcc07b8b58fd04', 114, 'dca740c6656f2f5a81e2f3589df6af2a', 64, '{"maxChars":39,"minVerbs":4,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":2}'::jsonb),
+  ('rm-simcheong-deck', 'c4a134de4c38ba8c8649c03ac9c494bd', 78, 'c3bbcfdbc37a9b2408db19837758c415', 57, '{"maxChars":40,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb),
+  ('rm-magpie-bridge', '8c9989ae73ed1155503dbb3a1f20ae19', 101, '44abb15a305e9a456abfca5a65342dd4', 53, '{"maxChars":34,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb),
+  ('rm-rabbit-court', 'c4a134de4c38ba8c8649c03ac9c494bd', 78, '5b89814326a3b13cf5aa33dbb50ca7d9', 62, '{"maxChars":40,"minVerbs":3,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb),
+  ('rm-siblings-tree', 'c4a134de4c38ba8c8649c03ac9c494bd', 78, '02a8bd50b2742dc40d2076f805c45998', 68, '{"maxChars":44,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb),
+  ('rm-goblin-club', '4af82dadf8273d39e9012e06a7199f05', 94, 'e5fe17def733f583bd84b79d9d7a7ab3', 65, '{"maxChars":42,"minVerbs":3,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":2}'::jsonb),
   ('heungbu-joy', '3d67b9991f63f7137c1e6ba4fa094d1d', 22, 'da937ab22e4be877e917c12dd2b7f4a0', 32, '{"maxChars":60,"minVerbs":2,"maxAdverbs":1,"forbidWords":["기뻤","기쁘","기뻐","기쁨","행복","신났","신나","즐거","좋았"],"maxModifiers":2}'::jsonb),
   ('sim-cheong-fear', '1ce88519de2a3b56c4602e5f1de52085', 46, '349f86cbb5b24dad2ed5a49d55af3aff', 31, '{"maxChars":60,"minVerbs":1,"maxAdverbs":1,"forbidWords":["두려","두렵","무서","겁먹","떨렸","공포","질렸"],"maxModifiers":2}'::jsonb),
   ('dragon-king-anger', '11ddecaa296705d33bb7247f1b59c364', 24, 'd90f2aadfc1d6f7dec8b7e1971db46d4', 29, '{"maxChars":60,"minVerbs":2,"maxAdverbs":1,"forbidWords":["화났","화가 났","화가 나서","화가 치밀","분노","노여","성났","격분","짜증","치밀어","치밀었"],"maxModifiers":2}'::jsonb),
