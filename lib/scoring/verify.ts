@@ -2727,16 +2727,17 @@ console.log('\n[쓰지 않을 말 표시: forbidLabel/forbidDisplay ↔ 채점]'
 
   // 화면 배선 — 사본 없이 RuleText 를 쓴다
   const ruleTextSrc = readFileSync(path.join(root, 'components', 'train', 'RuleText.tsx'), 'utf8')
-  // 항상 두 줄 고정: 1줄 범주(rule), 2줄 기본형 전체(list.join). 토글·팝오버 없음 —
-  // 접힘/펼침이 없으니 아무것도 안 움직인다.
-  t('RuleText 2줄째가 기본형 전체를 항상 편다',
-    /\{list\.join\(' · '\)\}/.test(ruleTextSrc) && /wordBreak:\s*'keep-all'/.test(ruleTextSrc))
-  t('RuleText 에 토글·팝오버·이벤트가 없다',
-    !/전체 보기/.test(ruleTextSrc) && !/접기/.test(ruleTextSrc) &&
-      !/useState|useEffect/.test(ruleTextSrc) && !/position:\s*'absolute'/.test(ruleTextSrc) &&
-      !/Escape|mousedown/.test(ruleTextSrc) && !/예:/.test(ruleTextSrc))
-  t('RuleText 2줄째가 옅은 색 · 행 전체(block)',
-    /color:\s*'var\(--ink-soft\)'/.test(ruleTextSrc) && /display:\s*'block'/.test(ruleTextSrc))
+  // 기본이 펼침(useState(true)) — 처음 화면에 범주 줄 + 기본형 전체 줄이 다 보인다.
+  // '접기'로 2줄이 인라인으로 빠진다(팝오버 아님). '전체 보기'로 다시 편다.
+  t('RuleText 가 기본 펼침이다 (useState(true))', /useState\(\s*true\s*\)/.test(ruleTextSrc))
+  t('RuleText 가 접기/전체 보기 로 토글한다',
+    /'접기'/.test(ruleTextSrc) && /'전체 보기'/.test(ruleTextSrc) && /open && \(/.test(ruleTextSrc))
+  t('RuleText 2줄째가 기본형 전체 · 옅은 색 · 행 전체(block) · keep-all',
+    /\{list\.join\(' · '\)\}/.test(ruleTextSrc) && /color:\s*'var\(--ink-soft\)'/.test(ruleTextSrc) &&
+      /wordBreak:\s*'keep-all'/.test(ruleTextSrc))
+  t('RuleText 는 인라인이다 — 팝오버·바깥클릭·Esc 장치가 없다',
+    !/position:\s*'absolute'/.test(ruleTextSrc) && !/Escape|mousedown/.test(ruleTextSrc) &&
+      !/useEffect/.test(ruleTextSrc) && !/예:/.test(ruleTextSrc))
   const checkRowSrc = readFileSync(path.join(root, 'components', 'train', 'CheckRow.tsx'), 'utf8')
   t('CheckRow 가 RuleText 를 쓰고 라벨을 nowrap 한다',
     /RuleText/.test(checkRowSrc) && /whitespace-nowrap/.test(checkRowSrc))

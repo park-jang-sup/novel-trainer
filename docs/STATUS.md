@@ -77,10 +77,10 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 가  세로 라벨 버그: '무엇을 봅니다'·CheckRow 라벨을 whitespace-nowrap + flex-shrink-0,
     긴 규칙 텍스트만 오른쪽 min-w-0 칸에서 줄바꿈.
 나  scoring_config 표시 전용 필드 둘 — forbidLabel(범주 한 줄) · forbidDisplay(기본형 배열).
-    있으면 규칙이 항상 두 줄 고정 — 1줄 범주, 2줄 기본형 전체(옅은 색, keep-all). 토글·
-    팝오버 없음(아무것도 안 움직인다). 새 컴포넌트 RuleText(순수, 이벤트 없음)를 '무엇을
-    봅니다'와 CheckRow 가 공유(fail 때 걸린 단어 칩은 별도, 안 건드림). forbidLabel 없으면
-    rule 한 줄 그대로. local.ts forbidWords 검사 + index.ts mergeForbidChecks
+    있으면 RuleText 가: 기본 펼침(useState(true)) — 1줄 범주 + '접기', 2줄 기본형 전체
+    (옅은 색·keep-all). 접으면 1줄 + '전체 보기'. 팝오버 아님 — 인라인로 줄이 빠진다
+    (행 이동 방지 장치 없음). '무엇을 봅니다'와 CheckRow 가 공유(fail 때 걸린 단어 칩은
+    별도). forbidLabel 없으면 rule 한 줄 그대로. local.ts forbidWords 검사 + index.ts mergeForbidChecks
     (sensory 는 forbidWords+forbidLemmas 병합)가 rule/examples 를 싣는다.
     page.tsx NON_SCORING_KEYS 에 두 필드 추가 — sensory 가 두 칸으로 안 넘어가게.
 다  2단계 emotion_action 6 + 6단계 sensory 8 덤프에 채움. 범주는 지시문 결에 맞춤
