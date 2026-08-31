@@ -156,18 +156,27 @@ begin
     raise exception '[불변식 9] stage_id 가 null 인 문항: %', v_bad;
   end if;
 
-  -- (10) reference_answers(fill 모범답안)는 자기 문항의 blanks 에 있는
-  --      blank_key 만 쓴다. 없는 key 를 가리키면 화면이 그 줄을 못 붙인다.
-  select string_agg(distinct r.problem_id::text || ':' || r.blank_key, ', ') into v_bad
+  -- (10) reference_answers(모범답안)의 blank_key 규칙.
+  --      fill 문항: 자기 blanks 에 실재하는 key 만 쓴다 — 없는 key 를 가리키면
+  --                 화면이 그 줄을 못 붙인다.
+  --      비-fill 문항(1단계 reduce_adverb 등): 빈칸이 없으니 blank_key 는 '' 다.
+  --                 ord 로만 답안 세트(가·나…)를 가른다.
+  select string_agg(
+           distinct r.problem_id::text || ':' ||
+           coalesce(nullif(r.blank_key, ''), '<빈>') || ' [' || p.type || ']', ', '
+         ) into v_bad
     from reference_answers r
     join problems p on p.id = r.problem_id
-   where not exists (
-     select 1
-       from jsonb_array_elements(p.scoring_config->'blanks') b
-      where b->>'key' = r.blank_key
-   );
+   where case
+     when p.type = 'fill' then not exists (
+       select 1
+         from jsonb_array_elements(p.scoring_config->'blanks') b
+        where b->>'key' = r.blank_key
+     )
+     else r.blank_key <> ''
+   end;
   if v_bad is not null then
-    raise exception '[불변식 10] 모범답안이 없는 빈칸을 가리킴: %', v_bad;
+    raise exception '[불변식 10] 모범답안 blank_key 규칙 위반 (fill=실재 빈칸 / 비-fill=빈 문자열): %', v_bad;
   end if;
 
   select count(*) into v_cnt from problems;

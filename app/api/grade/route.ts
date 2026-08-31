@@ -117,23 +117,22 @@ export async function POST(request: NextRequest) {
     console.error('submissions insert failed', err)
   }
 
-  // 8. fill: 모범답안을 읽어 함께 내려보낸다(stage2 자기점검이 화면에
-  //    보여줄 것). RLS 정책이 방금 넣은 submissions 행을 보고 통과시킨다 —
-  //    제출이 저장되지 않았으면 0행이 온다. 채점 정답이 아니므로 pass/fail
-  //    과 무관하게 내려보내고, 언제 보여줄지는 화면이 정한다.
-  let reference: { ord: number; blank_key: string; content: string }[] | undefined
-  if (problem.type === 'fill') {
-    const { data, error } = await supabase
-      .from('reference_answers')
-      .select('ord, blank_key, content')
-      .eq('problem_id', problemId)
-      .order('ord')
-      .order('blank_key')
-    if (error) {
-      console.error('reference_answers select failed', 'message=' + error.message)
-    }
-    reference = data ?? []
+  // 8. 모범답안을 읽어 함께 내려보낸다(stage2 자기점검이 화면에 보여줄 것).
+  //    10단계 fill 만이 아니라 비-fill 문항(1단계 reduce_adverb 등)도 모범답안이
+  //    있을 수 있어 유형을 안 가리고 읽는다 — reference_answers 에 행이 없으면
+  //    빈 배열이다. RLS 정책이 방금 넣은 submissions 행을 보고 통과시킨다 —
+  //    제출이 저장되지 않았으면 0행이 온다. 채점 정답이 아니므로 pass/fail 과
+  //    무관하게 내려보내고, 언제 보여줄지는 화면이 정한다.
+  const { data: refData, error: refError } = await supabase
+    .from('reference_answers')
+    .select('ord, blank_key, content')
+    .eq('problem_id', problemId)
+    .order('ord')
+    .order('blank_key')
+  if (refError) {
+    console.error('reference_answers select failed', 'message=' + refError.message)
   }
+  const reference: { ord: number; blank_key: string; content: string }[] = refData ?? []
 
   // 9. 응답 — checks와 status만. 정답·scoring_config는 실리지 않는다.
   return Response.json({
@@ -141,6 +140,6 @@ export async function POST(request: NextRequest) {
     checks: result.checks,
     needsAi: result.needsAi,
     morphAvailable: morph !== null,
-    ...(reference !== undefined ? { reference } : {}),
+    reference,
   })
 }

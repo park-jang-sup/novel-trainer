@@ -5,7 +5,10 @@
     "is_free": true,
     "summary": "꾸미는 말을 걷어내고 동작으로 대신한다",
     "order_no": 1,
-    "skill_key": "reduce_adverb"
+    "skill_key": "reduce_adverb",
+    "self_checks": [
+      "부사가 하던 일을 동작이 하고 있는가"
+    ]
   },
   {
     "title": "감정을 동작으로",
@@ -13,7 +16,8 @@
     "is_free": true,
     "summary": "감정을 서술하지 않고 몸으로 드러낸다",
     "order_no": 2,
-    "skill_key": "emotion_action"
+    "skill_key": "emotion_action",
+    "self_checks": []
   },
   {
     "title": "군더더기 빼기",
@@ -21,7 +25,8 @@
     "is_free": true,
     "summary": "없어도 되는 문장을 알아본다",
     "order_no": 3,
-    "skill_key": "trim_padding"
+    "skill_key": "trim_padding",
+    "self_checks": []
   },
   {
     "title": "반복 표현 제거",
@@ -29,7 +34,8 @@
     "is_free": true,
     "summary": "같은 말이 겹치는 것을 알아챈다",
     "order_no": 4,
-    "skill_key": "reduce_repeat"
+    "skill_key": "reduce_repeat",
+    "self_checks": []
   },
   {
     "title": "부사를 쓸 자리",
@@ -37,7 +43,8 @@
     "is_free": true,
     "summary": "부사를 언제 써도 되는지 안다",
     "order_no": 5,
-    "skill_key": "adverb_exception"
+    "skill_key": "adverb_exception",
+    "self_checks": []
   },
   {
     "title": "감각 묘사",
@@ -45,7 +52,8 @@
     "is_free": true,
     "summary": "한 장면에서 두 가지 이상의 감각을 쓴다",
     "order_no": 6,
-    "skill_key": "sensory"
+    "skill_key": "sensory",
+    "self_checks": []
   },
   {
     "title": "문장 리듬",
@@ -53,7 +61,8 @@
     "is_free": true,
     "summary": "문단을 끊어 읽는 속도를 만든다",
     "order_no": 7,
-    "skill_key": "rhythm"
+    "skill_key": "rhythm",
+    "self_checks": []
   },
   {
     "title": "대사와 독백",
@@ -61,7 +70,8 @@
     "is_free": true,
     "summary": "대화 사이에 속마음을 끼워 넣는다",
     "order_no": 8,
-    "skill_key": "dialogue_ratio"
+    "skill_key": "dialogue_ratio",
+    "self_checks": []
   },
   {
     "title": "시점 고정",
@@ -69,7 +79,8 @@
     "is_free": true,
     "summary": "한 인물의 눈에 보이는 것만 쓴다",
     "order_no": 9,
-    "skill_key": "pov_lock"
+    "skill_key": "pov_lock",
+    "self_checks": []
   },
   {
     "title": "동작에 이유 넣기",
@@ -77,7 +88,11 @@
     "is_free": true,
     "summary": "동작 사이에 왜 그렇게 했는지를 끼운다",
     "order_no": 10,
-    "skill_key": "action_reason"
+    "skill_key": "action_reason",
+    "self_checks": [
+      "마지막에 채운 칸이 그 뒤 결정타 줄의 이유가 되는가",
+      "채운 칸들이 앞뒤 고정 줄과 끊기지 않고 이어지는가"
+    ]
   },
   {
     "title": "전투 서사화",
@@ -85,7 +100,8 @@
     "is_free": true,
     "summary": "빌드업을 쌓고 마지막 한 줄로 승부를 가른다",
     "order_no": 12,
-    "skill_key": "action_turn"
+    "skill_key": "action_turn",
+    "self_checks": []
   },
   {
     "title": "절단신공",
@@ -93,7 +109,8 @@
     "is_free": true,
     "summary": "마지막 줄이 다음을 부르게 한다",
     "order_no": 11,
-    "skill_key": "cliffhanger"
+    "skill_key": "cliffhanger",
+    "self_checks": []
   },
   {
     "title": "첫 문장 고르기",
@@ -101,7 +118,8 @@
     "is_free": true,
     "summary": "어떤 첫 문장이 통하는지 안다",
     "order_no": 1,
-    "skill_key": "start_choose"
+    "skill_key": "start_choose",
+    "self_checks": []
   },
   {
     "title": "첫 문장 쓰기",
@@ -109,7 +127,8 @@
     "is_free": true,
     "summary": "주인공의 감각에서 시작한다",
     "order_no": 2,
-    "skill_key": "start_write"
+    "skill_key": "start_write",
+    "self_checks": []
   },
   {
     "title": "도입 잇기",
@@ -117,7 +136,8 @@
     "is_free": true,
     "summary": "세 문장 안에 인물을 세운다",
     "order_no": 3,
-    "skill_key": "start_extend"
+    "skill_key": "start_extend",
+    "self_checks": []
   },
   {
     "title": "1화 축약",
@@ -125,7 +145,8 @@
     "is_free": true,
     "summary": "1화의 요소를 손에 쥔다",
     "order_no": 4,
-    "skill_key": "start_episode"
+    "skill_key": "start_episode",
+    "self_checks": []
   },
   {
     "title": "결핍 부여",
@@ -133,7 +154,8 @@
     "is_free": false,
     "summary": "완벽한 인물을 만들지 않는다",
     "order_no": 11,
-    "skill_key": "lack"
+    "skill_key": "lack",
+    "self_checks": []
   },
   {
     "title": "대비 캐릭터",
@@ -141,7 +163,8 @@
     "is_free": false,
     "summary": "상반된 인물을 나란히 세운다",
     "order_no": 12,
-    "skill_key": "contrast_char"
+    "skill_key": "contrast_char",
+    "self_checks": []
   },
   {
     "title": "호감 확보",
@@ -149,7 +172,8 @@
     "is_free": false,
     "summary": "초반에 응원할 이유를 만든다",
     "order_no": 13,
-    "skill_key": "likability"
+    "skill_key": "likability",
+    "self_checks": []
   },
   {
     "title": "궤도 이탈 찾기",
@@ -157,7 +181,8 @@
     "is_free": true,
     "summary": "장면 목적에 기여하지 않는 문장을 본다",
     "order_no": 14,
-    "skill_key": "off_track"
+    "skill_key": "off_track",
+    "self_checks": []
   },
   {
     "title": "정보 비대칭",
@@ -165,7 +190,8 @@
     "is_free": false,
     "summary": "답답함을 기대감으로 바꾼다",
     "order_no": 15,
-    "skill_key": "info_gap"
+    "skill_key": "info_gap",
+    "self_checks": []
   },
   {
     "title": "절단신공 심화",
@@ -173,7 +199,8 @@
     "is_free": false,
     "summary": "끊기 전에 신호를 깐다",
     "order_no": 16,
-    "skill_key": "cliffhanger_adv"
+    "skill_key": "cliffhanger_adv",
+    "self_checks": []
   },
   {
     "title": "역순 설계",
@@ -181,7 +208,8 @@
     "is_free": true,
     "summary": "목표에서 거꾸로 조건을 세운다",
     "order_no": 17,
-    "skill_key": "reverse_design"
+    "skill_key": "reverse_design",
+    "self_checks": []
   },
   {
     "title": "1화 훅",
@@ -189,7 +217,8 @@
     "is_free": false,
     "summary": "다섯 줄 안에 세 요소를 넣는다",
     "order_no": 18,
-    "skill_key": "first_hook"
+    "skill_key": "first_hook",
+    "self_checks": []
   },
   {
     "title": "장르의 조어법",
@@ -197,7 +226,8 @@
     "is_free": true,
     "summary": "장르마다 이름을 만드는 규칙이 있다",
     "order_no": 19,
-    "skill_key": "genre_coinage"
+    "skill_key": "genre_coinage",
+    "self_checks": []
   },
   {
     "title": "분량 역산",
@@ -205,6 +235,7 @@
     "is_free": true,
     "summary": "분기점 수로 전체 분량을 가늠한다",
     "order_no": 20,
-    "skill_key": "branch_estimate"
+    "skill_key": "branch_estimate",
+    "self_checks": []
   }
 ]

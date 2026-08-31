@@ -128,9 +128,13 @@ function splitInstruction(instruction: string): {
 export default function TrainClient({
   problem,
   loop,
+  selfChecks,
 }: {
   problem: PublicProblem
   loop: LoopProps
+  // 이 단계의 자기점검 문구(stages.self_checks). 빈 배열이면 SelfCheck 가
+  // '스스로 확인' 칸을 안 그리고 모범답안만 보여준다.
+  selfChecks: string[]
 }) {
   const { publicConfig: cfg } = problem
 
@@ -569,11 +573,11 @@ export default function TrainClient({
               규칙 검사는 통과했습니다. 내용 심사는 아직 준비 중입니다.
             </p>
           )}
-          {/* fill: 규칙을 통과하면 모범답안 + 자기점검이 판정을 대신한다.
-              규칙 목록(전부 ○)은 그 아래에 접어 둔다. */}
-          {problem.type === 'fill' && result.status === 'pass' && result.reference?.length ? (
+          {/* 규칙을 통과하고 모범답안이 있으면(10단계 fill · 1단계 등) 모범답안 +
+              자기점검이 판정을 대신한다. 규칙 목록(전부 ○)은 그 아래에 접어 둔다. */}
+          {result.status === 'pass' && result.reference?.length ? (
             <>
-              <SelfCheck reference={result.reference} />
+              <SelfCheck reference={result.reference} selfChecks={selfChecks} />
               <details className="pt-2">
                 <summary className="cursor-pointer text-sm" style={{ color: 'var(--ink-soft)' }}>
                   규칙 검사 {displayChecks?.length ?? 0}개

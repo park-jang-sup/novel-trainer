@@ -101,6 +101,11 @@ create policy "own submissions insert" on submissions
 -- 이 정책이 없으면 훈련 화면이 42501(insufficient_privilege)로 실패한다.
 alter table stages enable row level security;
 
+-- 단계마다 다른 stage2 자기점검 문구(재설계안 11-2). reduce_adverb 는 한 줄,
+-- action_reason 은 두 줄, 나머지는 빈 배열 — 빈 배열이면 화면에 자기점검 칸이
+-- 안 뜨고 모범답안만 보인다. 값은 seed/dump/stages.json 이 단일 출처다.
+alter table stages add column if not exists self_checks text[] not null default '{}';
+
 drop policy if exists "authed read stages" on stages;
 create policy "authed read stages" on stages
   for select to authenticated using (true);

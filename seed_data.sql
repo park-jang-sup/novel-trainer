@@ -30,265 +30,291 @@ begin;
 update stages set order_no = order_no + 1000
  where skill_key in ('reduce_adverb', 'emotion_action', 'trim_padding', 'reduce_repeat', 'adverb_exception', 'sensory', 'rhythm', 'dialogue_ratio', 'pov_lock', 'action_reason', 'cliffhanger', 'action_turn', 'lack', 'contrast_char', 'likability', 'off_track', 'info_gap', 'cliffhanger_adv', 'reverse_design', 'first_hook', 'genre_coinage', 'branch_estimate', 'start_choose', 'start_write', 'start_extend', 'start_episode');
 
-insert into stages (track, order_no, title, skill_key, summary, is_free)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
 values ('sentence', 1, '부사 줄이기', 'reduce_adverb',
-        '꾸미는 말을 걷어내고 동작으로 대신한다', true)
+        '꾸미는 말을 걷어내고 동작으로 대신한다', true, array['부사가 하던 일을 동작이 하고 있는가']::text[])
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
-  is_free = excluded.is_free;
+  is_free = excluded.is_free,
+  self_checks = excluded.self_checks;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
 values ('sentence', 2, '감정을 동작으로', 'emotion_action',
-        '감정을 서술하지 않고 몸으로 드러낸다', true)
+        '감정을 서술하지 않고 몸으로 드러낸다', true, array[]::text[])
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
-  is_free = excluded.is_free;
+  is_free = excluded.is_free,
+  self_checks = excluded.self_checks;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
 values ('sentence', 3, '군더더기 빼기', 'trim_padding',
-        '없어도 되는 문장을 알아본다', true)
+        '없어도 되는 문장을 알아본다', true, array[]::text[])
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
-  is_free = excluded.is_free;
+  is_free = excluded.is_free,
+  self_checks = excluded.self_checks;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
 values ('sentence', 4, '반복 표현 제거', 'reduce_repeat',
-        '같은 말이 겹치는 것을 알아챈다', true)
+        '같은 말이 겹치는 것을 알아챈다', true, array[]::text[])
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
-  is_free = excluded.is_free;
+  is_free = excluded.is_free,
+  self_checks = excluded.self_checks;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
 values ('sentence', 5, '부사를 쓸 자리', 'adverb_exception',
-        '부사를 언제 써도 되는지 안다', true)
+        '부사를 언제 써도 되는지 안다', true, array[]::text[])
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
-  is_free = excluded.is_free;
+  is_free = excluded.is_free,
+  self_checks = excluded.self_checks;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
 values ('sentence', 6, '감각 묘사', 'sensory',
-        '한 장면에서 두 가지 이상의 감각을 쓴다', true)
+        '한 장면에서 두 가지 이상의 감각을 쓴다', true, array[]::text[])
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
-  is_free = excluded.is_free;
+  is_free = excluded.is_free,
+  self_checks = excluded.self_checks;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
 values ('sentence', 7, '문장 리듬', 'rhythm',
-        '문단을 끊어 읽는 속도를 만든다', true)
+        '문단을 끊어 읽는 속도를 만든다', true, array[]::text[])
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
-  is_free = excluded.is_free;
+  is_free = excluded.is_free,
+  self_checks = excluded.self_checks;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
 values ('sentence', 8, '대사와 독백', 'dialogue_ratio',
-        '대화 사이에 속마음을 끼워 넣는다', true)
+        '대화 사이에 속마음을 끼워 넣는다', true, array[]::text[])
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
-  is_free = excluded.is_free;
+  is_free = excluded.is_free,
+  self_checks = excluded.self_checks;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
 values ('sentence', 9, '시점 고정', 'pov_lock',
-        '한 인물의 눈에 보이는 것만 쓴다', true)
+        '한 인물의 눈에 보이는 것만 쓴다', true, array[]::text[])
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
-  is_free = excluded.is_free;
+  is_free = excluded.is_free,
+  self_checks = excluded.self_checks;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
 values ('sentence', 10, '동작에 이유 넣기', 'action_reason',
-        '동작 사이에 왜 그렇게 했는지를 끼운다', true)
+        '동작 사이에 왜 그렇게 했는지를 끼운다', true, array['마지막에 채운 칸이 그 뒤 결정타 줄의 이유가 되는가', '채운 칸들이 앞뒤 고정 줄과 끊기지 않고 이어지는가']::text[])
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
-  is_free = excluded.is_free;
+  is_free = excluded.is_free,
+  self_checks = excluded.self_checks;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
 values ('sentence', 11, '절단신공', 'cliffhanger',
-        '마지막 줄이 다음을 부르게 한다', true)
+        '마지막 줄이 다음을 부르게 한다', true, array[]::text[])
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
-  is_free = excluded.is_free;
+  is_free = excluded.is_free,
+  self_checks = excluded.self_checks;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
 values ('sentence', 12, '전투 서사화', 'action_turn',
-        '빌드업을 쌓고 마지막 한 줄로 승부를 가른다', true)
+        '빌드업을 쌓고 마지막 한 줄로 승부를 가른다', true, array[]::text[])
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
-  is_free = excluded.is_free;
+  is_free = excluded.is_free,
+  self_checks = excluded.self_checks;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
 values ('structure', 11, '결핍 부여', 'lack',
-        '완벽한 인물을 만들지 않는다', false)
+        '완벽한 인물을 만들지 않는다', false, array[]::text[])
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
-  is_free = excluded.is_free;
+  is_free = excluded.is_free,
+  self_checks = excluded.self_checks;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
 values ('structure', 12, '대비 캐릭터', 'contrast_char',
-        '상반된 인물을 나란히 세운다', false)
+        '상반된 인물을 나란히 세운다', false, array[]::text[])
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
-  is_free = excluded.is_free;
+  is_free = excluded.is_free,
+  self_checks = excluded.self_checks;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
 values ('structure', 13, '호감 확보', 'likability',
-        '초반에 응원할 이유를 만든다', false)
+        '초반에 응원할 이유를 만든다', false, array[]::text[])
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
-  is_free = excluded.is_free;
+  is_free = excluded.is_free,
+  self_checks = excluded.self_checks;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
 values ('structure', 14, '궤도 이탈 찾기', 'off_track',
-        '장면 목적에 기여하지 않는 문장을 본다', true)
+        '장면 목적에 기여하지 않는 문장을 본다', true, array[]::text[])
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
-  is_free = excluded.is_free;
+  is_free = excluded.is_free,
+  self_checks = excluded.self_checks;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
 values ('structure', 15, '정보 비대칭', 'info_gap',
-        '답답함을 기대감으로 바꾼다', false)
+        '답답함을 기대감으로 바꾼다', false, array[]::text[])
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
-  is_free = excluded.is_free;
+  is_free = excluded.is_free,
+  self_checks = excluded.self_checks;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
 values ('structure', 16, '절단신공 심화', 'cliffhanger_adv',
-        '끊기 전에 신호를 깐다', false)
+        '끊기 전에 신호를 깐다', false, array[]::text[])
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
-  is_free = excluded.is_free;
+  is_free = excluded.is_free,
+  self_checks = excluded.self_checks;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
 values ('structure', 17, '역순 설계', 'reverse_design',
-        '목표에서 거꾸로 조건을 세운다', true)
+        '목표에서 거꾸로 조건을 세운다', true, array[]::text[])
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
-  is_free = excluded.is_free;
+  is_free = excluded.is_free,
+  self_checks = excluded.self_checks;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
 values ('structure', 18, '1화 훅', 'first_hook',
-        '다섯 줄 안에 세 요소를 넣는다', false)
+        '다섯 줄 안에 세 요소를 넣는다', false, array[]::text[])
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
-  is_free = excluded.is_free;
+  is_free = excluded.is_free,
+  self_checks = excluded.self_checks;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
 values ('structure', 19, '장르의 조어법', 'genre_coinage',
-        '장르마다 이름을 만드는 규칙이 있다', true)
+        '장르마다 이름을 만드는 규칙이 있다', true, array[]::text[])
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
-  is_free = excluded.is_free;
+  is_free = excluded.is_free,
+  self_checks = excluded.self_checks;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
 values ('structure', 20, '분량 역산', 'branch_estimate',
-        '분기점 수로 전체 분량을 가늠한다', true)
+        '분기점 수로 전체 분량을 가늠한다', true, array[]::text[])
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
-  is_free = excluded.is_free;
+  is_free = excluded.is_free,
+  self_checks = excluded.self_checks;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
 values ('start', 1, '첫 문장 고르기', 'start_choose',
-        '어떤 첫 문장이 통하는지 안다', true)
+        '어떤 첫 문장이 통하는지 안다', true, array[]::text[])
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
-  is_free = excluded.is_free;
+  is_free = excluded.is_free,
+  self_checks = excluded.self_checks;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
 values ('start', 2, '첫 문장 쓰기', 'start_write',
-        '주인공의 감각에서 시작한다', true)
+        '주인공의 감각에서 시작한다', true, array[]::text[])
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
-  is_free = excluded.is_free;
+  is_free = excluded.is_free,
+  self_checks = excluded.self_checks;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
 values ('start', 3, '도입 잇기', 'start_extend',
-        '세 문장 안에 인물을 세운다', true)
+        '세 문장 안에 인물을 세운다', true, array[]::text[])
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
-  is_free = excluded.is_free;
+  is_free = excluded.is_free,
+  self_checks = excluded.self_checks;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
 values ('start', 4, '1화 축약', 'start_episode',
-        '1화의 요소를 손에 쥔다', true)
+        '1화의 요소를 손에 쥔다', true, array[]::text[])
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
-  is_free = excluded.is_free;
+  is_free = excluded.is_free,
+  self_checks = excluded.self_checks;
 
 -- ── 문항 ────────────────────────────────────────────────────────────
 
@@ -1578,6 +1604,118 @@ where p.source_key = 'dragon-king-anger'
 -- problem_answers 가 아니다 — 채점 정답이 아니라 stage2 자기점검이
 -- 화면에 보여줄 것이다(재설계안 11-2 4번). RLS 는 seed_schema.sql 이
 -- 건다: 그 문항에 제출 기록이 있는 학습자만 읽는다.
+
+-- rm-axe-pond ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '나무꾼이 도끼를 휘둘렀다. 자루가 빠지고 도끼가 연못에 떨어졌다.'
+from problems p
+where p.source_key = 'rm-axe-pond'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- rm-axe-pond ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '나무꾼은 도끼를 머리 위로 들어 내리쳤다. 자루만 손에 남고 날은 연못에 박혔다.'
+from problems p
+where p.source_key = 'rm-axe-pond'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- rm-heungbu-swallow ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '흥부는 제비의 다리를 감쌌다. 부러진 뼈에 헝겊을 둘렀다.'
+from problems p
+where p.source_key = 'rm-heungbu-swallow'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- rm-heungbu-swallow ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '흥부는 숨을 죽이고 제비 다리를 헝겊으로 감았다. 매듭을 두 번 확인했다.'
+from problems p
+where p.source_key = 'rm-heungbu-swallow'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- rm-kongjwi-jar ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '콩쥐는 깨진 독에 물을 부었다. 물이 새어 나갔다. 그녀는 주저앉았다.'
+from problems p
+where p.source_key = 'rm-kongjwi-jar'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- rm-kongjwi-jar ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '콩쥐는 깨진 독에 물을 부었다. 물이 바닥으로 빠졌다. 콩쥐는 바가지를 놓고 주저앉았다.'
+from problems p
+where p.source_key = 'rm-kongjwi-jar'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- rm-simcheong-deck ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '심청은 뱃전으로 걸어갔다. 사람들은 그녀를 바라보았고, 뱃사공은 고개를 돌렸다.'
+from problems p
+where p.source_key = 'rm-simcheong-deck'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- rm-simcheong-deck ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '심청이 뱃전에 섰다. 사람들이 입을 다물었다. 뱃사공은 고개를 돌려 노를 잡았다.'
+from problems p
+where p.source_key = 'rm-simcheong-deck'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- rm-magpie-bridge ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '까치들이 날아와 몸을 이었다. 견우는 그 위에 발을 얹었다.'
+from problems p
+where p.source_key = 'rm-magpie-bridge'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- rm-magpie-bridge ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '까치들이 날아와 몸을 이었다. 견우는 발끝으로 다리를 눌러 보았다.'
+from problems p
+where p.source_key = 'rm-magpie-bridge'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- rm-rabbit-court ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '토끼는 웃으며 말했다. 용왕은 몸을 일으켰고, 신하들은 서로를 바라보았다.'
+from problems p
+where p.source_key = 'rm-rabbit-court'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- rm-rabbit-court ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '토끼가 웃으며 말했다. 용왕이 자리를 박차고 일어섰다. 신하들이 서로를 돌아보았다.'
+from problems p
+where p.source_key = 'rm-rabbit-court'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- rm-siblings-tree ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '오누이는 나무 위로 올라갔다. 호랑이는 아래에서 나무를 흔들었고, 아이들은 가지를 붙잡았다.'
+from problems p
+where p.source_key = 'rm-siblings-tree'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- rm-siblings-tree ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '오누이가 나무 위로 기어올랐다. 호랑이가 밑동을 들이받았다. 아이들은 가지를 끌어안았다.'
+from problems p
+where p.source_key = 'rm-siblings-tree'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- rm-goblin-club ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '나무꾼은 방망이를 들어 내리쳤다. 곡식이 쏟아져 나왔다.'
+from problems p
+where p.source_key = 'rm-goblin-club'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- rm-goblin-club ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '나무꾼은 방망이를 들었다. 손이 떨렸다. 그가 내리치자 곡식이 쏟아졌다.'
+from problems p
+where p.source_key = 'rm-goblin-club'
+on conflict (problem_id, ord, blank_key) do nothing;
 
 -- ar-cracked-ice ord 1 ①
 insert into reference_answers (problem_id, ord, blank_key, content)

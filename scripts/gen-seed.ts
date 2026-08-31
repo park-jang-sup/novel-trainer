@@ -28,6 +28,9 @@ interface DumpStage {
   summary: string
   order_no: number
   skill_key: string
+  // stage2 자기점검 문구(재설계안 11-2). 단계마다 다르다 — reduce_adverb 는
+  // 한 줄, action_reason 은 두 줄, 나머지는 빈 배열(자기점검 칸이 안 뜬다).
+  self_checks: string[]
 }
 
 interface DumpProblem {
@@ -97,6 +100,13 @@ function sqlJsonb(value: unknown): string {
 
 function sqlBool(value: boolean): string {
   return value ? 'true' : 'false'
+}
+
+// text[] 리터럴. 빈 배열도 명시적으로 타입을 붙인다 — array[] 만으로는
+// Postgres 가 타입을 못 정해 do update 에서 죽는다.
+function sqlTextArray(items: string[]): string {
+  if (items.length === 0) return 'array[]::text[]'
+  return `array[${items.map(sqlStr).join(', ')}]::text[]`
 }
 
 function sqlInt(value: number): string {
@@ -227,15 +237,16 @@ out.push(
 
 for (const s of stagesSorted) {
   out.push(
-    'insert into stages (track, order_no, title, skill_key, summary, is_free)',
+    'insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)',
     `values (${sqlStr(s.track)}, ${sqlInt(s.order_no)}, ${sqlStr(s.title)}, ${sqlStr(s.skill_key)},`,
-    `        ${sqlStr(s.summary)}, ${sqlBool(s.is_free)})`,
+    `        ${sqlStr(s.summary)}, ${sqlBool(s.is_free)}, ${sqlTextArray(s.self_checks)})`,
     'on conflict (skill_key) do update set',
     '  track = excluded.track,',
     '  order_no = excluded.order_no,',
     '  title = excluded.title,',
     '  summary = excluded.summary,',
-    '  is_free = excluded.is_free;',
+    '  is_free = excluded.is_free,',
+    '  self_checks = excluded.self_checks;',
     ''
   )
 }

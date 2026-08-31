@@ -9,7 +9,7 @@
 
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import path from 'node:path'
-import { combine, countLetters, countSentences, deriveFillParts, fillMarkerMismatch, findForbidden, mergeForbidChecks, gradeLocal, pendingMorphChecks } from './index'
+import { combine, countChars, countLetters, countSentences, deriveFillParts, fillMarkerMismatch, findForbidden, mergeForbidChecks, gradeLocal, pendingMorphChecks } from './index'
 import { sqlStr, countRawNewlinesInStrings } from '../seed-sql'
 import { nextProblemKey, nextStageId, stageProgress } from '../train-nav'
 import type { Answer, Check, MorphResult, Problem, ProblemType, ScoringConfig, ScoringMode } from './types'
@@ -101,6 +101,11 @@ import { backoffMs, isRetryable, statusOf } from '../ai/retry'
 
 let pass = 0
 let fail = 0
+/**
+ * 형태소 서버가 없어 건너뛴 검사 수. 조용히 넘기지 않는다 — 최종 줄에 세어
+ * 나온다(세션 5 교훈: 조용한 스킵을 다음 세션이 '다 잰 것'으로 읽는다).
+ */
+let morphSkipped = 0
 /**
  * 최종 줄을 찍은 뒤인가. `t` 가 이 뒤에 불리면 그 단언은 세어지지 못한 것이다.
  *
@@ -2191,7 +2196,11 @@ console.log('\n[10단계 action_reason: fill 시드 대조]')
   const allProblems = readDump<DumpFillProblem[]>('problems.json')
   const fill = allProblems.filter((d) => d.skill_key === 'action_reason')
   const answersDump = readDump<{ reference?: DumpRef[] }>('answers.json')
-  const refs = answersDump.reference ?? []
+  // answers.json 의 reference[] 는 이제 여러 단계의 모범답안을 담는다(비-fill
+  // 포함). 이 블록은 action_reason 것만 본다 — 1단계 reduce_adverb 는 아래
+  // 자기 블록이 잰다.
+  const arKeys = new Set(fill.map((d) => d.source_key))
+  const refs = (answersDump.reference ?? []).filter((r) => arKeys.has(r.source_key))
   const deactivate = readDump<{ source_keys: string[] }>('deactivate.json')
 
   t('덤프에 action_reason 8문항', fill.length === 8, `실제=${fill.length}`)
@@ -2310,6 +2319,240 @@ console.log('\n[10단계 action_reason: fill 시드 대조]')
     fillMarkerMismatch('첫 줄\n①\n둘째 줄\n②\n셋째 줄', ['①', '②']) === null)
   t('물기: deriveFillParts 가 힌트 줄을 고정 줄에서 뺀다',
     deriveFillParts('[상황] 배경\n[복선] 힌트\n\n동작 줄\n①\n결정타 줄').fixedLines.join('|') === '동작 줄|결정타 줄')
+}
+
+// ── 1단계 reduce_adverb(부사 줄이기): 모범답안 대조 (세션 19) ────────────
+//
+// answers.json 의 reference[] 에 rm-* 8문항 × ord 1(가)/2(나) = 16행.
+// blank_key 는 ''(비-fill). 화면은 규칙 통과 시 SelfCheck 로 이 16건을
+// 보여준다(비-fill 도 모범답안 + 자기점검, 재설계안 11-2). 여기서는 16건이
+// 제 문항 규칙을 지키는지 잰다.
+//   · 자수(maxChars)는 순수 검사 — 늘 돈다.
+//   · 부사·관형·동사·반복은 형태소가 필요하다 — 로컬 형태소 서버가 떠 있을
+//     때만 도는 선택 검사다. 서버가 없으면 조용히 넘기지 않고 morphSkipped 로
+//     세어 최종 줄에 남긴다(세션 5 교훈).
+console.log('\n[1단계 reduce_adverb: 모범답안 대조]')
+{
+  interface RaProblem {
+    source_key: string
+    skill_key: string
+    type: string
+    passage: string | null
+    scoring_config: ScoringConfig
+  }
+  interface RaRef {
+    source_key: string
+    ord: number
+    blank_key: string
+    content: string
+  }
+  const seedDir = path.join(__dirname, '..', '..', 'seed', 'dump')
+  const readDump = <T,>(f: string): T =>
+    JSON.parse(readFileSync(path.join(seedDir, f), 'utf8').replace(/^﻿/, '')) as T
+
+  const problems = readDump<RaProblem[]>('problems.json')
+  const ra = problems.filter((d) => d.skill_key === 'reduce_adverb')
+  const raKeys = new Set(ra.map((d) => d.source_key))
+  const refs = (readDump<{ reference?: RaRef[] }>('answers.json').reference ?? []).filter((r) =>
+    raKeys.has(r.source_key)
+  )
+  const cfgOf = new Map(ra.map((d) => [d.source_key, d.scoring_config]))
+  const passageOf = new Map(ra.map((d) => [d.source_key, d.passage ?? '']))
+
+  t('덤프에 reduce_adverb 8문항', ra.length === 8, `실제=${ra.length}`)
+  t('전부 remove 유형', ra.every((d) => d.type === 'remove'))
+  t('모범답안 16행', refs.length === 16, `실제=${refs.length}`)
+  t(
+    '모범답안 전부 blank_key 가 빈 문자열(비-fill)',
+    refs.every((r) => r.blank_key === ''),
+    JSON.stringify(refs.filter((r) => r.blank_key !== '').map((r) => r.source_key))
+  )
+  t('모범답안 전부 ord 1 또는 2', refs.every((r) => r.ord === 1 || r.ord === 2))
+
+  for (const d of ra) {
+    const ords = refs
+      .filter((r) => r.source_key === d.source_key)
+      .map((r) => r.ord)
+      .sort()
+    t(`'${d.source_key}': 가·나 두 세트`, JSON.stringify(ords) === '[1,2]', JSON.stringify(ords))
+  }
+
+  // ── 순수 검사: 자수 · 비어 있지 않음 · 지문 베낌 아님 ──
+  for (const r of refs) {
+    const cfg = cfgOf.get(r.source_key)!
+    const max = (cfg.maxChars as number | undefined) ?? 9999
+    const n = countChars(r.content)
+    t(`'${r.source_key}' ord${r.ord}: 자수 ${n} ≤ ${max}`, n <= max, `"${r.content}"`)
+    t(`'${r.source_key}' ord${r.ord}: 비어 있지 않다`, r.content.trim().length > 0)
+    t(
+      `'${r.source_key}' ord${r.ord}: 지문을 그대로 베끼지 않았다`,
+      r.content.trim() !== passageOf.get(r.source_key)!.trim()
+    )
+  }
+
+  // 물기: 자수 검사가 실제로 문다 — 부사 든 원문을 답안으로 내면 초과로 미달
+  t('물기: 지문 원문을 답안으로 내면 자수 초과로 미달', (() => {
+    const d = ra[0]
+    const prob: Problem = {
+      id: d.source_key,
+      type: 'remove',
+      scoring_mode: 'auto',
+      scoring_config: cfgOf.get(d.source_key)!,
+    }
+    const res = combine(prob, { text: d.passage ?? '' }, undefined, null)
+    return res.checks.find((c) => c.key === 'maxChars')?.status === 'fail'
+  })())
+
+  // ── 선택 검사: 형태소 규칙(부사·관형·동사·반복) ──
+  // remote.ts 는 server-only 라 여기서 import 못 한다(파일 첫 주석). 짧은 짝을 둔다.
+  const scoringServer = (): { url: string; secret: string } => {
+    let url = process.env.SCORING_SERVER_URL
+    let secret = process.env.SCORING_SERVER_SECRET
+    if (!url || !secret) {
+      try {
+        const raw = readFileSync(path.join(__dirname, '..', '..', '.env.local'), 'utf8')
+        for (const line of raw.split('\n')) {
+          const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/)
+          if (!m) continue
+          const val = m[2].replace(/^["']|["']$/g, '')
+          if (m[1] === 'SCORING_SERVER_URL') url = url || val
+          if (m[1] === 'SCORING_SERVER_SECRET') secret = secret || val
+        }
+      } catch {
+        /* .env.local 이 없다 — 기본값으로 간다 */
+      }
+    }
+    return { url: url || 'http://localhost:8000', secret: secret || 'dev' }
+  }
+  const morphAnalyze = async (text: string): Promise<MorphResult | null> => {
+    const { url, secret } = scoringServer()
+    const ac = new AbortController()
+    const timer = setTimeout(() => ac.abort(), 4000)
+    try {
+      const res = await fetch(`${url}/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-scoring-secret': secret },
+        body: JSON.stringify({ text }),
+        signal: ac.signal,
+      })
+      if (!res.ok) return null
+      const raw = (await res.json()) as Partial<MorphResult>
+      if (!Array.isArray(raw.adverbs) || !Array.isArray(raw.verbs)) return null
+      return {
+        adverbs: raw.adverbs,
+        modifiers: Array.isArray(raw.modifiers) ? raw.modifiers : [],
+        verbs: raw.verbs,
+        propers: raw.propers ?? [],
+        repeats: Array.isArray(raw.repeats) ? raw.repeats : [],
+        lemmas: raw.lemmas ?? [],
+        sentences: raw.sentences ?? 0,
+      }
+    } catch {
+      return null
+    } finally {
+      clearTimeout(timer)
+    }
+  }
+
+  aiChainChecks.push(
+    (async () => {
+      const probe = await morphAnalyze(refs[0].content)
+      if (!probe) {
+        morphSkipped += refs.length
+        console.log(
+          `  – 형태소 서버 없음: 모범답안 ${refs.length}건의 부사·관형·동사·반복 검사를 건너뜀`
+        )
+        return
+      }
+      for (const r of refs) {
+        const morph = r === refs[0] ? probe : await morphAnalyze(r.content)
+        if (!morph) {
+          morphSkipped++
+          console.log(`  – '${r.source_key}' ord${r.ord}: 형태소 응답 없음, 건너뜀`)
+          continue
+        }
+        const prob: Problem = {
+          id: r.source_key,
+          type: 'remove',
+          scoring_mode: 'auto',
+          scoring_config: cfgOf.get(r.source_key)!,
+        }
+        const res = combine(prob, { text: r.content }, undefined, morph)
+        t(
+          `'${r.source_key}' ord${r.ord}: 형태소 규칙 전부 통과 (부사 0~1 등)`,
+          res.status === 'pass',
+          JSON.stringify(
+            res.checks
+              .filter((c) => c.status !== 'pass')
+              .map((c) => `${c.key}:${c.status} ${c.detail ?? ''}`)
+          )
+        )
+      }
+    })()
+  )
+}
+
+// ── 자기점검 self_checks: 스키마 · 시드 · 화면 대조 (세션 19) ────────────
+//
+// 자기점검 문구가 SelfCheck.tsx 에 하드코딩돼 있던 것을 stages.self_checks 로
+// 옮겼다(재설계안 11-2). 단계마다 다르다: reduce_adverb 한 줄 · action_reason
+// 두 줄 · 나머지 빈 배열(칸이 안 뜬다).
+console.log('\n[자기점검 self_checks: 시드 ↔ 화면]')
+{
+  const root = path.join(__dirname, '..', '..')
+  const stagesDump = JSON.parse(
+    readFileSync(path.join(root, 'seed', 'dump', 'stages.json'), 'utf8').replace(/^﻿/, '')
+  ) as { skill_key: string; self_checks?: unknown }[]
+
+  t(
+    '모든 단계에 self_checks 배열이 있다',
+    stagesDump.every((s) => Array.isArray(s.self_checks)),
+    JSON.stringify(stagesDump.filter((s) => !Array.isArray(s.self_checks)).map((s) => s.skill_key))
+  )
+
+  const scOf = (k: string) => stagesDump.find((s) => s.skill_key === k)?.self_checks as string[] | undefined
+  t(
+    'reduce_adverb 자기점검 한 줄',
+    JSON.stringify(scOf('reduce_adverb')) === JSON.stringify(['부사가 하던 일을 동작이 하고 있는가'])
+  )
+  t(
+    'action_reason 자기점검 두 줄(옛 SelfCheck 문구)',
+    JSON.stringify(scOf('action_reason')) ===
+      JSON.stringify([
+        '마지막에 채운 칸이 그 뒤 결정타 줄의 이유가 되는가',
+        '채운 칸들이 앞뒤 고정 줄과 끊기지 않고 이어지는가',
+      ])
+  )
+  t(
+    '나머지 단계는 빈 배열(자기점검 칸이 안 뜬다)',
+    stagesDump
+      .filter((s) => !['reduce_adverb', 'action_reason'].includes(s.skill_key))
+      .every((s) => Array.isArray(s.self_checks) && (s.self_checks as string[]).length === 0)
+  )
+
+  const selfCheckSrc = readFileSync(path.join(root, 'components', 'train', 'SelfCheck.tsx'), 'utf8')
+  t(
+    'SelfCheck 가 자기점검 문구를 하드코딩하지 않는다',
+    !selfCheckSrc.includes('마지막에 채운 칸이') && !selfCheckSrc.includes('const QUESTIONS')
+  )
+  t('SelfCheck 가 selfChecks prop 을 받는다', /selfChecks:\s*string\[\]/.test(selfCheckSrc))
+
+  const seedSql = readFileSync(path.join(root, 'seed_data.sql'), 'utf8')
+  t(
+    'seed_data.sql stages insert 에 self_checks 열이 있다',
+    /insert into stages \(track, order_no, title, skill_key, summary, is_free, self_checks\)/.test(seedSql)
+  )
+  t(
+    'seed_data.sql 에 reduce_adverb 자기점검 문구가 들어갔다',
+    seedSql.includes("array['부사가 하던 일을 동작이 하고 있는가']::text[]")
+  )
+  t('seed_data.sql 에 빈 self_checks 는 array[]::text[]', seedSql.includes('array[]::text[]'))
+
+  const schemaSql = readFileSync(path.join(root, 'seed_schema.sql'), 'utf8')
+  t(
+    'seed_schema.sql 에 stages.self_checks 컬럼 추가가 있다',
+    /alter table stages add column if not exists self_checks text\[\]/.test(schemaSql)
+  )
 }
 
 // ── 학습 루프: '다음 문항' 계산 (세션 18) ─────────────────────────────
@@ -3052,6 +3295,9 @@ void Promise.all(aiChainChecks)
   .then(() => {
     // 여기서부터 t 는 봉인된다. 늦게 오는 단언은 세어지는 대신 죽는다.
     sealed = true
-    console.log(`\n최종: ${pass} 통과 / ${fail} 실패`)
+    console.log(
+      `\n최종: ${pass} 통과 / ${fail} 실패` +
+        (morphSkipped > 0 ? ` / 형태소 검사 ${morphSkipped}건 건너뜀(서버 없음)` : '')
+    )
     if (fail > 0) process.exit(1)
   })

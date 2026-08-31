@@ -84,8 +84,14 @@ export default async function TrainProblemPage(
     await Promise.all([
       supabase.from('problems').select('id, source_key, difficulty, stage_id').not('is_active', 'is', false),
       supabase.from('submissions').select('problem_id').eq('passed', true),
-      supabase.from('stages').select('id, track, order_no'),
+      supabase.from('stages').select('id, track, order_no, self_checks'),
     ])
+
+  // 이 단계의 자기점검 문구. 빈 배열이면 화면에 자기점검 칸이 안 뜬다.
+  const selfChecks =
+    ((allStages ?? []).find((s) => String(s.id) === actualStageId)?.self_checks as
+      | string[]
+      | null) ?? []
 
   const stageProblems = (activeProblems ?? [])
     .filter((p) => String(p.stage_id) === actualStageId)
@@ -127,6 +133,7 @@ export default async function TrainProblemPage(
           scoringConfig,
         }}
         loop={loop}
+        selfChecks={selfChecks}
       />
     </>
   )

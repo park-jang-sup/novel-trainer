@@ -60,6 +60,102 @@
   ],
   "reference": [
     {
+      "source_key": "rm-axe-pond",
+      "ord": 1,
+      "blank_key": "",
+      "content": "나무꾼이 도끼를 휘둘렀다. 자루가 빠지고 도끼가 연못에 떨어졌다."
+    },
+    {
+      "source_key": "rm-axe-pond",
+      "ord": 2,
+      "blank_key": "",
+      "content": "나무꾼은 도끼를 머리 위로 들어 내리쳤다. 자루만 손에 남고 날은 연못에 박혔다."
+    },
+    {
+      "source_key": "rm-heungbu-swallow",
+      "ord": 1,
+      "blank_key": "",
+      "content": "흥부는 제비의 다리를 감쌌다. 부러진 뼈에 헝겊을 둘렀다."
+    },
+    {
+      "source_key": "rm-heungbu-swallow",
+      "ord": 2,
+      "blank_key": "",
+      "content": "흥부는 숨을 죽이고 제비 다리를 헝겊으로 감았다. 매듭을 두 번 확인했다."
+    },
+    {
+      "source_key": "rm-kongjwi-jar",
+      "ord": 1,
+      "blank_key": "",
+      "content": "콩쥐는 깨진 독에 물을 부었다. 물이 새어 나갔다. 그녀는 주저앉았다."
+    },
+    {
+      "source_key": "rm-kongjwi-jar",
+      "ord": 2,
+      "blank_key": "",
+      "content": "콩쥐는 깨진 독에 물을 부었다. 물이 바닥으로 빠졌다. 콩쥐는 바가지를 놓고 주저앉았다."
+    },
+    {
+      "source_key": "rm-simcheong-deck",
+      "ord": 1,
+      "blank_key": "",
+      "content": "심청은 뱃전으로 걸어갔다. 사람들은 그녀를 바라보았고, 뱃사공은 고개를 돌렸다."
+    },
+    {
+      "source_key": "rm-simcheong-deck",
+      "ord": 2,
+      "blank_key": "",
+      "content": "심청이 뱃전에 섰다. 사람들이 입을 다물었다. 뱃사공은 고개를 돌려 노를 잡았다."
+    },
+    {
+      "source_key": "rm-magpie-bridge",
+      "ord": 1,
+      "blank_key": "",
+      "content": "까치들이 날아와 몸을 이었다. 견우는 그 위에 발을 얹었다."
+    },
+    {
+      "source_key": "rm-magpie-bridge",
+      "ord": 2,
+      "blank_key": "",
+      "content": "까치들이 날아와 몸을 이었다. 견우는 발끝으로 다리를 눌러 보았다."
+    },
+    {
+      "source_key": "rm-rabbit-court",
+      "ord": 1,
+      "blank_key": "",
+      "content": "토끼는 웃으며 말했다. 용왕은 몸을 일으켰고, 신하들은 서로를 바라보았다."
+    },
+    {
+      "source_key": "rm-rabbit-court",
+      "ord": 2,
+      "blank_key": "",
+      "content": "토끼가 웃으며 말했다. 용왕이 자리를 박차고 일어섰다. 신하들이 서로를 돌아보았다."
+    },
+    {
+      "source_key": "rm-siblings-tree",
+      "ord": 1,
+      "blank_key": "",
+      "content": "오누이는 나무 위로 올라갔다. 호랑이는 아래에서 나무를 흔들었고, 아이들은 가지를 붙잡았다."
+    },
+    {
+      "source_key": "rm-siblings-tree",
+      "ord": 2,
+      "blank_key": "",
+      "content": "오누이가 나무 위로 기어올랐다. 호랑이가 밑동을 들이받았다. 아이들은 가지를 끌어안았다."
+    },
+    {
+      "source_key": "rm-goblin-club",
+      "ord": 1,
+      "blank_key": "",
+      "content": "나무꾼은 방망이를 들어 내리쳤다. 곡식이 쏟아져 나왔다."
+    },
+    {
+      "source_key": "rm-goblin-club",
+      "ord": 2,
+      "blank_key": "",
+      "content": "나무꾼은 방망이를 들었다. 손이 떨렸다. 그가 내리치자 곡식이 쏟아졌다."
+    },
+    {
       "source_key": "ar-cracked-ice",
       "ord": 1,
       "blank_key": "①",

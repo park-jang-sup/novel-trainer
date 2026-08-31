@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 18 · 커밋 `0e1c906` 위
+마지막 갱신: 세션 19 · 커밋 `81913cc` 위
 
 ---
 
@@ -12,9 +12,10 @@
 
 ```
 단계 26 · 문항 93 (fill 8 추가) · 화면이 붙은 유형 11단계분 (문장 1~11, 구성 14·17·19·20)
-학습자 흐름   로그인 → 단계 목록 → 문항 → 제출 → 통과/미달 → (fill 통과 시) 모범답안+자기점검 →
-             '다음 문항 →'(미달 '건너뛰기 →') → … → 다 통과면 '단계 완료 N/N'+'다음 단계 →',
-             건너뛴 게 있으면 'N/M · 건너뛴 문항 k개'+첫 건너뛴 문항 링크
+학습자 흐름   로그인 → 단계 목록 → 문항 → 제출 → 통과/미달 → (모범답안 있는 문항 통과 시)
+             모범답안+자기점검 → '다음 문항 →'(미달 '건너뛰기 →') → … → 다 통과면
+             '단계 완료 N/N'+'다음 단계 →', 건너뛴 게 있으면 'N/M · 건너뛴 문항 k개'+첫 링크
+★ 모범답안 있는 문항: 10단계 fill 8 (①②) + 1단계 reduce_adverb 8 (가·나, blank_key '')
 없는 것       도입 트랙 전부 · streak·XP·복습·하트·진도 저장 테이블(안 만든다 — submissions 로만 센다)
 ★ 10단계는 새 skill_key `action_reason`(fill 8). 옛 `action_turn`(convert 8)은 is_active=false — 화면에 '준비 중'
 ```
@@ -35,7 +36,12 @@ AI 심판                 세션 13~16. delete · 지목 · 결합(AND·OR·합�
 
 ```
 10단계는 빈칸(fill) 문항이다     재설계안 11장. 지문 여덟(feint 뺌) · ①② (bell-rope 만 ①②③)
-stage2 는 자기점검이다           모범답안 2~3건 + 체크 둘. AI 아님. 사람 아님. reference_answers 테이블
+stage2 는 자기점검이다           모범답안 2~3건 + 체크. AI 아님. 사람 아님. reference_answers 테이블
+자기점검 문구는 단계마다 다르다   stages.self_checks(text[]). reduce_adverb 한 줄 · action_reason 두 줄 ·
+                              나머지 빈 배열(칸이 안 뜨고 모범답안만). SelfCheck.tsx 하드코딩 걷음
+reference_answers 는 저장소에 둔다  제출 뒤 학습자에게 보이는 것이라 비밀이 아니다. 세션 3 2-5 의
+                              '모범답안 저장소 금지'는 problem_answers(채점 정답)·골든에만 적용된다.
+                              비-fill 모범답안은 blank_key '' · ord 로만 세트(가·나…)를 가른다
 단계 이름                       `동작에 이유 넣기` (skill_key action_reason)
 fill 분량은 글자만 센다          countLetters — 한글·영문·숫자만. 최대·최소 한 수로. 구두점·공백은 0
 AI 는 피드백이지 심판이 아니다     위 재개 조건 전까지
@@ -55,69 +61,46 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 1  빈 단계 채우기         도입 4단계 → 구성 빈 6단계 → 절단신공. 단계당 4~6. 기존 유형만
 ```
 
-### 끝난 것 — 세션 18
+### 끝난 것 — 세션 19
 
 ```
-fill 유형 (재설계안 11-3)   lib/scoring/types · local · index · verify
-  types      ProblemType 'fill' · BlankSpec · cfg.blanks/fixedLines/forbidCopyOfFixedLines · Submission.blanks
-  local      case 'fill' — 빈칸마다 채움·분량·문장수·고정줄베낌, 전체에 forbidWords. countSentences(종결부호)
-  verify     물기 시험 넷 다 물림 (빈칸 비움 · 고정 줄 베낌 · 61자 · 대괄호)
+모범답안·자기점검을 fill 밖으로 (재설계안 11-2 · 채팅 지시)
+  seed_schema   stages.self_checks text[] not null default '{}'
+  stages.json   self_checks 26단계분. reduce_adverb 한 줄 · action_reason 두 줄(옛 SelfCheck
+                QUESTIONS 를 이리로) · 나머지 []
+  gen-seed      sqlTextArray 헬퍼. stages insert + do update 에 self_checks
+  answers.json  reference[] 에 rm-* 16행 (8문항 × ord 1 가 / 2 나 · blank_key '')
+  seed_verify   (10) 을 넓힘 — fill 은 실재 빈칸, 비-fill 은 blank_key '' 여야 한다 (case 분기)
+  route.ts      reference_answers 를 유형 안 가리고 읽어 응답에 싣는다(RLS 가 제출 여부로 막음)
+  page.tsx      현재 단계의 self_checks 를 TrainClient 로
+  TrainClient   통과 + reference 있으면(fill 아니어도) 모범답안 + SelfCheck. selfChecks prop
+  SelfCheck     selfChecks prop 으로 문구를 받는다. 빈 배열이면 '스스로 확인' 칸 없음.
+                blank_key '' 면 표식 span 을 안 그린다
+  verify.ts     [1단계 reduce_adverb: 모범답안 대조] — 16행 · blank_key '' · 가·나 두 세트 ·
+                자수 ≤ maxChars · 지문 베낌 아님 · 물기(원문 내면 자수 초과 미달).
+                형태소 규칙(부사·관형·동사·반복)은 로컬 서버 떠 있을 때만 도는 선택 검사 —
+                없으면 morphSkipped 로 세어 최종 줄에 "형태소 검사 N건 건너뜀(서버 없음)"
+                [자기점검 self_checks: 시드 ↔ 화면] — 시드·SelfCheck·seed_data·seed_schema 대조
+                action_reason 블록: refs 를 action_reason source_key 로 필터(비-fill 이 안 섞이게)
+  ★ 형태소 서버 띄우고 test:scoring → 2137 통과 / 0 실패 (16 형태소 검사 다 물림).
+    서버 없이 → 2121 통과 / 0 실패 / 형태소 16건 건너뜀 표시.
+  ★ 대시보드 적용 완료 · 눈검사 완료(박 님): 1단계 통과 화면에 모범답안 가·나 + 자기점검 +
+    '다음 문항 →'. 원문 그대로 제출 시 부사 7개가 칩으로 뜸.
+  ★ 1단계 모범답안 16건은 잠정 통과다. 화면에서 풀며 고칠 수 있다 — 고치면 answers.json 수정 +
+    DB update + seed_check 재실행이 절차다(seed_data 의 reference insert 는 on conflict do
+    nothing 이라 기존 행을 안 고친다. self_checks 는 do update 라 재시드로 갱신됨).
+```
 
-fill 여덟 시드 (재설계안 11-5 · 7-6·7-7·7-10-2)   ★ DB 적용 완료 · seed_check 통과
-  stages     새 skill_key `action_reason` order_no 10 · 옛 action_turn 은 12 로 밀림
-  problems   ar-broken-gate·left-draw·cracked-ice·left-feeler·dragon-jaw·dull-blade·bell-rope·wind-gate
-             ★ at-left-feint 은 뺐다 (재설계안에 fill 재료가 없다 — 미결 참조)
-  answers.json  reference[] 39행 (7-10-2 가·나·다). ★ ar-left-feeler 는 모범답안이 없다 (재설계안 7-7 에 없음)
-  gen-seed   fixedLines 를 passage 에서 파생(lib/scoring/fill.ts, 손으로 안 적는다) · reference_answers insert ·
-             옛 at-* 8건 update is_active=false (seed/dump/deactivate.json)
-  seed_schema  reference_answers 테이블 + RLS('제출한 뒤에만')
-  seed_check   (5)(5b) fill 빈칸↔지문 표식 일치 · (6) reference_answers SELECT 정책 있음
-  seed_verify  (10) 모범답안이 실재하는 빈칸만 가리킨다
-  verify.ts    action_reason fill 시드 대조 블록 — fixedLines 파생·모범답안이 제 규칙 지킴·물기 넷
-  ★ bell-rope 만 빈칸 셋·maxSentences 3 (반응 빈칸이 길다). 나머지 둘·2.
+### 끝난 것 — 세션 18 (요약, 이제 '앱이 지금 할 수 있는 것' 에 들어감)
 
-fill 화면 + 자기점검 (재설계안 11-2 4번 · 세션 18)
-  route.ts     zod 에 blanks · submissions.content 에 '① …\n② …' 이어 붙여 저장 · fill 이면
-               제출 뒤 reference_answers 를 읽어 응답에 실어 준다(RLS 가 방금 넣은 제출을 본다)
-  page.tsx     publicConfig 에 blanks(key·label·글자수·문장수·optional) 만 보낸다. fixedLines 는 안 보냄
-  TrainClient  fill 분기 — 지문 대신 FillBody, 통과 시 SelfCheck
-  FillBody     [상황]/[복선]/[결정타] 머리와 본문을 fillPassageParts 로 가른다. 본문은 고정 줄과
-               입력칸(①②)이 번갈아. 칸마다 문장·글자 수 표시
-  SelfCheck    모범답안을 ord(가·나·다)로 묶어 보여주고 체크 둘(채점 아님).
-               캡션 "정해진 답은 없다"
-  목록 라벨      fillSituation — [상황] 머리표를 뗀 첫 문장
-  ★ 눈검사 완료 (박 님) — '.' → 아직 미달.
-
-구두점만 넣은 제출을 막았다 (세션 18 후기)
-  countSentences  종결부호로 조각낸 뒤 글자(한글·영문·숫자) 든 조각만 센다.
-                  '.' '...' '?!' '…' → 0. 종결부호 없는 꼬리는 글자 있으면 1 (규칙 유지)
-  fill 분량       최대·최소 둘 다 countLetters. b.minChars 없으면 기본 8자. rule 에 '8자 이상'.
-                  화면 카운터도 같은 수 — 한 칸에 글자 수 하나
-  verify          {①:'.',②:'.'} → maxChars·minChars·sentences 다 0자/fail · {②:'...'} → fail ·
-                  종결부호 없는 8자+ → pass. 병 넣어 무는 것 봄(되돌리면 새는 것 확인)
-  ★ DB 는 안 건드렸다 — 시드 blanks 에 minChars 가 없어 기본값 8 이 그대로 선다
-
-학습 루프 (세션 18)
-  lib/train-nav.ts   nextProblemKey — 순수. 목록 순서(difficulty→source_key) · 통과한 것 건너뜀 · 마지막 null
-                     nextStageId  — 순수. 전체 순서(sentence→structure→start) 에서 문항 있는 다음 단계.
-                                    같은 트랙에 안 매인다. 없으면 null(홈으로)
-                     stageProgress — 순수. {passed,total,skipped}. 유형과 무관하게 통과한 problem_id 만
-                                    센다(정수 보장 — NaN 안 남). app/page.tsx 와 문항 화면이 이 하나를 쓴다
-  page.tsx           활성 문항 전부 + 통과 행 + 단계 전부를 한 번에 읽어 loop 재료
-  TrainClient        제출 결과 아래 링크 하나.
-                       통과+다음 있음   '다음 문항 →'
-                       미달+다음 있음   '건너뛰기 →'
-                       통과+다음 없음+건너뛴 것 0   '단계 완료 N/N' + '다음 단계 →'
-                       통과+다음 없음+건너뛴 것 k   'N/M · 건너뛴 문항 k개' + 첫 건너뛴 문항 링크
-                       미달+다음 없음   '단계 목록으로 →'
-  verify             nextProblemKey 9건 · nextStageId 8건 · stageProgress (choice·order·count 로 완료 수 · 물기)
-  ★ 세션 18 후기: choice 단계 완료 화면이 'NaN/4' 였다. loop.total - skipped.length 를 stageProgress 로
-    바꿔 정수만 나오게 함. app/page.tsx 도 같은 함수를 쓴다(홈의 N/M 과 완료 화면이 갈릴 수 없다)
-  ★ 확인함: nextStageId 가 10단계(action_reason) 다음으로 stage 14 `궤도 이탈 찾기`(구성 14, off_track)
-    를 낸다 — SSR props 에서 확인 · ar-broken-gate 통과 후 형제 페이지에 passedIds 반영
-  ★ 완료 조건(박 님): 브라우저 두 화면 — (1) 건너뛴 채 마지막까지 → 'N/M · 건너뛴 문항 k개' ·
-    (2) 8/8 화면의 '다음 단계 →' 가 구성 14로 가는지
-    fill-smoke 계정엔 테스트 제출이 쌓였다(broken-gate 통과) — 다른 문항을 건너뛰어 시연하거나 새 계정
+```
+fill 유형·시드·화면      10단계 action_reason fill 8 (①②, bell-rope 만 ①②③). types·local·index,
+                        seed_schema 의 reference_answers 테이블 + RLS('제출한 뒤에만'), FillBody·SelfCheck.
+                        옛 action_turn 8 은 is_active=false. ★ ar-left-feeler 는 모범답안 없음(미결)
+구두점만 제출 막음        countSentences 종결부호 조각 중 글자 든 것만. fill 분량 최대·최소 다 countLetters,
+                        b.minChars 없으면 기본 8
+학습 루프               lib/train-nav 순수 셋(nextProblemKey·nextStageId·stageProgress). TrainClient 결과
+                        아래 링크 하나. nextStageId 가 action_reason 다음 → 구성 14 off_track
 ```
 
 ★ 주 단위 기준 하나 — **학습자가 새로 할 수 있게 된 것**이 없는 주는 실패다.
