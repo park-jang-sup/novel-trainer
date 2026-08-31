@@ -818,7 +818,21 @@
     "scoring_config": {
       "maxChars": 45,
       "minVerbs": 3,
-      "maxRepeat": 2
+      "maxRepeat": 2,
+      "repeatTargets": [
+        {
+          "word": "도끼",
+          "max": 2
+        },
+        {
+          "word": "나무꾼",
+          "max": 2
+        },
+        {
+          "word": "산신령",
+          "max": 1
+        }
+      ]
     }
   },
   {
@@ -837,7 +851,17 @@
     "scoring_config": {
       "maxChars": 35,
       "minVerbs": 3,
-      "maxRepeat": 2
+      "maxRepeat": 2,
+      "repeatTargets": [
+        {
+          "word": "박",
+          "max": 2
+        },
+        {
+          "word": "흥부",
+          "max": 1
+        }
+      ]
     }
   },
   {
@@ -856,7 +880,17 @@
     "scoring_config": {
       "maxChars": 46,
       "minVerbs": 3,
-      "maxRepeat": 2
+      "maxRepeat": 2,
+      "repeatTargets": [
+        {
+          "word": "바다",
+          "max": 2
+        },
+        {
+          "word": "심청",
+          "max": 2
+        }
+      ]
     }
   },
   {
@@ -875,7 +909,17 @@
     "scoring_config": {
       "maxChars": 34,
       "minVerbs": 3,
-      "maxRepeat": 2
+      "maxRepeat": 2,
+      "repeatTargets": [
+        {
+          "word": "물",
+          "max": 2
+        },
+        {
+          "word": "콩쥐",
+          "max": 2
+        }
+      ]
     }
   },
   {
@@ -894,7 +938,13 @@
     "scoring_config": {
       "maxChars": 38,
       "minVerbs": 3,
-      "maxRepeat": 2
+      "maxRepeat": 2,
+      "repeatTargets": [
+        {
+          "word": "다리",
+          "max": 2
+        }
+      ]
     }
   },
   {
@@ -913,7 +963,17 @@
     "scoring_config": {
       "maxChars": 44,
       "minVerbs": 5,
-      "maxRepeat": 2
+      "maxRepeat": 2,
+      "repeatTargets": [
+        {
+          "word": "간",
+          "max": 2
+        },
+        {
+          "word": "토끼",
+          "max": 2
+        }
+      ]
     }
   },
   {
@@ -932,7 +992,13 @@
     "scoring_config": {
       "maxChars": 40,
       "minVerbs": 3,
-      "maxRepeat": 2
+      "maxRepeat": 2,
+      "repeatTargets": [
+        {
+          "word": "밧줄",
+          "max": 2
+        }
+      ]
     }
   },
   {
@@ -951,7 +1017,17 @@
     "scoring_config": {
       "maxChars": 41,
       "minVerbs": 4,
-      "maxRepeat": 2
+      "maxRepeat": 2,
+      "repeatTargets": [
+        {
+          "word": "방망이",
+          "max": 2
+        },
+        {
+          "word": "도깨비",
+          "max": 1
+        }
+      ]
     }
   },
   {

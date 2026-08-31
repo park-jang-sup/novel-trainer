@@ -20,6 +20,9 @@ export function summarizeConfig(cfg: ScoringConfig): string {
   if (cfg.maxModifiers != null) parts.push(`꾸미는 말 ${cfg.maxModifiers}개까지`)
   if (cfg.maxProperNouns != null) parts.push(`이름 ${cfg.maxProperNouns}개까지`)
   if (cfg.maxRepeat != null) parts.push(`같은 말 반복 ${cfg.maxRepeat}회까지`)
+  if (cfg.repeatTargets?.length) {
+    parts.push(`특정 낱말 반복 제한(${cfg.repeatTargets.map((t) => t.word).join('·')})`)
+  }
 
   if (cfg.minSpeeches != null) parts.push(`대사 ${cfg.minSpeeches}개 이상`)
   if (cfg.minMonologues != null) parts.push(`독백 ${cfg.minMonologues}개 이상`)

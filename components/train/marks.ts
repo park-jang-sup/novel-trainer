@@ -17,6 +17,7 @@ export function markClassFor(key: string): string | null {
     key === 'maxModifiers' ||
     key === 'maxAdverbs' ||
     key === 'maxRepeat' ||
+    key === 'repeatTargets' ||
     key === 'forbidWords' ||
     key === 'maxLineChars' ||
     key === 'maxDuplicateLines' ||
@@ -41,8 +42,9 @@ export function buildMarks(text: string, checks: Check[] | undefined): Mark[] {
     if (!className) continue
 
     for (const item of c.evidence) {
-      // maxRepeat의 evidence는 "제비 3회" 형태다. 표면형만 떼어낸다.
-      const word = c.key === 'maxRepeat' ? item.replace(/ \d+회$/, '') : item
+      // maxRepeat·repeatTargets의 evidence는 "제비 3회" 형태다. 표면형만 떼어낸다.
+      const word =
+        c.key === 'maxRepeat' || c.key === 'repeatTargets' ? item.replace(/ \d+회$/, '') : item
       if (!word) continue
       let from = 0
       while (true) {

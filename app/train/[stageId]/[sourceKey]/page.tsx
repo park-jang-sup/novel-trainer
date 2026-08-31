@@ -73,8 +73,9 @@ export default async function TrainProblemPage(
   // 넘겨도 두 칸이 되지 않는 이유다.
   // forbidLabel·forbidDisplay 는 표시 전용이라 채점 키로 세지 않는다 — 세면
   // sensory(maxChars·forbidWords·forbidLemmas)가 3→5 로 올라 두 칸이 돼 버린다.
+  // repeatTargets 도 안 센다 — 4단계(remove, 3키)가 3단계와 갈려 두 칸이 되지 않게.
   const NON_SCORING_KEYS = new Set([
-    'cards', 'inputs', 'answer', 'answerIndex', 'forbidLabel', 'forbidDisplay',
+    'cards', 'inputs', 'answer', 'answerIndex', 'forbidLabel', 'forbidDisplay', 'repeatTargets',
   ])
   const scoringKeyCount = Object.keys(cfg).filter((k) => !NON_SCORING_KEYS.has(k)).length
   const isTextInputType = problem.type === 'convert' || problem.type === 'remove'

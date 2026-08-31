@@ -719,7 +719,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'reduce_repeat'),
   'remove', 'auto', '같은 말이 겹치는 곳을 찾아 다시 쓰시오.',
-  '산신령이 금도끼를 들었다. 나무꾼은 그 도끼를 보았다. 산신령이 은도끼를 들었다. 나무꾼은 도끼를 고르지 않았다.', null, '{"maxChars":45,"minVerbs":3,"maxRepeat":2}'::jsonb,
+  '산신령이 금도끼를 들었다. 나무꾼은 그 도끼를 보았다. 산신령이 은도끼를 들었다. 나무꾼은 도끼를 고르지 않았다.', null, '{"maxChars":45,"minVerbs":3,"maxRepeat":2,"repeatTargets":[{"word":"도끼","max":2},{"word":"나무꾼","max":2},{"word":"산신령","max":1}]}'::jsonb,
   'folktale', 'fantasy', 'planned',
   1, 'rp-axe-gold'
 where not exists (select 1 from problems p where p.source_key = 'rp-axe-gold');
@@ -731,7 +731,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'reduce_repeat'),
   'remove', 'auto', '같은 말이 겹치는 곳을 찾아 다시 쓰시오. 일어나는 일은 하나도 빼지 말 것.',
-  '흥부는 박을 켰다. 박 속에서 쌀이 쏟아졌다. 흥부는 두 번째 박을 켰다. 그 박에서도 비단이 나왔다.', null, '{"maxChars":35,"minVerbs":3,"maxRepeat":2}'::jsonb,
+  '흥부는 박을 켰다. 박 속에서 쌀이 쏟아졌다. 흥부는 두 번째 박을 켰다. 그 박에서도 비단이 나왔다.', null, '{"maxChars":35,"minVerbs":3,"maxRepeat":2,"repeatTargets":[{"word":"박","max":2},{"word":"흥부","max":1}]}'::jsonb,
   'folktale', 'fantasy', 'planned',
   1, 'rp-heungbu-gourd'
 where not exists (select 1 from problems p where p.source_key = 'rp-heungbu-gourd');
@@ -743,7 +743,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'reduce_repeat'),
   'remove', 'auto', '같은 말이 겹치는 곳을 찾아 다시 쓰시오.',
-  '심청은 바다를 보았다. 바다는 검은 물결로 일렁였다. 뱃사람들이 바다를 가리켰다. 심청은 바다 쪽으로 한 걸음 옮겼다.', null, '{"maxChars":46,"minVerbs":3,"maxRepeat":2}'::jsonb,
+  '심청은 바다를 보았다. 바다는 검은 물결로 일렁였다. 뱃사람들이 바다를 가리켰다. 심청은 바다 쪽으로 한 걸음 옮겼다.', null, '{"maxChars":46,"minVerbs":3,"maxRepeat":2,"repeatTargets":[{"word":"바다","max":2},{"word":"심청","max":2}]}'::jsonb,
   'folktale', 'modern', 'planned',
   1, 'rp-simcheong-sea'
 where not exists (select 1 from problems p where p.source_key = 'rp-simcheong-sea');
@@ -755,7 +755,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'reduce_repeat'),
   'remove', 'auto', '같은 말이 겹치는 곳을 찾아 다시 쓰시오.',
-  '콩쥐는 물을 길었다. 물은 독에서 새어 나갔다. 콩쥐는 다시 물을 부었다. 물은 또 빠져나갔다.', null, '{"maxChars":34,"minVerbs":3,"maxRepeat":2}'::jsonb,
+  '콩쥐는 물을 길었다. 물은 독에서 새어 나갔다. 콩쥐는 다시 물을 부었다. 물은 또 빠져나갔다.', null, '{"maxChars":34,"minVerbs":3,"maxRepeat":2,"repeatTargets":[{"word":"물","max":2},{"word":"콩쥐","max":2}]}'::jsonb,
   'folktale', 'modern', 'planned',
   2, 'rp-kongjwi-jar'
 where not exists (select 1 from problems p where p.source_key = 'rp-kongjwi-jar');
@@ -767,7 +767,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'reduce_repeat'),
   'remove', 'auto', '같은 말이 겹치는 곳을 찾아 다시 쓰시오.',
-  '까치들이 다리를 놓았다. 다리는 강 위로 이어졌다. 견우가 다리에 올랐다. 다리는 흔들렸다.', null, '{"maxChars":38,"minVerbs":3,"maxRepeat":2}'::jsonb,
+  '까치들이 다리를 놓았다. 다리는 강 위로 이어졌다. 견우가 다리에 올랐다. 다리는 흔들렸다.', null, '{"maxChars":38,"minVerbs":3,"maxRepeat":2,"repeatTargets":[{"word":"다리","max":2}]}'::jsonb,
   'folktale', 'romance', 'planned',
   2, 'rp-magpie-bridge'
 where not exists (select 1 from problems p where p.source_key = 'rp-magpie-bridge');
@@ -779,7 +779,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'reduce_repeat'),
   'remove', 'auto', '같은 말이 겹치는 곳을 찾아 다시 쓰시오.',
-  '토끼는 간을 두고 왔다고 했다. 용왕은 간을 요구했다. 신하들이 간을 찾아 나섰다. 토끼는 간이 없다고 웃었다.', null, '{"maxChars":44,"minVerbs":5,"maxRepeat":2}'::jsonb,
+  '토끼는 간을 두고 왔다고 했다. 용왕은 간을 요구했다. 신하들이 간을 찾아 나섰다. 토끼는 간이 없다고 웃었다.', null, '{"maxChars":44,"minVerbs":5,"maxRepeat":2,"repeatTargets":[{"word":"간","max":2},{"word":"토끼","max":2}]}'::jsonb,
   'folktale', 'martial', 'impulsive',
   2, 'rp-rabbit-liver'
 where not exists (select 1 from problems p where p.source_key = 'rp-rabbit-liver');
@@ -791,7 +791,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'reduce_repeat'),
   'remove', 'auto', '같은 말이 겹치는 곳을 찾아 다시 쓰시오. 밧줄이 어떤 상태인지는 남길 것.',
-  '오누이는 밧줄을 잡았다. 밧줄이 하늘에서 내려왔다. 오라비가 밧줄을 당겼다. 밧줄은 튼튼했다.', null, '{"maxChars":40,"minVerbs":3,"maxRepeat":2}'::jsonb,
+  '오누이는 밧줄을 잡았다. 밧줄이 하늘에서 내려왔다. 오라비가 밧줄을 당겼다. 밧줄은 튼튼했다.', null, '{"maxChars":40,"minVerbs":3,"maxRepeat":2,"repeatTargets":[{"word":"밧줄","max":2}]}'::jsonb,
   'folktale', 'fantasy', 'impulsive',
   2, 'rp-siblings-rope'
 where not exists (select 1 from problems p where p.source_key = 'rp-siblings-rope');
@@ -803,7 +803,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'reduce_repeat'),
   'remove', 'auto', '같은 말이 겹치는 곳을 찾아 다시 쓰시오. 방망이가 멈추지 않는다는 것을 남길 것.',
-  '도깨비가 방망이를 두드렸다. 방망이에서 쌀이 나왔다. 도깨비가 방망이를 다시 두드렸다. 방망이는 멈추지 않았다.', null, '{"maxChars":41,"minVerbs":4,"maxRepeat":2}'::jsonb,
+  '도깨비가 방망이를 두드렸다. 방망이에서 쌀이 나왔다. 도깨비가 방망이를 다시 두드렸다. 방망이는 멈추지 않았다.', null, '{"maxChars":41,"minVerbs":4,"maxRepeat":2,"repeatTargets":[{"word":"방망이","max":2},{"word":"도깨비","max":1}]}'::jsonb,
   'folktale', 'fantasy', 'impulsive',
   3, 'rp-goblin-club'
 where not exists (select 1 from problems p where p.source_key = 'rp-goblin-club');

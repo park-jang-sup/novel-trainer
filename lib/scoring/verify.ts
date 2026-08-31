@@ -9,7 +9,7 @@
 
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import path from 'node:path'
-import { combine, countChars, countLetters, countSentences, deriveFillParts, fillMarkerMismatch, findForbidden, mergeForbidChecks, gradeLocal, pendingMorphChecks, summarizeConfig } from './index'
+import { combine, countChars, countLetters, countOccurrences, countSentences, deriveFillParts, fillMarkerMismatch, findForbidden, mergeForbidChecks, gradeLocal, pendingMorphChecks, summarizeConfig } from './index'
 import { sqlStr, countRawNewlinesInStrings } from '../seed-sql'
 import { nextProblemKey, nextStageId, stageProgress } from '../train-nav'
 import type { Answer, Check, CheckStatus, MorphResult, Problem, ProblemType, ScoringConfig, ScoringMode } from './types'
@@ -2758,12 +2758,53 @@ console.log('\n[4단계 reduce_repeat: 모범답안 대조]')
   }
 
   for (const r of refs) {
-    const max = (cfgOf.get(r.source_key)!.maxChars as number | undefined) ?? 9999
+    const cfg = cfgOf.get(r.source_key)!
+    const max = (cfg.maxChars as number | undefined) ?? 9999
     const n = countChars(r.content)
     t(`'${r.source_key}' ord${r.ord}: 자수 ${n} ≤ ${max}`, n <= max, `"${r.content}"`)
     t(`'${r.source_key}' ord${r.ord}: 비어 있지 않다`, r.content.trim().length > 0)
     t(`'${r.source_key}' ord${r.ord}: 지문을 그대로 베끼지 않았다`,
       r.content.trim() !== passageOf.get(r.source_key)!.trim())
+    // repeatTargets — 모범답안이 이 한도 안이어야 한다(형태소 불필요).
+    const rt = (cfg.repeatTargets ?? []) as { word: string; max: number }[]
+    const over = rt.filter((tg) => countOccurrences(r.content, tg.word) > tg.max)
+    t(`'${r.source_key}' ord${r.ord}: repeatTargets 한도 안`, over.length === 0,
+      JSON.stringify(over.map((tg) => `${tg.word} ${countOccurrences(r.content, tg.word)}/${tg.max}`)))
+    // 출하 코드(combine)로도 같은 결론
+    const res = combine(
+      { id: r.source_key, type: 'remove', scoring_mode: 'auto', scoring_config: cfg },
+      { text: r.content }, undefined, null)
+    t(`'${r.source_key}' ord${r.ord}: combine 의 repeatTargets 검사가 pass`,
+      res.checks.find((c) => c.key === 'repeatTargets')?.status === 'pass')
+  }
+
+  // 물기(형태소 불필요): 원문 8건은 repeatTargets 에 걸린다 — 드디어 반복으로 잡힘.
+  for (const d of rp) {
+    const rt = (d.scoring_config.repeatTargets ?? []) as { word: string; max: number }[]
+    t(`'${d.source_key}': repeatTargets 8건 지정 (word·max)`,
+      rt.length >= 1 && rt.every((tg) => tg.word.length > 0 && tg.max >= 1), JSON.stringify(rt))
+    const res = combine(
+      { id: d.source_key, type: 'remove', scoring_mode: 'auto', scoring_config: d.scoring_config },
+      { text: d.passage ?? '' }, undefined, null)
+    const rtCheck = res.checks.find((c) => c.key === 'repeatTargets')!
+    t(`물기: '${d.source_key}' 원문이 repeatTargets 에 걸린다 (겹친 말)`,
+      rtCheck.status === 'fail' && rtCheck.label === '겹친 말', JSON.stringify(rtCheck))
+  }
+
+  // update SQL 이 덤프와 갈리지 않았는지
+  {
+    const updSql = readFileSync(
+      path.join(__dirname, '..', '..', 'seed', 'update-reduce-repeat.sql'), 'utf8')
+    const rows = [...updSql.matchAll(
+      /update problems set scoring_config = '(.+?)'::jsonb\s*\n\s*where source_key = '([^']*)';/g
+    )].map((m) => ({ cfg: JSON.parse(m[1]) as Record<string, unknown>, source_key: m[2] }))
+    t('update SQL 에 8행', rows.length === 8, `실제=${rows.length}`)
+    const canon = (o: unknown) => JSON.stringify(o, Object.keys(o as object).sort())
+    for (const d of rp) {
+      const row = rows.find((r) => r.source_key === d.source_key)
+      t(`update SQL '${d.source_key}' 의 scoring_config 가 덤프와 같다`,
+        !!row && canon(row.cfg) === canon(d.scoring_config), `SQL=${JSON.stringify(row?.cfg)}`)
+    }
   }
 
   // 형태소 규칙(동사·반복 ≤ 2) — 서버 있을 때만. 모범답안이 제 규칙을 지킨다.
@@ -3131,6 +3172,9 @@ console.log('\n[가르침 층: 코치 말풍선 · 조건 요약 · 게이지]')
     '60자 이하 · 분노를 직접 말하는 표현 안 씀')
   t('요약: forbidLabel 없이 forbidWords 만 → "쓰지 않을 말 있음"',
     summarizeConfig({ forbidWords: ['화났'] }) === '쓰지 않을 말 있음')
+  t('요약: repeatTargets → 감시 낱말 목록',
+    summarizeConfig({ maxChars: 45, maxRepeat: 2, repeatTargets: [{ word: '도끼', max: 2 }, { word: '산신령', max: 1 }] }) ===
+      '45자 이하 · 같은 말 반복 2회까지 · 특정 낱말 반복 제한(도끼·산신령)')
   // 모든 실 문항의 요약이 터지지 않고, 채점 임계값(숫자 배열)이 안 샌다
   const allProblems = JSON.parse(
     readFileSync(path.join(root, 'seed', 'dump', 'problems.json'), 'utf8').replace(/^﻿/, '')

@@ -109,6 +109,12 @@ export interface ScoringConfig {
   minVerbs?: number // 형태소 필요
   maxProperNouns?: number // 고유명사(NNP)만. 형태소 필요
   maxRepeat?: number
+  /**
+   * 문항별로 지정한 낱말이 답안에 몇 번까지 나와도 되는가. 형태소가 아니라
+   * 답안 문자열에서 그 낱말이 나온 횟수를 그대로 센다 — 형태소 서버의
+   * maxRepeat 가 못 세는 한 음절 반복(박·물·간)을 규칙으로 잡는다(4단계).
+   */
+  repeatTargets?: { word: string; max: number }[]
   forbidWords?: string[] // 어간 매칭
   forbidLemmas?: string[] // "보/VV" 형식. 형태소 필요
   /**

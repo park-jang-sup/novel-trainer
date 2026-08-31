@@ -31,6 +31,18 @@ export function countSentences(text: string): number {
   return text.split(/[.!?…]+/).filter((seg) => /[가-힣A-Za-z0-9]/.test(seg)).length
 }
 
+/** 문자열에서 낱말이 나온 횟수(겹치지 않게). repeatTargets 가 쓴다. */
+export function countOccurrences(haystack: string, needle: string): number {
+  if (!needle) return 0
+  let n = 0
+  let i = 0
+  while ((i = haystack.indexOf(needle, i)) !== -1) {
+    n++
+    i += needle.length
+  }
+  return n
+}
+
 /** 어간 매칭. "기뻤"은 기뻤다·기뻤고·기뻤지만을 모두 잡는다. */
 export function findForbidden(text: string, stems: string[]): string[] {
   const hits: string[] = []
@@ -643,6 +655,24 @@ export function gradeLocal(
           status: found.length > 0 ? 'pass' : 'fail',
           detail: found.length > 0 ? found.join(', ') : '없음',
           rule: cfg.requireAny.join(', '),
+          gating: true,
+        })
+      }
+
+      // repeatTargets: 문항별로 지정한 낱말이 몇 번까지 나와도 되는가.
+      // 형태소가 아니라 답안 문자열에서 그 낱말이 나온 횟수를 그대로 센다
+      // (maxRepeat 가 못 세는 한 음절 반복 — 박·물·간 — 을 잡는다).
+      if (cfg.repeatTargets?.length) {
+        const over = cfg.repeatTargets
+          .map((tgt) => ({ ...tgt, count: countOccurrences(text, tgt.word) }))
+          .filter((tgt) => tgt.count > tgt.max)
+        checks.push({
+          key: 'repeatTargets',
+          label: '겹친 말',
+          status: over.length === 0 ? 'pass' : 'fail',
+          detail: over.length === 0 ? '없음' : `${over.length}개`,
+          rule: cfg.repeatTargets.map((tgt) => `${tgt.word} ${tgt.max}회까지`).join(' · '),
+          evidence: over.map((tgt) => `${tgt.word} ${tgt.count}회`),
           gating: true,
         })
       }

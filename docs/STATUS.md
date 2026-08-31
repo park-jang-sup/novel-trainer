@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 25 · 커밋 `7d749c3` 위
+마지막 갱신: 세션 26 · 커밋 `4ac4ee9` 위
 
 ---
 
@@ -67,6 +67,10 @@ fill 분량은 글자만 센다          countLetters — 한글·영문·숫자
 조건 요약은 손으로 안 적는다      문항 화면 지시문 아래 한 줄은 summarizeConfig(scoring_config)
                               파생. 상세는 오른쪽 '무엇을 봅니다' 패널. 임계값 숫자는 코드가 학습자
                               말로 옮긴다("42자 이하 · 움직이는 말 3개 이상 …")
+한 음절 반복은 repeatTargets 로     형태소 maxRepeat 는 두 음절+만 센다. scoring_config.repeatTargets
+                              [{word,max}] — 형태소 아님, 답안 문자열의 낱말 횟수. 검사 key
+                              repeatTargets · 라벨 '겹친 말'. 4단계 rp- 8문항에 지정. 새 반복
+                              문항은 이걸로 감시 대상을 박는다
 AI 는 피드백이지 심판이 아니다     위 재개 조건 전까지
 문서는 이 파일 하나              STATUS 를 덮어쓴다. 인수인계를 새로 안 쓴다
 fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀 때 뺀다
@@ -84,9 +88,24 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 1  빈 단계 채우기         도입 4단계 → 구성 빈 6단계 → 절단신공. 단계당 4~6. 기존 유형만
 ```
 
-### 끝난 것 — 세션 25
+### 끝난 것 — 세션 26
 
 ```
+repeatTargets — 한 음절 반복을 규칙으로 잡는다 (4단계 실사용 확인, 구멍이 실제로 샜다)
+  types       ScoringConfig.repeatTargets?: {word,max}[]. 형태소 아님 — 답안 문자열의 낱말 횟수
+  local       default(remove/convert) 케이스에 검사 추가. key repeatTargets · 라벨 '겹친 말' ·
+              rule "{word} {max}회까지" · evidence "{word} {count}회" · gating. countOccurrences 헬퍼
+  marks.ts    repeatTargets 를 mk-mark 로 · evidence 의 " N회" 접미 벗김(maxRepeat 와 같이)
+  summary     "특정 낱말 반복 제한(도끼·나무꾼·산신령)" 한 조각 추가
+  page.tsx    NON_SCORING_KEYS 에 repeatTargets — 4단계(remove 3키)가 3단계와 갈려 두 칸 안 되게
+  problems.json  rp- 8문항에 repeatTargets 지정 (axe-gold 도끼2·나무꾼2·산신령1 등)
+  seed/update-reduce-repeat.sql  scoring_config 8건 (덤프에서 뽑음)
+  verify [4단계]  모범답안 16건이 repeatTargets 한도 안(직접 + combine) · 원문 8건이 걸린다('겹친 말') ·
+                 update SQL 덤프 대조. + summarizeConfig repeatTargets 케이스
+  ★ 모범답안 16건은 이 한도로 실측 통과(0 초과) 확인 후 진행
+  ★ DB 반영: seed/update-reduce-repeat.sql → seed_check
+  ★ 절차(박 님): update-reduce-repeat.sql → seed_check → 4단계에서 '물'×4 답안이 미달로 잡히는지
+
 4단계 reduce_repeat 모범답안 16 + self_checks (3단계와 같은 절차)
   answers.json   reference[] 에 rp-* 8문항 × ord 1 가 / 2 나 = 16행 · blank_key ''
   stages.json    reduce_repeat self_checks ["같은 말이 두 번 넘게 안 나와? 소리 내서 읽어 봐!"]
@@ -216,10 +235,6 @@ verify  [쓰지 않을 말 표시] — 14문항 · forbidDisplay 의 각 기본�
 ★ 형태소 서버              지금 로컬뿐(scoring-server, 상태 확인 참조). 안 떠 있으면 6단계 46문항이
                           통과 불가(pending). 배포 시 이것도 같이 올린다(Cloud Run 이든 뭐든) —
                           .env 의 SCORING_SERVER_URL·SCORING_SERVER_SECRET 을 그쪽으로 맞춘다
-4단계 한 음절 반복 미검출     박·물·간 같은 한 음절 명사 반복은 maxRepeat 가 못 센다 — 학습자가
-                            '물'을 4번 써도 자수만 맞으면 통과. 자기점검이 맡는다. 규칙으로
-                            잡으려면 문항별 repeatTargets(감시 대상) 지정 — 실사용에서 실제로
-                            새는지 본 뒤 결정
 at-left-feint fill 재료      상황 본문 · 빈칸 위치 · 모범답안 3건. 재설계안 7-5 목록 열둘을 먼저
                             읽고 짠다. 그때 3×3(장르 셋씩)이 찬다
 ar-left-feeler 모범답안       재설계안 7-7 에 가·나·다가 없다. stage2 가 보여줄 것이 없다
