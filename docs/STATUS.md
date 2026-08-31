@@ -216,6 +216,10 @@ verify  [쓰지 않을 말 표시] — 14문항 · forbidDisplay 의 각 기본�
 ★ 형태소 서버              지금 로컬뿐(scoring-server, 상태 확인 참조). 안 떠 있으면 6단계 46문항이
                           통과 불가(pending). 배포 시 이것도 같이 올린다(Cloud Run 이든 뭐든) —
                           .env 의 SCORING_SERVER_URL·SCORING_SERVER_SECRET 을 그쪽으로 맞춘다
+4단계 한 음절 반복 미검출     박·물·간 같은 한 음절 명사 반복은 maxRepeat 가 못 센다 — 학습자가
+                            '물'을 4번 써도 자수만 맞으면 통과. 자기점검이 맡는다. 규칙으로
+                            잡으려면 문항별 repeatTargets(감시 대상) 지정 — 실사용에서 실제로
+                            새는지 본 뒤 결정
 at-left-feint fill 재료      상황 본문 · 빈칸 위치 · 모범답안 3건. 재설계안 7-5 목록 열둘을 먼저
                             읽고 짠다. 그때 3×3(장르 셋씩)이 찬다
 ar-left-feeler 모범답안       재설계안 7-7 에 가·나·다가 없다. stage2 가 보여줄 것이 없다
