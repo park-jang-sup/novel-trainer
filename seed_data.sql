@@ -492,8 +492,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'trim_padding'),
-  'remove', 'auto', '없어도 되는 문장을 지우고 다시 쓰시오. 나무꾼이 손을 넣는 동작까지 남길 것.',
-  '나무꾼은 연못가에 앉았다. 연못은 산 아래의 깊은 물이었다. 그날은 바람 한 점 없이 잔잔했다. 도끼는 물속에 보이지 않았다. 그는 소매를 걷고 물에 손을 넣었다.', null, '{"maxChars":38,"minVerbs":3,"maxRepeat":2}'::jsonb,
+  'remove', 'auto', '없어도 되는 문장을 지우고 다시 쓰시오. 나무꾼이 손을 넣는 동작까지 남길 것. 새로 쓰지 말고, 원문에서 지우기만 하십시오.',
+  '나무꾼은 연못가에 앉았다. 연못은 산 아래의 깊은 물이었다. 그날은 바람 한 점 없이 잔잔했다. 도끼는 물속에 보이지 않았다. 그는 소매를 걷고 물에 손을 넣었다.', null, '{"maxChars":42,"minVerbs":3,"maxRepeat":2}'::jsonb,
   'folktale', 'fantasy', 'planned',
   1, 'tp-axe-water'
 where not exists (select 1 from problems p where p.source_key = 'tp-axe-water');
@@ -504,8 +504,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'trim_padding'),
-  'remove', 'auto', '없어도 되는 문장을 지우고 다시 쓰시오. 인물이 하는 동작은 하나도 빼지 말 것.',
-  '흥부는 마당에 나갔다. 마당은 좁고 흙바닥이라 늘 먼지투성이였다. 제비 한 마리가 떨어져 있었다. 제비는 봄의 새다. 흥부는 제비를 두 손으로 들어 올렸다.', null, '{"maxChars":35,"minVerbs":3,"maxRepeat":2}'::jsonb,
+  'remove', 'auto', '없어도 되는 문장을 지우고 다시 쓰시오. 인물이 하는 동작은 하나도 빼지 말 것. 새로 쓰지 말고, 원문에서 지우기만 하십시오.',
+  '흥부는 마당에 나갔다. 마당은 좁고 흙바닥이라 늘 먼지투성이였다. 제비 한 마리가 떨어져 있었다. 제비는 봄의 새다. 흥부는 제비를 두 손으로 들어 올렸다.', null, '{"maxChars":41,"minVerbs":3,"maxRepeat":2}'::jsonb,
   'folktale', 'fantasy', 'planned',
   1, 'tp-heungbu-yard'
 where not exists (select 1 from problems p where p.source_key = 'tp-heungbu-yard');
@@ -516,8 +516,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'trim_padding'),
-  'remove', 'auto', '없어도 되는 문장을 지우고 다시 쓰시오.',
-  '심청은 뱃전에 섰다. 그 배는 마을에서 가장 큰 배였다. 공양미 삼백 석이 이 배에 실려 있었다. 바다는 넓고 깊었다. 심청은 치마를 걷어쥐었다.', null, '{"maxChars":35,"minVerbs":3,"maxRepeat":2}'::jsonb,
+  'remove', 'auto', '없어도 되는 문장을 지우고 다시 쓰시오. 새로 쓰지 말고, 원문에서 지우기만 하십시오.',
+  '심청은 뱃전에 섰다. 그 배는 마을에서 가장 큰 배였다. 공양미 삼백 석이 이 배에 실려 있었다. 바다는 넓고 깊었다. 심청은 치마를 걷어쥐었다.', null, '{"maxChars":39,"minVerbs":3,"maxRepeat":2}'::jsonb,
   'folktale', 'modern', 'planned',
   1, 'tp-simcheong-rail'
 where not exists (select 1 from problems p where p.source_key = 'tp-simcheong-rail');
@@ -528,7 +528,7 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'trim_padding'),
-  'remove', 'auto', '없어도 되는 문장을 지우고 다시 쓰시오.',
+  'remove', 'auto', '없어도 되는 문장을 지우고 다시 쓰시오. 새로 쓰지 말고, 원문에서 지우기만 하십시오.',
   '견우는 강가에 나왔다. 강은 일 년 내내 소리 없이 그대로였다. 까치들이 하늘을 덮었다. 까치는 검고 흰, 아주 흔한 새다. 견우는 강물에 발을 담갔다.', null, '{"maxChars":35,"minVerbs":2,"maxRepeat":2}'::jsonb,
   'folktale', 'romance', 'planned',
   2, 'tp-gyeonu-river'
@@ -540,8 +540,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'trim_padding'),
-  'remove', 'auto', '없어도 되는 문장을 지우고 다시 쓰시오. 독의 상태와 콩쥐의 동작만 남길 것.',
-  '콩쥐는 독 앞에 앉았다. 독은 마당 한가운데의 커다란 물건이었다. 바닥에 금이 가 있었다. 금은 손가락 하나 굵기였다. 콩쥐는 손바닥으로 그 자리를 눌렀다.', null, '{"maxChars":35,"minVerbs":2,"maxRepeat":2}'::jsonb,
+  'remove', 'auto', '없어도 되는 문장을 지우고 다시 쓰시오. 독의 상태와 콩쥐의 동작만 남길 것. 새로 쓰지 말고, 원문에서 지우기만 하십시오.',
+  '콩쥐는 독 앞에 앉았다. 독은 마당 한가운데의 커다란 물건이었다. 바닥에 금이 가 있었다. 금은 손가락 하나 굵기였다. 콩쥐는 손바닥으로 그 자리를 눌렀다.', null, '{"maxChars":38,"minVerbs":2,"maxRepeat":2}'::jsonb,
   'folktale', 'modern', 'planned',
   2, 'tp-kongjwi-crack'
 where not exists (select 1 from problems p where p.source_key = 'tp-kongjwi-crack');
@@ -552,8 +552,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'trim_padding'),
-  'remove', 'auto', '없어도 되는 문장을 지우고 다시 쓰시오.',
-  '토끼는 용궁 문 앞에 섰다. 용궁은 바다 밑의 깊은 곳이었다. 문지기가 창을 내렸다. 문지기의 창은 길고 무거웠다. 토끼는 웃으며 한 걸음 나섰다.', null, '{"maxChars":33,"minVerbs":3,"maxRepeat":2}'::jsonb,
+  'remove', 'auto', '없어도 되는 문장을 지우고 다시 쓰시오. 새로 쓰지 말고, 원문에서 지우기만 하십시오.',
+  '토끼는 용궁 문 앞에 섰다. 용궁은 바다 밑의 깊은 곳이었다. 문지기가 창을 내렸다. 문지기의 창은 길고 무거웠다. 토끼는 웃으며 한 걸음 나섰다.', null, '{"maxChars":36,"minVerbs":3,"maxRepeat":2}'::jsonb,
   'folktale', 'martial', 'impulsive',
   2, 'tp-rabbit-gate'
 where not exists (select 1 from problems p where p.source_key = 'tp-rabbit-gate');
@@ -564,7 +564,7 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'trim_padding'),
-  'remove', 'auto', '없어도 되는 문장을 지우고 다시 쓰시오.',
+  'remove', 'auto', '없어도 되는 문장을 지우고 다시 쓰시오. 새로 쓰지 말고, 원문에서 지우기만 하십시오.',
   '오누이는 마루 밑에 숨었다. 그 집은 마을에서 가장 낡은 초가집이었다. 문밖에서 발소리가 났다. 문밖은 달도 없이 어두웠다. 오라비가 동생의 입을 막았다.', null, '{"maxChars":38,"minVerbs":2,"maxRepeat":2}'::jsonb,
   'folktale', 'fantasy', 'impulsive',
   2, 'tp-siblings-floor'
@@ -576,8 +576,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'trim_padding'),
-  'remove', 'auto', '없어도 되는 문장을 지우고 다시 쓰시오. 남는 문장은 세 개 이하로.',
-  '나무꾼은 방망이를 상 위에 올렸다. 상은 다리 하나가 짧은 낡은 것이었다. 집 안은 조용했다. 방망이에 검은 자국이 남아 있었다. 그는 그것을 다시 집어 들었다.', null, '{"maxChars":37,"minVerbs":3,"maxRepeat":2}'::jsonb,
+  'remove', 'auto', '없어도 되는 문장을 지우고 다시 쓰시오. 남는 문장은 세 개 이하로. 새로 쓰지 말고, 원문에서 지우기만 하십시오.',
+  '나무꾼은 방망이를 상 위에 올렸다. 상은 다리 하나가 짧은 낡은 것이었다. 집 안은 조용했다. 방망이에 검은 자국이 남아 있었다. 그는 그것을 다시 집어 들었다.', null, '{"maxChars":45,"minVerbs":3,"maxRepeat":2}'::jsonb,
   'folktale', 'fantasy', 'impulsive',
   3, 'tp-goblin-mark'
 where not exists (select 1 from problems p where p.source_key = 'tp-goblin-mark');

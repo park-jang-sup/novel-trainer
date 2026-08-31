@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 23 · 커밋 `534aed1` 위
+마지막 갱신: 세션 23 · 커밋 `5c0e801` 위
 
 ---
 
@@ -55,6 +55,9 @@ reference_answers 는 저장소에 둔다  제출 뒤 학습자에게 보이는 
                               비-fill 모범답안은 blank_key '' · ord 로만 세트(가·나…)를 가른다
 단계 이름                       `동작에 이유 넣기` (skill_key action_reason)
 fill 분량은 글자만 센다          countLetters — 한글·영문·숫자만. 최대·최소 한 수로. 구두점·공백은 0
+3단계류 자수 상한 = 필수+2       지우기 단계(trim_padding 등)의 maxChars 는 '필수 문장을 원문
+                              그대로 남긴 정직한 답 자수 + 2'. 지우기가 고쳐쓰기를 강요하면
+                              안 된다 — 세션 23 실사용 발견(정직한 40자 답이 상한 38 에 걸림)
 AI 는 피드백이지 심판이 아니다     위 재개 조건 전까지
 문서는 이 파일 하나              STATUS 를 덮어쓴다. 인수인계를 새로 안 쓴다
 fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀 때 뺀다
@@ -104,7 +107,16 @@ verify  [쓰지 않을 말 표시] — 14문항 · forbidDisplay 의 각 기본�
     (자수·베낌·가나 두 세트 + ★ 문장 수 < 원문 문장 수 + 형태소는 서버 있을 때만)
   ★ DB 반영: reference 16행 새 insert(on conflict do nothing) · self_checks do update →
     seed_data.sql 재실행이면 된다(멱등). update 파일 불필요.
-  ★ 절차(박 님): seed_data.sql → seed_check.sql → 브라우저에서 3단계를 학습자로 완주
+
+  3단계 maxChars 재조정 + 지시문 (세션 23 후기 — 실사용 발견)
+    problems.json  maxChars 6건(axe 38→42·heungbu 35→41·simcheong 35→39·kongjwi 35→38·
+                   rabbit 33→36·goblin 37→45. gyeonu 35·siblings 38 유지) · 지시문 8건에
+                   "새로 쓰지 말고, 원문에서 지우기만 하십시오." 추가
+    seed/update-trim-padding.sql  scoring_config + instruction 8건 (덤프에서 뽑음)
+    verify  정직한 답 8건이 자수 통과 · 상한 = 정직한 답 자수 + 2 · 조임(정직한 답 + 군더더기
+            한 문장 > 상한) · 물기(옛 값이면 6건이 샌다) · 지시문·update SQL 대조
+  ★ 절차(박 님): seed_data.sql(모범답안·self_checks) + seed/update-trim-padding.sql(maxChars·지시문)
+    → seed_check.sql → 옛 40자 답 재제출해 통과 확인 → 3단계 완주
 ```
 
 ### 끝난 것 — 세션 21

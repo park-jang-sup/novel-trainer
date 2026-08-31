@@ -2605,6 +2605,7 @@ console.log('\n[3단계 trim_padding: 모범답안 대조]')
     skill_key: string
     type: string
     passage: string | null
+    instruction: string
     scoring_config: ScoringConfig
   }
   const seedDir = path.join(__dirname, '..', '..', 'seed', 'dump')
@@ -2643,6 +2644,67 @@ console.log('\n[3단계 trim_padding: 모범답안 대조]')
     const sPassage = countSentences(passage)
     t(`'${r.source_key}' ord${r.ord}: 문장 수 ${sModel} < 원문 ${sPassage}`,
       sModel < sPassage, `"${r.content}"`)
+  }
+
+  // ── maxChars 재조정 (세션 23) ──
+  // 상한 = '필수 문장을 원문 그대로 남긴' 정직한 답의 자수 + 2. 지우기 단계가
+  // 고쳐쓰기를 강요하면 안 된다(실사용에서 40자 정직한 답이 상한 38 에 걸렸다).
+  const OLD_MAX: Record<string, number> = {
+    'tp-axe-water': 38, 'tp-heungbu-yard': 35, 'tp-simcheong-rail': 35, 'tp-gyeonu-river': 35,
+    'tp-kongjwi-crack': 35, 'tp-rabbit-gate': 33, 'tp-siblings-floor': 38, 'tp-goblin-mark': 37,
+  }
+  const HONEST: Record<string, string> = {
+    'tp-axe-water': '나무꾼은 연못가에 앉았다. 도끼는 물속에 보이지 않았다. 그는 소매를 걷고 물에 손을 넣었다.',
+    'tp-heungbu-yard': '흥부는 마당에 나갔다. 제비 한 마리가 떨어져 있었다. 흥부는 제비를 두 손으로 들어 올렸다.',
+    'tp-simcheong-rail': '심청은 뱃전에 섰다. 공양미 삼백 석이 이 배에 실려 있었다. 심청은 치마를 걷어쥐었다.',
+    'tp-gyeonu-river': '견우는 강가에 나왔다. 까치들이 하늘을 덮었다. 견우는 강물에 발을 담갔다.',
+    'tp-kongjwi-crack': '콩쥐는 독 앞에 앉았다. 바닥에 금이 가 있었다. 콩쥐는 손바닥으로 그 자리를 눌렀다.',
+    'tp-rabbit-gate': '토끼는 용궁 문 앞에 섰다. 문지기가 창을 내렸다. 토끼는 웃으며 한 걸음 나섰다.',
+    'tp-siblings-floor': '오누이는 마루 밑에 숨었다. 문밖에서 발소리가 났다. 오라비가 동생의 입을 막았다.',
+    'tp-goblin-mark': '나무꾼은 방망이를 상 위에 올렸다. 방망이에 검은 자국이 남아 있었다. 그는 그것을 다시 집어 들었다.',
+  }
+  let oldLeak = 0
+  for (const d of tp) {
+    const max = d.scoring_config.maxChars as number
+    const honest = HONEST[d.source_key]
+    const hn = countChars(honest)
+    t(`'${d.source_key}': 정직한 답 ${hn}자 ≤ 상한 ${max}`, hn <= max, `"${honest}"`)
+    t(`'${d.source_key}': 상한 = 필수 문장 자수 + 2`, max === hn + 2, `${max} vs ${hn}+2`)
+    if (hn > OLD_MAX[d.source_key]) oldLeak++
+    // 조임: 정직한 답 + 원문 군더더기 한 문장(가장 짧은 것)은 상한을 넘는다
+    const sents = (passageOf.get(d.source_key)!.match(/[^.!?]+[.!?]/g) ?? []).map((s) => s.trim())
+    const padding = sents.filter((s) => !honest.includes(s))
+    const shortest = padding.reduce((a, b) => (countChars(a) <= countChars(b) ? a : b))
+    t(`'${d.source_key}': 정직한 답 + 군더더기 한 문장 > 상한 (조임 살아 있음)`,
+      countChars(`${honest} ${shortest}`) > max, `+"${shortest}"`)
+  }
+  t('물기: 상한을 옛 값으로 되돌리면 정직한 답 6건이 샌다', oldLeak === 6, `실제=${oldLeak}`)
+
+  // 지시문에 '새로 쓰지 말고, 원문에서 지우기만' 한 문장이 붙었다 (8건)
+  for (const d of tp) {
+    t(`'${d.source_key}': 지시문에 '지우기만' 문장이 있다`,
+      d.instruction.includes('새로 쓰지 말고, 원문에서 지우기만 하십시오.'))
+  }
+
+  // update SQL 이 덤프와 갈리지 않았는지 (scoring_config jsonb · instruction 글자까지)
+  {
+    const updSql = readFileSync(
+      path.join(__dirname, '..', '..', 'seed', 'update-trim-padding.sql'), 'utf8')
+    const rows = [...updSql.matchAll(
+      /update problems set scoring_config = '(.+?)'::jsonb,\s*\n\s*instruction = '((?:[^']|'')*)'\s*\n\s*where source_key = '([^']*)';/g
+    )].map((m) => ({
+      cfg: JSON.parse(m[1]) as Record<string, unknown>,
+      instruction: m[2].replace(/''/g, "'"),
+      source_key: m[3],
+    }))
+    t('update SQL 에 8행이 있다', rows.length === 8, `실제=${rows.length}`)
+    const canon = (o: unknown) => JSON.stringify(o, Object.keys(o as object).sort())
+    for (const d of tp) {
+      const row = rows.find((r) => r.source_key === d.source_key)
+      t(`update SQL '${d.source_key}' 이 덤프와 같다 (scoring_config · instruction)`,
+        !!row && canon(row.cfg) === canon(d.scoring_config) && row.instruction === d.instruction,
+        `SQL=${JSON.stringify(row)}`)
+    }
   }
 
   // 형태소 규칙(동사·반복) — 서버 있을 때만
