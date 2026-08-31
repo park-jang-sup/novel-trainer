@@ -2748,9 +2748,7 @@ console.log('\n[쓰지 않을 말 표시: forbidLabel/forbidDisplay ↔ 채점]'
   const trainSrc = readFileSync(path.join(root, 'components', 'train', 'TrainClient.tsx'), 'utf8')
   t("'무엇을 봅니다' 라벨이 nowrap + 긴 규칙만 줄바꿈",
     /whitespace-nowrap[^]*RuleText/.test(trainSrc) && /min-w-0 flex-1/.test(trainSrc))
-  // 패널을 키운다 — 오른쪽 칸 최소 24rem · 규칙 글씨는 본문 급(text-sm 아님)
-  t("'무엇을 봅니다' 오른쪽 칸이 최소 24rem 이다",
-    /lg:grid-cols-\[minmax\(0,1fr\)_minmax\(24rem,[^\]]*\)\]/.test(trainSrc))
+  // 규칙 글씨는 본문 급(text-sm 아님)
   t("'무엇을 봅니다' 규칙 글씨가 본문 급이다 (text-sm 안 씀)",
     /min-w-0 flex-1 text-right"/.test(trainSrc) && !/min-w-0 flex-1 text-right text-sm/.test(trainSrc))
   t('CheckRow 의 RuleText 도 본문 급 (text-sm 벗음)',
@@ -2762,6 +2760,26 @@ console.log('\n[쓰지 않을 말 표시: forbidLabel/forbidDisplay ↔ 채점]'
   t('CheckRow 도 같은 행 밀도 (min-height 3.5rem · py-4 · 라벨 font-medium)',
     /py-4 text-left"/.test(checkRowSrc) && /minHeight: '3\.5rem'/.test(checkRowSrc) &&
       /flex-1 whitespace-nowrap font-medium/.test(checkRowSrc))
+
+  // ── 문항 영역(왼쪽) 스케일업 (세션 23) ──
+  const editorSrc2 = readFileSync(path.join(root, 'components', 'train', 'Editor.tsx'), 'utf8')
+  const fillBodySrc = readFileSync(path.join(root, 'components', 'train', 'FillBody.tsx'), 'utf8')
+  t('제목이 text-3xl', /<h1\s+className="text-3xl"/.test(trainSrc))
+  t('원문 상자가 p-5 · text-lg · leading-relaxed',
+    /whitespace-pre-wrap p-5 text-lg leading-relaxed/.test(trainSrc))
+  t('Editor 입력 높이 1.2배 (6→7 · 13→16)', /rows=\{cfg\.minLines != null \? 16 : 7\}/.test(trainSrc))
+  t('두 칸 비율이 왼쪽 우선 (1.4fr) · 오른쪽 최소 22rem',
+    /lg:grid-cols-\[minmax\(0,1\.4fr\)_minmax\(22rem,1fr\)\]/.test(trainSrc))
+  t('페이지 컨테이너 한 단계 넓힘 (max-w-7xl · 한 칸은 max-w-3xl)',
+    /mx-auto max-w-7xl p-6/.test(trainSrc) && /mx-auto max-w-3xl space-y-6 p-6/.test(trainSrc))
+  t('Editor textarea 글씨 text-lg(1.125rem) · 패딩 20',
+    /fontSize:\s*'1\.125rem'/.test(editorSrc2) && /padding:\s*20/.test(editorSrc2))
+  t('fill(FillBody) 고정 줄·입력칸도 같은 글씨 급 (text-lg / 1.125rem)',
+    /className="text-lg leading-relaxed"/.test(fillBodySrc) && /fontSize:\s*'1\.125rem'/.test(fillBodySrc))
+  // 유형마다 크기가 다르면 안 된다 — 세 자리(원문 상자·Editor·FillBody)가 같은 급
+  t('원문 상자·Editor·FillBody 입력 글씨가 한 급이다',
+    /p-5 text-lg/.test(trainSrc) && /fontSize:\s*'1\.125rem'/.test(editorSrc2) &&
+      /fontSize:\s*'1\.125rem'/.test(fillBodySrc))
 }
 
 // ── 자기점검 self_checks: 스키마 · 시드 · 화면 대조 (세션 19) ────────────

@@ -297,7 +297,7 @@ export default function TrainClient({
           {problem.type}
         </p>
         <h1
-          className="text-xl"
+          className="text-3xl"
           style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}
         >
           {instructionFirst}
@@ -316,7 +316,7 @@ export default function TrainClient({
         <div className="space-y-1">
           <p className="text-sm" style={{ color: 'var(--ink-soft)' }}>{passageLabel}</p>
           <div
-            className="whitespace-pre-wrap p-4 text-sm leading-relaxed"
+            className="whitespace-pre-wrap p-5 text-lg leading-relaxed"
             style={{
               fontFamily: 'var(--font-display)',
               background: 'var(--panel)',
@@ -341,14 +341,13 @@ export default function TrainClient({
 
       {isTextType && (
         <div className="space-y-2">
-          {/* 13의 근거: rh-heungbu-yard 모범답안 3건이 화면에서 차지하는 줄 수가
-              (빈 줄 포함) 11 · 13 · 11줄이었다. 그중 최대인 13을 쓴다 — 추측이
-              아니라 실측값이다. minLines 없는 38문항은 6 그대로다. */}
+          {/* 페이지 스케일업(약 1.2배): 6→7 · 13→16. 13의 근거는 rh-heungbu-yard
+              모범답안 3건이 화면에서 차지하던 줄 수(11·13·11) 최댓값이었다. */}
           <Editor
             value={text}
             onChange={setText}
             checks={displayChecks}
-            rows={cfg.minLines != null ? 13 : 6}
+            rows={cfg.minLines != null ? 16 : 7}
             disabled={submitting}
           />
           {cfg.maxChars != null && (
@@ -662,7 +661,7 @@ export default function TrainClient({
   // 한 칸 쌓기 그대로다.
   if (!problem.twoColumnEligible) {
     return (
-      <main className="mx-auto max-w-2xl space-y-6 p-6">
+      <main className="mx-auto max-w-3xl space-y-6 p-6">
         {leftContent}
         {rightContent}
       </main>
@@ -670,14 +669,11 @@ export default function TrainClient({
   }
 
   return (
-    // 6xl(1152). 5xl(1024)에서는 한 열이 472px라 예시·원문 상자가 좁았다.
-    // 7xl(1280)까지 넓히지 않는 이유는 왼쪽 입력창 한 줄이 길어지면
-    // 7단계(maxLineChars 18)의 "짧게 끊는다"는 눈의 감각이 흐려지기 때문이다.
-    <main className="mx-auto max-w-6xl p-6">
-      {/* 오른쪽 칸을 넓힌다 — '무엇을 봅니다'·판정 목록이 앉는 자리다. 최소
-          24rem 을 바닥으로 두고 왼쪽보다 크게(1.3fr). 왼쪽 입력 칸은
-          minmax(0,1fr) 이라 좁은 화면에서 먼저 줄어든다. */}
-      <div className="space-y-6 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(24rem,1.3fr)] lg:items-start lg:gap-8 lg:space-y-0">
+    // 7xl(1280). 페이지 스케일업 — 제목·원문·입력칸을 키우면서 컨테이너도 한
+    // 단계 넓혀 여백을 줄인다. 왼쪽(문항)이 오른쪽에 안 눌리게 비율은 왼쪽
+    // 우선(1.4fr) 으로 되돌리고, 오른쪽은 최소 22rem 바닥만 지킨다.
+    <main className="mx-auto max-w-7xl p-6">
+      <div className="space-y-6 lg:grid lg:grid-cols-[minmax(0,1.4fr)_minmax(22rem,1fr)] lg:items-start lg:gap-8 lg:space-y-0">
         <div className="space-y-6">{leftContent}</div>
         {/* 제출 전에는 비어 있다 — result가 없으면 rightContent 자체가 false다.
             판정을 보며 왼쪽을 스크롤해도 안 따라 올라가게 sticky로 붙이고,

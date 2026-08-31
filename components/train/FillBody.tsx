@@ -53,7 +53,7 @@ function BlankField({
         className="w-full"
         style={{
           fontFamily: 'var(--font-display)',
-          fontSize: '1rem',
+          fontSize: '1.125rem', // 원문 상자·Editor 와 같은 급(text-lg)
           lineHeight: 1.7,
           background: 'transparent',
           border: 'none',
@@ -118,7 +118,7 @@ export default function FillBody({
           seg.kind === 'line' ? (
             <p
               key={i}
-              className="leading-relaxed"
+              className="text-lg leading-relaxed"
               style={{ fontFamily: 'var(--font-display)' }}
             >
               {seg.text}

@@ -30,9 +30,9 @@ function renderHighlight(text: string, marks: Mark[]): string {
 const shared: CSSProperties = {
   margin: 0,
   fontFamily: 'var(--font-display)',
-  fontSize: '1rem',
+  fontSize: '1.125rem', // text-lg — 유형마다 입력 글씨 크기가 다르면 안 된다
   lineHeight: 1.8,
-  padding: 12,
+  padding: 20, // p-5
   letterSpacing: '0.01em',
   whiteSpace: 'pre-wrap',
   wordBreak: 'break-word',
