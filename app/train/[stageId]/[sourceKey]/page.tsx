@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import TrainClient from '@/components/train/TrainClient'
 import { nextStageId } from '@/lib/train-nav'
+import { summarizeConfig } from '@/lib/scoring'
 import type { BlankSpec, ProblemType } from '@/lib/scoring/types'
 
 export default async function TrainProblemPage(
@@ -35,6 +36,10 @@ export default async function TrainProblemPage(
   }
 
   const cfg = problem.scoring_config ?? {}
+
+  // 지시문 바로 아래 한 줄 요약. 임계값을 학습자 말로 옮긴 것 — 코드가
+  // config 에서 만든다. 상세는 오른쪽 '무엇을 봅니다' 패널이 맡는다.
+  const configSummary = summarizeConfig(cfg)
 
   // 화면 표시에 필요한 것만 넘긴다. forbidWords · maxAdverbs · minVerbs ·
   // maxRepeat 는 여기서 걸러진다 — 채점 결과(evidence)에 어차피 나온다.
@@ -138,6 +143,7 @@ export default async function TrainProblemPage(
         }}
         loop={loop}
         selfChecks={selfChecks}
+        configSummary={configSummary}
       />
     </>
   )

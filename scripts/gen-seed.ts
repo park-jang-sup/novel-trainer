@@ -31,6 +31,8 @@ interface DumpStage {
   // stage2 자기점검 문구(재설계안 11-2). 단계마다 다르다 — reduce_adverb 는
   // 한 줄, action_reason 은 두 줄, 나머지는 빈 배열(자기점검 칸이 안 뜬다).
   self_checks: string[]
+  // 단계 도입문. 단계 목록 페이지 제목·요약 아래에 뜬다. '' 면 안 뜬다.
+  intro: string
 }
 
 interface DumpProblem {
@@ -237,16 +239,17 @@ out.push(
 
 for (const s of stagesSorted) {
   out.push(
-    'insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)',
+    'insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks, intro)',
     `values (${sqlStr(s.track)}, ${sqlInt(s.order_no)}, ${sqlStr(s.title)}, ${sqlStr(s.skill_key)},`,
-    `        ${sqlStr(s.summary)}, ${sqlBool(s.is_free)}, ${sqlTextArray(s.self_checks)})`,
+    `        ${sqlStr(s.summary)}, ${sqlBool(s.is_free)}, ${sqlTextArray(s.self_checks)}, ${sqlStr(s.intro)})`,
     'on conflict (skill_key) do update set',
     '  track = excluded.track,',
     '  order_no = excluded.order_no,',
     '  title = excluded.title,',
     '  summary = excluded.summary,',
     '  is_free = excluded.is_free,',
-    '  self_checks = excluded.self_checks;',
+    '  self_checks = excluded.self_checks,',
+    '  intro = excluded.intro;',
     ''
   )
 }

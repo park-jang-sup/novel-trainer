@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
-import { countChars, mergeForbidChecks, gradeLocal, pendingMorphChecks } from '@/lib/scoring'
+import { countChars, countSentences, mergeForbidChecks, gradeLocal, pendingMorphChecks } from '@/lib/scoring'
 import { nextProblemKey, stageProgress, type NavProblem } from '@/lib/train-nav'
 import type { Check, CheckStatus, CountInput, ProblemType, ScoringConfig } from '@/lib/scoring/types'
 import RuleGauge from './RuleGauge'
@@ -130,12 +130,15 @@ export default function TrainClient({
   problem,
   loop,
   selfChecks,
+  configSummary,
 }: {
   problem: PublicProblem
   loop: LoopProps
   // 이 단계의 자기점검 문구(stages.self_checks). 빈 배열이면 SelfCheck 가
   // '스스로 확인' 칸을 안 그리고 모범답안만 보여준다.
   selfChecks: string[]
+  // scoring_config 에서 파생한 한 줄 요약(page.tsx 가 만든다). '' 면 안 뜬다.
+  configSummary: string
 }) {
   const { publicConfig: cfg } = problem
 
@@ -310,6 +313,12 @@ export default function TrainClient({
             {displayedInstructionRest}
           </p>
         )}
+        {/* 조건 요약 한 줄 — scoring_config 파생(page.tsx). 상세는 오른쪽 패널. */}
+        {configSummary !== '' && (
+          <p className="font-mono text-sm" style={{ color: 'var(--ink-soft)' }}>
+            {configSummary}
+          </p>
+        )}
       </div>
 
       {problem.passage && problem.type !== 'fill' && (
@@ -350,14 +359,13 @@ export default function TrainClient({
             rows={cfg.minLines != null ? 16 : 7}
             disabled={submitting}
           />
-          {cfg.maxChars != null && (
-            <>
-              <RuleGauge count={countChars(text)} max={cfg.maxChars} />
-              <p className="text-right font-mono text-sm" style={{ color: 'var(--ink-soft)' }}>
-                {countChars(text)} / {cfg.maxChars}
-              </p>
-            </>
-          )}
+          {cfg.maxChars != null && <RuleGauge count={countChars(text)} max={cfg.maxChars} />}
+          {/* 문장 수 + 자수 — 모든 텍스트 입력 유형 공통(fill 은 칸마다 이미 있다).
+              maxChars 없는 문항은 상한 없이 현재 수만 보여준다. */}
+          <p className="text-right font-mono text-sm" style={{ color: 'var(--ink-soft)' }}>
+            {countSentences(text)}문장 · {countChars(text)}
+            {cfg.maxChars != null ? ` / ${cfg.maxChars}` : ''}자
+          </p>
         </div>
       )}
 

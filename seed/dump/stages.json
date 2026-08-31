@@ -8,7 +8,8 @@
     "skill_key": "reduce_adverb",
     "self_checks": [
       "부사가 하던 일을 동작이 하고 있는가"
-    ]
+    ],
+    "intro": "\"정말 힘껏 휘둘렀다\"는 말로 세게 친 것이고, \"머리 위로 들어 내리쳤다\"는 정말 세게 친 것입니다. 부사는 작가가 독자에게 '이렇게 느껴라'라고 시키는 말이고, 동작은 독자가 스스로 느끼게 만드는 말입니다. 여기서는 일부러 부사를 전부 막고 동작만으로 써 봅니다. 부사가 나쁜 게 아닙니다 — 언제 써도 되는지는 5단계에서 다룹니다."
   },
   {
     "title": "감정을 동작으로",
@@ -19,7 +20,8 @@
     "skill_key": "emotion_action",
     "self_checks": [
       "이 동작만 보고도 무슨 감정인지 남이 맞힐 수 있는가"
-    ]
+    ],
+    "intro": "\"흥부는 기뻤다\"라고 쓰면 독자는 정보를 받고, 흥부가 주먹으로 입을 막으면 독자는 기쁨을 목격합니다. 감정을 이름으로 부르지 말고, 그 감정이 몸에 시키는 일을 쓰는 훈련입니다. 잘 됐는지 확인하는 법은 하나 — 감정 단어 없이도 남이 그 감정을 맞힐 수 있으면 성공입니다."
   },
   {
     "title": "군더더기 빼기",
@@ -30,7 +32,8 @@
     "skill_key": "trim_padding",
     "self_checks": [
       "지운 문장 중에 이야기가 잃은 것이 있는가"
-    ]
+    ],
+    "intro": "웹소설 독자는 폰으로, 빠르게 읽습니다. 이야기가 멈추는 문장에서 손가락도 멈춥니다. 다섯 문장 중 사건이 움직이는 문장만 남기고, 장소·사물을 설명하는 문장은 지우는 훈련입니다. 다만 조심할 것 — 없어 보여도 뒤 문장의 이유가 되는 정보(깨진 독, 검은 자국)는 군더더기가 아닙니다. 지우고 나서 이야기가 그대로 서 있는지 확인하세요."
   },
   {
     "title": "반복 표현 제거",
@@ -39,7 +42,8 @@
     "summary": "같은 말이 겹치는 것을 알아챈다",
     "order_no": 4,
     "skill_key": "reduce_repeat",
-    "self_checks": []
+    "self_checks": [],
+    "intro": "같은 단어가 두 번 나오면 독자는 세 번째부터 그 단어만 보입니다. 조사만 바꾼 반복(제비를·제비는·제비가)도 반복입니다. 반복된 말을 지우거나 다른 말로 바꿔, 같은 뜻을 한 번만 말하는 훈련입니다. 문장을 통째로 지우는 게 아니라 겹친 말을 걷어내는 것입니다 — 3단계와 다릅니다."
   },
   {
     "title": "부사를 쓸 자리",
@@ -48,7 +52,8 @@
     "summary": "부사를 언제 써도 되는지 안다",
     "order_no": 5,
     "skill_key": "adverb_exception",
-    "self_checks": []
+    "self_checks": [],
+    "intro": "1단계에서 부사를 전부 막았지만, 부사는 죄가 없습니다. 동사가 연출을 하고 부사는 그 연출을 꾸미는 말 — 그게 부사의 정당한 직무입니다. 네 문제에서 부사가 제값을 하는 자리 하나를 고르는 훈련입니다."
   },
   {
     "title": "감각 묘사",
@@ -57,7 +62,8 @@
     "summary": "한 장면에서 두 가지 이상의 감각을 쓴다",
     "order_no": 6,
     "skill_key": "sensory",
-    "self_checks": []
+    "self_checks": [],
+    "intro": "초보의 묘사는 전부 눈입니다. 보였다, 어두웠다, 빛났다. 눈을 막으면 소리·촉감·냄새가 일하기 시작하고, 장면이 두 배로 깊어집니다. 여기서는 눈에 기대는 말을 전부 막습니다 — 목록이 깁니다. 쓰기 전에 한 번 보세요."
   },
   {
     "title": "문장 리듬",
@@ -66,7 +72,8 @@
     "summary": "문단을 끊어 읽는 속도를 만든다",
     "order_no": 7,
     "skill_key": "rhythm",
-    "self_checks": []
+    "self_checks": [],
+    "intro": "일반 소설은 문단 사이를 절대 뛰지 않지만, 웹소설은 많이 뜁니다. 가독성이 제일 중요한 장르라서입니다. 문장 하나에도 개행이 들어갑니다. 긴 덩어리를 끊어, 읽는 속도를 만드는 훈련입니다."
   },
   {
     "title": "대사와 독백",
@@ -75,7 +82,8 @@
     "summary": "대화 사이에 속마음을 끼워 넣는다",
     "order_no": 8,
     "skill_key": "dialogue_ratio",
-    "self_checks": []
+    "self_checks": [],
+    "intro": "웹소설은 설명·묘사보다 대화와 독백으로 굴러갑니다. 대사 사이에 속마음을 끼우면, 말과 생각이 다른 인물이 생깁니다 — 그게 입체입니다. 대화 세 마디 사이에 독백 하나를 끼워 넣는 훈련입니다."
   },
   {
     "title": "시점 고정",
@@ -84,7 +92,8 @@
     "summary": "한 인물의 눈에 보이는 것만 쓴다",
     "order_no": 9,
     "skill_key": "pov_lock",
-    "self_checks": []
+    "self_checks": [],
+    "intro": "1인칭 화자는 자기 등을 못 봅니다. \"몸이 붕 떠서 떨어지는 모습이 보였다\"는 유체이탈입니다. 한 인물의 눈에 보이는 것만 쓰는 훈련입니다. 화자가 볼 수 없는 것을 쓰는 순간, 독자는 그 인물에서 튕겨 나갑니다."
   },
   {
     "title": "동작에 이유 넣기",
@@ -96,7 +105,8 @@
     "self_checks": [
       "마지막에 채운 칸이 그 뒤 결정타 줄의 이유가 되는가",
       "채운 칸들이 앞뒤 고정 줄과 끊기지 않고 이어지는가"
-    ]
+    ],
+    "intro": "동작만 나열하면 합이 짜인 무술 시범이 되고, 동작 사이에 판단이 끼면 싸움이 됩니다. 고정된 동작 사이 빈칸에 '왜 그렇게 했는지'를 채우는 훈련입니다. 무엇을 했는지가 아니라, 무엇을 보고 그렇게 하기로 했는지를 씁니다."
   },
   {
     "title": "전투 서사화",
@@ -105,7 +115,8 @@
     "summary": "빌드업을 쌓고 마지막 한 줄로 승부를 가른다",
     "order_no": 12,
     "skill_key": "action_turn",
-    "self_checks": []
+    "self_checks": [],
+    "intro": ""
   },
   {
     "title": "절단신공",
@@ -114,7 +125,8 @@
     "summary": "마지막 줄이 다음을 부르게 한다",
     "order_no": 11,
     "skill_key": "cliffhanger",
-    "self_checks": []
+    "self_checks": [],
+    "intro": ""
   },
   {
     "title": "첫 문장 고르기",
@@ -123,7 +135,8 @@
     "summary": "어떤 첫 문장이 통하는지 안다",
     "order_no": 1,
     "skill_key": "start_choose",
-    "self_checks": []
+    "self_checks": [],
+    "intro": ""
   },
   {
     "title": "첫 문장 쓰기",
@@ -132,7 +145,8 @@
     "summary": "주인공의 감각에서 시작한다",
     "order_no": 2,
     "skill_key": "start_write",
-    "self_checks": []
+    "self_checks": [],
+    "intro": ""
   },
   {
     "title": "도입 잇기",
@@ -141,7 +155,8 @@
     "summary": "세 문장 안에 인물을 세운다",
     "order_no": 3,
     "skill_key": "start_extend",
-    "self_checks": []
+    "self_checks": [],
+    "intro": ""
   },
   {
     "title": "1화 축약",
@@ -150,7 +165,8 @@
     "summary": "1화의 요소를 손에 쥔다",
     "order_no": 4,
     "skill_key": "start_episode",
-    "self_checks": []
+    "self_checks": [],
+    "intro": ""
   },
   {
     "title": "결핍 부여",
@@ -159,7 +175,8 @@
     "summary": "완벽한 인물을 만들지 않는다",
     "order_no": 11,
     "skill_key": "lack",
-    "self_checks": []
+    "self_checks": [],
+    "intro": ""
   },
   {
     "title": "대비 캐릭터",
@@ -168,7 +185,8 @@
     "summary": "상반된 인물을 나란히 세운다",
     "order_no": 12,
     "skill_key": "contrast_char",
-    "self_checks": []
+    "self_checks": [],
+    "intro": ""
   },
   {
     "title": "호감 확보",
@@ -177,7 +195,8 @@
     "summary": "초반에 응원할 이유를 만든다",
     "order_no": 13,
     "skill_key": "likability",
-    "self_checks": []
+    "self_checks": [],
+    "intro": ""
   },
   {
     "title": "궤도 이탈 찾기",
@@ -186,7 +205,8 @@
     "summary": "장면 목적에 기여하지 않는 문장을 본다",
     "order_no": 14,
     "skill_key": "off_track",
-    "self_checks": []
+    "self_checks": [],
+    "intro": ""
   },
   {
     "title": "정보 비대칭",
@@ -195,7 +215,8 @@
     "summary": "답답함을 기대감으로 바꾼다",
     "order_no": 15,
     "skill_key": "info_gap",
-    "self_checks": []
+    "self_checks": [],
+    "intro": ""
   },
   {
     "title": "절단신공 심화",
@@ -204,7 +225,8 @@
     "summary": "끊기 전에 신호를 깐다",
     "order_no": 16,
     "skill_key": "cliffhanger_adv",
-    "self_checks": []
+    "self_checks": [],
+    "intro": ""
   },
   {
     "title": "역순 설계",
@@ -213,7 +235,8 @@
     "summary": "목표에서 거꾸로 조건을 세운다",
     "order_no": 17,
     "skill_key": "reverse_design",
-    "self_checks": []
+    "self_checks": [],
+    "intro": ""
   },
   {
     "title": "1화 훅",
@@ -222,7 +245,8 @@
     "summary": "다섯 줄 안에 세 요소를 넣는다",
     "order_no": 18,
     "skill_key": "first_hook",
-    "self_checks": []
+    "self_checks": [],
+    "intro": ""
   },
   {
     "title": "장르의 조어법",
@@ -231,7 +255,8 @@
     "summary": "장르마다 이름을 만드는 규칙이 있다",
     "order_no": 19,
     "skill_key": "genre_coinage",
-    "self_checks": []
+    "self_checks": [],
+    "intro": ""
   },
   {
     "title": "분량 역산",
@@ -240,6 +265,7 @@
     "summary": "분기점 수로 전체 분량을 가늠한다",
     "order_no": 20,
     "skill_key": "branch_estimate",
-    "self_checks": []
+    "self_checks": [],
+    "intro": ""
   }
 ]

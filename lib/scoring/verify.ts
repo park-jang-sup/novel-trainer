@@ -9,7 +9,7 @@
 
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import path from 'node:path'
-import { combine, countChars, countLetters, countSentences, deriveFillParts, fillMarkerMismatch, findForbidden, mergeForbidChecks, gradeLocal, pendingMorphChecks } from './index'
+import { combine, countChars, countLetters, countSentences, deriveFillParts, fillMarkerMismatch, findForbidden, mergeForbidChecks, gradeLocal, pendingMorphChecks, summarizeConfig } from './index'
 import { sqlStr, countRawNewlinesInStrings } from '../seed-sql'
 import { nextProblemKey, nextStageId, stageProgress } from '../train-nav'
 import type { Answer, Check, CheckStatus, MorphResult, Problem, ProblemType, ScoringConfig, ScoringMode } from './types'
@@ -2680,10 +2680,18 @@ console.log('\n[3단계 trim_padding: 모범답안 대조]')
   }
   t('물기: 상한을 옛 값으로 되돌리면 정직한 답 6건이 샌다', oldLeak === 6, `실제=${oldLeak}`)
 
-  // 지시문에 '새로 쓰지 말고, 원문에서 지우기만' 한 문장이 붙었다 (8건)
+  // 지시문 규격(세션 24): 공통부에 '남길 것 / 지울 것 / 문장째 지우기만'.
+  const COMMON = '이야기가 멈추는 문장을 지우고 다시 쓰시오. 남길 것: 인물이 무엇을 하는 문장(사건). 지울 것: 장소나 사물을 설명하는 문장, 몰라도 되는 정보. 새로 쓰지 말고, 원문에서 문장째 지우기만 하십시오.'
   for (const d of tp) {
-    t(`'${d.source_key}': 지시문에 '지우기만' 문장이 있다`,
-      d.instruction.includes('새로 쓰지 말고, 원문에서 지우기만 하십시오.'))
+    t(`'${d.source_key}': 지시문이 공통부로 시작한다`, d.instruction.startsWith(COMMON))
+    t(`'${d.source_key}': 지시문에 '문장째' 가 있다`, d.instruction.includes('문장째'))
+  }
+  // 문항별 조항 넷 · 공통부만 넷
+  const withClause = ['tp-axe-water', 'tp-heungbu-yard', 'tp-kongjwi-crack', 'tp-goblin-mark']
+  for (const d of tp) {
+    const extra = d.instruction.slice(COMMON.length).trim()
+    t(`'${d.source_key}': 조항 ${withClause.includes(d.source_key) ? '있음' : '없음(공통부만)'}`,
+      withClause.includes(d.source_key) ? extra.length > 0 : extra.length === 0, `"${extra}"`)
   }
 
   // update SQL 이 덤프와 갈리지 않았는지 (scoring_config jsonb · instruction 글자까지)
@@ -2959,7 +2967,8 @@ console.log('\n[자기점검 self_checks: 시드 ↔ 화면]')
   const seedSql = readFileSync(path.join(root, 'seed_data.sql'), 'utf8')
   t(
     'seed_data.sql stages insert 에 self_checks 열이 있다',
-    /insert into stages \(track, order_no, title, skill_key, summary, is_free, self_checks\)/.test(seedSql)
+    /insert into stages \([^)]*\bself_checks\b[^)]*\)/.test(seedSql) &&
+      /self_checks = excluded\.self_checks/.test(seedSql)
   )
   t(
     'seed_data.sql 에 reduce_adverb 자기점검 문구가 들어갔다',
@@ -2972,6 +2981,75 @@ console.log('\n[자기점검 self_checks: 시드 ↔ 화면]')
     'seed_schema.sql 에 stages.self_checks 컬럼 추가가 있다',
     /alter table stages add column if not exists self_checks text\[\]/.test(schemaSql)
   )
+}
+
+// ── 가르침 층: 도입문 · 조건 요약 · 문장 수 게이지 (세션 24) ─────────────
+console.log('\n[가르침 층: 도입문 · 조건 요약 · 게이지]')
+{
+  const root = path.join(__dirname, '..', '..')
+  const stagesDump = JSON.parse(
+    readFileSync(path.join(root, 'seed', 'dump', 'stages.json'), 'utf8').replace(/^﻿/, '')
+  ) as { skill_key: string; track: string; intro?: unknown }[]
+
+  // ── 가: 도입문 ──
+  t('모든 단계에 intro 문자열이 있다', stagesDump.every((s) => typeof s.intro === 'string'),
+    JSON.stringify(stagesDump.filter((s) => typeof s.intro !== 'string').map((s) => s.skill_key)))
+  const withIntro = stagesDump.filter((s) => (s.intro as string).length > 0)
+  t('도입문은 문장 트랙 10단계에만 있다',
+    withIntro.length === 10 && withIntro.every((s) => s.track === 'sentence'),
+    JSON.stringify(withIntro.map((s) => `${s.skill_key}:${s.track}`)))
+  t('구성·도입 트랙은 intro 가 빈 문자열',
+    stagesDump.filter((s) => s.track !== 'sentence').every((s) => s.intro === ''))
+  // 도입문 하나를 표본으로 — 실제 콘텐츠가 들어갔는지(빈칸/자리표시자 아님)
+  const raIntro = stagesDump.find((s) => s.skill_key === 'reduce_adverb')?.intro as string
+  t('reduce_adverb 도입문에 실제 콘텐츠', raIntro.includes('부사') && raIntro.length > 80)
+
+  const schemaSql = readFileSync(path.join(root, 'seed_schema.sql'), 'utf8')
+  t('seed_schema.sql 에 stages.intro 컬럼',
+    /alter table stages add column if not exists intro text not null default ''/.test(schemaSql))
+  const seedSql = readFileSync(path.join(root, 'seed_data.sql'), 'utf8')
+  t('seed_data.sql stages upsert 에 intro (insert + do update)',
+    /insert into stages \(track, order_no, title, skill_key, summary, is_free, self_checks, intro\)/.test(seedSql) &&
+      /intro = excluded\.intro;/.test(seedSql))
+  const stageListSrc = readFileSync(path.join(root, 'app', 'train', '[stageId]', 'page.tsx'), 'utf8')
+  t('단계 목록 페이지가 intro 를 읽고 요약 아래에 그린다',
+    /select\([^)]*intro/.test(stageListSrc) && /stage\.intro &&/.test(stageListSrc))
+
+  // ── 다: 조건 요약 (summarizeConfig) ──
+  t('요약: 3단계 config → 예시 문구 그대로',
+    summarizeConfig({ maxChars: 42, minVerbs: 3, maxRepeat: 2 }) ===
+      '42자 이하 · 움직이는 말 3개 이상 · 같은 말 반복 2회까지')
+  t('요약: 빈 config → 빈 문자열', summarizeConfig({}) === '')
+  t('요약: choice 재료(cards)만 있으면 빈 문자열', summarizeConfig({ cards: ['a', 'b'] }) === '')
+  t('요약: forbidLabel 이 있으면 범주로', summarizeConfig({ maxChars: 60, forbidLabel: '분노를 직접 말하는 표현' }) ===
+    '60자 이하 · 분노를 직접 말하는 표현 안 씀')
+  t('요약: forbidLabel 없이 forbidWords 만 → "쓰지 않을 말 있음"',
+    summarizeConfig({ forbidWords: ['화났'] }) === '쓰지 않을 말 있음')
+  // 모든 실 문항의 요약이 터지지 않고, 채점 임계값(숫자 배열)이 안 샌다
+  const allProblems = JSON.parse(
+    readFileSync(path.join(root, 'seed', 'dump', 'problems.json'), 'utf8').replace(/^﻿/, '')
+  ) as { source_key: string; scoring_config: ScoringConfig }[]
+  for (const p of allProblems) {
+    const s = summarizeConfig(p.scoring_config)
+    t(`요약 '${p.source_key}' 이 문자열이고 원시 배열이 안 샌다`,
+      typeof s === 'string' && !s.includes('[') && !s.includes('undefined'), `"${s}"`)
+  }
+  const pageSrc = readFileSync(
+    path.join(root, 'app', 'train', '[stageId]', '[sourceKey]', 'page.tsx'), 'utf8')
+  t('문항 page.tsx 가 summarizeConfig 로 configSummary 를 만들어 넘긴다',
+    /summarizeConfig\(cfg\)/.test(pageSrc) && /configSummary=\{configSummary\}/.test(pageSrc))
+  const trainSrc2 = readFileSync(path.join(root, 'components', 'train', 'TrainClient.tsx'), 'utf8')
+  t('TrainClient 가 configSummary 를 지시문 아래에 그린다',
+    /configSummary !== ''/.test(trainSrc2) && /configSummary: string/.test(trainSrc2))
+
+  // ── 라: 게이지에 문장 수 ──
+  t('서술형 게이지에 문장 수 + 자수 (모든 텍스트 유형)',
+    /countSentences\(text\)\}문장 · \{countChars\(text\)\}/.test(trainSrc2))
+  // RuleGauge 만 maxChars 로 게이트하고, 문장·자수 줄은 그 밖에서 늘 뜬다.
+  t('RuleGauge 는 maxChars 로 게이트 · 문장 수 줄은 게이트 밖',
+    /\{cfg\.maxChars != null && <RuleGauge count=\{countChars\(text\)\} max=\{cfg\.maxChars\} \/>\}/.test(trainSrc2) &&
+      /\}자\s*<\/p>/.test(trainSrc2) &&
+      /maxChars != null \? ` \/ \$\{cfg\.maxChars\}` : ''\}자/.test(trainSrc2))
 }
 
 // ── 채점 근거 하이라이트: fail 검사만 본문에 칠한다 (세션 20) ────────────

@@ -30,291 +30,317 @@ begin;
 update stages set order_no = order_no + 1000
  where skill_key in ('reduce_adverb', 'emotion_action', 'trim_padding', 'reduce_repeat', 'adverb_exception', 'sensory', 'rhythm', 'dialogue_ratio', 'pov_lock', 'action_reason', 'cliffhanger', 'action_turn', 'lack', 'contrast_char', 'likability', 'off_track', 'info_gap', 'cliffhanger_adv', 'reverse_design', 'first_hook', 'genre_coinage', 'branch_estimate', 'start_choose', 'start_write', 'start_extend', 'start_episode');
 
-insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks, intro)
 values ('sentence', 1, '부사 줄이기', 'reduce_adverb',
-        '꾸미는 말을 걷어내고 동작으로 대신한다', true, array['부사가 하던 일을 동작이 하고 있는가']::text[])
+        '꾸미는 말을 걷어내고 동작으로 대신한다', true, array['부사가 하던 일을 동작이 하고 있는가']::text[], '"정말 힘껏 휘둘렀다"는 말로 세게 친 것이고, "머리 위로 들어 내리쳤다"는 정말 세게 친 것입니다. 부사는 작가가 독자에게 ''이렇게 느껴라''라고 시키는 말이고, 동작은 독자가 스스로 느끼게 만드는 말입니다. 여기서는 일부러 부사를 전부 막고 동작만으로 써 봅니다. 부사가 나쁜 게 아닙니다 — 언제 써도 되는지는 5단계에서 다룹니다.')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
   is_free = excluded.is_free,
-  self_checks = excluded.self_checks;
+  self_checks = excluded.self_checks,
+  intro = excluded.intro;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks, intro)
 values ('sentence', 2, '감정을 동작으로', 'emotion_action',
-        '감정을 서술하지 않고 몸으로 드러낸다', true, array['이 동작만 보고도 무슨 감정인지 남이 맞힐 수 있는가']::text[])
+        '감정을 서술하지 않고 몸으로 드러낸다', true, array['이 동작만 보고도 무슨 감정인지 남이 맞힐 수 있는가']::text[], '"흥부는 기뻤다"라고 쓰면 독자는 정보를 받고, 흥부가 주먹으로 입을 막으면 독자는 기쁨을 목격합니다. 감정을 이름으로 부르지 말고, 그 감정이 몸에 시키는 일을 쓰는 훈련입니다. 잘 됐는지 확인하는 법은 하나 — 감정 단어 없이도 남이 그 감정을 맞힐 수 있으면 성공입니다.')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
   is_free = excluded.is_free,
-  self_checks = excluded.self_checks;
+  self_checks = excluded.self_checks,
+  intro = excluded.intro;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks, intro)
 values ('sentence', 3, '군더더기 빼기', 'trim_padding',
-        '없어도 되는 문장을 알아본다', true, array['지운 문장 중에 이야기가 잃은 것이 있는가']::text[])
+        '없어도 되는 문장을 알아본다', true, array['지운 문장 중에 이야기가 잃은 것이 있는가']::text[], '웹소설 독자는 폰으로, 빠르게 읽습니다. 이야기가 멈추는 문장에서 손가락도 멈춥니다. 다섯 문장 중 사건이 움직이는 문장만 남기고, 장소·사물을 설명하는 문장은 지우는 훈련입니다. 다만 조심할 것 — 없어 보여도 뒤 문장의 이유가 되는 정보(깨진 독, 검은 자국)는 군더더기가 아닙니다. 지우고 나서 이야기가 그대로 서 있는지 확인하세요.')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
   is_free = excluded.is_free,
-  self_checks = excluded.self_checks;
+  self_checks = excluded.self_checks,
+  intro = excluded.intro;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks, intro)
 values ('sentence', 4, '반복 표현 제거', 'reduce_repeat',
-        '같은 말이 겹치는 것을 알아챈다', true, array[]::text[])
+        '같은 말이 겹치는 것을 알아챈다', true, array[]::text[], '같은 단어가 두 번 나오면 독자는 세 번째부터 그 단어만 보입니다. 조사만 바꾼 반복(제비를·제비는·제비가)도 반복입니다. 반복된 말을 지우거나 다른 말로 바꿔, 같은 뜻을 한 번만 말하는 훈련입니다. 문장을 통째로 지우는 게 아니라 겹친 말을 걷어내는 것입니다 — 3단계와 다릅니다.')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
   is_free = excluded.is_free,
-  self_checks = excluded.self_checks;
+  self_checks = excluded.self_checks,
+  intro = excluded.intro;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks, intro)
 values ('sentence', 5, '부사를 쓸 자리', 'adverb_exception',
-        '부사를 언제 써도 되는지 안다', true, array[]::text[])
+        '부사를 언제 써도 되는지 안다', true, array[]::text[], '1단계에서 부사를 전부 막았지만, 부사는 죄가 없습니다. 동사가 연출을 하고 부사는 그 연출을 꾸미는 말 — 그게 부사의 정당한 직무입니다. 네 문제에서 부사가 제값을 하는 자리 하나를 고르는 훈련입니다.')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
   is_free = excluded.is_free,
-  self_checks = excluded.self_checks;
+  self_checks = excluded.self_checks,
+  intro = excluded.intro;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks, intro)
 values ('sentence', 6, '감각 묘사', 'sensory',
-        '한 장면에서 두 가지 이상의 감각을 쓴다', true, array[]::text[])
+        '한 장면에서 두 가지 이상의 감각을 쓴다', true, array[]::text[], '초보의 묘사는 전부 눈입니다. 보였다, 어두웠다, 빛났다. 눈을 막으면 소리·촉감·냄새가 일하기 시작하고, 장면이 두 배로 깊어집니다. 여기서는 눈에 기대는 말을 전부 막습니다 — 목록이 깁니다. 쓰기 전에 한 번 보세요.')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
   is_free = excluded.is_free,
-  self_checks = excluded.self_checks;
+  self_checks = excluded.self_checks,
+  intro = excluded.intro;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks, intro)
 values ('sentence', 7, '문장 리듬', 'rhythm',
-        '문단을 끊어 읽는 속도를 만든다', true, array[]::text[])
+        '문단을 끊어 읽는 속도를 만든다', true, array[]::text[], '일반 소설은 문단 사이를 절대 뛰지 않지만, 웹소설은 많이 뜁니다. 가독성이 제일 중요한 장르라서입니다. 문장 하나에도 개행이 들어갑니다. 긴 덩어리를 끊어, 읽는 속도를 만드는 훈련입니다.')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
   is_free = excluded.is_free,
-  self_checks = excluded.self_checks;
+  self_checks = excluded.self_checks,
+  intro = excluded.intro;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks, intro)
 values ('sentence', 8, '대사와 독백', 'dialogue_ratio',
-        '대화 사이에 속마음을 끼워 넣는다', true, array[]::text[])
+        '대화 사이에 속마음을 끼워 넣는다', true, array[]::text[], '웹소설은 설명·묘사보다 대화와 독백으로 굴러갑니다. 대사 사이에 속마음을 끼우면, 말과 생각이 다른 인물이 생깁니다 — 그게 입체입니다. 대화 세 마디 사이에 독백 하나를 끼워 넣는 훈련입니다.')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
   is_free = excluded.is_free,
-  self_checks = excluded.self_checks;
+  self_checks = excluded.self_checks,
+  intro = excluded.intro;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks, intro)
 values ('sentence', 9, '시점 고정', 'pov_lock',
-        '한 인물의 눈에 보이는 것만 쓴다', true, array[]::text[])
+        '한 인물의 눈에 보이는 것만 쓴다', true, array[]::text[], '1인칭 화자는 자기 등을 못 봅니다. "몸이 붕 떠서 떨어지는 모습이 보였다"는 유체이탈입니다. 한 인물의 눈에 보이는 것만 쓰는 훈련입니다. 화자가 볼 수 없는 것을 쓰는 순간, 독자는 그 인물에서 튕겨 나갑니다.')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
   is_free = excluded.is_free,
-  self_checks = excluded.self_checks;
+  self_checks = excluded.self_checks,
+  intro = excluded.intro;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks, intro)
 values ('sentence', 10, '동작에 이유 넣기', 'action_reason',
-        '동작 사이에 왜 그렇게 했는지를 끼운다', true, array['마지막에 채운 칸이 그 뒤 결정타 줄의 이유가 되는가', '채운 칸들이 앞뒤 고정 줄과 끊기지 않고 이어지는가']::text[])
+        '동작 사이에 왜 그렇게 했는지를 끼운다', true, array['마지막에 채운 칸이 그 뒤 결정타 줄의 이유가 되는가', '채운 칸들이 앞뒤 고정 줄과 끊기지 않고 이어지는가']::text[], '동작만 나열하면 합이 짜인 무술 시범이 되고, 동작 사이에 판단이 끼면 싸움이 됩니다. 고정된 동작 사이 빈칸에 ''왜 그렇게 했는지''를 채우는 훈련입니다. 무엇을 했는지가 아니라, 무엇을 보고 그렇게 하기로 했는지를 씁니다.')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
   is_free = excluded.is_free,
-  self_checks = excluded.self_checks;
+  self_checks = excluded.self_checks,
+  intro = excluded.intro;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks, intro)
 values ('sentence', 11, '절단신공', 'cliffhanger',
-        '마지막 줄이 다음을 부르게 한다', true, array[]::text[])
+        '마지막 줄이 다음을 부르게 한다', true, array[]::text[], '')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
   is_free = excluded.is_free,
-  self_checks = excluded.self_checks;
+  self_checks = excluded.self_checks,
+  intro = excluded.intro;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks, intro)
 values ('sentence', 12, '전투 서사화', 'action_turn',
-        '빌드업을 쌓고 마지막 한 줄로 승부를 가른다', true, array[]::text[])
+        '빌드업을 쌓고 마지막 한 줄로 승부를 가른다', true, array[]::text[], '')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
   is_free = excluded.is_free,
-  self_checks = excluded.self_checks;
+  self_checks = excluded.self_checks,
+  intro = excluded.intro;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks, intro)
 values ('structure', 11, '결핍 부여', 'lack',
-        '완벽한 인물을 만들지 않는다', false, array[]::text[])
+        '완벽한 인물을 만들지 않는다', false, array[]::text[], '')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
   is_free = excluded.is_free,
-  self_checks = excluded.self_checks;
+  self_checks = excluded.self_checks,
+  intro = excluded.intro;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks, intro)
 values ('structure', 12, '대비 캐릭터', 'contrast_char',
-        '상반된 인물을 나란히 세운다', false, array[]::text[])
+        '상반된 인물을 나란히 세운다', false, array[]::text[], '')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
   is_free = excluded.is_free,
-  self_checks = excluded.self_checks;
+  self_checks = excluded.self_checks,
+  intro = excluded.intro;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks, intro)
 values ('structure', 13, '호감 확보', 'likability',
-        '초반에 응원할 이유를 만든다', false, array[]::text[])
+        '초반에 응원할 이유를 만든다', false, array[]::text[], '')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
   is_free = excluded.is_free,
-  self_checks = excluded.self_checks;
+  self_checks = excluded.self_checks,
+  intro = excluded.intro;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks, intro)
 values ('structure', 14, '궤도 이탈 찾기', 'off_track',
-        '장면 목적에 기여하지 않는 문장을 본다', true, array[]::text[])
+        '장면 목적에 기여하지 않는 문장을 본다', true, array[]::text[], '')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
   is_free = excluded.is_free,
-  self_checks = excluded.self_checks;
+  self_checks = excluded.self_checks,
+  intro = excluded.intro;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks, intro)
 values ('structure', 15, '정보 비대칭', 'info_gap',
-        '답답함을 기대감으로 바꾼다', false, array[]::text[])
+        '답답함을 기대감으로 바꾼다', false, array[]::text[], '')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
   is_free = excluded.is_free,
-  self_checks = excluded.self_checks;
+  self_checks = excluded.self_checks,
+  intro = excluded.intro;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks, intro)
 values ('structure', 16, '절단신공 심화', 'cliffhanger_adv',
-        '끊기 전에 신호를 깐다', false, array[]::text[])
+        '끊기 전에 신호를 깐다', false, array[]::text[], '')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
   is_free = excluded.is_free,
-  self_checks = excluded.self_checks;
+  self_checks = excluded.self_checks,
+  intro = excluded.intro;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks, intro)
 values ('structure', 17, '역순 설계', 'reverse_design',
-        '목표에서 거꾸로 조건을 세운다', true, array[]::text[])
+        '목표에서 거꾸로 조건을 세운다', true, array[]::text[], '')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
   is_free = excluded.is_free,
-  self_checks = excluded.self_checks;
+  self_checks = excluded.self_checks,
+  intro = excluded.intro;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks, intro)
 values ('structure', 18, '1화 훅', 'first_hook',
-        '다섯 줄 안에 세 요소를 넣는다', false, array[]::text[])
+        '다섯 줄 안에 세 요소를 넣는다', false, array[]::text[], '')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
   is_free = excluded.is_free,
-  self_checks = excluded.self_checks;
+  self_checks = excluded.self_checks,
+  intro = excluded.intro;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks, intro)
 values ('structure', 19, '장르의 조어법', 'genre_coinage',
-        '장르마다 이름을 만드는 규칙이 있다', true, array[]::text[])
+        '장르마다 이름을 만드는 규칙이 있다', true, array[]::text[], '')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
   is_free = excluded.is_free,
-  self_checks = excluded.self_checks;
+  self_checks = excluded.self_checks,
+  intro = excluded.intro;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks, intro)
 values ('structure', 20, '분량 역산', 'branch_estimate',
-        '분기점 수로 전체 분량을 가늠한다', true, array[]::text[])
+        '분기점 수로 전체 분량을 가늠한다', true, array[]::text[], '')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
   is_free = excluded.is_free,
-  self_checks = excluded.self_checks;
+  self_checks = excluded.self_checks,
+  intro = excluded.intro;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks, intro)
 values ('start', 1, '첫 문장 고르기', 'start_choose',
-        '어떤 첫 문장이 통하는지 안다', true, array[]::text[])
+        '어떤 첫 문장이 통하는지 안다', true, array[]::text[], '')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
   is_free = excluded.is_free,
-  self_checks = excluded.self_checks;
+  self_checks = excluded.self_checks,
+  intro = excluded.intro;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks, intro)
 values ('start', 2, '첫 문장 쓰기', 'start_write',
-        '주인공의 감각에서 시작한다', true, array[]::text[])
+        '주인공의 감각에서 시작한다', true, array[]::text[], '')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
   is_free = excluded.is_free,
-  self_checks = excluded.self_checks;
+  self_checks = excluded.self_checks,
+  intro = excluded.intro;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks, intro)
 values ('start', 3, '도입 잇기', 'start_extend',
-        '세 문장 안에 인물을 세운다', true, array[]::text[])
+        '세 문장 안에 인물을 세운다', true, array[]::text[], '')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
   is_free = excluded.is_free,
-  self_checks = excluded.self_checks;
+  self_checks = excluded.self_checks,
+  intro = excluded.intro;
 
-insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks)
+insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks, intro)
 values ('start', 4, '1화 축약', 'start_episode',
-        '1화의 요소를 손에 쥔다', true, array[]::text[])
+        '1화의 요소를 손에 쥔다', true, array[]::text[], '')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
   title = excluded.title,
   summary = excluded.summary,
   is_free = excluded.is_free,
-  self_checks = excluded.self_checks;
+  self_checks = excluded.self_checks,
+  intro = excluded.intro;
 
 -- ── 문항 ────────────────────────────────────────────────────────────
 
@@ -492,7 +518,7 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'trim_padding'),
-  'remove', 'auto', '없어도 되는 문장을 지우고 다시 쓰시오. 나무꾼이 손을 넣는 동작까지 남길 것. 새로 쓰지 말고, 원문에서 지우기만 하십시오.',
+  'remove', 'auto', '이야기가 멈추는 문장을 지우고 다시 쓰시오. 남길 것: 인물이 무엇을 하는 문장(사건). 지울 것: 장소나 사물을 설명하는 문장, 몰라도 되는 정보. 새로 쓰지 말고, 원문에서 문장째 지우기만 하십시오. 나무꾼이 손을 넣는 동작까지 남길 것.',
   '나무꾼은 연못가에 앉았다. 연못은 산 아래의 깊은 물이었다. 그날은 바람 한 점 없이 잔잔했다. 도끼는 물속에 보이지 않았다. 그는 소매를 걷고 물에 손을 넣었다.', null, '{"maxChars":42,"minVerbs":3,"maxRepeat":2}'::jsonb,
   'folktale', 'fantasy', 'planned',
   1, 'tp-axe-water'
@@ -504,7 +530,7 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'trim_padding'),
-  'remove', 'auto', '없어도 되는 문장을 지우고 다시 쓰시오. 인물이 하는 동작은 하나도 빼지 말 것. 새로 쓰지 말고, 원문에서 지우기만 하십시오.',
+  'remove', 'auto', '이야기가 멈추는 문장을 지우고 다시 쓰시오. 남길 것: 인물이 무엇을 하는 문장(사건). 지울 것: 장소나 사물을 설명하는 문장, 몰라도 되는 정보. 새로 쓰지 말고, 원문에서 문장째 지우기만 하십시오. 인물이 하는 동작은 하나도 빼지 말 것.',
   '흥부는 마당에 나갔다. 마당은 좁고 흙바닥이라 늘 먼지투성이였다. 제비 한 마리가 떨어져 있었다. 제비는 봄의 새다. 흥부는 제비를 두 손으로 들어 올렸다.', null, '{"maxChars":41,"minVerbs":3,"maxRepeat":2}'::jsonb,
   'folktale', 'fantasy', 'planned',
   1, 'tp-heungbu-yard'
@@ -516,7 +542,7 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'trim_padding'),
-  'remove', 'auto', '없어도 되는 문장을 지우고 다시 쓰시오. 새로 쓰지 말고, 원문에서 지우기만 하십시오.',
+  'remove', 'auto', '이야기가 멈추는 문장을 지우고 다시 쓰시오. 남길 것: 인물이 무엇을 하는 문장(사건). 지울 것: 장소나 사물을 설명하는 문장, 몰라도 되는 정보. 새로 쓰지 말고, 원문에서 문장째 지우기만 하십시오.',
   '심청은 뱃전에 섰다. 그 배는 마을에서 가장 큰 배였다. 공양미 삼백 석이 이 배에 실려 있었다. 바다는 넓고 깊었다. 심청은 치마를 걷어쥐었다.', null, '{"maxChars":39,"minVerbs":3,"maxRepeat":2}'::jsonb,
   'folktale', 'modern', 'planned',
   1, 'tp-simcheong-rail'
@@ -528,7 +554,7 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'trim_padding'),
-  'remove', 'auto', '없어도 되는 문장을 지우고 다시 쓰시오. 새로 쓰지 말고, 원문에서 지우기만 하십시오.',
+  'remove', 'auto', '이야기가 멈추는 문장을 지우고 다시 쓰시오. 남길 것: 인물이 무엇을 하는 문장(사건). 지울 것: 장소나 사물을 설명하는 문장, 몰라도 되는 정보. 새로 쓰지 말고, 원문에서 문장째 지우기만 하십시오.',
   '견우는 강가에 나왔다. 강은 일 년 내내 소리 없이 그대로였다. 까치들이 하늘을 덮었다. 까치는 검고 흰, 아주 흔한 새다. 견우는 강물에 발을 담갔다.', null, '{"maxChars":35,"minVerbs":2,"maxRepeat":2}'::jsonb,
   'folktale', 'romance', 'planned',
   2, 'tp-gyeonu-river'
@@ -540,7 +566,7 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'trim_padding'),
-  'remove', 'auto', '없어도 되는 문장을 지우고 다시 쓰시오. 독의 상태와 콩쥐의 동작만 남길 것. 새로 쓰지 말고, 원문에서 지우기만 하십시오.',
+  'remove', 'auto', '이야기가 멈추는 문장을 지우고 다시 쓰시오. 남길 것: 인물이 무엇을 하는 문장(사건). 지울 것: 장소나 사물을 설명하는 문장, 몰라도 되는 정보. 새로 쓰지 말고, 원문에서 문장째 지우기만 하십시오. 독의 상태와 콩쥐의 동작만 남길 것.',
   '콩쥐는 독 앞에 앉았다. 독은 마당 한가운데의 커다란 물건이었다. 바닥에 금이 가 있었다. 금은 손가락 하나 굵기였다. 콩쥐는 손바닥으로 그 자리를 눌렀다.', null, '{"maxChars":38,"minVerbs":2,"maxRepeat":2}'::jsonb,
   'folktale', 'modern', 'planned',
   2, 'tp-kongjwi-crack'
@@ -552,7 +578,7 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'trim_padding'),
-  'remove', 'auto', '없어도 되는 문장을 지우고 다시 쓰시오. 새로 쓰지 말고, 원문에서 지우기만 하십시오.',
+  'remove', 'auto', '이야기가 멈추는 문장을 지우고 다시 쓰시오. 남길 것: 인물이 무엇을 하는 문장(사건). 지울 것: 장소나 사물을 설명하는 문장, 몰라도 되는 정보. 새로 쓰지 말고, 원문에서 문장째 지우기만 하십시오.',
   '토끼는 용궁 문 앞에 섰다. 용궁은 바다 밑의 깊은 곳이었다. 문지기가 창을 내렸다. 문지기의 창은 길고 무거웠다. 토끼는 웃으며 한 걸음 나섰다.', null, '{"maxChars":36,"minVerbs":3,"maxRepeat":2}'::jsonb,
   'folktale', 'martial', 'impulsive',
   2, 'tp-rabbit-gate'
@@ -564,7 +590,7 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'trim_padding'),
-  'remove', 'auto', '없어도 되는 문장을 지우고 다시 쓰시오. 새로 쓰지 말고, 원문에서 지우기만 하십시오.',
+  'remove', 'auto', '이야기가 멈추는 문장을 지우고 다시 쓰시오. 남길 것: 인물이 무엇을 하는 문장(사건). 지울 것: 장소나 사물을 설명하는 문장, 몰라도 되는 정보. 새로 쓰지 말고, 원문에서 문장째 지우기만 하십시오.',
   '오누이는 마루 밑에 숨었다. 그 집은 마을에서 가장 낡은 초가집이었다. 문밖에서 발소리가 났다. 문밖은 달도 없이 어두웠다. 오라비가 동생의 입을 막았다.', null, '{"maxChars":38,"minVerbs":2,"maxRepeat":2}'::jsonb,
   'folktale', 'fantasy', 'impulsive',
   2, 'tp-siblings-floor'
@@ -576,7 +602,7 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'trim_padding'),
-  'remove', 'auto', '없어도 되는 문장을 지우고 다시 쓰시오. 남는 문장은 세 개 이하로. 새로 쓰지 말고, 원문에서 지우기만 하십시오.',
+  'remove', 'auto', '이야기가 멈추는 문장을 지우고 다시 쓰시오. 남길 것: 인물이 무엇을 하는 문장(사건). 지울 것: 장소나 사물을 설명하는 문장, 몰라도 되는 정보. 새로 쓰지 말고, 원문에서 문장째 지우기만 하십시오. 남는 문장은 세 개 이하로.',
   '나무꾼은 방망이를 상 위에 올렸다. 상은 다리 하나가 짧은 낡은 것이었다. 집 안은 조용했다. 방망이에 검은 자국이 남아 있었다. 그는 그것을 다시 집어 들었다.', null, '{"maxChars":45,"minVerbs":3,"maxRepeat":2}'::jsonb,
   'folktale', 'fantasy', 'impulsive',
   3, 'tp-goblin-mark'

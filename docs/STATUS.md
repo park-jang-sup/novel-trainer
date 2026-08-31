@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 23 · 커밋 `5c0e801` 위
+마지막 갱신: 세션 24 · 커밋 `14e0a92` 위
 
 ---
 
@@ -14,6 +14,9 @@
 단계 26 · 문항 93 (fill 8 추가) · 화면이 붙은 유형 11단계분 (문장 1~11, 구성 14·17·19·20)
 문항 화면 스케일  제목 text-3xl · 원문 상자·입력(Editor·FillBody) text-lg(1.125rem) p-5 · Editor rows 7/16 ·
                 컨테이너 max-w-7xl(한 칸 max-w-3xl) · 두 칸 grid [minmax(0,1.4fr) minmax(22rem,1fr)] 왼쪽 우선
+가르침 층       단계 목록: 제목·요약 아래 도입문(stages.intro, 문장 트랙 10단계만) ·
+                문항 화면: 지시문 아래 조건 요약 한 줄(summarizeConfig — config 파생) ·
+                서술형 게이지 "N문장 · M / 상한자"(모든 텍스트 유형)
 학습자 흐름   로그인 → 단계 목록 → 문항 → 제출 → 통과/미달 → (모범답안 있는 문항 통과 시)
              모범답안+자기점검 → '다음 문항 →'(미달 '건너뛰기 →') → … → 다 통과면
              '단계 완료 N/N'+'다음 단계 →', 건너뛴 게 있으면 'N/M · 건너뛴 문항 k개'+첫 링크
@@ -58,6 +61,9 @@ fill 분량은 글자만 센다          countLetters — 한글·영문·숫자
 3단계류 자수 상한 = 필수+2       지우기 단계(trim_padding 등)의 maxChars 는 '필수 문장을 원문
                               그대로 남긴 정직한 답 자수 + 2'. 지우기가 고쳐쓰기를 강요하면
                               안 된다 — 세션 23 실사용 발견(정직한 40자 답이 상한 38 에 걸림)
+조건 요약은 손으로 안 적는다      문항 화면 지시문 아래 한 줄은 summarizeConfig(scoring_config)
+                              파생. 상세는 오른쪽 '무엇을 봅니다' 패널. 임계값 숫자는 코드가 학습자
+                              말로 옮긴다("42자 이하 · 움직이는 말 3개 이상 …")
 AI 는 피드백이지 심판이 아니다     위 재개 조건 전까지
 문서는 이 파일 하나              STATUS 를 덮어쓴다. 인수인계를 새로 안 쓴다
 fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀 때 뺀다
@@ -73,6 +79,28 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 
 ```
 1  빈 단계 채우기         도입 4단계 → 구성 빈 6단계 → 절단신공. 단계당 4~6. 기존 유형만
+```
+
+### 끝난 것 — 세션 24
+
+```
+문항 화면 가르침 층 — 실사용에서 나온 넷
+가  단계 도입문 — seed_schema stages.intro text not null default '' · stages.json 문장 트랙
+    10단계 본문(reduce_adverb~action_reason) · gen-seed upsert 에 intro(do update) ·
+    app/train/[stageId]/page.tsx 가 요약 아래에 그린다('' 면 안 뜸)
+나  3단계 지시문 규격 재작성 8건 — 공통부(남길 것: 사건 / 지울 것: 설명·잉여 / 문장째 지우기만)
+    + 문항별 조항(axe·heungbu·kongjwi·goblin 넷만). seed/update-trim-padding.sql 갱신.
+    verify: 공통부로 시작 · '문장째' 있음 · 조항 넷/공통부만 넷
+다  조건 요약 한 줄 — lib/scoring/summary.ts summarizeConfig(cfg) → "42자 이하 · 움직이는 말
+    3개 이상 · 같은 말 반복 2회까지". page.tsx 가 만들어 configSummary prop 으로, TrainClient 가
+    지시문 아래에. 임계값 숫자는 클라이언트로 안 감(요약 문자열만).
+라  서술형 게이지에 문장 수 — "N문장 · M / 상한자". RuleGauge 만 maxChars 게이트, 문장·자수
+    줄은 그 밖(상한 없는 문항도 뜸). fill 은 칸마다 이미 있음.
+verify [가르침 층] — intro 10단계·트랙 · seed_schema/seed_data · summarizeConfig 5케이스 +
+    실 문항 93건 안 터짐(원시 배열 안 샘) · 화면 배선
+  ★ DB 반영: seed_schema(intro 컬럼) → seed_data(intro upsert · do update) →
+    seed/update-trim-padding.sql(지시문) → seed_check
+  ★ 눈확인(박 님): 단계 목록에 도입문 · 3단계 새 지시문+요약 한 줄 · 게이지 문장 수
 ```
 
 ### 끝난 것 — 세션 22

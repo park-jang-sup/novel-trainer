@@ -32,7 +32,7 @@ export default async function TrainStagePage(props: PageProps<'/train/[stageId]'
 
   const { data: stage, error: stageError } = await supabase
     .from('stages')
-    .select('id, track, order_no, title, summary')
+    .select('id, track, order_no, title, summary, intro')
     .eq('id', stageId)
     .maybeSingle()
 
@@ -117,6 +117,16 @@ export default async function TrainStagePage(props: PageProps<'/train/[stageId]'
           </p>
         )}
       </div>
+
+      {/* 단계 도입문. 왜 이 훈련을 하는지. intro 가 '' 인 단계(구성·도입)는 안 뜬다. */}
+      {stage.intro && (
+        <p
+          className="leading-relaxed"
+          style={{ fontFamily: 'var(--font-display)', color: 'var(--ink)' }}
+        >
+          {stage.intro}
+        </p>
+      )}
 
       {problems && problems.length > 0 ? (
         <div>
