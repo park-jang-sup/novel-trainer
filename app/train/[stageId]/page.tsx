@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { fillSituation } from '@/lib/scoring'
+import CoachBubble from '@/components/train/CoachBubble'
 
 // order_no는 트랙마다 번호 구간이 달라 전역 번호가 성립하지 않는다.
 // structure는 11부터 시작하고 sentence도 11까지 있어 11번이 두 개다.
@@ -32,7 +33,7 @@ export default async function TrainStagePage(props: PageProps<'/train/[stageId]'
 
   const { data: stage, error: stageError } = await supabase
     .from('stages')
-    .select('id, track, order_no, title, summary, intro')
+    .select('id, track, order_no, title, summary, coach_intro')
     .eq('id', stageId)
     .maybeSingle()
 
@@ -118,15 +119,9 @@ export default async function TrainStagePage(props: PageProps<'/train/[stageId]'
         )}
       </div>
 
-      {/* 단계 도입문. 왜 이 훈련을 하는지. intro 가 '' 인 단계(구성·도입)는 안 뜬다. */}
-      {stage.intro && (
-        <p
-          className="leading-relaxed"
-          style={{ fontFamily: 'var(--font-display)', color: 'var(--ink)' }}
-        >
-          {stage.intro}
-        </p>
-      )}
+      {/* 코치 도입 말풍선. coach_intro 가 '' 인 단계(구성·도입)는 안 뜬다. */}
+      <CoachBubble text={stage.coach_intro ?? ''} />
+
 
       {problems && problems.length > 0 ? (
         <div>

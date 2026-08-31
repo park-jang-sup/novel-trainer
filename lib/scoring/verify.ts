@@ -2967,7 +2967,7 @@ console.log('\n[자기점검 self_checks: 시드 ↔ 화면]')
   const seedSql = readFileSync(path.join(root, 'seed_data.sql'), 'utf8')
   t(
     'seed_data.sql stages insert 에 self_checks 열이 있다',
-    /insert into stages \([^)]*\bself_checks\b[^)]*\)/.test(seedSql) &&
+    /\(track, order_no, title, skill_key, summary, is_free, self_checks,/.test(seedSql) &&
       /self_checks = excluded\.self_checks/.test(seedSql)
   )
   t(
@@ -2983,37 +2983,52 @@ console.log('\n[자기점검 self_checks: 시드 ↔ 화면]')
   )
 }
 
-// ── 가르침 층: 도입문 · 조건 요약 · 문장 수 게이지 (세션 24) ─────────────
-console.log('\n[가르침 층: 도입문 · 조건 요약 · 게이지]')
+// ── 가르침 층: 코치 말풍선 · 조건 요약 · 문장 수 게이지 (세션 24) ─────────
+console.log('\n[가르침 층: 코치 말풍선 · 조건 요약 · 게이지]')
 {
   const root = path.join(__dirname, '..', '..')
   const stagesDump = JSON.parse(
     readFileSync(path.join(root, 'seed', 'dump', 'stages.json'), 'utf8').replace(/^﻿/, '')
-  ) as { skill_key: string; track: string; intro?: unknown }[]
+  ) as { skill_key: string; track: string; intro?: unknown; coach_intro?: unknown; coach_line?: unknown }[]
 
-  // ── 가: 도입문 ──
-  t('모든 단계에 intro 문자열이 있다', stagesDump.every((s) => typeof s.intro === 'string'),
-    JSON.stringify(stagesDump.filter((s) => typeof s.intro !== 'string').map((s) => s.skill_key)))
-  const withIntro = stagesDump.filter((s) => (s.intro as string).length > 0)
-  t('도입문은 문장 트랙 10단계에만 있다',
-    withIntro.length === 10 && withIntro.every((s) => s.track === 'sentence'),
-    JSON.stringify(withIntro.map((s) => `${s.skill_key}:${s.track}`)))
-  t('구성·도입 트랙은 intro 가 빈 문자열',
-    stagesDump.filter((s) => s.track !== 'sentence').every((s) => s.intro === ''))
-  // 도입문 하나를 표본으로 — 실제 콘텐츠가 들어갔는지(빈칸/자리표시자 아님)
-  const raIntro = stagesDump.find((s) => s.skill_key === 'reduce_adverb')?.intro as string
-  t('reduce_adverb 도입문에 실제 콘텐츠', raIntro.includes('부사') && raIntro.length > 80)
+  // ── 가·나·라: 코치 캐릭터 ──
+  t('모든 단계에 coach_intro·coach_line 문자열', stagesDump.every(
+    (s) => typeof s.coach_intro === 'string' && typeof s.coach_line === 'string'))
+  const withCoach = stagesDump.filter((s) => (s.coach_intro as string).length > 0)
+  t('coach_intro 는 문장 트랙 10단계에만 있다',
+    withCoach.length === 10 && withCoach.every((s) => s.track === 'sentence'),
+    JSON.stringify(withCoach.map((s) => `${s.skill_key}:${s.track}`)))
+  t('coach_line 도 같은 10단계에만',
+    stagesDump.filter((s) => (s.coach_line as string).length > 0).length === 10 &&
+      stagesDump.every((s) => (s.coach_intro as string).length > 0 === ((s.coach_line as string).length > 0)))
+  t('다른 트랙은 coach_intro·coach_line 이 빈 문자열',
+    stagesDump.filter((s) => s.track !== 'sentence').every(
+      (s) => s.coach_intro === '' && s.coach_line === ''))
+  // 레거시 intro 는 전부 '' — 화면이 안 쓴다
+  t('stages.json 의 intro 는 전부 빈 문자열(레거시)',
+    stagesDump.every((s) => s.intro === ''))
+  const raCoach = stagesDump.find((s) => s.skill_key === 'reduce_adverb')!
+  t('reduce_adverb 코치 대사에 실제 콘텐츠',
+    (raCoach.coach_intro as string).includes('부사') && (raCoach.coach_intro as string).length > 60 &&
+      (raCoach.coach_line as string).length > 5)
 
   const schemaSql = readFileSync(path.join(root, 'seed_schema.sql'), 'utf8')
-  t('seed_schema.sql 에 stages.intro 컬럼',
-    /alter table stages add column if not exists intro text not null default ''/.test(schemaSql))
+  t('seed_schema.sql 에 stages.coach_intro·coach_line 컬럼',
+    /alter table stages add column if not exists coach_intro text not null default ''/.test(schemaSql) &&
+      /alter table stages add column if not exists coach_line\s+text not null default ''/.test(schemaSql))
   const seedSql = readFileSync(path.join(root, 'seed_data.sql'), 'utf8')
-  t('seed_data.sql stages upsert 에 intro (insert + do update)',
-    /insert into stages \(track, order_no, title, skill_key, summary, is_free, self_checks, intro\)/.test(seedSql) &&
-      /intro = excluded\.intro;/.test(seedSql))
+  t('seed_data.sql stages upsert 에 coach_intro·coach_line (insert + do update)',
+    /insert into stages\s*\n\s*\([^)]*coach_intro, coach_line\)/.test(seedSql) &&
+      /coach_intro = excluded\.coach_intro,/.test(seedSql) &&
+      /coach_line = excluded\.coach_line;/.test(seedSql))
+
+  const bubbleSrc = readFileSync(path.join(root, 'components', 'train', 'CoachBubble.tsx'), 'utf8')
+  t('CoachBubble 이 빈 문자열이면 렌더 안 함', /if \(!text\) return null/.test(bubbleSrc))
+  t('CoachBubble 에 ✒️ + 말풍선 카드(꼬리)', /✒️/.test(bubbleSrc) && /borderRight: '8px solid/.test(bubbleSrc))
+
   const stageListSrc = readFileSync(path.join(root, 'app', 'train', '[stageId]', 'page.tsx'), 'utf8')
-  t('단계 목록 페이지가 intro 를 읽고 요약 아래에 그린다',
-    /select\([^)]*intro/.test(stageListSrc) && /stage\.intro &&/.test(stageListSrc))
+  t('단계 목록 페이지가 coach_intro 를 읽고 요약 아래 CoachBubble 로 그린다',
+    /select\([^)]*coach_intro/.test(stageListSrc) && /<CoachBubble text=\{stage\.coach_intro/.test(stageListSrc))
 
   // ── 다: 조건 요약 (summarizeConfig) ──
   t('요약: 3단계 config → 예시 문구 그대로',
@@ -3038,9 +3053,14 @@ console.log('\n[가르침 층: 도입문 · 조건 요약 · 게이지]')
     path.join(root, 'app', 'train', '[stageId]', '[sourceKey]', 'page.tsx'), 'utf8')
   t('문항 page.tsx 가 summarizeConfig 로 configSummary 를 만들어 넘긴다',
     /summarizeConfig\(cfg\)/.test(pageSrc) && /configSummary=\{configSummary\}/.test(pageSrc))
+  t('문항 page.tsx 가 이 단계의 coach_line 을 읽어 넘긴다',
+    /select\([^)]*coach_line/.test(pageSrc) && /coachLine=\{coachLine\}/.test(pageSrc))
   const trainSrc2 = readFileSync(path.join(root, 'components', 'train', 'TrainClient.tsx'), 'utf8')
   t('TrainClient 가 configSummary 를 지시문 아래에 그린다',
     /configSummary !== ''/.test(trainSrc2) && /configSummary: string/.test(trainSrc2))
+  t('TrainClient 가 지시문 위에 CoachBubble(coachLine) 을 그린다',
+    /<CoachBubble text=\{coachLine\} \/>/.test(trainSrc2) &&
+      trainSrc2.indexOf('<CoachBubble') < trainSrc2.indexOf('{instructionFirst}'))
 
   // ── 라: 게이지에 문장 수 ──
   t('서술형 게이지에 문장 수 + 자수 (모든 텍스트 유형)',

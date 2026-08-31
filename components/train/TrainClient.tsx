@@ -11,6 +11,7 @@ import Editor from './Editor'
 import FillBody from './FillBody'
 import SelfCheck from './SelfCheck'
 import RuleText from './RuleText'
+import CoachBubble from './CoachBubble'
 import type { FillBlank } from './FillBlank'
 
 interface PublicConfig {
@@ -131,6 +132,7 @@ export default function TrainClient({
   loop,
   selfChecks,
   configSummary,
+  coachLine,
 }: {
   problem: PublicProblem
   loop: LoopProps
@@ -139,6 +141,8 @@ export default function TrainClient({
   selfChecks: string[]
   // scoring_config 에서 파생한 한 줄 요약(page.tsx 가 만든다). '' 면 안 뜬다.
   configSummary: string
+  // 코치 한 줄(stages.coach_line). '' 면 말풍선이 안 뜬다.
+  coachLine: string
 }) {
   const { publicConfig: cfg } = problem
 
@@ -295,6 +299,9 @@ export default function TrainClient({
 
   const leftContent = (
     <>
+      {/* 코치 말풍선 — 지시문 위. coach_line 이 '' 인 단계는 안 뜬다. */}
+      <CoachBubble text={coachLine} />
+
       <div className="space-y-2">
         <p className="font-mono text-sm" style={{ color: 'var(--ink-soft)' }}>
           {problem.type}

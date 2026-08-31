@@ -106,9 +106,15 @@ alter table stages enable row level security;
 -- 안 뜨고 모범답안만 보인다. 값은 seed/dump/stages.json 이 단일 출처다.
 alter table stages add column if not exists self_checks text[] not null default '{}';
 
--- 단계 도입문. 단계 목록 페이지의 제목·요약 아래에 뜬다(왜 이 훈련을 하는지).
--- 문장 트랙 10단계만 채우고 나머지는 '' — '' 면 아무것도 안 뜬다.
+-- 단계 도입문. (레거시) intro 는 남기되 화면은 이제 coach_* 를 쓴다 — stages.json
+-- 에서 intro 값은 전부 '' 다.
 alter table stages add column if not exists intro text not null default '';
+
+-- 코치 캐릭터(먹물이 ✒️) 말풍선. coach_intro 는 단계 목록의 제목·요약 아래,
+-- coach_line 은 문항 화면 지시문 위. 문장 트랙 10단계만 채우고 나머지는 ''
+-- ('' 면 말풍선이 안 뜬다).
+alter table stages add column if not exists coach_intro text not null default '';
+alter table stages add column if not exists coach_line  text not null default '';
 
 drop policy if exists "authed read stages" on stages;
 create policy "authed read stages" on stages

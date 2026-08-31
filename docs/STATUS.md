@@ -14,9 +14,11 @@
 단계 26 · 문항 93 (fill 8 추가) · 화면이 붙은 유형 11단계분 (문장 1~11, 구성 14·17·19·20)
 문항 화면 스케일  제목 text-3xl · 원문 상자·입력(Editor·FillBody) text-lg(1.125rem) p-5 · Editor rows 7/16 ·
                 컨테이너 max-w-7xl(한 칸 max-w-3xl) · 두 칸 grid [minmax(0,1.4fr) minmax(22rem,1fr)] 왼쪽 우선
-가르침 층       단계 목록: 제목·요약 아래 도입문(stages.intro, 문장 트랙 10단계만) ·
-                문항 화면: 지시문 아래 조건 요약 한 줄(summarizeConfig — config 파생) ·
+가르침 층       코치 캐릭터 먹물이 ✒️ 말풍선(CoachBubble) — 단계 목록: 제목·요약 아래 coach_intro ·
+                문항 화면: 지시문 위 coach_line (둘 다 stages, 문장 트랙 10단계만, '' 면 안 뜸) ·
+                지시문 아래 조건 요약 한 줄(summarizeConfig — config 파생) ·
                 서술형 게이지 "N문장 · M / 상한자"(모든 텍스트 유형)
+                ★ 레거시 stages.intro 컬럼은 남아 있으나 값 전부 '' · 화면은 coach_* 만 씀
 학습자 흐름   로그인 → 단계 목록 → 문항 → 제출 → 통과/미달 → (모범답안 있는 문항 통과 시)
              모범답안+자기점검 → '다음 문항 →'(미달 '건너뛰기 →') → … → 다 통과면
              '단계 완료 N/N'+'다음 단계 →', 건너뛴 게 있으면 'N/M · 건너뛴 문항 k개'+첫 링크
@@ -84,10 +86,12 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 ### 끝난 것 — 세션 24
 
 ```
-문항 화면 가르침 층 — 실사용에서 나온 넷
-가  단계 도입문 — seed_schema stages.intro text not null default '' · stages.json 문장 트랙
-    10단계 본문(reduce_adverb~action_reason) · gen-seed upsert 에 intro(do update) ·
-    app/train/[stageId]/page.tsx 가 요약 아래에 그린다('' 면 안 뜸)
+문항 화면 가르침 층 — 실사용에서 나온 넷 (+ 코치 캐릭터)
+가  코치 캐릭터 먹물이 ✒️ — seed_schema stages.coach_intro·coach_line (text not null default '').
+    레거시 intro 컬럼은 남기되 stages.json 값 전부 ''. stages.json 문장 트랙 10단계 coach_intro
+    (반말 코치 톤)·coach_line(한 줄 구호). gen-seed upsert(do update). 컴포넌트 CoachBubble
+    (✒️ + 말풍선 카드 + 왼쪽 꼬리, text '' 면 null). 단계 목록: 요약 아래 coach_intro ·
+    문항 화면: 지시문 위 coach_line
 나  3단계 지시문 규격 재작성 8건 — 공통부(남길 것: 사건 / 지울 것: 설명·잉여 / 문장째 지우기만)
     + 문항별 조항(axe·heungbu·kongjwi·goblin 넷만). seed/update-trim-padding.sql 갱신.
     verify: 공통부로 시작 · '문장째' 있음 · 조항 넷/공통부만 넷
@@ -96,11 +100,12 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
     지시문 아래에. 임계값 숫자는 클라이언트로 안 감(요약 문자열만).
 라  서술형 게이지에 문장 수 — "N문장 · M / 상한자". RuleGauge 만 maxChars 게이트, 문장·자수
     줄은 그 밖(상한 없는 문항도 뜸). fill 은 칸마다 이미 있음.
-verify [가르침 층] — intro 10단계·트랙 · seed_schema/seed_data · summarizeConfig 5케이스 +
-    실 문항 93건 안 터짐(원시 배열 안 샘) · 화면 배선
-  ★ DB 반영: seed_schema(intro 컬럼) → seed_data(intro upsert · do update) →
-    seed/update-trim-padding.sql(지시문) → seed_check
-  ★ 눈확인(박 님): 단계 목록에 도입문 · 3단계 새 지시문+요약 한 줄 · 게이지 문장 수
+verify [가르침 층] — coach_intro·coach_line 10단계·트랙 · intro 전부 '' · CoachBubble null 조건 ·
+    seed_schema/seed_data · summarizeConfig 5케이스 + 실 문항 93건 안 터짐 · 화면 배선
+  ★ DB 반영: seed_schema(coach_intro·coach_line 컬럼) → seed_data(coach upsert · do update) →
+    seed/update-trim-padding.sql(3단계 지시문) → seed_check
+  ★ 눈확인(박 님): /train/3 목록의 말풍선 · 문항 화면 지시문 위 코치 한 줄 ·
+    3단계 새 지시문+요약 한 줄 · 게이지 문장 수
 ```
 
 ### 끝난 것 — 세션 22

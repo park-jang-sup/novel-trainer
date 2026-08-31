@@ -93,14 +93,14 @@ export default async function TrainProblemPage(
     await Promise.all([
       supabase.from('problems').select('id, source_key, difficulty, stage_id').not('is_active', 'is', false),
       supabase.from('submissions').select('problem_id').eq('passed', true),
-      supabase.from('stages').select('id, track, order_no, self_checks'),
+      supabase.from('stages').select('id, track, order_no, self_checks, coach_line'),
     ])
 
+  const currentStage = (allStages ?? []).find((s) => String(s.id) === actualStageId)
   // 이 단계의 자기점검 문구. 빈 배열이면 화면에 자기점검 칸이 안 뜬다.
-  const selfChecks =
-    ((allStages ?? []).find((s) => String(s.id) === actualStageId)?.self_checks as
-      | string[]
-      | null) ?? []
+  const selfChecks = (currentStage?.self_checks as string[] | null) ?? []
+  // 코치 한 줄. '' 인 단계(구성·도입)는 말풍선이 안 뜬다.
+  const coachLine = (currentStage?.coach_line as string | null) ?? ''
 
   const stageProblems = (activeProblems ?? [])
     .filter((p) => String(p.stage_id) === actualStageId)
@@ -144,6 +144,7 @@ export default async function TrainProblemPage(
         loop={loop}
         selfChecks={selfChecks}
         configSummary={configSummary}
+        coachLine={coachLine}
       />
     </>
   )

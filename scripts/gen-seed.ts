@@ -31,8 +31,12 @@ interface DumpStage {
   // stage2 자기점검 문구(재설계안 11-2). 단계마다 다르다 — reduce_adverb 는
   // 한 줄, action_reason 은 두 줄, 나머지는 빈 배열(자기점검 칸이 안 뜬다).
   self_checks: string[]
-  // 단계 도입문. 단계 목록 페이지 제목·요약 아래에 뜬다. '' 면 안 뜬다.
+  // 단계 도입문. (레거시) 남기되 값은 전부 '' — 화면은 coach_* 를 쓴다.
   intro: string
+  // 코치 캐릭터 말풍선. coach_intro 는 단계 목록, coach_line 은 문항 화면.
+  // 문장 트랙 10단계만 채우고 나머지는 ''.
+  coach_intro: string
+  coach_line: string
 }
 
 interface DumpProblem {
@@ -239,9 +243,11 @@ out.push(
 
 for (const s of stagesSorted) {
   out.push(
-    'insert into stages (track, order_no, title, skill_key, summary, is_free, self_checks, intro)',
+    'insert into stages',
+    '  (track, order_no, title, skill_key, summary, is_free, self_checks, intro, coach_intro, coach_line)',
     `values (${sqlStr(s.track)}, ${sqlInt(s.order_no)}, ${sqlStr(s.title)}, ${sqlStr(s.skill_key)},`,
-    `        ${sqlStr(s.summary)}, ${sqlBool(s.is_free)}, ${sqlTextArray(s.self_checks)}, ${sqlStr(s.intro)})`,
+    `        ${sqlStr(s.summary)}, ${sqlBool(s.is_free)}, ${sqlTextArray(s.self_checks)}, ${sqlStr(s.intro)},`,
+    `        ${sqlStr(s.coach_intro)}, ${sqlStr(s.coach_line)})`,
     'on conflict (skill_key) do update set',
     '  track = excluded.track,',
     '  order_no = excluded.order_no,',
@@ -249,7 +255,9 @@ for (const s of stagesSorted) {
     '  summary = excluded.summary,',
     '  is_free = excluded.is_free,',
     '  self_checks = excluded.self_checks,',
-    '  intro = excluded.intro;',
+    '  intro = excluded.intro,',
+    '  coach_intro = excluded.coach_intro,',
+    '  coach_line = excluded.coach_line;',
     ''
   )
 }
