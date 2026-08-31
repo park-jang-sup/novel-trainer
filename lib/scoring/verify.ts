@@ -2593,6 +2593,149 @@ console.log('\n[2단계 emotion_action: 모범답안 대조]')
   pushRefMorphCheck('2단계', refs, 'convert', cfgOf)
 }
 
+// ── '쓰지 않을 말' 표시: forbidLabel/forbidDisplay ↔ 채점 (세션 22) ──────
+//
+// scoring_config 에 표시 전용 필드 둘을 더했다. 채점(forbidWords·forbidLemmas)은
+// 안 건드린다 — 화면의 규칙 줄이 긴 목록 대신 범주 한 줄 + '예: …'(펼치면 전체)로
+// 보이게만 한다. 2단계 emotion_action 6 + 6단계 sensory 8 에 채웠다.
+//
+// ★ forbidDisplay 의 기본형마다 대응 어간이 forbidWords/forbidLemmas 에 실재해야
+//   한다. 표시와 채점이 갈리면(학습자에게 안 잡히는 말을 예로 보여주면) 여기서 문다.
+console.log('\n[쓰지 않을 말 표시: forbidLabel/forbidDisplay ↔ 채점]')
+{
+  interface FwProblem {
+    source_key: string
+    skill_key: string
+    type: string
+    scoring_config: ScoringConfig
+  }
+  const root = path.join(__dirname, '..', '..')
+  const readDump = <T,>(f: string): T =>
+    JSON.parse(readFileSync(path.join(root, 'seed', 'dump', f), 'utf8').replace(/^﻿/, '')) as T
+
+  // 표시(기본형) → 어간. 'X다' 면 '다'를 뗀다(보다→보, 화나다→화나). 그 밖엔 그대로.
+  const stemOf = (display: string) => (display.endsWith('다') ? display.slice(0, -1) : display)
+  // 표시 기본형이 채점 목록에 실재하는가. forbidWords 는 활용 어간('화났'),
+  // forbidLemmas 는 '보/VV' 라 표제어만 뗀다. 자모 분해(NFD)해서 한쪽이 다른
+  // 쪽을 품으면 대응으로 본다 — '화나'(ㅎㅘㄴㅏ)는 '화났'(ㅎㅘㄴㅏㅆ)의 앞이고,
+  // '낯뜨거'는 '낯뜨겁'의 앞이다(ㅂ 불규칙·시제 어미를 이렇게 흡수한다).
+  const nfd = (s: string) => s.normalize('NFD')
+  const isScored = (display: string, fw: string[], fl: string[]) => {
+    const stem = nfd(stemOf(display))
+    const overlaps = (target: string) => {
+      const a = nfd(target)
+      return a.includes(stem) || stem.includes(a)
+    }
+    return fw.some(overlaps) || fl.some((l) => overlaps(l.split('/')[0]))
+  }
+
+  const withDisplay = readDump<FwProblem[]>('problems.json').filter(
+    (d) => d.scoring_config.forbidLabel !== undefined
+  )
+  t('덤프에 forbidLabel 을 채운 문항 14', withDisplay.length === 14, `실제=${withDisplay.length}`)
+  t(
+    '전부 emotion_action 6 + sensory 8',
+    withDisplay.filter((d) => d.skill_key === 'emotion_action').length === 6 &&
+      withDisplay.filter((d) => d.skill_key === 'sensory').length === 8
+  )
+
+  for (const d of withDisplay) {
+    const cfg = d.scoring_config
+    const label = cfg.forbidLabel!
+    const display = cfg.forbidDisplay ?? []
+    const fw = cfg.forbidWords ?? []
+    const fl = cfg.forbidLemmas ?? []
+    t(`'${d.source_key}': forbidLabel 이 한 줄이고 '기계' 얘기가 없다`,
+      label.length > 0 && label.length < 40 && !/기계|자동|채점기|규칙 검사|서버/.test(label), `"${label}"`)
+    t(`'${d.source_key}': forbidDisplay 가 2개 이상`, display.length >= 2, `${display.length}`)
+    for (const e of display) {
+      t(`'${d.source_key}': 표시 '${e}' 가 채점 목록(forbidWords/forbidLemmas)에 실재`,
+        isScored(e, fw, fl), `어간="${stemOf(e)}"`)
+    }
+  }
+
+  // 물기: 채점에 없는 말을 표시에 넣으면 잡힌다. dragon-king-anger 의 목록에는
+  // '억울'이 없다 — 넣어 보면 isScored 가 false 여야 한다(그래서 검사가 문다).
+  {
+    const anger = withDisplay.find((d) => d.source_key === 'dragon-king-anger')!
+    const fw = anger.scoring_config.forbidWords ?? []
+    const fl = anger.scoring_config.forbidLemmas ?? []
+    t('물기: 채점에 없는 "억울하다"는 실재로 안 잡힌다',
+      isScored('억울하다', fw, fl) === false)
+    t('물기: 실제 목록의 "화나다"는 잡힌다', isScored('화나다', fw, fl) === true)
+  }
+
+  // 규칙 없는 문항은 안 깨진다 — forbidWords 만 있고 forbidLabel 없는 문항의
+  // 검사는 rule 이 '쓰지 않음: …' 그대로여야 한다(예: 8단계 fill 의 대괄호).
+  {
+    const plain: Problem = {
+      id: 'x', type: 'convert', scoring_mode: 'auto',
+      scoring_config: { forbidWords: ['가나다'] },
+    }
+    const r = combine(plain, { text: '무해한 문장.' }, undefined, emptyMorph())
+    const fwCheck = r.checks.find((c) => c.key === 'forbidWords')!
+    t('forbidLabel 없으면 rule 이 "쓰지 않음: …" 그대로', fwCheck.rule === '쓰지 않음: 가나다')
+    t('forbidLabel 없으면 examples 가 없다', fwCheck.examples === undefined)
+  }
+
+  // 있는 문항: combine 이 rule=forbidLabel, examples=forbidDisplay 로 낸다
+  {
+    const anger = withDisplay.find((d) => d.source_key === 'dragon-king-anger')!
+    const prob: Problem = {
+      id: anger.source_key, type: 'convert', scoring_mode: 'auto',
+      scoring_config: anger.scoring_config,
+    }
+    const r = combine(prob, { text: '용왕이 옥좌를 내리쳤다.' }, undefined, emptyMorph({ verbs: ['내리치'] }))
+    const fwCheck = r.checks.find((c) => c.key === 'forbidWords')!
+    t('forbidLabel 있으면 rule 이 범주 한 줄', fwCheck.rule === '분노를 직접 말하는 표현')
+    t('forbidLabel 있으면 examples 가 forbidDisplay',
+      JSON.stringify(fwCheck.examples) === JSON.stringify(anger.scoring_config.forbidDisplay))
+  }
+
+  // sensory: forbidWords + forbidLemmas 를 mergeForbidChecks 가 한 줄로 합치는데,
+  // forbidDisplay 가 있으면 합친 목록 대신 범주 한 줄 + examples 를 유지해야 한다.
+  {
+    const sn = withDisplay.find((d) => d.skill_key === 'sensory')!
+    const prob: Problem = {
+      id: sn.source_key, type: 'convert', scoring_mode: 'auto',
+      scoring_config: sn.scoring_config,
+    }
+    const r = combine(prob, { text: '손끝이 진흙을 훑었다.' }, undefined,
+      emptyMorph({ verbs: ['훑'], lemmas: [] }))
+    const merged = mergeForbidChecks(r.checks).find((c) => c.key === 'forbidWords')!
+    t('sensory 병합본 rule 이 범주 한 줄', merged.rule === '눈에 기대는 표현')
+    t('sensory 병합본에 examples 가 남는다',
+      JSON.stringify(merged.examples) === JSON.stringify(sn.scoring_config.forbidDisplay))
+    t('sensory 병합본에 forbidLemmas 표제어 나열이 안 샌다', !merged.rule.includes('바라보'))
+  }
+
+  // update SQL 이 덤프와 갈리지 않았는지 (scoring_config 를 jsonb 로 비교)
+  {
+    const updSql = readFileSync(path.join(root, 'seed', 'update-forbid-display.sql'), 'utf8')
+    const rows = [...updSql.matchAll(
+      /update problems set scoring_config = '(.+?)'::jsonb\s*\n\s*where source_key = '([^']*)';/g
+    )].map((m) => ({ cfg: JSON.parse(m[1]) as Record<string, unknown>, source_key: m[2] }))
+    t('update SQL 에 14행이 있다', rows.length === 14, `실제=${rows.length}`)
+    const canon = (o: unknown) => JSON.stringify(o, Object.keys(o as object).sort())
+    for (const d of withDisplay) {
+      const row = rows.find((r) => r.source_key === d.source_key)
+      t(`update SQL '${d.source_key}' 의 scoring_config 가 덤프와 같다`,
+        !!row && canon(row.cfg) === canon(d.scoring_config),
+        `SQL=${JSON.stringify(row?.cfg)}`)
+    }
+  }
+
+  // 화면 배선 — 사본 없이 RuleText 를 쓴다
+  const ruleTextSrc = readFileSync(path.join(root, 'components', 'train', 'RuleText.tsx'), 'utf8')
+  t('RuleText 가 examples 를 접었다 폈다 한다', /예:/.test(ruleTextSrc) && /더 보기|접기/.test(ruleTextSrc))
+  const checkRowSrc = readFileSync(path.join(root, 'components', 'train', 'CheckRow.tsx'), 'utf8')
+  t('CheckRow 가 RuleText 를 쓰고 라벨을 nowrap 한다',
+    /RuleText/.test(checkRowSrc) && /whitespace-nowrap/.test(checkRowSrc))
+  const trainSrc = readFileSync(path.join(root, 'components', 'train', 'TrainClient.tsx'), 'utf8')
+  t("'무엇을 봅니다' 라벨이 nowrap + 긴 규칙만 줄바꿈",
+    /whitespace-nowrap[^]*RuleText/.test(trainSrc) && /min-w-0 flex-1/.test(trainSrc))
+}
+
 // ── 자기점검 self_checks: 스키마 · 시드 · 화면 대조 (세션 19) ────────────
 //
 // 자기점검 문구가 SelfCheck.tsx 에 하드코딩돼 있던 것을 stages.self_checks 로

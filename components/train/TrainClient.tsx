@@ -10,6 +10,7 @@ import CheckRow from './CheckRow'
 import Editor from './Editor'
 import FillBody from './FillBody'
 import SelfCheck from './SelfCheck'
+import RuleText from './RuleText'
 import type { FillBlank } from './FillBlank'
 
 interface PublicConfig {
@@ -526,11 +527,16 @@ export default function TrainClient({
       <div>
         {criteriaChecks.map((c) => (
           <div key={c.key} style={{ borderBottom: '1px solid var(--rule)' }}>
-            <div className="flex w-full items-center gap-3 py-2">
-              <span className="font-mono" style={{ width: '1em' }} aria-hidden />
-              <span className="flex-1">{c.label}</span>
-              <span className="font-mono text-sm" style={{ color: 'var(--ink-soft)' }}>
-                {c.rule}
+            {/* 라벨은 안 꺾이게 nowrap + 안 줄어들게. 긴 규칙 텍스트만 오른쪽
+                칸에서 줄바꿈한다(min-w-0 이 있어야 flex 칸이 실제로 줄어든다). */}
+            <div className="flex w-full items-start gap-3 py-2">
+              <span className="font-mono" style={{ width: '1em', flexShrink: 0 }} aria-hidden />
+              <span className="whitespace-nowrap" style={{ flexShrink: 0 }}>{c.label}</span>
+              <span
+                className="min-w-0 flex-1 text-right text-sm"
+                style={{ color: 'var(--ink-soft)', wordBreak: 'keep-all' }}
+              >
+                <RuleText rule={c.rule} examples={c.examples} align="right" />
               </span>
             </div>
           </div>

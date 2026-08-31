@@ -66,7 +66,11 @@ export default async function TrainProblemPage(
   // choice·order·count·coinage는 remove/convert가 아니라서 이 조건에서
   // 이미 걸러진다 — coinage가 채점 키 4개(count·minLen·maxLen·distinctInitial)를
   // 넘겨도 두 칸이 되지 않는 이유다.
-  const NON_SCORING_KEYS = new Set(['cards', 'inputs', 'answer', 'answerIndex'])
+  // forbidLabel·forbidDisplay 는 표시 전용이라 채점 키로 세지 않는다 — 세면
+  // sensory(maxChars·forbidWords·forbidLemmas)가 3→5 로 올라 두 칸이 돼 버린다.
+  const NON_SCORING_KEYS = new Set([
+    'cards', 'inputs', 'answer', 'answerIndex', 'forbidLabel', 'forbidDisplay',
+  ])
   const scoringKeyCount = Object.keys(cfg).filter((k) => !NON_SCORING_KEYS.has(k)).length
   const isTextInputType = problem.type === 'convert' || problem.type === 'remove'
   const twoColumnEligible = isTextInputType && scoringKeyCount >= 4

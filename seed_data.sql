@@ -421,7 +421,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'emotion_action'),
   'convert', 'hybrid', '''흥부는 기뻤다''를 감정어 없이 쓰시오.',
-  '박이 갈라지고 안에서 금은보화가 쏟아졌다. 흥부는 기뻤다.', null, '{"maxChars":60,"minVerbs":2,"maxAdverbs":1,"forbidWords":["기뻤","기쁘","기뻐","기쁨","행복","신났","신나","즐거","좋았"],"maxModifiers":2}'::jsonb,
+  '박이 갈라지고 안에서 금은보화가 쏟아졌다. 흥부는 기뻤다.', null, '{"maxChars":60,"minVerbs":2,"maxAdverbs":1,"forbidWords":["기뻤","기쁘","기뻐","기쁨","행복","신났","신나","즐거","좋았"],"maxModifiers":2,"forbidLabel":"기쁨을 직접 말하는 표현","forbidDisplay":["기쁘다","기쁨","행복하다","신나다","좋다","즐거워하다"]}'::jsonb,
   'folktale', 'fantasy', 'planned',
   1, 'heungbu-joy'
 where not exists (select 1 from problems p where p.source_key = 'heungbu-joy');
@@ -433,7 +433,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'emotion_action'),
   'convert', 'hybrid', '''심청은 두려웠다''를 감정어 없이 쓰시오. 신체 동작만으로 두려움이 보이게 할 것.',
-  '뱃사람들이 뱃전에 모여 그녀를 불렀다. 심청은 두려웠다.', null, '{"maxChars":60,"minVerbs":1,"maxAdverbs":1,"forbidWords":["두려","두렵","무서","겁먹","떨렸","공포","질렸"],"maxModifiers":2}'::jsonb,
+  '뱃사람들이 뱃전에 모여 그녀를 불렀다. 심청은 두려웠다.', null, '{"maxChars":60,"minVerbs":1,"maxAdverbs":1,"forbidWords":["두려","두렵","무서","겁먹","떨렸","공포","질렸"],"maxModifiers":2,"forbidLabel":"두려움을 직접 말하는 표현","forbidDisplay":["두렵다","무서워하다","겁먹다","떨다","공포"]}'::jsonb,
   'folktale', 'modern', 'planned',
   1, 'sim-cheong-fear'
 where not exists (select 1 from problems p where p.source_key = 'sim-cheong-fear');
@@ -445,7 +445,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'emotion_action'),
   'convert', 'hybrid', '''용왕은 화가 났다''를 감정어 없이 쓰시오.',
-  '토끼가 간을 두고 왔다고 말했다. 용왕은 화가 났다.', null, '{"maxChars":60,"minVerbs":2,"maxAdverbs":1,"forbidWords":["화났","화가 났","화가 나서","화가 치밀","분노","노여","성났","격분","짜증","치밀어","치밀었"],"maxModifiers":2}'::jsonb,
+  '토끼가 간을 두고 왔다고 말했다. 용왕은 화가 났다.', null, '{"maxChars":60,"minVerbs":2,"maxAdverbs":1,"forbidWords":["화났","화가 났","화가 나서","화가 치밀","분노","노여","성났","격분","짜증","치밀어","치밀었"],"maxModifiers":2,"forbidLabel":"분노를 직접 말하는 표현","forbidDisplay":["화나다","분노","짜증","치밀다","성나다","격분","노여워하다"]}'::jsonb,
   'folktale', 'martial', 'planned',
   2, 'dragon-king-anger'
 where not exists (select 1 from problems p where p.source_key = 'dragon-king-anger');
@@ -457,7 +457,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'emotion_action'),
   'convert', 'hybrid', '''콩쥐는 서러웠다''를 감정어 없이 쓰시오. 울음을 직접 쓰지 말 것.',
-  '식구들은 잔치에 가고 마당에는 깨진 독만 남았다. 콩쥐는 서러웠다.', null, '{"maxChars":70,"minVerbs":2,"maxAdverbs":1,"forbidWords":["서러","서럽","슬프","슬펐","슬픔","눈물","흐느","비참","원망"],"maxModifiers":2}'::jsonb,
+  '식구들은 잔치에 가고 마당에는 깨진 독만 남았다. 콩쥐는 서러웠다.', null, '{"maxChars":70,"minVerbs":2,"maxAdverbs":1,"forbidWords":["서러","서럽","슬프","슬펐","슬픔","눈물","흐느","비참","원망"],"maxModifiers":2,"forbidLabel":"서러움을 직접 말하는 표현","forbidDisplay":["서럽다","슬프다","눈물","흐느끼다","비참하다","원망"]}'::jsonb,
   'folktale', 'modern', 'planned',
   2, 'kongjwi-grief'
 where not exists (select 1 from problems p where p.source_key = 'kongjwi-grief');
@@ -469,7 +469,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'emotion_action'),
   'convert', 'hybrid', '''견우는 그리웠다''를 감정어 없이 쓰시오. 직녀를 등장시키지 말 것.',
-  '일 년에 한 번 다리가 놓이는 날이 아직 멀었다. 견우는 그리웠다.', null, '{"maxChars":70,"minVerbs":2,"maxAdverbs":1,"forbidWords":["그리웠","그리워","그리움","그립","보고 싶","외로","쓸쓸","사무치","애틋"],"maxModifiers":2}'::jsonb,
+  '일 년에 한 번 다리가 놓이는 날이 아직 멀었다. 견우는 그리웠다.', null, '{"maxChars":70,"minVerbs":2,"maxAdverbs":1,"forbidWords":["그리웠","그리워","그리움","그립","보고 싶","외로","쓸쓸","사무치","애틋"],"maxModifiers":2,"forbidLabel":"그리움을 직접 말하는 표현","forbidDisplay":["그립다","그리움","보고 싶다","쓸쓸하다","사무치다","애틋하다"]}'::jsonb,
   'folktale', 'romance', 'planned',
   3, 'gyeonu-longing'
 where not exists (select 1 from problems p where p.source_key = 'gyeonu-longing');
@@ -481,7 +481,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'emotion_action'),
   'convert', 'hybrid', '''나무꾼은 부끄러웠다''를 감정어 없이 쓰시오.',
-  '산신령이 금도끼와 은도끼를 나란히 들어 보였다. 나무꾼은 부끄러웠다.', null, '{"maxChars":65,"minVerbs":2,"maxAdverbs":1,"forbidWords":["부끄","창피","민망","수치스","낯뜨거","뻘개"],"maxModifiers":2}'::jsonb,
+  '산신령이 금도끼와 은도끼를 나란히 들어 보였다. 나무꾼은 부끄러웠다.', null, '{"maxChars":65,"minVerbs":2,"maxAdverbs":1,"forbidWords":["부끄","창피","민망","수치스","낯뜨거","뻘개"],"maxModifiers":2,"forbidLabel":"부끄러움을 직접 말하는 표현","forbidDisplay":["부끄럽다","창피하다","민망하다","수치스럽다"]}'::jsonb,
   'folktale', 'fantasy', 'planned',
   3, 'woodcutter-shame'
 where not exists (select 1 from problems p where p.source_key = 'woodcutter-shame');
@@ -733,7 +733,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'sensory'),
   'convert', 'auto', '연못 바닥에 손을 넣은 상태다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색·시선·시야·모습·얼굴·그림자·어둠·캄캄·깜깜·컴컴·흐릿·뚜렷·선명·투명·반짝·어른어른이 들어간 말은 전부 막습니다. 보다 계열(보이다·바라보다·살펴보다 등), 밝기와 색(밝다·어둡다·붉다·푸르다·하얗다·검다·노랗다·흐리다·훤하다), 빛의 움직임(빛나다·번쩍이다·반짝이다·어른거리다)도 막습니다.',
-  '물빛이 탁해 아무것도 보이지 않았다. 나무꾼은 손끝을 살펴보았다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"]}'::jsonb,
+  '물빛이 탁해 아무것도 보이지 않았다. 나무꾼은 손끝을 살펴보았다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"],"forbidLabel":"눈에 기대는 표현","forbidDisplay":["눈","빛","색","시선","모습","그림자","어둠","보다","보이다","바라보다","쳐다보다","살펴보다","밝다","어둡다","붉다","푸르다","하얗다","검다","빛나다","번쩍이다","반짝이다"]}'::jsonb,
   'folktale', 'modern', 'planned',
   2, 'sn-axe-pond'
 where not exists (select 1 from problems p where p.source_key = 'sn-axe-pond');
@@ -745,7 +745,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'sensory'),
   'convert', 'auto', '빛이 들지 않는 헛간 안이다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색·시선·시야·모습·얼굴·그림자·어둠·캄캄·깜깜·컴컴·흐릿·뚜렷·선명·투명·반짝·어른어른이 들어간 말은 전부 막습니다. 보다 계열(보이다·바라보다·살펴보다 등), 밝기와 색(밝다·어둡다·붉다·푸르다·하얗다·검다·노랗다·흐리다·훤하다), 빛의 움직임(빛나다·번쩍이다·반짝이다·어른거리다)도 막습니다.',
-  '아무것도 보이지 않았다. 어둠 속에서 제비의 흰 배가 어렴풋이 눈에 띄었다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"]}'::jsonb,
+  '아무것도 보이지 않았다. 어둠 속에서 제비의 흰 배가 어렴풋이 눈에 띄었다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"],"forbidLabel":"눈에 기대는 표현","forbidDisplay":["눈","빛","색","시선","모습","그림자","어둠","보다","보이다","바라보다","쳐다보다","살펴보다","밝다","어둡다","붉다","푸르다","하얗다","검다","빛나다","번쩍이다","반짝이다"]}'::jsonb,
   'folktale', 'fantasy', 'planned',
   2, 'sn-heungbu-barn'
 where not exists (select 1 from problems p where p.source_key = 'sn-heungbu-barn');
@@ -757,7 +757,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'sensory'),
   'convert', 'auto', '달도 없는 밤의 마당이다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색·시선·시야·모습·얼굴·그림자·어둠·캄캄·깜깜·컴컴·흐릿·뚜렷·선명·투명·반짝·어른어른이 들어간 말은 전부 막습니다. 보다 계열(보이다·바라보다·살펴보다 등), 밝기와 색(밝다·어둡다·붉다·푸르다·하얗다·검다·노랗다·흐리다·훤하다), 빛의 움직임(빛나다·번쩍이다·반짝이다·어른거리다)도 막습니다.',
-  '깨진 독이 검게 보였다. 물이 흘러나온 자리가 어둡게 번들거렸다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"]}'::jsonb,
+  '깨진 독이 검게 보였다. 물이 흘러나온 자리가 어둡게 번들거렸다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"],"forbidLabel":"눈에 기대는 표현","forbidDisplay":["눈","빛","색","시선","모습","그림자","어둠","보다","보이다","바라보다","쳐다보다","살펴보다","밝다","어둡다","붉다","푸르다","하얗다","검다","빛나다","번쩍이다","반짝이다"]}'::jsonb,
   'folktale', 'modern', 'planned',
   2, 'sn-kongjwi-night'
 where not exists (select 1 from problems p where p.source_key = 'sn-kongjwi-night');
@@ -769,7 +769,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'sensory'),
   'convert', 'auto', '물에 잠긴 직후다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색·시선·시야·모습·얼굴·그림자·어둠·캄캄·깜깜·컴컴·흐릿·뚜렷·선명·투명·반짝·어른어른이 들어간 말은 전부 막습니다. 보다 계열(보이다·바라보다·살펴보다 등), 밝기와 색(밝다·어둡다·붉다·푸르다·하얗다·검다·노랗다·흐리다·훤하다), 빛의 움직임(빛나다·번쩍이다·반짝이다·어른거리다)도 막습니다.',
-  '푸른 물빛이 눈앞을 가득 채웠다. 뱃사람들의 모습이 점점 멀어지는 것이 보였다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"]}'::jsonb,
+  '푸른 물빛이 눈앞을 가득 채웠다. 뱃사람들의 모습이 점점 멀어지는 것이 보였다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"],"forbidLabel":"눈에 기대는 표현","forbidDisplay":["눈","빛","색","시선","모습","그림자","어둠","보다","보이다","바라보다","쳐다보다","살펴보다","밝다","어둡다","붉다","푸르다","하얗다","검다","빛나다","번쩍이다","반짝이다"]}'::jsonb,
   'folktale', 'fantasy', 'planned',
   2, 'sn-simcheong-water'
 where not exists (select 1 from problems p where p.source_key = 'sn-simcheong-water');
@@ -781,7 +781,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'sensory'),
   'convert', 'auto', '도깨비들이 방망이를 두드린다. 등을 돌리고 있어 앞이 분간되지 않는다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색·시선·시야·모습·얼굴·그림자·어둠·캄캄·깜깜·컴컴·흐릿·뚜렷·선명·투명·반짝·어른어른이 들어간 말은 전부 막습니다. 보다 계열(보이다·바라보다·살펴보다 등), 밝기와 색(밝다·어둡다·붉다·푸르다·하얗다·검다·노랗다·흐리다·훤하다), 빛의 움직임(빛나다·번쩍이다·반짝이다·어른거리다)도 막습니다.',
-  '도깨비의 모습이 어둠 속에서 어른거렸다. 방망이가 붉게 빛났다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"]}'::jsonb,
+  '도깨비의 모습이 어둠 속에서 어른거렸다. 방망이가 붉게 빛났다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"],"forbidLabel":"눈에 기대는 표현","forbidDisplay":["눈","빛","색","시선","모습","그림자","어둠","보다","보이다","바라보다","쳐다보다","살펴보다","밝다","어둡다","붉다","푸르다","하얗다","검다","빛나다","번쩍이다","반짝이다"]}'::jsonb,
   'folktale', 'martial', 'planned',
   3, 'sn-goblin-club'
 where not exists (select 1 from problems p where p.source_key = 'sn-goblin-club');
@@ -793,7 +793,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'sensory'),
   'convert', 'auto', '까치 다리 위다. 발밑이 분간되지 않는다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색·시선·시야·모습·얼굴·그림자·어둠·캄캄·깜깜·컴컴·흐릿·뚜렷·선명·투명·반짝·어른어른이 들어간 말은 전부 막습니다. 보다 계열(보이다·바라보다·살펴보다 등), 밝기와 색(밝다·어둡다·붉다·푸르다·하얗다·검다·노랗다·흐리다·훤하다), 빛의 움직임(빛나다·번쩍이다·반짝이다·어른거리다)도 막습니다.',
-  '까치들의 검은 모습이 눈앞에 가득했다. 견우는 발밑을 내려다보았다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"]}'::jsonb,
+  '까치들의 검은 모습이 눈앞에 가득했다. 견우는 발밑을 내려다보았다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"],"forbidLabel":"눈에 기대는 표현","forbidDisplay":["눈","빛","색","시선","모습","그림자","어둠","보다","보이다","바라보다","쳐다보다","살펴보다","밝다","어둡다","붉다","푸르다","하얗다","검다","빛나다","번쩍이다","반짝이다"]}'::jsonb,
   'folktale', 'fantasy', 'planned',
   3, 'sn-gyeonu-bridge'
 where not exists (select 1 from problems p where p.source_key = 'sn-gyeonu-bridge');
@@ -805,7 +805,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'sensory'),
   'convert', 'auto', '용궁 복도에서 등불이 꺼졌다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색·시선·시야·모습·얼굴·그림자·어둠·캄캄·깜깜·컴컴·흐릿·뚜렷·선명·투명·반짝·어른어른이 들어간 말은 전부 막습니다. 보다 계열(보이다·바라보다·살펴보다 등), 밝기와 색(밝다·어둡다·붉다·푸르다·하얗다·검다·노랗다·흐리다·훤하다), 빛의 움직임(빛나다·번쩍이다·반짝이다·어른거리다)도 막습니다.',
-  '붉은 기둥들이 어둠 속에 잠겨 보이지 않았다. 토끼는 앞을 바라보았다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"]}'::jsonb,
+  '붉은 기둥들이 어둠 속에 잠겨 보이지 않았다. 토끼는 앞을 바라보았다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"],"forbidLabel":"눈에 기대는 표현","forbidDisplay":["눈","빛","색","시선","모습","그림자","어둠","보다","보이다","바라보다","쳐다보다","살펴보다","밝다","어둡다","붉다","푸르다","하얗다","검다","빛나다","번쩍이다","반짝이다"]}'::jsonb,
   'folktale', 'fantasy', 'planned',
   3, 'sn-rabbit-hall'
 where not exists (select 1 from problems p where p.source_key = 'sn-rabbit-hall');
@@ -817,7 +817,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'sensory'),
   'convert', 'auto', '나무 위다. 아래는 아무것도 분간되지 않는다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색·시선·시야·모습·얼굴·그림자·어둠·캄캄·깜깜·컴컴·흐릿·뚜렷·선명·투명·반짝·어른어른이 들어간 말은 전부 막습니다. 보다 계열(보이다·바라보다·살펴보다 등), 밝기와 색(밝다·어둡다·붉다·푸르다·하얗다·검다·노랗다·흐리다·훤하다), 빛의 움직임(빛나다·번쩍이다·반짝이다·어른거리다)도 막습니다.',
-  '호랑이의 모습이 밑동 쪽에서 어른거렸다. 오누이는 아래를 내려다보았다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"]}'::jsonb,
+  '호랑이의 모습이 밑동 쪽에서 어른거렸다. 오누이는 아래를 내려다보았다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"],"forbidLabel":"눈에 기대는 표현","forbidDisplay":["눈","빛","색","시선","모습","그림자","어둠","보다","보이다","바라보다","쳐다보다","살펴보다","밝다","어둡다","붉다","푸르다","하얗다","검다","빛나다","번쩍이다","반짝이다"]}'::jsonb,
   'folktale', 'fantasy', 'planned',
   3, 'sn-siblings-tree'
 where not exists (select 1 from problems p where p.source_key = 'sn-siblings-tree');

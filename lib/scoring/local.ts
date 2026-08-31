@@ -614,14 +614,18 @@ export function gradeLocal(
 
       if (cfg.forbidWords?.length) {
         const hits = findForbidden(text, cfg.forbidWords)
+        // forbidLabel/forbidDisplay 가 있으면 규칙 줄을 범주 한 줄 + '예: …' 로
+        // 보여준다. 채점은 그대로 forbidWords 다.
+        const hasDisplay = !!cfg.forbidLabel && !!cfg.forbidDisplay?.length
         checks.push({
           key: 'forbidWords',
           label: '쓰지 않을 말',
           status: hits.length === 0 ? 'pass' : 'fail',
           detail: hits.length === 0 ? '없음' : `${hits.length}개`,
-          rule: `쓰지 않음: ${cfg.forbidWords.join(', ')}`,
+          rule: hasDisplay ? cfg.forbidLabel! : `쓰지 않음: ${cfg.forbidWords.join(', ')}`,
           evidence: hits,
           gating: true, // 감정어가 남아 있으면 AI를 부르지 않는다
+          ...(hasDisplay ? { examples: cfg.forbidDisplay! } : {}),
         })
       }
 

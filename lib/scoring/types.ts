@@ -20,6 +20,13 @@ export interface Check {
   rule: string
   evidence?: string[] // 걸린 근거. UI에서 그대로 보여준다
   gating?: boolean // true면 fail 시 AI를 호출하지 않는다
+  /**
+   * forbidWords 검사 전용 표시 데이터. scoring_config.forbidDisplay 를 그대로
+   * 옮긴다. 있으면 rule 은 범주 한 줄(forbidLabel)이고, 화면은 그 아래에
+   * '예: …' 로 이 배열의 앞 몇 개만 보이고 펼치면 전체를 보여준다. 없으면
+   * rule 이 목록 전체다(지금까지). 채점(evidence)과는 무관하다 — 표시만이다.
+   */
+  examples?: string[]
 }
 
 export type ProblemType =
@@ -104,6 +111,16 @@ export interface ScoringConfig {
   maxRepeat?: number
   forbidWords?: string[] // 어간 매칭
   forbidLemmas?: string[] // "보/VV" 형식. 형태소 필요
+  /**
+   * 표시 전용. 채점은 forbidWords/forbidLemmas 가 그대로 한다 — 이 둘은 안 본다.
+   * forbidLabel   금지어 범주 한 줄. 예: '분노를 직접 말하는 표현'
+   * forbidDisplay 학습자에게 보여줄 기본형 묶음. 예: ['화나다','분노','짜증', …]
+   * 둘이 함께 있으면 화면의 규칙 줄이 forbidLabel + '예: …'(펼치면 전체)로 바뀐다.
+   * 없으면 forbidWords 목록을 그대로 보여준다(다른 단계 안 깨짐).
+   * verify 가 forbidDisplay 의 각 기본형이 forbidWords/forbidLemmas 에 실재하는지 문다.
+   */
+  forbidLabel?: string
+  forbidDisplay?: string[]
   requireAny?: string[]
   // coinage
   count?: number

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { Check } from '@/lib/scoring/types'
+import RuleText from './RuleText'
 
 const ICON: Record<Check['status'], string> = {
   pass: '○',
@@ -34,7 +35,7 @@ export default function CheckRow({ check }: { check: Check }) {
         >
           {ICON[check.status]}
         </span>
-        <span className="flex-1">{check.label}</span>
+        <span className="flex-1 whitespace-nowrap">{check.label}</span>
         <span
           className="font-mono text-sm"
           style={{ color: 'var(--ink-soft)' }}
@@ -47,6 +48,12 @@ export default function CheckRow({ check }: { check: Check }) {
           </span>
         )}
       </button>
+
+      {check.examples?.length ? (
+        <div className="pb-3 text-sm" style={{ color: 'var(--ink-soft)' }}>
+          <RuleText rule={check.rule} examples={check.examples} />
+        </div>
+      ) : null}
 
       {open && hasEvidence && (
         <div className="flex flex-wrap gap-2 pb-3">

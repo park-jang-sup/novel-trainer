@@ -86,14 +86,18 @@ export function mergeForbidChecks(checks: Check[]): Check[] {
   const ruleWords = [
     ...new Set([...stripRulePrefix(words.rule).split(', '), ...stripRulePrefix(lemmas.rule).split(', ')]),
   ]
+  // forbidLabel/forbidDisplay 가 words 쪽에 있으면(scoring_config 에서 옴) 병합본도
+  // 범주 한 줄 + '예: …' 로 보여준다 — 목록 두 벌을 이어 붙이지 않는다.
+  const hasDisplay = !!words.examples?.length
   const merged: Check = {
     key: 'forbidWords',
     label: '쓰지 않을 말',
     status,
     detail: evidence.length === 0 ? '없음' : `${evidence.length}개`,
-    rule: `쓰지 않음: ${ruleWords.join(', ')}`,
+    rule: hasDisplay ? words.rule : `쓰지 않음: ${ruleWords.join(', ')}`,
     evidence,
     gating: !!(words.gating || lemmas.gating),
+    ...(hasDisplay ? { examples: words.examples } : {}),
   }
 
   return checks

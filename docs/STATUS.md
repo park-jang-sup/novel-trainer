@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 21 · 커밋 `e808fd1` 위
+마지막 갱신: 세션 22 · 커밋 `31a83a8` 위
 
 ---
 
@@ -42,6 +42,10 @@ stage2 는 자기점검이다           모범답안 2~3건 + 체크. AI 아님.
 채점 근거 밑줄은 fail 만 친다     통과·확인중 검사의 evidence 는 본문에서 뺀다 — 밑줄이 남으면
                               학습자가 "아직 틀렸다"로 읽는다(실사용). 근거는 검사 목록 칩으로만.
                               buildMarks 는 components/train/marks.ts(순수, verify 가 문다)
+'쓰지 않을 말'은 범주로 보인다    scoring_config.forbidLabel(범주 한 줄)+forbidDisplay(기본형 묶음)
+                              가 있으면 규칙 줄이 그것 + '예: …'(펼치면 전체). 채점(forbidWords·
+                              forbidLemmas)은 안 바뀜. 없으면 forbidWords 목록 그대로. 문구에
+                              '기계' 얘기 안 씀. verify 가 표시↔채점 대응을 문다(NFD 어간 비교)
 원문은 희화화하지 않는다          부사 3~4개의 그럴듯한 문장이면 걷어내기 훈련은 성립한다. 더하기
                               빼기 수준으로 낮추지 않는다(세션 20, 실사용 판단)
 reference_answers 는 저장소에 둔다  제출 뒤 학습자에게 보이는 것이라 비밀이 아니다. 세션 3 2-5 의
@@ -66,6 +70,27 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 1  빈 단계 채우기         도입 4단계 → 구성 빈 6단계 → 절단신공. 단계당 4~6. 기존 유형만
 ```
 
+### 끝난 것 — 세션 22
+
+```
+'쓰지 않을 말' 개선 — 채점(forbidWords)은 한 글자도 안 바꿈, 표시만
+가  세로 라벨 버그: '무엇을 봅니다'·CheckRow 라벨을 whitespace-nowrap + flex-shrink-0,
+    긴 규칙 텍스트만 오른쪽 min-w-0 칸에서 줄바꿈.
+나  scoring_config 표시 전용 필드 둘 — forbidLabel(범주 한 줄) · forbidDisplay(기본형 배열).
+    있으면 규칙 줄 = forbidLabel + '예: X · Y …'(펼치면 전체). 새 컴포넌트 RuleText 를
+    '무엇을 봅니다'와 CheckRow 가 공유. local.ts forbidWords 검사 + index.ts mergeForbidChecks
+    (sensory 는 forbidWords+forbidLemmas 병합)가 rule/examples 를 싣는다.
+    page.tsx NON_SCORING_KEYS 에 두 필드 추가 — sensory 가 두 칸으로 안 넘어가게.
+다  2단계 emotion_action 6 + 6단계 sensory 8 덤프에 채움. 범주는 지시문 결에 맞춤
+    (감정별 '기쁨/두려움/분노/서러움/그리움/부끄러움을 직접 말하는 표현' · 6단계 '눈에 기대는 표현').
+verify  [쓰지 않을 말 표시] — 14문항 · forbidDisplay 의 각 기본형이 forbidWords/forbidLemmas 에
+    실재(NFD 어간 비교) · 물기('억울하다'는 안 잡힘 확인) · forbidLabel 없으면 옛 rule 그대로 ·
+    combine 이 rule=forbidLabel·examples=forbidDisplay · sensory 병합본 유지 ·
+    update SQL 이 덤프와 jsonb 로 같다 · RuleText/CheckRow/TrainClient 배선
+  ★ scoring_config 바뀜 → DB 반영은 seed/update-forbid-display.sql (덤프에서 뽑은 update 14건) → seed_check
+  ★ 눈확인(박 님): /train/2/dragon-king-anger 제출 전 — 라벨 가로 정상 + 범주 한 줄 + 예 몇 개 + 펼침
+```
+
 ### 끝난 것 — 세션 21
 
 ```
@@ -83,24 +108,13 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
   ★ 절차(박 님): seed_data.sql → seed_check.sql → 브라우저 2단계 한 문항 통과 화면
 ```
 
-### 끝난 것 — 세션 20
+### 끝난 것 — 세션 20 (요약)
 
 ```
-가  채점 근거 하이라이트는 fail 검사만 본문에 칠한다
-  marks.ts        buildMarks·markClassFor 를 Editor.tsx 에서 뗀 순수 모듈. status !== 'fail' 이면
-                  evidence 를 밑줄에서 뺀다. Editor.tsx 는 사본 지우고 import
-  verify          [채점 근거 하이라이트: fail 만 본문에 칠한다] — pass·pending evidence 0개 ·
-                  섞이면 fail 것만 · 물기(필터 없으면 pass evidence 샜을 것) · Editor 사본 없음
-  ★ 눈검사: 밑줄 규칙만 승인. 통과 화면에서 실제로 사라지는지는 다음 눈검사 때
-
-나  1단계 원문 여덟을 박 님 판으로 (희화화 완화)
-  problems.json   passage 8건 교체. scoring_config·모범답안은 그대로
-  update SQL      seed/update-reduce-adverb-passages.sql — 덤프에서 뽑은 update 8건.
-                  seed_data 는 기존 행 passage 를 안 고쳐서 따로 낸다
-  verify          reduce_adverb 블록: 원문 8건이 다 자기 maxChars 초과 · 원문 제출은 미달 ·
-                  update SQL 의 8건 passage 가 덤프와 글자까지 같다
-  ★ 박 님이 형태소 서버로 실측: 새 원문 전부 자수 초과 + 부사 2~5 → 원문 제출 여전히 미달
-  ★ 커밋 후 절차(박 님): update-reduce-adverb-passages.sql 실행 → seed_check.sql
+가  채점 근거 하이라이트는 fail 검사만 (marks.ts 로 뗌, status!=='fail' 이면 밑줄 제외)
+    ★ 눈검사: 밑줄 규칙만 승인. 통과 화면에서 실제로 사라지는지는 다음 눈검사 때
+나  1단계 원문 여덟을 박 님 판으로 (희화화 완화). seed/update-reduce-adverb-passages.sql 로 DB 반영.
+    verify: 원문 8건이 다 maxChars 초과 · update SQL 이 덤프와 글자까지 같다
 ```
 
 ### 끝난 것 — 세션 19 (요약, 대시보드 적용 · 눈검사 완료)
