@@ -105,6 +105,42 @@ export function mergeForbidChecks(checks: Check[]): Check[] {
     .map((c) => (c.key === 'forbidWords' ? merged : c))
 }
 
+/**
+ * 화면 표시 전용 병합. maxRepeat(형태소, '반복 어휘')와 repeatTargets(문자열,
+ * '겹친 말')는 채점 근거가 달라 combine()에서는 끝까지 분리해 둔다. 화면에는
+ * 둘 다 "같은 말이 겹쳤다"는 한 가지 지적이라 여기서만 한 행으로 합친다.
+ *
+ * mergeForbidChecks 와 같은 규칙: 상태는 둘 중 나쁜 쪽, 근거(칩)는 합집합.
+ * key 는 'maxRepeat' 로 유지한다 — Editor.tsx 의 buildMarks/markClassFor 가
+ * key 로 밑줄 색과 " N회" 접미 처리를 고른다.
+ */
+export function mergeRepeatChecks(checks: Check[]): Check[] {
+  const repeat = checks.find((c) => c.key === 'maxRepeat')
+  const targets = checks.find((c) => c.key === 'repeatTargets')
+  if (!repeat || !targets) return checks
+
+  const status: CheckStatus =
+    repeat.status === 'fail' || targets.status === 'fail'
+      ? 'fail'
+      : repeat.status === 'pending' || targets.status === 'pending'
+        ? 'pending'
+        : 'pass'
+  const evidence = [...new Set([...(repeat.evidence ?? []), ...(targets.evidence ?? [])])]
+  const merged: Check = {
+    key: 'maxRepeat',
+    label: '같은 말 반복',
+    status,
+    detail: evidence.length === 0 ? '없음' : `${evidence.length}개`,
+    rule: '같은 말 2회까지',
+    evidence,
+    gating: !!(repeat.gating || targets.gating),
+  }
+
+  return checks
+    .filter((c) => c.key !== 'repeatTargets')
+    .map((c) => (c.key === 'maxRepeat' ? merged : c))
+}
+
 export { gradeLocal, pendingMorphChecks, countChars, countLetters, countSentences, findForbidden, countOccurrences } from './local'
 export { gradeMorph } from './morph'
 export { deriveFillParts, fillMarkerMismatch, fillPassageParts, fillSituation } from './fill'

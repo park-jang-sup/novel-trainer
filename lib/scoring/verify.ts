@@ -9,7 +9,7 @@
 
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import path from 'node:path'
-import { combine, countChars, countLetters, countOccurrences, countSentences, deriveFillParts, fillMarkerMismatch, findForbidden, mergeForbidChecks, gradeLocal, pendingMorphChecks, summarizeConfig } from './index'
+import { combine, countChars, countLetters, countOccurrences, countSentences, deriveFillParts, fillMarkerMismatch, findForbidden, mergeForbidChecks, mergeRepeatChecks, gradeLocal, pendingMorphChecks, summarizeConfig } from './index'
 import { sqlStr, countRawNewlinesInStrings } from '../seed-sql'
 import { nextProblemKey, nextStageId, stageProgress } from '../train-nav'
 import type { Answer, Check, CheckStatus, MorphResult, Problem, ProblemType, ScoringConfig, ScoringMode } from './types'
@@ -2790,6 +2790,52 @@ console.log('\n[4단계 reduce_repeat: 모범답안 대조]')
     t(`물기: '${d.source_key}' 원문이 repeatTargets 에 걸린다 (겹친 말)`,
       rtCheck.status === 'fail' && rtCheck.label === '겹친 말', JSON.stringify(rtCheck))
   }
+
+  // ── 화면 병합: maxRepeat('반복 어휘') + repeatTargets('겹친 말') → 한 행 ──
+  {
+    const d = rp.find((x) => x.source_key === 'rp-kongjwi-jar')! // 물 2 · 콩쥐 2
+    const prob = {
+      id: d.source_key, type: 'remove' as const, scoring_mode: 'auto' as const,
+      scoring_config: d.scoring_config,
+    }
+    // 답안: '물' 4회(repeatTargets fail) · 두 음절 반복 없음(maxRepeat pass)
+    const bad = combine(prob, { text: '물을 붓고 물을 또 붓고 물을 더 부어도 물은 샜다.' },
+      undefined, emptyMorph({ verbs: ['붓', '새'], repeats: [] }))
+    const rawKeys = bad.checks.filter((c) => c.key === 'maxRepeat' || c.key === 'repeatTargets')
+    t('병합 전: 두 검사가 따로 있다', rawKeys.length === 2)
+    const merged = mergeRepeatChecks(bad.checks)
+    const mrows = merged.filter((c) => c.key === 'maxRepeat' || c.key === 'repeatTargets')
+    t('병합 후: 행이 하나뿐', mrows.length === 1 && mrows[0].key === 'maxRepeat')
+    const row = mrows[0]
+    t('병합 행 라벨 "같은 말 반복"', row.label === '같은 말 반복')
+    t('병합 행 rule "같은 말 2회까지"', row.rule === '같은 말 2회까지')
+    t('병합: 한쪽이 fail 이면 x', row.status === 'fail')
+    t('병합: 칩에 repeatTargets 걸린 단어(물)', !!row.evidence?.some((e) => e.startsWith('물')))
+
+    // 둘 다 pass → '없음'
+    const ok = combine(prob, { text: '콩쥐가 물을 부었다. 독이 샜다.' }, undefined,
+      emptyMorph({ verbs: ['붓', '새'], repeats: [] }))
+    const okRow = mergeRepeatChecks(ok.checks).find((c) => c.key === 'maxRepeat')!
+    t('병합: 둘 다 pass 면 "없음"', okRow.status === 'pass' && okRow.detail === '없음')
+
+    // maxRepeat 만 fail(두 음절 반복) → 병합도 x, 칩 합집합
+    const rep = combine(prob, { text: '콩쥐가 바가지로 펐다.' }, undefined,
+      emptyMorph({ verbs: ['푸'], repeats: [{ word: '바가지', count: 3 }] }))
+    const repRow = mergeRepeatChecks(rep.checks).find((c) => c.key === 'maxRepeat')!
+    t('병합: maxRepeat 만 fail 이어도 x · 칩에 그 단어',
+      repRow.status === 'fail' && !!repRow.evidence?.some((e) => e.startsWith('바가지')))
+
+    // 물기: 검사 하나만 있으면 병합 안 함
+    const only: Check[] = [
+      { key: 'maxRepeat', label: '반복 어휘', status: 'pass', detail: '없음', rule: 'x' },
+    ]
+    t('병합 물기: maxRepeat 만 있으면 그대로', mergeRepeatChecks(only).length === 1 &&
+      mergeRepeatChecks(only)[0].label === '반복 어휘')
+  }
+  const trainSrc = readFileSync(
+    path.join(__dirname, '..', '..', 'components', 'train', 'TrainClient.tsx'), 'utf8')
+  t('TrainClient 가 displayChecks·criteriaChecks 에 mergeRepeatChecks 를 쓴다',
+    (trainSrc.match(/mergeRepeatChecks\(/g) ?? []).length >= 2)
 
   // update SQL 이 덤프와 갈리지 않았는지
   {

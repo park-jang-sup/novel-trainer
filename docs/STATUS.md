@@ -100,8 +100,11 @@ repeatTargets — 한 음절 반복을 규칙으로 잡는다 (4단계 실사용
   page.tsx    NON_SCORING_KEYS 에 repeatTargets — 4단계(remove 3키)가 3단계와 갈려 두 칸 안 되게
   problems.json  rp- 8문항에 repeatTargets 지정 (axe-gold 도끼2·나무꾼2·산신령1 등)
   seed/update-reduce-repeat.sql  scoring_config 8건 (덤프에서 뽑음)
+  화면 병합    mergeRepeatChecks(index.ts) — maxRepeat('반복 어휘')+repeatTargets('겹친 말')를 한 행
+              '같은 말 반복'으로(채점은 둘 그대로). 상태 나쁜 쪽 · 칩 합집합 · rule '같은 말 2회까지'.
+              TrainClient displayChecks·criteriaChecks 둘 다 이 병합을 거친다(mergeForbidChecks 옆)
   verify [4단계]  모범답안 16건이 repeatTargets 한도 안(직접 + combine) · 원문 8건이 걸린다('겹친 말') ·
-                 update SQL 덤프 대조. + summarizeConfig repeatTargets 케이스
+                 update SQL 덤프 대조 · 병합 행 하나·상태·칩 합집합 · summarizeConfig repeatTargets 케이스
   ★ 모범답안 16건은 이 한도로 실측 통과(0 초과) 확인 후 진행
   ★ DB 반영: seed/update-reduce-repeat.sql → seed_check
   ★ 절차(박 님): update-reduce-repeat.sql → seed_check → 4단계에서 '물'×4 답안이 미달로 잡히는지

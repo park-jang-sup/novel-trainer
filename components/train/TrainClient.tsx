@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
-import { countChars, countSentences, mergeForbidChecks, gradeLocal, pendingMorphChecks } from '@/lib/scoring'
+import { countChars, countSentences, mergeForbidChecks, mergeRepeatChecks, gradeLocal, pendingMorphChecks } from '@/lib/scoring'
 import { nextProblemKey, stageProgress, type NavProblem } from '@/lib/train-nav'
 import type { Check, CheckStatus, CountInput, ProblemType, ScoringConfig } from '@/lib/scoring/types'
 import RuleGauge from './RuleGauge'
@@ -157,7 +157,7 @@ export default function TrainClient({
   const [error, setError] = useState<string | null>(null)
 
   const displayChecks = useMemo(
-    () => (result ? mergeForbidChecks(result.checks) : undefined),
+    () => (result ? mergeRepeatChecks(mergeForbidChecks(result.checks)) : undefined),
     [result]
   )
 
@@ -192,8 +192,9 @@ export default function TrainClient({
   //
   // 제출 후 combine()도 같은 두 함수(gradeLocal + pendingMorphChecks 또는
   // gradeMorph)를 같은 순서로 부르므로 항목 순서·개수가 그대로 유지된다 —
-  // forbidWords와 forbidLemmas를 둘 다 쓰는 문항이 생기면 mergeForbidChecks가
-  // 둘을 하나로 합쳐 이 순서가 깨질 수 있다. 지금 두 칸 문항 중에는 없다.
+  // forbidWords와 forbidLemmas / maxRepeat와 repeatTargets 를 둘 다 쓰는 문항이면
+  // merge*가 둘을 한 행으로 합친다. 제출 후 displayChecks도 같은 병합을 거치므로
+  // 순서가 유지된다.
   const criteriaChecks = useMemo(() => {
     if (!problem.twoColumnEligible || !problem.scoringConfig) return []
     const dummy = {
@@ -202,10 +203,12 @@ export default function TrainClient({
       scoring_mode: 'auto' as const,
       scoring_config: problem.scoringConfig,
     }
-    return [
-      ...gradeLocal(dummy, { text: '' }, undefined),
-      ...pendingMorphChecks(problem.scoringConfig),
-    ]
+    return mergeRepeatChecks(
+      mergeForbidChecks([
+        ...gradeLocal(dummy, { text: '' }, undefined),
+        ...pendingMorphChecks(problem.scoringConfig),
+      ])
+    )
   }, [problem])
 
   const {
