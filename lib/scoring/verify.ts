@@ -2719,6 +2719,92 @@ console.log('\n[3단계 trim_padding: 모범답안 대조]')
   pushRefMorphCheck('3단계', refs, 'remove', cfgOf)
 }
 
+// ── 4단계 reduce_repeat(반복 표현 제거): 모범답안 대조 (세션 25) ─────────
+//
+// answers.json 의 reference[] 에 8문항 × ord 1(가)/2(나) = 16행. blank_key ''.
+// 3단계와 같은 결 — 다만 이 단계의 핵심은 maxRepeat(같은 말 2회까지)라
+// 형태소가 있어야 온전히 잰다. 원문 8건은 각자 한 어휘를 3~4회 되풀이해
+// maxRepeat 에 걸린다(그래서 걷어내기가 성립한다).
+console.log('\n[4단계 reduce_repeat: 모범답안 대조]')
+{
+  interface RpProblem {
+    source_key: string
+    skill_key: string
+    type: string
+    passage: string | null
+    scoring_config: ScoringConfig
+  }
+  const seedDir = path.join(__dirname, '..', '..', 'seed', 'dump')
+  const readDump = <T,>(f: string): T =>
+    JSON.parse(readFileSync(path.join(seedDir, f), 'utf8').replace(/^﻿/, '')) as T
+
+  const rp = readDump<RpProblem[]>('problems.json').filter((d) => d.skill_key === 'reduce_repeat')
+  const rpKeys = new Set(rp.map((d) => d.source_key))
+  const refs = (readDump<{ reference?: RefRow[] }>('answers.json').reference ?? []).filter((r) =>
+    rpKeys.has(r.source_key)
+  )
+  const cfgOf = new Map(rp.map((d) => [d.source_key, d.scoring_config]))
+  const passageOf = new Map(rp.map((d) => [d.source_key, d.passage ?? '']))
+
+  t('덤프에 reduce_repeat 8문항', rp.length === 8, `실제=${rp.length}`)
+  t('전부 remove 유형', rp.every((d) => d.type === 'remove'))
+  t('모범답안 16행', refs.length === 16, `실제=${refs.length}`)
+  t('모범답안 전부 blank_key 가 빈 문자열', refs.every((r) => r.blank_key === ''),
+    JSON.stringify(refs.filter((r) => r.blank_key !== '').map((r) => r.source_key)))
+
+  for (const d of rp) {
+    const ords = refs.filter((r) => r.source_key === d.source_key).map((r) => r.ord).sort()
+    t(`'${d.source_key}': 가·나 두 세트`, JSON.stringify(ords) === '[1,2]', JSON.stringify(ords))
+  }
+
+  for (const r of refs) {
+    const max = (cfgOf.get(r.source_key)!.maxChars as number | undefined) ?? 9999
+    const n = countChars(r.content)
+    t(`'${r.source_key}' ord${r.ord}: 자수 ${n} ≤ ${max}`, n <= max, `"${r.content}"`)
+    t(`'${r.source_key}' ord${r.ord}: 비어 있지 않다`, r.content.trim().length > 0)
+    t(`'${r.source_key}' ord${r.ord}: 지문을 그대로 베끼지 않았다`,
+      r.content.trim() !== passageOf.get(r.source_key)!.trim())
+  }
+
+  // 형태소 규칙(동사·반복 ≤ 2) — 서버 있을 때만. 모범답안이 제 규칙을 지킨다.
+  pushRefMorphCheck('4단계', refs, 'remove', cfgOf)
+
+  // 물기: 원문 8건은 그대로 내면 미달이다(걷어내기가 성립). 반복 어휘가
+  // 3~4회씩 있는데, 형태소 서버의 maxRepeat 는 두 음절 이상만 세므로
+  // 한 음절 반복(박·물·간)은 자수 초과로 걸린다 — 어느 쪽이든 미달이면 된다.
+  aiChainChecks.push(
+    (async () => {
+      const probe = await morphAnalyze(rp[0].passage ?? '')
+      if (!probe) {
+        morphSkipped += rp.length
+        console.log(`  – 형태소 서버 없음: 4단계 원문 ${rp.length}건의 물기를 건너뜀`)
+        return
+      }
+      let repeatFails = 0
+      for (const d of rp) {
+        const m = d === rp[0] ? probe : await morphAnalyze(d.passage ?? '')
+        if (!m) {
+          morphSkipped++
+          console.log(`  – '${d.source_key}' 원문: 형태소 응답 없음, 건너뜀`)
+          continue
+        }
+        const res = combine(
+          { id: d.source_key, type: 'remove', scoring_mode: 'auto', scoring_config: d.scoring_config },
+          { text: d.passage ?? '' },
+          undefined,
+          m
+        )
+        t(`물기: '${d.source_key}' 원문 그대로는 미달 (걷어내기가 성립)`,
+          res.status === 'fail',
+          JSON.stringify(res.checks.filter((c) => c.status === 'fail').map((c) => c.key)))
+        if (res.checks.find((c) => c.key === 'maxRepeat')?.status === 'fail') repeatFails++
+      }
+      t('물기: 원문 여럿이 maxRepeat 로도 걸린다 (반복 기제가 실재)', repeatFails >= 5,
+        `maxRepeat 로 걸린 원문 수=${repeatFails}`)
+    })()
+  )
+}
+
 // ── '쓰지 않을 말' 표시: forbidLabel/forbidDisplay ↔ 채점 (세션 22) ──────
 //
 // scoring_config 에 표시 전용 필드 둘을 더했다. 채점(forbidWords·forbidLemmas)은
@@ -2942,6 +3028,11 @@ console.log('\n[자기점검 self_checks: 시드 ↔ 화면]')
       JSON.stringify(['지운 문장 중에 이야기가 잃은 것이 있는가'])
   )
   t(
+    'reduce_repeat 자기점검 한 줄',
+    JSON.stringify(scOf('reduce_repeat')) ===
+      JSON.stringify(['같은 말이 두 번 넘게 안 나와? 소리 내서 읽어 봐!'])
+  )
+  t(
     'action_reason 자기점검 두 줄(옛 SelfCheck 문구)',
     JSON.stringify(scOf('action_reason')) ===
       JSON.stringify([
@@ -2949,7 +3040,7 @@ console.log('\n[자기점검 self_checks: 시드 ↔ 화면]')
         '채운 칸들이 앞뒤 고정 줄과 끊기지 않고 이어지는가',
       ])
   )
-  const withSelfChecks = ['reduce_adverb', 'emotion_action', 'trim_padding', 'action_reason']
+  const withSelfChecks = ['reduce_adverb', 'emotion_action', 'trim_padding', 'reduce_repeat', 'action_reason']
   t(
     '나머지 단계는 빈 배열(자기점검 칸이 안 뜬다)',
     stagesDump

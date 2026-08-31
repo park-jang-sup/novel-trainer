@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 24 · 커밋 `14e0a92` 위
+마지막 갱신: 세션 25 · 커밋 `7d749c3` 위
 
 ---
 
@@ -22,7 +22,8 @@
 학습자 흐름   로그인 → 단계 목록 → 문항 → 제출 → 통과/미달 → (모범답안 있는 문항 통과 시)
              모범답안+자기점검 → '다음 문항 →'(미달 '건너뛰기 →') → … → 다 통과면
              '단계 완료 N/N'+'다음 단계 →', 건너뛴 게 있으면 'N/M · 건너뛴 문항 k개'+첫 링크
-★ 모범답안 있는 문항: 10단계 fill 8 (①②) + 1단계 reduce_adverb 8 · 2단계 emotion_action 6 · 3단계 trim_padding 8 (가·나, blank_key '')
+★ 모범답안 있는 문항: 10단계 fill 8 (①②) + 문장 1·2·3·4단계 (reduce_adverb 8 · emotion_action 6 ·
+  trim_padding 8 · reduce_repeat 8, 가·나 blank_key '')
 없는 것       도입 트랙 전부 · streak·XP·복습·하트·진도 저장 테이블(안 만든다 — submissions 로만 센다)
 ★ 10단계는 새 skill_key `action_reason`(fill 8). 옛 `action_turn`(convert 8)은 is_active=false — 화면에 '준비 중'
 ```
@@ -81,6 +82,22 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 
 ```
 1  빈 단계 채우기         도입 4단계 → 구성 빈 6단계 → 절단신공. 단계당 4~6. 기존 유형만
+```
+
+### 끝난 것 — 세션 25
+
+```
+4단계 reduce_repeat 모범답안 16 + self_checks (3단계와 같은 절차)
+  answers.json   reference[] 에 rp-* 8문항 × ord 1 가 / 2 나 = 16행 · blank_key ''
+  stages.json    reduce_repeat self_checks ["같은 말이 두 번 넘게 안 나와? 소리 내서 읽어 봐!"]
+  verify.ts      [4단계 reduce_repeat: 모범답안 대조] — 16행 · 가·나 두 세트 · 자수 ≤ maxChars ·
+                 지문 베낌 아님 · 형태소 규칙(동사·반복≤2)은 서버 있을 때만 ·
+                 물기: 원문 8건 그대로는 미달 + 여럿(≥5)은 maxRepeat 로도 걸린다
+                 ★ 형태소 서버의 maxRepeat 는 두 음절+만 센다 — 한 음절 반복(박·물·간)은 자수로 걸림
+  ★ DB 반영: reference 16행 새 insert(on conflict do nothing) · self_checks do update →
+    seed_data.sql 재실행이면 된다(멱등). update 파일 불필요.
+  ★ 절차(박 님): seed_data.sql → seed_check.sql → 브라우저에서 4단계 완주
+    (코치 말풍선·조건 요약이 이 단계에서도 도는지 곁눈)
 ```
 
 ### 끝난 것 — 세션 24
