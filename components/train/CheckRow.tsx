@@ -25,8 +25,8 @@ export default function CheckRow({ check }: { check: Check }) {
       <button
         type="button"
         onClick={() => hasEvidence && setOpen((v) => !v)}
-        className="flex w-full items-center gap-3 py-2 text-left"
-        style={{ cursor: hasEvidence ? 'pointer' : 'default' }}
+        className="flex w-full items-center gap-3 py-4 text-left"
+        style={{ cursor: hasEvidence ? 'pointer' : 'default', minHeight: '3.5rem' }}
       >
         <span
           className="font-mono"
@@ -35,7 +35,7 @@ export default function CheckRow({ check }: { check: Check }) {
         >
           {ICON[check.status]}
         </span>
-        <span className="flex-1 whitespace-nowrap">{check.label}</span>
+        <span className="flex-1 whitespace-nowrap font-medium">{check.label}</span>
         <span
           className="font-mono text-sm"
           style={{ color: 'var(--ink-soft)' }}

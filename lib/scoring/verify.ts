@@ -2755,6 +2755,13 @@ console.log('\n[쓰지 않을 말 표시: forbidLabel/forbidDisplay ↔ 채점]'
     /min-w-0 flex-1 text-right"/.test(trainSrc) && !/min-w-0 flex-1 text-right text-sm/.test(trainSrc))
   t('CheckRow 의 RuleText 도 본문 급 (text-sm 벗음)',
     /examples\?\.length \? \(\s*<div className="pb-3"/.test(checkRowSrc))
+  // 행 높이·간격 — 제출 전('무엇을 봅니다')과 후(CheckRow)가 같은 값이어야 한다.
+  t("'무엇을 봅니다' 행이 min-height 3.5rem · py-4 · space-y-4 · 라벨 font-medium",
+    /py-4" style=\{\{ minHeight: '3.5rem' \}\}/.test(trainSrc) &&
+      /space-y-4 pt-4/.test(trainSrc) && /whitespace-nowrap font-medium/.test(trainSrc))
+  t('CheckRow 도 같은 행 밀도 (min-height 3.5rem · py-4 · 라벨 font-medium)',
+    /py-4 text-left"/.test(checkRowSrc) && /minHeight: '3\.5rem'/.test(checkRowSrc) &&
+      /flex-1 whitespace-nowrap font-medium/.test(checkRowSrc))
 }
 
 // ── 자기점검 self_checks: 스키마 · 시드 · 화면 대조 (세션 19) ────────────

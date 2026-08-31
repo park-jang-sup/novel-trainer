@@ -522,17 +522,18 @@ export default function TrainClient({
   // 안 된다. label은 CheckRow와 같은 자리에, rule은 detail이 있던 자리에
   // 놓아서 제출 순간 아이콘·detail만 채워지고 재배치가 없게 한다.
   const criteriaContent = criteriaChecks.length > 0 && (
-    <div className="space-y-3 pt-4" style={{ borderTop: '1px solid var(--rule)' }}>
+    <div className="space-y-4 pt-4" style={{ borderTop: '1px solid var(--rule)' }}>
       <p style={{ fontWeight: 700 }}>무엇을 봅니다</p>
       <div>
         {criteriaChecks.map((c) => (
           <div key={c.key} style={{ borderBottom: '1px solid var(--rule)' }}>
             {/* 라벨은 안 꺾이게 nowrap + 안 줄어들게. 긴 규칙 텍스트만 오른쪽
                 칸에서 줄바꿈한다(min-w-0 이 있어야 flex 칸이 실제로 줄어든다).
-                글씨는 본문 급 — 한 급 작게 두지 않는다(패널을 키운다). */}
-            <div className="flex w-full items-start gap-3 py-2.5">
+                글씨는 본문 급, 라벨은 font-medium. 행 높이·간격은 CheckRow(제출 후)와
+                같은 값이어야 한다 — 제출 전후 밀도가 안 바뀌게. */}
+            <div className="flex w-full items-start gap-3 py-4" style={{ minHeight: '3.5rem' }}>
               <span className="font-mono" style={{ width: '1em', flexShrink: 0 }} aria-hidden />
-              <span className="whitespace-nowrap" style={{ flexShrink: 0 }}>{c.label}</span>
+              <span className="whitespace-nowrap font-medium" style={{ flexShrink: 0 }}>{c.label}</span>
               <span
                 className="min-w-0 flex-1 text-right"
                 style={{ color: 'var(--ink-soft)', wordBreak: 'keep-all' }}

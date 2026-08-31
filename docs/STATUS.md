@@ -81,8 +81,9 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
     (옅은 색·keep-all). 접으면 1줄 + '전체 보기' — 2줄째는 visibility:hidden 으로 자리만
     남긴다(행 높이 늘 펼친 크기 · 아래 행 안 밀림). '무엇을 봅니다'와 CheckRow 가 공유
     (fail 때 걸린 단어 칩은 별도). forbidLabel 없으면 rule 한 줄. '무엇을 봅니다' 패널은
-    오른쪽 칸 최소 24rem(grid-cols [minmax(0,1fr) minmax(24rem,1.3fr)]) · 규칙 글씨 본문 급.
-    local.ts forbidWords 검사 + index.ts mergeForbidChecks
+    오른쪽 칸 최소 24rem(grid-cols [minmax(0,1fr) minmax(24rem,1.3fr)]) · 규칙 글씨 본문 급 ·
+    행 min-height 3.5rem · py-4 · space-y-4 · 라벨 font-medium. CheckRow(제출 후)도 같은 값
+    (제출 전후 밀도 동일). local.ts forbidWords 검사 + index.ts mergeForbidChecks
     (sensory 는 forbidWords+forbidLemmas 병합)가 rule/examples 를 싣는다.
     page.tsx NON_SCORING_KEYS 에 두 필드 추가 — sensory 가 두 칸으로 안 넘어가게.
 다  2단계 emotion_action 6 + 6단계 sensory 8 덤프에 채움. 범주는 지시문 결에 맞춤
