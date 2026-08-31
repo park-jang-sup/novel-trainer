@@ -2727,7 +2727,8 @@ console.log('\n[쓰지 않을 말 표시: forbidLabel/forbidDisplay ↔ 채점]'
 
   // 화면 배선 — 사본 없이 RuleText 를 쓴다
   const ruleTextSrc = readFileSync(path.join(root, 'components', 'train', 'RuleText.tsx'), 'utf8')
-  t('RuleText 가 examples 를 접었다 폈다 한다', /예:/.test(ruleTextSrc) && /더 보기|접기/.test(ruleTextSrc))
+  t('RuleText 가 전체 목록을 기본 숨김 + 전체 보기/접기 로 편다',
+    /전체 보기/.test(ruleTextSrc) && /접기/.test(ruleTextSrc) && !/예:/.test(ruleTextSrc))
   const checkRowSrc = readFileSync(path.join(root, 'components', 'train', 'CheckRow.tsx'), 'utf8')
   t('CheckRow 가 RuleText 를 쓰고 라벨을 nowrap 한다',
     /RuleText/.test(checkRowSrc) && /whitespace-nowrap/.test(checkRowSrc))
