@@ -19,7 +19,7 @@
 --
 -- expect는 CTE가 아니라 임시 테이블이다. CTE는 그것이 붙은 statement
 -- 하나에만 유효해서, 검사 넷을 한 do 블록 안에서 나눠 적으려면 매번
--- 113행짜리 values를 다시 적어야 한다. 임시 테이블로 한 번만 채운다.
+-- 118행짜리 values를 다시 적어야 한다. 임시 테이블로 한 번만 채운다.
 --
 -- 마지막 문장이 select인 것은 의도다. Supabase 편집기가 NOTICE를
 -- 안 띄워서, raise notice로 끝내면 "통과"와 "파일이 잘려 안 돌았다"가
@@ -46,6 +46,7 @@ create temporary table expect (
 );
 
 insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) values
+  ('cc-report-credit', '6fb8a461655328aa3d9179bd6b953735', 123, 'de38611eebf908e329853f1801444b33', 41, '{"maxChars":60,"minVerbs":2,"requireAll":["김하준","서담"]}'::jsonb),
   ('lk-desk-nine', '5ed701d19c837118675f85e347e27d3e', 108, 'c78005fc2b863deb8545e5823326867c', 52, '{"maxChars":60,"minVerbs":2,"forbidLabel":"인정 욕구를 직접 말하는 표현","forbidWords":["인정","칭찬","알아주"],"forbidDisplay":["인정","칭찬","알아주다"],"requireAny":["김하준","하준"]}'::jsonb),
   ('rm-axe-pond', '767bce97ba0984cb0aaa18ad470b183b', 99, 'f32376318db1d3b5936bc5bdaed0f9f7', 49, '{"maxChars":36,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb),
   ('rm-heungbu-swallow', '422bcd35e5ed12611f1c159741b8d284', 101, '6c9ffa5102ba47bf88f994870c85a89a', 46, '{"maxChars":34,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":2}'::jsonb),
@@ -62,6 +63,7 @@ insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) v
   ('sc-boss-mirror', '74acc9ac9de70b9925542a1d938bb9a9', 71, null, null, '{}'::jsonb),
   ('sc-villainess-chains', '6af165c8036e50698cedfed900aaa13b', 68, null, null, '{}'::jsonb),
   ('rm-goblin-club', '4af82dadf8273d39e9012e06a7199f05', 94, 'e5fe17def733f583bd84b79d9d7a7ab3', 65, '{"maxChars":42,"minVerbs":3,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":2}'::jsonb),
+  ('cc-street-night', '17f220cf6e32c147e09c8a33fc1b646b', 109, 'b3f5a5ae8305051c09b7229a52f3fcb9', 45, '{"maxChars":60,"minVerbs":2,"requireAll":["윤소민","하늘"]}'::jsonb),
   ('heungbu-joy', '3d67b9991f63f7137c1e6ba4fa094d1d', 22, 'da937ab22e4be877e917c12dd2b7f4a0', 32, '{"maxChars":60,"minVerbs":2,"maxAdverbs":1,"forbidWords":["기뻤","기쁘","기뻐","기쁨","행복","신났","신나","즐거","좋았"],"maxModifiers":2,"forbidLabel":"기쁨을 직접 말하는 표현","forbidDisplay":["기쁘다","기쁨","행복하다","신나다","좋다","즐거워하다"]}'::jsonb),
   ('lk-cafe-wait', 'e3855757130d7e30167c1af0c33a9bc2', 109, '7308f28a423268f7d0fe88778d4a6ca9', 40, '{"maxChars":60,"minVerbs":2,"forbidLabel":"외로움을 직접 말하는 표현","forbidWords":["사랑","애정","외로","쓸쓸","관심"],"forbidDisplay":["사랑","애정","외롭다","쓸쓸하다","관심"],"requireAny":["윤소민","소민"]}'::jsonb),
   ('se-sword-five', '09dd0bbee3a594d19b961c717b8ee5ac', 110, '6c20c49ed9e85d426a68e4d6b02d9ddb', 33, '{"maxChars":60,"minVerbs":1,"requireAny":["진운"]}'::jsonb),
@@ -71,6 +73,7 @@ insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) v
   ('kongjwi-grief', '35f520990c3cf5aaf25482a2f0d491af', 38, 'f7b2bbb8765ace19f4f133dd592d867a', 37, '{"maxChars":70,"minVerbs":2,"maxAdverbs":1,"forbidWords":["서러","서럽","슬프","슬펐","슬픔","눈물","흐느","비참","원망"],"maxModifiers":2,"forbidLabel":"서러움을 직접 말하는 표현","forbidDisplay":["서럽다","슬프다","눈물","흐느끼다","비참하다","원망"]}'::jsonb),
   ('gyeonu-longing', 'd4fee3ce734cc2b298a0e7e4c777f338', 38, 'f28b2dfea5c35325d2d8dc27de70734e', 37, '{"maxChars":70,"minVerbs":2,"maxAdverbs":1,"forbidWords":["그리웠","그리워","그리움","그립","보고 싶","외로","쓸쓸","사무치","애틋"],"maxModifiers":2,"forbidLabel":"그리움을 직접 말하는 표현","forbidDisplay":["그립다","그리움","보고 싶다","쓸쓸하다","사무치다","애틋하다"]}'::jsonb),
   ('woodcutter-shame', 'a6f56f8890743432bc48983269612cbd', 25, '5ecd0f5785f56bd76b039f6273a80f33', 38, '{"maxChars":65,"minVerbs":2,"maxAdverbs":1,"forbidWords":["부끄","창피","민망","수치스","낯뜨거","뻘개"],"maxModifiers":2,"forbidLabel":"부끄러움을 직접 말하는 표현","forbidDisplay":["부끄럽다","창피하다","민망하다","수치스럽다"]}'::jsonb),
+  ('cc-first-pay', 'bc9f51461d1f242189afa9f3391b0eb7', 118, 'a9e6c1cf8e10e91a35cb754b518b31e3', 43, '{"maxChars":60,"minVerbs":2,"requireAll":["조평","유겸"]}'::jsonb),
   ('lk-guard-dawn', '71aaceffdda2ed06e2e1a7f934b6a5e8', 102, '46c0ab8ef1488e972d1cdab7c10afe23', 50, '{"maxChars":60,"minVerbs":2,"forbidLabel":"가난을 직접 말하는 표현","forbidWords":["가난","굶","궁핍"],"forbidDisplay":["가난","굶다","궁핍"],"requireAny":["조평"]}'::jsonb),
   ('se-vow-deal', 'bd07fbe9831c4576b081f9e2a09bd608', 115, 'eb400c635c85ce775a2b96beb6aaaf3e', 29, '{"maxChars":60,"minVerbs":1,"requireAny":["하은수","은수"]}'::jsonb),
   ('sw-vow-afternoon', '2ace2c8496a0bcd86c7d50344ef4bb93', 138, '02a05525996b0db530dcb82e69a1e4a9', 35, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","서글","기류","아우라","기색","낌새","기미"],"forbidLemmas":["오라/NNG"],"forbidDisplay":["기운","느낌","분위기","서글프다","기류","오라","아우라","기색","낌새","기미"],"requireAny":["하은수","은수"]}'::jsonb),
@@ -82,6 +85,7 @@ insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) v
   ('tp-rabbit-gate', '9cf7af2b087e33e8952659cb583e7f17', 113, '16ccb3562d6164f5ec4961788ab1f670', 82, '{"maxChars":36,"minVerbs":3,"maxRepeat":2}'::jsonb),
   ('tp-siblings-floor', '9cf7af2b087e33e8952659cb583e7f17', 113, '01a84cc13a5b0afe03a92d5ae1c62301', 86, '{"maxChars":38,"minVerbs":2,"maxRepeat":2}'::jsonb),
   ('tp-goblin-mark', 'e8595e1082733f8a32376de687d900c5', 129, '865fb3df2adb61a2e6fbe8d6630da094', 90, '{"maxChars":45,"minVerbs":3,"maxRepeat":2}'::jsonb),
+  ('cc-raid-reward', '491b9673e0c383aa90a4d9105fe8dc93', 116, '3dd3180606a41ce294cd8455636788cb', 42, '{"maxChars":60,"minVerbs":2,"requireAll":["한시우","도현"]}'::jsonb),
   ('lk-board-rank', 'ac26ca8df0c5f4d13dcc677c8ca23207', 96, '505ce0c2b004612d2ae7af31b9040f3c', 52, '{"maxChars":60,"minVerbs":2,"forbidLabel":"열등감을 직접 말하는 표현","forbidWords":["열등","부럽","부러워","질투","뒤처"],"forbidDisplay":["열등감","부럽다","질투","뒤처지다"],"requireAny":["한시우","시우"]}'::jsonb),
   ('rp-axe-gold', '1923f3bd3896a41facdc89d04e9c0444', 23, '9041a207282177090f0bb3726540675f', 113, '{"maxChars":88,"minVerbs":3,"maxRepeat":2,"repeatTargets":[{"word":"도끼","max":2},{"word":"나무꾼","max":2},{"word":"산신령","max":1}]}'::jsonb),
   ('rp-heungbu-gourd', 'abe00269b9cf9de6d03bab6f3aad86dd', 43, 'bc662a82c425a4665ea8ebc5f9cd57e8', 85, '{"maxChars":64,"minVerbs":3,"maxRepeat":2,"repeatTargets":[{"word":"박","max":2},{"word":"흥부","max":1}]}'::jsonb),
@@ -95,6 +99,7 @@ insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) v
   ('rp-goblin-club', 'ffd522567376018a709ddaee7f1973a4', 46, '2073ca5eed15c143d03990a6e61edd13', 105, '{"maxChars":83,"minVerbs":4,"maxRepeat":2,"repeatTargets":[{"word":"방망이","max":2},{"word":"도깨비","max":1}]}'::jsonb),
   ('ae-gyeonu-bridge', 'd0b29ca3e9ef3a7469ae9654c5571880', 69, 'cf2ba72479f268c26ad5005d2878436f', 14, '{}'::jsonb),
   ('ae-rabbit-gate', 'd0b29ca3e9ef3a7469ae9654c5571880', 69, '265c8e8798aa4c9fed7e1d0da0652a1d', 15, '{}'::jsonb),
+  ('cc-relic-box', '9157ca6f4d930456132ed6adc06528c5', 115, '5181355d2cd008f73e0111f2e7386fa2', 42, '{"maxChars":60,"minVerbs":2,"requireAll":["리안","셀라"]}'::jsonb),
   ('lk-tower-shelf', '75d1962a81c683841ba5ed7d73649031', 106, '55d5d0c349a77b66c375cca302c23f99', 47, '{"maxChars":60,"minVerbs":2,"forbidLabel":"그리움을 직접 말하는 표현","forbidWords":["그립","그리워"],"forbidDisplay":["그립다","그리워하다"],"requireAny":["리안"]}'::jsonb),
   ('se-phoenix-mound', '4b7687245dfe4c4faba21154873d650c', 118, 'ea5d5a25fd72ea19f8f2ce9eba4327f1', 34, '{"maxChars":60,"minVerbs":1,"requireAny":["서준혁","준혁"]}'::jsonb),
   ('sw-boss-wake', '3a4863b41b3091052b4f462d2636a4fc', 145, '714fe9eef4385a917bebded82aecd0bb', 32, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","기류","아우라","기색","낌새","기미"],"forbidLemmas":["오라/NNG"],"forbidDisplay":["기운","느낌","분위기","기류","오라","아우라","기색","낌새","기미"],"requireAny":["이재하","재하"]}'::jsonb),

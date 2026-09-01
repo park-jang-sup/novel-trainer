@@ -957,6 +957,66 @@
       "ord": 2,
       "blank_key": "",
       "content": "리안은 주문서를 정리하다 여백의 손글씨 앞에서 멈췄다. 그 갈피만 끈으로 따로 묶어 두었다."
+    },
+    {
+      "source_key": "cc-report-credit",
+      "ord": 1,
+      "blank_key": "",
+      "content": "발표가 끝나기 무섭게 김하준은 부장 쪽으로 걸어갔다. 서담은 밤새운 막내의 어깨를 먼저 두드렸다."
+    },
+    {
+      "source_key": "cc-report-credit",
+      "ord": 2,
+      "blank_key": "",
+      "content": "김하준은 회의록의 제 이름에 밑줄을 그었다. 서담은 제 이름을 지우고 팀 이름으로 고쳐 적었다."
+    },
+    {
+      "source_key": "cc-street-night",
+      "ord": 1,
+      "blank_key": "",
+      "content": "윤소민은 헤어지자마자 잘 들어갔냐고 문자를 보냈다. 하늘은 휴대폰을 끄고 이어폰을 꽂았다."
+    },
+    {
+      "source_key": "cc-street-night",
+      "ord": 2,
+      "blank_key": "",
+      "content": "하늘이 먼저 손을 흔들고 돌아섰다. 윤소민은 그 뒷모습이 골목을 다 빠져나갈 때까지 서 있었다."
+    },
+    {
+      "source_key": "cc-first-pay",
+      "ord": 1,
+      "blank_key": "",
+      "content": "조평은 삯의 절반을 그 자리에서 전대에 꿰맸다. 유겸은 제 몫을 털어 저녁 술값부터 걸었다."
+    },
+    {
+      "source_key": "cc-first-pay",
+      "ord": 2,
+      "blank_key": "",
+      "content": "유겸이 새 검집을 사러 가자고 했다. 조평은 헌 검집의 끈을 당겨 보고는 고개를 저었다."
+    },
+    {
+      "source_key": "cc-raid-reward",
+      "ord": 1,
+      "blank_key": "",
+      "content": "보상 목록이 뜨자 한시우는 도현의 몫부터 훑었다. 도현은 제 몫을 확인도 않고 다음 일정을 물었다."
+    },
+    {
+      "source_key": "cc-raid-reward",
+      "ord": 2,
+      "blank_key": "",
+      "content": "도현이 먼저 수고했다며 손을 내밀었다. 한시우는 그 손을 잡으며 상대의 장갑 등급을 읽고 있었다."
+    },
+    {
+      "source_key": "cc-relic-box",
+      "ord": 1,
+      "blank_key": "",
+      "content": "셀라는 상자 속 지팡이에 감정가부터 매겼다. 리안은 손잡이의 닳은 자리에 제 손을 포개 보았다."
+    },
+    {
+      "source_key": "cc-relic-box",
+      "ord": 2,
+      "blank_key": "",
+      "content": "리안은 상자를 여는 데 한참이 걸렸다. 셀라는 그사이 목록 양피지에 품목을 두 줄 적었다."
     }
   ]
 }

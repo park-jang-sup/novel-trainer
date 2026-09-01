@@ -241,8 +241,8 @@ on conflict (skill_key) do update set
 insert into stages
   (track, order_no, title, skill_key, summary, is_free, self_checks, intro, coach_intro, coach_line)
 values ('structure', 12, '대비 캐릭터', 'contrast_char',
-        '상반된 인물을 나란히 세운다', false, array[]::text[], '',
-        '', '')
+        '상반된 인물을 나란히 세운다', false, array['두 사람의 반응을 서로 바꿔 놓으면 어색해? 안 어색하면 아직 대비가 아니야.']::text[], '',
+        '인물은 혼자 서 있으면 잘 안 보여. 옆에 반대쪽 사람을 세우면 그제야 윤곽이 잡히지. 방법은 하나야 — 같은 일을 겪게 하고, 다르게 반응하게 해. 한쪽이 움켜쥐면 한쪽은 흘려보내는 거야.', '같은 일, 다른 반응!')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
@@ -448,6 +448,18 @@ on conflict (skill_key) do update set
 
 -- ── 문항 ────────────────────────────────────────────────────────────
 
+-- cc-report-credit (order_no 1, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'contrast_char'),
+  'convert', 'auto', '김하준과 서담을 대비시키시오. 김하준은 제 공을 앞세우고 싶어 하는 대리, 서담은 제 공을 남에게 돌리는 대리다. 아래 장면에서 두 사람은 똑같이 움직인다. 다시 써서, 같은 일에 두 사람이 서로 다르게 반응하게 하시오.',
+  '결과 발표가 끝났다. 두 대리는 나란히 자리로 돌아와 다음 업무를 열었다.', null, '{"maxChars":60,"minVerbs":2,"requireAll":["김하준","서담"]}'::jsonb,
+  'original', 'modern', 'planned',
+  1, 'cc-report-credit'
+where not exists (select 1 from problems p where p.source_key = 'cc-report-credit');
+
 -- lk-desk-nine (order_no 1, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
@@ -640,6 +652,18 @@ select
   3, 'rm-goblin-club'
 where not exists (select 1 from problems p where p.source_key = 'rm-goblin-club');
 
+-- cc-street-night (order_no 2, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'contrast_char'),
+  'convert', 'auto', '윤소민과 하늘을 대비시키시오. 윤소민은 곁을 그리는 사람, 하늘은 혼자가 편한 사람이다. 아래 장면에서 두 사람은 똑같이 움직인다. 다시 써서, 같은 일에 두 사람이 서로 다르게 반응하게 하시오.',
+  '모임이 끝나고 두 사람은 각자 집으로 향했다. 거리에는 저녁 불이 켜지고 있었다.', null, '{"maxChars":60,"minVerbs":2,"requireAll":["윤소민","하늘"]}'::jsonb,
+  'original', 'romance', 'planned',
+  1, 'cc-street-night'
+where not exists (select 1 from problems p where p.source_key = 'cc-street-night');
+
 -- heungbu-joy (order_no 2, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
@@ -747,6 +771,18 @@ select
   'folktale', 'fantasy', 'planned',
   3, 'woodcutter-shame'
 where not exists (select 1 from problems p where p.source_key = 'woodcutter-shame');
+
+-- cc-first-pay (order_no 3, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'contrast_char'),
+  'convert', 'auto', '조평과 유겸을 대비시키시오. 조평은 배곯던 시절을 기억하는 호위, 유겸은 부족함 없이 자란 신참 호위다. 아래 장면에서 두 사람은 똑같이 움직인다. 다시 써서, 같은 일에 두 사람이 서로 다르게 반응하게 하시오.',
+  '상단이 첫 삯을 나눠 주었다. 두 호위는 주머니를 받아 들고 숙소로 돌아갔다.', null, '{"maxChars":60,"minVerbs":2,"requireAll":["조평","유겸"]}'::jsonb,
+  'original', 'martial', 'planned',
+  1, 'cc-first-pay'
+where not exists (select 1 from problems p where p.source_key = 'cc-first-pay');
 
 -- lk-guard-dawn (order_no 3, difficulty 1)
 insert into problems
@@ -879,6 +915,18 @@ select
   'folktale', 'fantasy', 'impulsive',
   3, 'tp-goblin-mark'
 where not exists (select 1 from problems p where p.source_key = 'tp-goblin-mark');
+
+-- cc-raid-reward (order_no 4, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'contrast_char'),
+  'convert', 'auto', '한시우와 도현을 대비시키시오. 한시우는 동기를 곁눈질하는 B급 헌터, 도현은 앞만 보는 S급 헌터다. 아래 장면에서 두 사람은 똑같이 움직인다. 다시 써서, 같은 일에 두 사람이 서로 다르게 반응하게 하시오.',
+  '공략이 끝나고 보상이 분배되었다. 두 헌터는 장비를 정리해 게이트를 나섰다.', null, '{"maxChars":60,"minVerbs":2,"requireAll":["한시우","도현"]}'::jsonb,
+  'original', 'modern', 'planned',
+  1, 'cc-raid-reward'
+where not exists (select 1 from problems p where p.source_key = 'cc-raid-reward');
 
 -- lk-board-rank (order_no 4, difficulty 1)
 insert into problems
@@ -1035,6 +1083,18 @@ select
   'folktale', 'fantasy', 'planned',
   1, 'ae-rabbit-gate'
 where not exists (select 1 from problems p where p.source_key = 'ae-rabbit-gate');
+
+-- cc-relic-box (order_no 5, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'contrast_char'),
+  'convert', 'auto', '리안과 셀라를 대비시키시오. 리안은 스승의 유품을 못 놓는 견습, 셀라는 쓸모부터 따지는 견습이다. 아래 장면에서 두 사람은 똑같이 움직인다. 다시 써서, 같은 일에 두 사람이 서로 다르게 반응하게 하시오.',
+  '서고 정리 중에 낡은 상자가 나왔다. 두 견습은 상자를 탁자로 옮겨 두었다.', null, '{"maxChars":60,"minVerbs":2,"requireAll":["리안","셀라"]}'::jsonb,
+  'original', 'fantasy', 'planned',
+  1, 'cc-relic-box'
+where not exists (select 1 from problems p where p.source_key = 'cc-relic-box');
 
 -- lk-tower-shelf (order_no 5, difficulty 1)
 insert into problems
@@ -2010,6 +2070,20 @@ where p.source_key = 'dragon-king-anger'
 -- 화면에 보여줄 것이다(재설계안 11-2 4번). RLS 는 seed_schema.sql 이
 -- 건다: 그 문항에 제출 기록이 있는 학습자만 읽는다.
 
+-- cc-report-credit ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '발표가 끝나기 무섭게 김하준은 부장 쪽으로 걸어갔다. 서담은 밤새운 막내의 어깨를 먼저 두드렸다.'
+from problems p
+where p.source_key = 'cc-report-credit'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- cc-report-credit ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '김하준은 회의록의 제 이름에 밑줄을 그었다. 서담은 제 이름을 지우고 팀 이름으로 고쳐 적었다.'
+from problems p
+where p.source_key = 'cc-report-credit'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- lk-desk-nine ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '회식 자리에서 김하준은 지난 분기 계약 얘기를 또 꺼냈다. 그거 사실 제가 그린 그림이라고, 잔을 채우며 말했다.'
@@ -2304,6 +2378,20 @@ from problems p
 where p.source_key = 'rm-goblin-club'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- cc-street-night ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '윤소민은 헤어지자마자 잘 들어갔냐고 문자를 보냈다. 하늘은 휴대폰을 끄고 이어폰을 꽂았다.'
+from problems p
+where p.source_key = 'cc-street-night'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- cc-street-night ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '하늘이 먼저 손을 흔들고 돌아섰다. 윤소민은 그 뒷모습이 골목을 다 빠져나갈 때까지 서 있었다.'
+from problems p
+where p.source_key = 'cc-street-night'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- heungbu-joy ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '흥부는 금은보화를 한 움큼 쥐었다가 놓쳤다. 손이 자꾸 벌어졌다.'
@@ -2428,6 +2516,20 @@ insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 2, '', '나무꾼은 두 도끼에서 눈을 돌렸다. 목덜미가 달아올라 뒷걸음질을 쳤다.'
 from problems p
 where p.source_key = 'woodcutter-shame'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- cc-first-pay ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '조평은 삯의 절반을 그 자리에서 전대에 꿰맸다. 유겸은 제 몫을 털어 저녁 술값부터 걸었다.'
+from problems p
+where p.source_key = 'cc-first-pay'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- cc-first-pay ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '유겸이 새 검집을 사러 가자고 했다. 조평은 헌 검집의 끈을 당겨 보고는 고개를 저었다.'
+from problems p
+where p.source_key = 'cc-first-pay'
 on conflict (problem_id, ord, blank_key) do nothing;
 
 -- lk-guard-dawn ord 1 
@@ -2584,6 +2686,20 @@ from problems p
 where p.source_key = 'tp-goblin-mark'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- cc-raid-reward ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '보상 목록이 뜨자 한시우는 도현의 몫부터 훑었다. 도현은 제 몫을 확인도 않고 다음 일정을 물었다.'
+from problems p
+where p.source_key = 'cc-raid-reward'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- cc-raid-reward ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '도현이 먼저 수고했다며 손을 내밀었다. 한시우는 그 손을 잡으며 상대의 장갑 등급을 읽고 있었다.'
+from problems p
+where p.source_key = 'cc-raid-reward'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- lk-board-rank ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '한시우는 협회 게시판의 승급 명단을 끝까지 읽었다. 동기의 이름에서 손가락이 한 번 멈췄다.'
@@ -2736,6 +2852,20 @@ insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 2, '', '도깨비들이 방망이를 휘두를 때마다 은돈과 금돈이 쏟아졌다. "나와라, 뚝딱!" 외침이 이어질수록 보물은 멈추지 않고 쌓여 갔다.'
 from problems p
 where p.source_key = 'rp-goblin-club'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- cc-relic-box ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '셀라는 상자 속 지팡이에 감정가부터 매겼다. 리안은 손잡이의 닳은 자리에 제 손을 포개 보았다.'
+from problems p
+where p.source_key = 'cc-relic-box'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- cc-relic-box ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '리안은 상자를 여는 데 한참이 걸렸다. 셀라는 그사이 목록 양피지에 품목을 두 줄 적었다.'
+from problems p
+where p.source_key = 'cc-relic-box'
 on conflict (problem_id, ord, blank_key) do nothing;
 
 -- lk-tower-shelf ord 1 

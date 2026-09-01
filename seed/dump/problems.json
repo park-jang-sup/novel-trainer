@@ -3693,5 +3693,115 @@
         "리안"
       ]
     }
+  },
+  {
+    "type": "convert",
+    "choices": null,
+    "passage": "결과 발표가 끝났다. 두 대리는 나란히 자리로 돌아와 다음 업무를 열었다.",
+    "order_no": 1,
+    "tone_tag": "planned",
+    "genre_tag": "modern",
+    "skill_key": "contrast_char",
+    "difficulty": 1,
+    "source_key": "cc-report-credit",
+    "source_tag": "original",
+    "instruction": "김하준과 서담을 대비시키시오. 김하준은 제 공을 앞세우고 싶어 하는 대리, 서담은 제 공을 남에게 돌리는 대리다. 아래 장면에서 두 사람은 똑같이 움직인다. 다시 써서, 같은 일에 두 사람이 서로 다르게 반응하게 하시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 60,
+      "minVerbs": 2,
+      "requireAll": [
+        "김하준",
+        "서담"
+      ]
+    }
+  },
+  {
+    "type": "convert",
+    "choices": null,
+    "passage": "모임이 끝나고 두 사람은 각자 집으로 향했다. 거리에는 저녁 불이 켜지고 있었다.",
+    "order_no": 2,
+    "tone_tag": "planned",
+    "genre_tag": "romance",
+    "skill_key": "contrast_char",
+    "difficulty": 1,
+    "source_key": "cc-street-night",
+    "source_tag": "original",
+    "instruction": "윤소민과 하늘을 대비시키시오. 윤소민은 곁을 그리는 사람, 하늘은 혼자가 편한 사람이다. 아래 장면에서 두 사람은 똑같이 움직인다. 다시 써서, 같은 일에 두 사람이 서로 다르게 반응하게 하시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 60,
+      "minVerbs": 2,
+      "requireAll": [
+        "윤소민",
+        "하늘"
+      ]
+    }
+  },
+  {
+    "type": "convert",
+    "choices": null,
+    "passage": "상단이 첫 삯을 나눠 주었다. 두 호위는 주머니를 받아 들고 숙소로 돌아갔다.",
+    "order_no": 3,
+    "tone_tag": "planned",
+    "genre_tag": "martial",
+    "skill_key": "contrast_char",
+    "difficulty": 1,
+    "source_key": "cc-first-pay",
+    "source_tag": "original",
+    "instruction": "조평과 유겸을 대비시키시오. 조평은 배곯던 시절을 기억하는 호위, 유겸은 부족함 없이 자란 신참 호위다. 아래 장면에서 두 사람은 똑같이 움직인다. 다시 써서, 같은 일에 두 사람이 서로 다르게 반응하게 하시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 60,
+      "minVerbs": 2,
+      "requireAll": [
+        "조평",
+        "유겸"
+      ]
+    }
+  },
+  {
+    "type": "convert",
+    "choices": null,
+    "passage": "공략이 끝나고 보상이 분배되었다. 두 헌터는 장비를 정리해 게이트를 나섰다.",
+    "order_no": 4,
+    "tone_tag": "planned",
+    "genre_tag": "modern",
+    "skill_key": "contrast_char",
+    "difficulty": 1,
+    "source_key": "cc-raid-reward",
+    "source_tag": "original",
+    "instruction": "한시우와 도현을 대비시키시오. 한시우는 동기를 곁눈질하는 B급 헌터, 도현은 앞만 보는 S급 헌터다. 아래 장면에서 두 사람은 똑같이 움직인다. 다시 써서, 같은 일에 두 사람이 서로 다르게 반응하게 하시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 60,
+      "minVerbs": 2,
+      "requireAll": [
+        "한시우",
+        "도현"
+      ]
+    }
+  },
+  {
+    "type": "convert",
+    "choices": null,
+    "passage": "서고 정리 중에 낡은 상자가 나왔다. 두 견습은 상자를 탁자로 옮겨 두었다.",
+    "order_no": 5,
+    "tone_tag": "planned",
+    "genre_tag": "fantasy",
+    "skill_key": "contrast_char",
+    "difficulty": 1,
+    "source_key": "cc-relic-box",
+    "source_tag": "original",
+    "instruction": "리안과 셀라를 대비시키시오. 리안은 스승의 유품을 못 놓는 견습, 셀라는 쓸모부터 따지는 견습이다. 아래 장면에서 두 사람은 똑같이 움직인다. 다시 써서, 같은 일에 두 사람이 서로 다르게 반응하게 하시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 60,
+      "minVerbs": 2,
+      "requireAll": [
+        "리안",
+        "셀라"
+      ]
+    }
   }
 ]

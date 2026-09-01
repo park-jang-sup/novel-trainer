@@ -128,6 +128,10 @@ export interface ScoringConfig {
   forbidLabel?: string
   forbidDisplay?: string[]
   requireAny?: string[]
+  /** requireAny 의 복수형 — 나열된 낱말이 전부 있어야 통과(구성 12 대비 캐릭터).
+   *  부분 문자열 includes 라, 일반명사와 겹치는 이름('하늘')은 sky 를 쓴 것만으로
+   *  충족되는 누수가 있다(관찰 항목 — 규칙으로 안 막는다). */
+  requireAll?: string[]
   // coinage
   count?: number
   minLen?: number

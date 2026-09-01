@@ -521,6 +521,28 @@ console.log('\n[choice]')
   t('형태소 없이도 확정 판정', combine(p, { choiceIndex: 1 }, a, null).status !== 'pending')
 }
 
+console.log('\n[requireAll — 구성 12 대비 캐릭터 (세션 32)]')
+{
+  const p: Problem = {
+    id: 'ra', type: 'convert', scoring_mode: 'auto',
+    scoring_config: { requireAll: ['김하준', '서담'] },
+  }
+  const key = (t: string) => combine(p, { text: t }, undefined, emptyMorph({ verbs: ['하'] }))
+    .checks.find((c) => c.key === 'requireAll')!
+  const both = key('김하준은 웃었고 서담은 고개를 숙였다.')
+  t('requireAll: 전부 포함 → pass', both.status === 'pass' && both.detail === '김하준, 서담')
+  const one = key('김하준은 혼자 웃었다.')
+  t('requireAll: 하나 누락 → fail · detail 에 빠진 이름만',
+    one.status === 'fail' && one.detail === '없음: 서담', one.detail)
+  const none = key('둘은 말없이 헤어졌다.')
+  t('requireAll: 전부 누락 → fail · detail 에 둘 다',
+    none.status === 'fail' && none.detail === '없음: 김하준, 서담', none.detail)
+  t('requireAll: gating', both.gating === true && one.gating === true)
+  t('요약: requireAll → 모두 넣기',
+    summarizeConfig({ maxChars: 60, minVerbs: 2, requireAll: ['김하준', '서담'] }) ===
+      "60자 이하 · 움직이는 말 2개 이상 · '김하준' · '서담' 모두 넣기")
+}
+
 console.log('\n[order]')
 {
   const p: Problem = { id: 'o', type: 'order', scoring_mode: 'auto', scoring_config: {} }
@@ -3846,6 +3868,169 @@ console.log('\n[구성 11 lack: 5문항 + 모범답안 대조]')
       lkStage.self_checks[0].length > 0, JSON.stringify(lkStage.self_checks))
 }
 
+// ── 구성 12 contrast_char(대비 캐릭터): 5문항 + 모범답안 대조 (세션 32) ────
+//
+// convert 유형 · requireAll(요구 검사 복수형) 신설·유일 사용. 페어 대비 —
+// 같은 장면에서 두 인물이 서로 다르게 반응. 원문은 이름 없이 '두 사람'만 담아
+// 똑같이 움직인다 → 원문 그대로 제출은 requireAll(두 이름)이 막는다.
+// lack 의 다섯 인물을 재사용하고 상대역 5명(서담·하늘·유겸·도현·셀라)을 세운다.
+console.log('\n[구성 12 contrast_char: 5문항 + 모범답안 대조]')
+{
+  interface CcProblem {
+    source_key: string
+    skill_key: string
+    type: string
+    choices: string[] | null
+    passage: string | null
+    instruction: string
+    order_no: number
+    difficulty: number
+    scoring_mode: string
+    scoring_config: ScoringConfig
+  }
+  const seedDir = path.join(__dirname, '..', '..', 'seed', 'dump')
+  const readDump = <T,>(f: string): T =>
+    JSON.parse(readFileSync(path.join(seedDir, f), 'utf8').replace(/^﻿/, '')) as T
+
+  const allProblems = readDump<CcProblem[]>('problems.json')
+  const cc = allProblems.filter((d) => d.skill_key === 'contrast_char')
+  const ccKeys = new Set(cc.map((d) => d.source_key))
+  const answersDump = readDump<{
+    reference?: RefRow[]
+    answers?: { source_key: string; answer: { kind: string; index?: number } }[]
+  }>('answers.json')
+  const refs = (answersDump.reference ?? []).filter((r) => ccKeys.has(r.source_key))
+  const cfgOf = new Map(cc.map((d) => [d.source_key, d.scoring_config]))
+  const passageOf = new Map(cc.map((d) => [d.source_key, d.passage ?? '']))
+
+  t('덤프에 contrast_char 5문항', cc.length === 5, `실제=${cc.length}`)
+  t('전부 convert · auto · choices null · difficulty 1', cc.every(
+    (d) => d.type === 'convert' && d.scoring_mode === 'auto' && d.choices === null && d.difficulty === 1))
+  t('order_no 1~5 각 1회',
+    JSON.stringify([...cc.map((d) => d.order_no)].sort()) === '[1,2,3,4,5]',
+    JSON.stringify(cc.map((d) => d.order_no)))
+  for (const d of cc) {
+    const c = d.scoring_config
+    t(`'${d.source_key}': scoring_config (maxChars 60 · minVerbs 2 · requireAll 정확히 2 · requireAny 없음)`,
+      c.maxChars === 60 && c.minVerbs === 2 &&
+        Array.isArray(c.requireAll) && (c.requireAll as string[]).length === 2 &&
+        c.requireAny === undefined && c.forbidWords === undefined,
+      JSON.stringify(c))
+  }
+
+  // ── 원문 불변식: 두 이름 미포함 · 원문 그대로 → requireAll fail ──
+  for (const d of cc) {
+    const names = (d.scoring_config.requireAll as string[]) ?? []
+    t(`불변식: '${d.source_key}' 원문에 두 이름이 다 없다`,
+      names.every((n) => !(d.passage ?? '').includes(n)), d.passage ?? '')
+    const res = combine(
+      { id: d.source_key, type: 'convert', scoring_mode: 'auto', scoring_config: d.scoring_config },
+      { text: d.passage ?? '' }, undefined, null)
+    t(`불변식: '${d.source_key}' 원문 그대로 제출은 requireAll fail`,
+      res.checks.find((x) => x.key === 'requireAll')?.status === 'fail')
+  }
+
+  // ── 새 지문 5건은 sc- 어느 choices 에도 없다(신작) ──
+  const allScChoices = new Set(
+    allProblems.filter((p) => p.skill_key === 'start_choose').flatMap((p) => p.choices ?? []))
+  for (const d of cc) {
+    t(`'${d.source_key}': 새 지문 — sc- 어느 choices 에도 없다`,
+      !allScChoices.has(d.passage ?? ''), d.passage ?? '')
+  }
+
+  // ── 모범답안 10행 ──
+  t('모범답안 10행', refs.length === 10, `실제=${refs.length}`)
+  t('모범답안 전부 blank_key 빈 문자열', refs.every((r) => r.blank_key === ''))
+  for (const d of cc) {
+    const ords = refs.filter((r) => r.source_key === d.source_key).map((r) => r.ord).sort()
+    t(`'${d.source_key}': 가·나 두 세트`, JSON.stringify(ords) === '[1,2]', JSON.stringify(ords))
+  }
+  const LEN: Record<string, [number, number]> = {
+    'cc-report-credit': [42, 40],
+    'cc-street-night': [40, 40],
+    'cc-first-pay': [38, 36],
+    'cc-raid-reward': [41, 41],
+    'cc-relic-box': [40, 37],
+  }
+  for (const r of refs) {
+    const cfg = cfgOf.get(r.source_key)!
+    const n = countChars(r.content)
+    const names = (cfg.requireAll as string[]) ?? []
+    t(`'${r.source_key}' ord${r.ord}: 비어 있지 않다`, r.content.trim().length > 0)
+    t(`'${r.source_key}' ord${r.ord}: 자수 ${n} == 실측 ${LEN[r.source_key][r.ord - 1]}`,
+      n === LEN[r.source_key][r.ord - 1], `"${r.content}"`)
+    t(`'${r.source_key}' ord${r.ord}: 자수 ${n} ≤ 60`, n <= 60)
+    t(`'${r.source_key}' ord${r.ord}: 지문을 그대로 베끼지 않았다`,
+      r.content.trim() !== passageOf.get(r.source_key)!.trim())
+    t(`'${r.source_key}' ord${r.ord}: 두 이름을 모두 포함`,
+      names.every((nm) => r.content.includes(nm)), JSON.stringify(names))
+    const res = combine(
+      { id: r.source_key, type: 'convert', scoring_mode: 'auto', scoring_config: cfg },
+      { text: r.content }, undefined, null)
+    for (const key of ['requireAll', 'maxChars']) {
+      const c = res.checks.find((x) => x.key === key)
+      t(`'${r.source_key}' ord${r.ord}: combine 의 ${key} 검사가 pass`,
+        !c || c.status === 'pass', JSON.stringify(c))
+    }
+  }
+
+  // ── 단계 간 베낌 가드: 도입 1 정답 5 + 도입 2·3 모범 20 + lack 모범 10 = 35문장 ──
+  // cc-first-pay 나의 '헌 검집'은 lk-guard-dawn 나의 버릇을 의도적으로 재사용한
+  // 것 — 낱말 겹침이고 문장 베낌이 아니다(가드는 문장째만 본다).
+  const priorSentences: string[] = []
+  {
+    const scAnsIdx = new Map(
+      (answersDump.answers ?? []).filter((a) => a.answer.kind === 'choice')
+        .map((a) => [a.source_key, a.answer.index!]))
+    for (const p of allProblems.filter((x) => x.skill_key === 'start_choose')) {
+      const idx = scAnsIdx.get(p.source_key)
+      if (idx != null && p.choices) priorSentences.push(p.choices[idx].replace(/\.$/, ''))
+    }
+    for (const r of answersDump.reference ?? []) {
+      if (r.source_key.startsWith('sw-') || r.source_key.startsWith('se-') || r.source_key.startsWith('lk-')) {
+        priorSentences.push(r.content.replace(/\.$/, ''))
+      }
+    }
+  }
+  t('단계 간 베낌 가드: 대조원이 35문장 (도입 1 정답 5 + 도입 2·3 모범 20 + lack 모범 10)',
+    priorSentences.length === 35, `실제=${priorSentences.length}`)
+  for (const r of refs) {
+    const copied = priorSentences.filter((s) => r.content.includes(s))
+    t(`단계 간 베낌 가드: '${r.source_key}' ord${r.ord} 이 앞 단계 문장을 안 베꼈다`,
+      copied.length === 0, JSON.stringify(copied))
+  }
+
+  // ── 형태소(서버 있을 때만): 모범답안 동사 ≥ 2 (실측 가 4·5·3·4·3 / 나 4·4·5·4·3) ──
+  pushRefMorphCheck('구성 12', refs, 'convert', cfgOf)
+
+  // ── requireAll 물기 (형태소 불필요): 한 이름 뺀 답안 fail · '하늘' 누수 ──
+  {
+    const d = cc.find((x) => x.source_key === 'cc-street-night')! // requireAll ['윤소민','하늘']
+    const cfg = d.scoring_config
+    const run = (text: string) => combine(
+      { id: d.source_key, type: 'convert', scoring_mode: 'auto', scoring_config: cfg },
+      { text }, undefined, emptyMorph({ verbs: ['하', '되'] }))
+      .checks.find((c) => c.key === 'requireAll')!
+    t("물기: '윤소민'만 있고 '하늘' 없는 답안 → requireAll fail",
+      run('윤소민은 골목 끝까지 서 있었다.').status === 'fail')
+    // ★ 알려진 누수: '하늘'(sky)은 일반명사와 부분 문자열이 겹친다 — 인물을
+    //   안 쓰고 하늘(sky)만 써도 requireAll 이 그 이름을 충족으로 본다. 규칙으로
+    //   안 막는다(조이면 좋은 답안이 먼저 걸린다 — requireAny 와 같은 자리).
+    //   내용(정말 대비했는가) 판정은 AI 몫. 박 님 실사용 관찰 대상.
+    t("물기(누수): '하늘'(sky)만 쓴 답안도 requireAll 은 '하늘' 을 충족으로 본다",
+      run('윤소민은 흐린 하늘을 올려다보았다.').status === 'pass')
+  }
+
+  // ── stages: contrast_char 코치·자기점검 ──
+  const stagesDump = readDump<{ skill_key: string; coach_intro: string; coach_line: string; self_checks: string[] }[]>('stages.json')
+  const ccStage = stagesDump.find((s) => s.skill_key === 'contrast_char')!
+  t('stages contrast_char 의 coach_intro·coach_line 이 비어 있지 않다',
+    ccStage.coach_intro.length > 0 && ccStage.coach_line.length > 0)
+  t('stages contrast_char 의 self_checks 1건',
+    Array.isArray(ccStage.self_checks) && ccStage.self_checks.length === 1 &&
+      ccStage.self_checks[0].length > 0, JSON.stringify(ccStage.self_checks))
+}
+
 // ── '쓰지 않을 말' 표시: forbidLabel/forbidDisplay ↔ 채점 (세션 22) ──────
 //
 // scoring_config 에 표시 전용 필드 둘을 더했다. 채점(forbidWords·forbidLemmas)은
@@ -4112,9 +4297,14 @@ console.log('\n[자기점검 self_checks: 시드 ↔ 화면]')
     JSON.stringify(scOf('lack')) ===
       JSON.stringify(['결핍이라는 말 없이도, 이 사람이 뭐에 굶주렸는지 남이 맞힐 수 있어?'])
   )
+  t(
+    'contrast_char 자기점검 한 줄 (세션 32)',
+    JSON.stringify(scOf('contrast_char')) ===
+      JSON.stringify(['두 사람의 반응을 서로 바꿔 놓으면 어색해? 안 어색하면 아직 대비가 아니야.'])
+  )
   const withSelfChecks = [
     'reduce_adverb', 'emotion_action', 'trim_padding', 'reduce_repeat', 'action_reason',
-    'start_write', 'start_extend', 'lack',
+    'start_write', 'start_extend', 'lack', 'contrast_char',
   ]
   t(
     '나머지 단계는 빈 배열(자기점검 칸이 안 뜬다)',
@@ -4160,19 +4350,19 @@ console.log('\n[가르침 층: 코치 말풍선 · 조건 요약 · 게이지]')
   // ── 가·나·라: 코치 캐릭터 ──
   t('모든 단계에 coach_intro·coach_line 문자열', stagesDump.every(
     (s) => typeof s.coach_intro === 'string' && typeof s.coach_line === 'string'))
-  // 문장 트랙 10단계 + 도입 1·2·3(start_choose·start_write·start_extend, 세션 28~30)
-  // + 구성 11 lack(세션 31) = 14단계에 코치가 있다.
+  // 문장 트랙 10단계 + 도입 1·2·3(세션 28~30) + 구성 11 lack·12 contrast_char
+  // (세션 31·32) = 15단계에 코치가 있다.
   const COACH_SKILLS = new Set([
     'reduce_adverb', 'emotion_action', 'trim_padding', 'reduce_repeat', 'adverb_exception',
     'sensory', 'rhythm', 'dialogue_ratio', 'pov_lock', 'action_reason',
-    'start_choose', 'start_write', 'start_extend', 'lack',
+    'start_choose', 'start_write', 'start_extend', 'lack', 'contrast_char',
   ])
   const withCoach = stagesDump.filter((s) => (s.coach_intro as string).length > 0)
-  t('coach_intro 는 문장 10 + 도입 1·2·3 + 구성 11 lack 에만 있다',
-    withCoach.length === 14 && withCoach.every((s) => COACH_SKILLS.has(s.skill_key)),
+  t('coach_intro 는 문장 10 + 도입 1·2·3 + 구성 11·12 에만 있다',
+    withCoach.length === 15 && withCoach.every((s) => COACH_SKILLS.has(s.skill_key)),
     JSON.stringify(withCoach.map((s) => `${s.skill_key}:${s.track}`)))
-  t('coach_line 도 같은 14단계에만',
-    stagesDump.filter((s) => (s.coach_line as string).length > 0).length === 14 &&
+  t('coach_line 도 같은 15단계에만',
+    stagesDump.filter((s) => (s.coach_line as string).length > 0).length === 15 &&
       stagesDump.every((s) => (s.coach_intro as string).length > 0 === ((s.coach_line as string).length > 0)))
   t('그 밖의 단계는 coach_intro·coach_line 이 빈 문자열',
     stagesDump.filter((s) => !COACH_SKILLS.has(s.skill_key)).every(

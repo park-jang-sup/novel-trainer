@@ -31,6 +31,7 @@ export function summarizeConfig(cfg: ScoringConfig): string {
   else if (cfg.forbidWords?.length || cfg.forbidLemmas?.length) parts.push('쓰지 않을 말 있음')
 
   if (cfg.requireAny?.length) parts.push(`'${cfg.requireAny.join("' 또는 '")}' 넣기`)
+  if (cfg.requireAll?.length) parts.push(`'${cfg.requireAll.join("' · '")}' 모두 넣기`)
 
   return parts.join(' · ')
 }

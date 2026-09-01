@@ -4,18 +4,18 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 31 · 커밋 `638395c` 위
+마지막 갱신: 세션 32 · 커밋 `008f43f` 위
 
 ---
 
 ## 앱이 지금 할 수 있는 것
 
 ```
-단계 26 · 문항 113 (구성 11 lack 5 추가) · 화면이 붙은 유형 14단계분 (문장 1~11, 구성 11·14·17·19·20, 도입 1·2·3)
+단계 26 · 문항 118 (구성 12 contrast_char 5 추가) · 화면이 붙은 유형 15단계분 (문장 1~11, 구성 11·12·14·17·19·20, 도입 1·2·3)
 문항 화면 스케일  제목 text-3xl · 원문 상자·입력(Editor·FillBody) text-lg(1.125rem) p-5 · Editor rows 7/16 ·
                 컨테이너 max-w-7xl(한 칸 max-w-3xl) · 두 칸 grid [minmax(0,1.4fr) minmax(22rem,1fr)] 왼쪽 우선
 가르침 층       코치 캐릭터 먹물이 ✒️ 말풍선(CoachBubble) — 단계 목록: 제목·요약 아래 coach_intro ·
-                문항 화면: 지시문 위 coach_line (둘 다 stages, 문장 10 + 도입 1·2·3 + 구성 11, '' 면 안 뜸) ·
+                문항 화면: 지시문 위 coach_line (둘 다 stages, 문장 10 + 도입 1·2·3 + 구성 11·12, '' 면 안 뜸) ·
                 지시문 아래 조건 요약 한 줄(summarizeConfig — config 파생) ·
                 서술형 게이지 "N문장 · M / 상한자"(모든 텍스트 유형)
                 ★ 레거시 stages.intro 컬럼은 남아 있으나 값 전부 '' · 화면은 coach_* 만 씀
@@ -23,7 +23,7 @@
              모범답안+자기점검 → '다음 문항 →'(미달 '건너뛰기 →') → … → 다 통과면
              '단계 완료 N/N'+'다음 단계 →', 건너뛴 게 있으면 'N/M · 건너뛴 문항 k개'+첫 링크
 ★ 모범답안 있는 문항: 10단계 fill 8 (①②) + 문장 1·2·3·4단계 (reduce_adverb 8 · emotion_action 6 ·
-  trim_padding 8 · reduce_repeat 8) + 도입 2·3 start_write·start_extend 각 5 + 구성 11 lack 5,
+  trim_padding 8 · reduce_repeat 8) + 도입 2·3 각 5 + 구성 11·12(lack·contrast_char) 각 5,
   가·나 blank_key '' · 도입 1 start_choose 5 는 reference 를 선택지별 해설로 씀(가·나 아님)
 없는 것       도입 4 start_episode(보류 — AI 심사 전) · streak·XP·복습·하트·진도 저장 테이블(안 만든다 — submissions 로만 센다)
 ★ 10단계는 새 skill_key `action_reason`(fill 8). 옛 `action_turn`(convert 8)은 is_active=false — 화면에 '준비 중'
@@ -93,9 +93,41 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 ## 다음 — 순서대로. 하나가 verify 에서 물리기 전에 다음을 안 한다
 
 ```
-1  빈 단계 채우기         구성 12 contrast_char → 나머지 구성 빈 단계(likability 13 · info_gap 15 ·
-                        cliffhanger_adv 16 · first_hook 18). 단계당 4~6. 기존 유형만.
+1  빈 단계 채우기         구성 13 likability → 나머지 구성 빈 단계(info_gap 15 · cliffhanger_adv 16 ·
+                        first_hook 18). 단계당 4~6. 기존 유형만.
                         도입 4 start_episode 는 아래 미결(AI 심사 전이라 보류)
+```
+
+### 끝난 것 — 세션 32
+
+```
+구성 12 contrast_char '대비 캐릭터' 5문항 — convert · requireAll 신설
+  설계   페어 대비(3-05) — 같은 장면에서 두 인물이 서로 다르게 반응하게. lack 의 다섯
+         인물을 재사용하고 상대역 5명 신설(서담·하늘·유겸·도현·셀라). 원문은 이름 없이
+         '두 사람'만 담아 똑같이 움직인다 → 원문 그대로 제출은 requireAll(두 이름)이 막는다
+  requireAll 신설  요구 검사의 복수형 — 나열된 낱말이 전부 있어야 통과. types(requireAll?)·
+         local(key 'requireAll'·label '모두 넣을 말'·gating·fail detail 에 빠진 것만)·
+         summary("'A' · 'B' 모두 넣기"). 테스트 3종 + 요약 케이스
+  problems.json  cc- 5건 (convert · auto · order_no 1~5 · maxChars 60 · minVerbs 2 ·
+         requireAll 2개. requireAny·forbid 없음)
+  answers.json   reference 10행 (가·나 · blank_key '')
+         실측 자수 가 42·40·38·41·40 / 나 40·40·36·41·37 · 동사 가 4·5·3·4·3 / 나 4·4·5·4·3
+  stages.json    contrast_char coach_intro(옆에 반대쪽 사람을 세운다)·coach_line·self_checks 1건
+  '헌 검집' 의도 재사용  cc-first-pay 나가 lk-guard-dawn 나의 버릇(헌 검집)을 낱말로 재사용 —
+         문장 베낌 아님. 단계 간 베낌 가드는 문장째만 보므로 통과
+  verify [구성 12 contrast_char]  5문항 형태·scoring_config(requireAll 정확히 2·requireAny 혼용
+         금지) · 원문 불변식(두 이름 없음 · 원문 그대로 → requireAll fail) · 모범답안 10행 실측·
+         두 이름 포함·베낌 아님 · 단계 간 베낌 가드 35문장(도입 1 정답 5 + 도입 2·3 모범 20 +
+         lack 모범 10) · 형태소 동사 ≥ 2 · requireAll 물기('하늘' 누수 pass 를 알려진 한계로 명시)
+         + [requireAll] 유닛 블록 · COACH_SKILLS 14→15 · [자기점검] +contrast_char
+  검증   tsc 0 · test:scoring 3845/0(형태소 서버) · check:numbers 0 · gen:seed 무변화 · next build 통과
+  ★ DB 반영·눈검사(박 님): seed_data.sql(cc- 5·reference 10 신규 insert + stages do update, 멱등)
+    → seed_check.sql → 브라우저 '대비 캐릭터':
+    ① 조건 요약에 "'김하준' · '서담' 모두 넣기" 뜨는지
+    ② 한 인물만 쓴 답 제출 → '모두 넣을 말' 미달에 빠진 이름이 표시되는지
+    ③ 통과 → 모범답안 가·나 + 자기점검("반응을 서로 바꿔 놓으면 어색해?")
+    ④ 대비 없이 두 이름만 박은 답이 통과하는 건 알려진 한계 — 자기점검이 그 자리
+    ⑤ 다섯 페어의 소개 두 줄이 대비를 쓰기에 충분한 정보인지
 ```
 
 ### 끝난 것 — 세션 31
@@ -514,6 +546,10 @@ fill 은 인물·사물을 안 본다     덕수 답이 세연 문항을 통과�
 무관 내용 통과(도입 2 사례)   '줄넘기 하면 재미있어 하는 이재하 친구' 가 통과 — 이름+동사만 맞추면
                             뚫린다. 9단계 실측 '내용 통째 교체' 계열. 내용 판정은 AI 몫,
                             자기점검이 그 자리. 박 님 뚫기 답안은 AI 재개 때 나쁜 표본 자산
+requireAll '하늘' 누수       일반명사와 부분 문자열이 겹치는 이름('하늘'=sky)은 인물을 안 쓰고
+                            하늘(sky)만 써도 requireAll 이 충족으로 본다(includes). 규칙으로 안
+                            막는다(조이면 좋은 답안이 먼저 걸린다). 박 님 실사용 관찰 대상 —
+                            같은 계열: 내용 판정은 AI 몫. verify 가 이 누수를 명시 단언으로 박음
 자모 낱자 검사(후보)         완성형 아닌 낱자(ㄱ-ㅎ·ㅏ-ㅣ)가 답안에 있으면 fail — 형태소 불필요·
                             오탐 여지 낮음. 장난·오타 답안 일부를 잡는다. 신규 규칙이라 박 님
                             승인 뒤 연다

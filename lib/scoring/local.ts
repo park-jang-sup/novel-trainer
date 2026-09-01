@@ -659,6 +659,21 @@ export function gradeLocal(
         })
       }
 
+      // requireAll: 나열된 낱말이 전부 있어야 한다. requireAny 의 복수형이다.
+      // 대비 캐릭터(구성 12)는 두 인물 이름이 다 있어야 성립한다 — 한 명만
+      // 쓴 답은 대비가 아니다. 내용(정말 대비했는가)은 AI 몫, 여기선 이름만.
+      if (cfg.requireAll?.length) {
+        const missing = cfg.requireAll.filter((w) => !text.includes(w))
+        checks.push({
+          key: 'requireAll',
+          label: '모두 넣을 말',
+          status: missing.length === 0 ? 'pass' : 'fail',
+          detail: missing.length === 0 ? cfg.requireAll.join(', ') : `없음: ${missing.join(', ')}`,
+          rule: cfg.requireAll.join(', '),
+          gating: true,
+        })
+      }
+
       // repeatTargets: 문항별로 지정한 낱말이 몇 번까지 나와도 되는가.
       // 형태소가 아니라 답안 문자열에서 그 낱말이 나온 횟수를 그대로 센다
       // (maxRepeat 가 못 세는 한 음절 반복 — 박·물·간 — 을 잡는다).
