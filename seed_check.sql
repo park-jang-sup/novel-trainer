@@ -19,7 +19,7 @@
 --
 -- expect는 CTE가 아니라 임시 테이블이다. CTE는 그것이 붙은 statement
 -- 하나에만 유효해서, 검사 넷을 한 do 블록 안에서 나눠 적으려면 매번
--- 93행짜리 values를 다시 적어야 한다. 임시 테이블로 한 번만 채운다.
+-- 98행짜리 values를 다시 적어야 한다. 임시 테이블로 한 번만 채운다.
 --
 -- 마지막 문장이 select인 것은 의도다. Supabase 편집기가 NOTICE를
 -- 안 띄워서, raise notice로 끝내면 "통과"와 "파일이 잘려 안 돌았다"가
@@ -50,9 +50,14 @@ insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) v
   ('rm-heungbu-swallow', '422bcd35e5ed12611f1c159741b8d284', 101, '6c9ffa5102ba47bf88f994870c85a89a', 46, '{"maxChars":34,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":2}'::jsonb),
   ('rm-kongjwi-jar', '3fc7a0a23aea08179dbcc07b8b58fd04', 114, 'dca740c6656f2f5a81e2f3589df6af2a', 64, '{"maxChars":39,"minVerbs":4,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":2}'::jsonb),
   ('rm-simcheong-deck', 'c4a134de4c38ba8c8649c03ac9c494bd', 78, 'c3bbcfdbc37a9b2408db19837758c415', 57, '{"maxChars":40,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb),
+  ('sc-broken-vow', '975e276c800e1f6f562d4a462c8285ee', 64, null, null, '{}'::jsonb),
+  ('sc-hunter-status', '82487150a19c7d1e9561289563ab5686', 59, null, null, '{}'::jsonb),
+  ('sc-sword-ruin', 'f1f47ee171f808996a236698a869b801', 61, null, null, '{}'::jsonb),
   ('rm-magpie-bridge', '8c9989ae73ed1155503dbb3a1f20ae19', 101, '44abb15a305e9a456abfca5a65342dd4', 53, '{"maxChars":34,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb),
   ('rm-rabbit-court', 'c4a134de4c38ba8c8649c03ac9c494bd', 78, '5b89814326a3b13cf5aa33dbb50ca7d9', 62, '{"maxChars":40,"minVerbs":3,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb),
   ('rm-siblings-tree', 'c4a134de4c38ba8c8649c03ac9c494bd', 78, '02a8bd50b2742dc40d2076f805c45998', 68, '{"maxChars":44,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb),
+  ('sc-boss-mirror', '74acc9ac9de70b9925542a1d938bb9a9', 71, null, null, '{}'::jsonb),
+  ('sc-villainess-chains', '6af165c8036e50698cedfed900aaa13b', 68, null, null, '{}'::jsonb),
   ('rm-goblin-club', '4af82dadf8273d39e9012e06a7199f05', 94, 'e5fe17def733f583bd84b79d9d7a7ab3', 65, '{"maxChars":42,"minVerbs":3,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":2}'::jsonb),
   ('heungbu-joy', '3d67b9991f63f7137c1e6ba4fa094d1d', 22, 'da937ab22e4be877e917c12dd2b7f4a0', 32, '{"maxChars":60,"minVerbs":2,"maxAdverbs":1,"forbidWords":["기뻤","기쁘","기뻐","기쁨","행복","신났","신나","즐거","좋았"],"maxModifiers":2,"forbidLabel":"기쁨을 직접 말하는 표현","forbidDisplay":["기쁘다","기쁨","행복하다","신나다","좋다","즐거워하다"]}'::jsonb),
   ('sim-cheong-fear', '1ce88519de2a3b56c4602e5f1de52085', 46, '349f86cbb5b24dad2ed5a49d55af3aff', 31, '{"maxChars":60,"minVerbs":1,"maxAdverbs":1,"forbidWords":["두려","두렵","무서","겁먹","떨렸","공포","질렸"],"maxModifiers":2,"forbidLabel":"두려움을 직접 말하는 표현","forbidDisplay":["두렵다","무서워하다","겁먹다","떨다","공포"]}'::jsonb),

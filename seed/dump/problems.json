@@ -3074,5 +3074,105 @@
       ],
       "forbidCopyOfFixedLines": true
     }
+  },
+  {
+    "type": "choice",
+    "choices": [
+      "대격변 이후 삼십 년, 게이트는 인류의 일상이 되었다.",
+      "강도윤은 손바닥에 떠오른 붉은 상태창을 천천히 문질러 보았다.",
+      "협회장 박무진은 아침부터 회의실 문을 박차고 들어섰다.",
+      "어딘가 불길하고 낯선 기운이 감도는 아침이었다."
+    ],
+    "passage": null,
+    "order_no": 1,
+    "tone_tag": "planned",
+    "genre_tag": "modern",
+    "skill_key": "start_choose",
+    "difficulty": 1,
+    "source_key": "sc-hunter-status",
+    "source_tag": "original",
+    "instruction": "주인공은 최약체에서 회귀한 헌터 강도윤이다. 1화의 첫 문장으로, 독자를 주인공에게 붙드는 것을 고르시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {}
+  },
+  {
+    "type": "choice",
+    "choices": [
+      "강호에는 오래전부터 다섯 세가가 천하를 나누어 다스려 왔다.",
+      "객잔 주인은 새벽부터 국솥을 걸며 콧노래를 흥얼거렸다.",
+      "부러진 검 자루를 끌어안은 채, 진운은 잿더미 속에서 눈을 떴다.",
+      "불타 버린 장원에는 말로 다 못 할 스산한 기운이 감돌았다."
+    ],
+    "passage": null,
+    "order_no": 1,
+    "tone_tag": "planned",
+    "genre_tag": "martial",
+    "skill_key": "start_choose",
+    "difficulty": 1,
+    "source_key": "sc-sword-ruin",
+    "source_tag": "original",
+    "instruction": "주인공은 하룻밤에 멸문한 가문의 소년 진운이다. 1화의 첫 문장으로, 독자를 주인공에게 붙드는 것을 고르시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {}
+  },
+  {
+    "type": "choice",
+    "choices": [
+      "하은수는 청첩장 견본을 반으로 접어 쓰레기통에 밀어 넣었다.",
+      "결혼이란 예로부터 두 집안이 맺는 가장 큰 거래였다.",
+      "웨딩홀의 김 실장은 오늘도 예약 장부를 한 장씩 넘기고 있었다.",
+      "무겁게 가라앉은 공기 속, 어딘지 서글픈 기운이 도는 오후였다."
+    ],
+    "passage": null,
+    "order_no": 1,
+    "tone_tag": "planned",
+    "genre_tag": "romance",
+    "skill_key": "start_choose",
+    "difficulty": 1,
+    "source_key": "sc-broken-vow",
+    "source_tag": "original",
+    "instruction": "주인공은 결혼식 한 달 전 파혼을 통보받은 하은수다. 1화의 첫 문장으로, 독자를 주인공에게 붙드는 것을 고르시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {}
+  },
+  {
+    "type": "choice",
+    "choices": [
+      "제국력 사백팔십일 년, 황실은 건국 이래 가장 깊은 혼란에 빠져 있었다.",
+      "재판장을 맡은 대신관은 판결문을 펴기 전 길게 헛기침을 했다.",
+      "처형장에는 무어라 형언할 수 없는 팽팽한 긴장감이 흐르고 있었다.",
+      "카리엘은 제 목에 감긴 차가운 쇠사슬을 두 손으로 더듬었다."
+    ],
+    "passage": null,
+    "order_no": 1,
+    "tone_tag": "planned",
+    "genre_tag": "fantasy",
+    "skill_key": "start_choose",
+    "difficulty": 2,
+    "source_key": "sc-villainess-chains",
+    "source_tag": "original",
+    "instruction": "주인공은 소설 속 처형당하는 악녀 카리엘의 몸에서 깨어났다. 1화의 첫 문장으로, 독자를 주인공에게 붙드는 것을 고르시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {}
+  },
+  {
+    "type": "choice",
+    "choices": [
+      "가상현실 게임 아르카디아는 출시 십 년 만에 대륙 전체를 삼켰다.",
+      "이재하는 거울 속 뿔 두 개 달린 낯선 얼굴과 눈을 맞췄다.",
+      "성채 아래에서는 병사들이 아침 점호로 분주하게 오가고 있었다.",
+      "무언가 단단히 잘못되었다는 느낌이 서늘하게 온몸을 감쌌다."
+    ],
+    "passage": null,
+    "order_no": 1,
+    "tone_tag": "planned",
+    "genre_tag": "fantasy",
+    "skill_key": "start_choose",
+    "difficulty": 2,
+    "source_key": "sc-boss-mirror",
+    "source_tag": "original",
+    "instruction": "주인공 이재하는 자신이 만든 게임 속 중간보스의 몸에서 깨어났다. 1화의 첫 문장으로, 독자를 주인공에게 붙드는 것을 고르시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {}
   }
 ]

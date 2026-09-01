@@ -56,7 +56,12 @@
     { "answer": { "kind": "count", "expected": 70, "tolerance": 0.15 }, "source_key": "cn-romance-70" },
     { "answer": { "kind": "order", "sequence": [2, 3, 0, 1] }, "source_key": "od-apology" },
     { "answer": { "kind": "order", "sequence": [1, 3, 0, 2] }, "source_key": "od-mountain-sword" },
-    { "answer": { "kind": "order", "sequence": [2, 1, 3, 0] }, "source_key": "od-open-gate" }
+    { "answer": { "kind": "order", "sequence": [2, 1, 3, 0] }, "source_key": "od-open-gate" },
+    { "answer": { "kind": "choice", "index": 1 }, "source_key": "sc-hunter-status" },
+    { "answer": { "kind": "choice", "index": 2 }, "source_key": "sc-sword-ruin" },
+    { "answer": { "kind": "choice", "index": 0 }, "source_key": "sc-broken-vow" },
+    { "answer": { "kind": "choice", "index": 3 }, "source_key": "sc-villainess-chains" },
+    { "answer": { "kind": "choice", "index": 1 }, "source_key": "sc-boss-mirror" }
   ],
   "reference": [
     {

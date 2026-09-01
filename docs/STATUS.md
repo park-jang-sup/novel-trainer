@@ -4,14 +4,14 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 27 · 커밋 `cb83f98` 위
+마지막 갱신: 세션 28 · 커밋 `77e991d` 위
 
 ---
 
 ## 앱이 지금 할 수 있는 것
 
 ```
-단계 26 · 문항 93 (fill 8 추가) · 화면이 붙은 유형 11단계분 (문장 1~11, 구성 14·17·19·20)
+단계 26 · 문항 98 (도입 1 start_choose 5 추가) · 화면이 붙은 유형 11단계분 (문장 1~11, 구성 14·17·19·20, 도입 1)
 문항 화면 스케일  제목 text-3xl · 원문 상자·입력(Editor·FillBody) text-lg(1.125rem) p-5 · Editor rows 7/16 ·
                 컨테이너 max-w-7xl(한 칸 max-w-3xl) · 두 칸 grid [minmax(0,1.4fr) minmax(22rem,1fr)] 왼쪽 우선
 가르침 층       코치 캐릭터 먹물이 ✒️ 말풍선(CoachBubble) — 단계 목록: 제목·요약 아래 coach_intro ·
@@ -24,7 +24,7 @@
              '단계 완료 N/N'+'다음 단계 →', 건너뛴 게 있으면 'N/M · 건너뛴 문항 k개'+첫 링크
 ★ 모범답안 있는 문항: 10단계 fill 8 (①②) + 문장 1·2·3·4단계 (reduce_adverb 8 · emotion_action 6 ·
   trim_padding 8 · reduce_repeat 8, 가·나 blank_key '')
-없는 것       도입 트랙 전부 · streak·XP·복습·하트·진도 저장 테이블(안 만든다 — submissions 로만 센다)
+없는 것       도입 2~4(start_write·start_extend·start_episode) · streak·XP·복습·하트·진도 저장 테이블(안 만든다 — submissions 로만 센다)
 ★ 10단계는 새 skill_key `action_reason`(fill 8). 옛 `action_turn`(convert 8)은 is_active=false — 화면에 '준비 중'
 ```
 
@@ -92,7 +92,29 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 ## 다음 — 순서대로. 하나가 verify 에서 물리기 전에 다음을 안 한다
 
 ```
-1  빈 단계 채우기         도입 4단계 → 구성 빈 6단계 → 절단신공. 단계당 4~6. 기존 유형만
+1  빈 단계 채우기         도입 2 start_write(convert + requireAny 첫 사용) → 도입 3 start_extend
+                        (continue 첫 사용) → 구성 빈 6단계. 단계당 4~6. 기존 유형만.
+                        도입 4 start_episode 는 아래 미결(AI 심사 전이라 보류)
+```
+
+### 끝난 것 — 세션 28
+
+```
+도입 1 start_choose '첫 문장 고르기' 5문항 — 도입 트랙 첫 문항
+  근거   작법 문서의 카메라 앵글 원칙(1화는 주인공에게서 시작) · 구체 이미지 원칙 ·
+         거시 서술 지양 · [IN-01] 다섯 줄의 승부(★★★, 교차검증)
+  설계   정답 = 주인공이 구체적 사물을 상대로 행동하는 문장. 오답 3종 고정(거시 서술 ·
+         타인물 앵글 · 추상 분위기). 5장르(modern·martial·romance·fantasy×2)
+  problems.json  choice 5건 · passage null · scoring_config {} · order_no 1 · start_choose 연결
+  answers.json   answers[] 에 choice 5건 (index 1·2·0·3·1)
+  stages.json    start_choose coach_intro(다섯 줄의 승부·카메라 붙이기)·coach_line
+  verify [도입 1 start_choose]  5문항 존재·choice·choices 4개·config {} · answers index 0..3 ·
+         combine 정답/오답 판정 · 표면 지표 물기(정답 자수가 5문항 모두 최장/최단 아님 ·
+         index 한 값에 3회 초과 안 몰림) · 코치 블록을 11단계(문장 10 + start_choose)로 갱신
+  검증   tsc 0 · test:scoring · check:numbers 0 · gen:seed 무변화
+  ★ DB 반영·절차(박 님): seed_data.sql(신규 행 insert) → seed_check.sql(갱신된 기대값) →
+    브라우저 도입 트랙에서 ① 단계가 "준비 중"에서 풀려 링크가 생겼는지 ② 5문항 목록 ③ 한
+    문항 정답/오답 제출 양쪽 판정 ④ 코치 말풍선
 ```
 
 ### 끝난 것 — 세션 27
@@ -297,6 +319,8 @@ rabbit 난도 관찰            4단계 최중량(간·토끼 각 4회 + minVerb
 ★ 형태소 서버              지금 로컬뿐(scoring-server, 상태 확인 참조). 안 떠 있으면 6단계 46문항이
                           통과 불가(pending). 배포 시 이것도 같이 올린다(Cloud Run 이든 뭐든) —
                           .env 의 SCORING_SERVER_URL·SCORING_SERVER_SECRET 을 그쪽으로 맞춘다
+도입 4 start_episode        AI 심사 전이라 보류(세션 5 근거). 재개 시 fill 4칸(핵심 재미→캐릭터→
+                            상황→첫 대사) 축소안 검토. 도입 2·3 을 먼저 채운다
 at-left-feint fill 재료      상황 본문 · 빈칸 위치 · 모범답안 3건. 재설계안 7-5 목록 열둘을 먼저
                             읽고 짠다. 그때 3×3(장르 셋씩)이 찬다
 ar-left-feeler 모범답안       재설계안 7-7 에 가·나·다가 없다. stage2 가 보여줄 것이 없다

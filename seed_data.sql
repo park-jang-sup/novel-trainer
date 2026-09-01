@@ -386,7 +386,7 @@ insert into stages
   (track, order_no, title, skill_key, summary, is_free, self_checks, intro, coach_intro, coach_line)
 values ('start', 1, '첫 문장 고르기', 'start_choose',
         '어떤 첫 문장이 통하는지 안다', true, array[]::text[], '',
-        '', '')
+        '웹소설 독자는 첫 화면 다섯 줄만 보고 떠날지 정해. 그 다섯 줄에서 첫 문장이 할 일은 하나야 — 카메라를 주인공한테 붙이는 것. 세상 설명도, 분위기 잡기도 그다음이야. 첫 문장을 화려하게 쓰라는 게 아니야. 망치는 세 가지를 피하면 돼.', '다섯 줄의 승부. 카메라를 주인공에게!')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
@@ -496,6 +496,42 @@ select
   1, 'rm-simcheong-deck'
 where not exists (select 1 from problems p where p.source_key = 'rm-simcheong-deck');
 
+-- sc-broken-vow (order_no 1, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'start_choose'),
+  'choice', 'auto', '주인공은 결혼식 한 달 전 파혼을 통보받은 하은수다. 1화의 첫 문장으로, 독자를 주인공에게 붙드는 것을 고르시오.',
+  null, '["하은수는 청첩장 견본을 반으로 접어 쓰레기통에 밀어 넣었다.","결혼이란 예로부터 두 집안이 맺는 가장 큰 거래였다.","웨딩홀의 김 실장은 오늘도 예약 장부를 한 장씩 넘기고 있었다.","무겁게 가라앉은 공기 속, 어딘지 서글픈 기운이 도는 오후였다."]'::jsonb, '{}'::jsonb,
+  'original', 'romance', 'planned',
+  1, 'sc-broken-vow'
+where not exists (select 1 from problems p where p.source_key = 'sc-broken-vow');
+
+-- sc-hunter-status (order_no 1, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'start_choose'),
+  'choice', 'auto', '주인공은 최약체에서 회귀한 헌터 강도윤이다. 1화의 첫 문장으로, 독자를 주인공에게 붙드는 것을 고르시오.',
+  null, '["대격변 이후 삼십 년, 게이트는 인류의 일상이 되었다.","강도윤은 손바닥에 떠오른 붉은 상태창을 천천히 문질러 보았다.","협회장 박무진은 아침부터 회의실 문을 박차고 들어섰다.","어딘가 불길하고 낯선 기운이 감도는 아침이었다."]'::jsonb, '{}'::jsonb,
+  'original', 'modern', 'planned',
+  1, 'sc-hunter-status'
+where not exists (select 1 from problems p where p.source_key = 'sc-hunter-status');
+
+-- sc-sword-ruin (order_no 1, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'start_choose'),
+  'choice', 'auto', '주인공은 하룻밤에 멸문한 가문의 소년 진운이다. 1화의 첫 문장으로, 독자를 주인공에게 붙드는 것을 고르시오.',
+  null, '["강호에는 오래전부터 다섯 세가가 천하를 나누어 다스려 왔다.","객잔 주인은 새벽부터 국솥을 걸며 콧노래를 흥얼거렸다.","부러진 검 자루를 끌어안은 채, 진운은 잿더미 속에서 눈을 떴다.","불타 버린 장원에는 말로 다 못 할 스산한 기운이 감돌았다."]'::jsonb, '{}'::jsonb,
+  'original', 'martial', 'planned',
+  1, 'sc-sword-ruin'
+where not exists (select 1 from problems p where p.source_key = 'sc-sword-ruin');
+
 -- rm-magpie-bridge (order_no 1, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
@@ -531,6 +567,30 @@ select
   'folktale', 'fantasy', 'impulsive',
   2, 'rm-siblings-tree'
 where not exists (select 1 from problems p where p.source_key = 'rm-siblings-tree');
+
+-- sc-boss-mirror (order_no 1, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'start_choose'),
+  'choice', 'auto', '주인공 이재하는 자신이 만든 게임 속 중간보스의 몸에서 깨어났다. 1화의 첫 문장으로, 독자를 주인공에게 붙드는 것을 고르시오.',
+  null, '["가상현실 게임 아르카디아는 출시 십 년 만에 대륙 전체를 삼켰다.","이재하는 거울 속 뿔 두 개 달린 낯선 얼굴과 눈을 맞췄다.","성채 아래에서는 병사들이 아침 점호로 분주하게 오가고 있었다.","무언가 단단히 잘못되었다는 느낌이 서늘하게 온몸을 감쌌다."]'::jsonb, '{}'::jsonb,
+  'original', 'fantasy', 'planned',
+  2, 'sc-boss-mirror'
+where not exists (select 1 from problems p where p.source_key = 'sc-boss-mirror');
+
+-- sc-villainess-chains (order_no 1, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'start_choose'),
+  'choice', 'auto', '주인공은 소설 속 처형당하는 악녀 카리엘의 몸에서 깨어났다. 1화의 첫 문장으로, 독자를 주인공에게 붙드는 것을 고르시오.',
+  null, '["제국력 사백팔십일 년, 황실은 건국 이래 가장 깊은 혼란에 빠져 있었다.","재판장을 맡은 대신관은 판결문을 펴기 전 길게 헛기침을 했다.","처형장에는 무어라 형언할 수 없는 팽팽한 긴장감이 흐르고 있었다.","카리엘은 제 목에 감긴 차가운 쇠사슬을 두 손으로 더듬었다."]'::jsonb, '{}'::jsonb,
+  'original', 'fantasy', 'planned',
+  2, 'sc-villainess-chains'
+where not exists (select 1 from problems p where p.source_key = 'sc-villainess-chains');
 
 -- rm-goblin-club (order_no 1, difficulty 3)
 insert into problems
@@ -1565,6 +1625,41 @@ select
 where not exists (select 1 from problems p where p.source_key = 'cn-fantasy-200');
 
 -- ── 정답 ────────────────────────────────────────────────────────────
+
+-- sc-broken-vow
+insert into problem_answers (problem_id, answer)
+select p.id, '{"kind":"choice","index":0}'::jsonb
+from problems p
+where p.source_key = 'sc-broken-vow'
+on conflict (problem_id) do nothing;
+
+-- sc-hunter-status
+insert into problem_answers (problem_id, answer)
+select p.id, '{"kind":"choice","index":1}'::jsonb
+from problems p
+where p.source_key = 'sc-hunter-status'
+on conflict (problem_id) do nothing;
+
+-- sc-sword-ruin
+insert into problem_answers (problem_id, answer)
+select p.id, '{"kind":"choice","index":2}'::jsonb
+from problems p
+where p.source_key = 'sc-sword-ruin'
+on conflict (problem_id) do nothing;
+
+-- sc-boss-mirror
+insert into problem_answers (problem_id, answer)
+select p.id, '{"kind":"choice","index":1}'::jsonb
+from problems p
+where p.source_key = 'sc-boss-mirror'
+on conflict (problem_id) do nothing;
+
+-- sc-villainess-chains
+insert into problem_answers (problem_id, answer)
+select p.id, '{"kind":"choice","index":3}'::jsonb
+from problems p
+where p.source_key = 'sc-villainess-chains'
+on conflict (problem_id) do nothing;
 
 -- ae-gyeonu-bridge
 insert into problem_answers (problem_id, answer)

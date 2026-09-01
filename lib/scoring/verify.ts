@@ -3048,6 +3048,114 @@ console.log('\n[4단계 reduce_repeat: 원문·모범답안 대조]')
   pushRefMorphCheck('4단계', refs, 'remove', cfgOf)
 }
 
+// ── 도입 1 start_choose(첫 문장 고르기): 5문항 신설 (세션 28) ────────────
+//
+// 도입 트랙 첫 문항. 근거는 작법 문서의 카메라 앵글 원칙(1화는 주인공에게서
+// 시작) · 구체 이미지 원칙(추상 서술 금지) · 거시 서술 지양 · [IN-01] 다섯
+// 줄의 승부. 정답 = 주인공이 구체적 사물을 상대로 행동하는 문장. 오답 3종 =
+// 거시 서술 · 타인물 앵글 · 추상 분위기. choice 라 형태소 불필요.
+//
+// 표면 지표 물기(세션 3 4-1 의 일반화): 정답이 자수·index 로 뽑히면 안 된다.
+console.log('\n[도입 1 start_choose: 5문항 신설]')
+{
+  interface ScProblem {
+    source_key: string
+    skill_key: string
+    type: string
+    choices: string[] | null
+    passage: string | null
+    scoring_config: Record<string, unknown>
+    instruction: string
+  }
+  const seedDir = path.join(__dirname, '..', '..', 'seed', 'dump')
+  const readDump = <T,>(f: string): T =>
+    JSON.parse(readFileSync(path.join(seedDir, f), 'utf8').replace(/^﻿/, '')) as T
+
+  const sc = readDump<ScProblem[]>('problems.json').filter((d) => d.skill_key === 'start_choose')
+  const scKeys = new Set(sc.map((d) => d.source_key))
+  const scAns = readDump<{ answers?: { source_key: string; answer: { kind: string; index?: number } }[] }>(
+    'answers.json'
+  ).answers!.filter((a) => scKeys.has(a.source_key))
+
+  t('덤프에 start_choose 5문항', sc.length === 5, `실제=${sc.length}`)
+  t('전부 choice 유형 · passage 없음', sc.every((d) => d.type === 'choice' && d.passage === null))
+  t('전부 choices 4개', sc.every((d) => Array.isArray(d.choices) && d.choices!.length === 4),
+    JSON.stringify(sc.map((d) => d.choices?.length)))
+  t('전부 scoring_config 빈 객체', sc.every((d) => JSON.stringify(d.scoring_config) === '{}'))
+  t('지시문이 다 "…고르시오." 로 끝난다',
+    sc.every((d) => d.instruction.trim().endsWith('고르시오.')))
+
+  t('answers 에 start_choose 5건', scAns.length === 5, `실제=${scAns.length}`)
+  t('전부 kind choice · index 0..3',
+    scAns.every((a) => a.answer.kind === 'choice' &&
+      Number.isInteger(a.answer.index) && a.answer.index! >= 0 && a.answer.index! <= 3),
+    JSON.stringify(scAns.map((a) => a.answer)))
+  // 출하 코드로 정답/오답 판정
+  for (const d of sc) {
+    const ans = scAns.find((a) => a.source_key === d.source_key)!
+    const idx = ans.answer.index!
+    const good = combine(
+      { id: d.source_key, type: 'choice', scoring_mode: 'auto', scoring_config: {} },
+      { choiceIndex: idx }, { kind: 'choice', index: idx }, null)
+    t(`'${d.source_key}': 정답 index ${idx} 제출 → pass`, good.status === 'pass')
+    const wrong = (idx + 1) % 4
+    const bad = combine(
+      { id: d.source_key, type: 'choice', scoring_mode: 'auto', scoring_config: {} },
+      { choiceIndex: wrong }, { kind: 'choice', index: idx }, null)
+    t(`'${d.source_key}': 오답 index ${wrong} 제출 → fail`, bad.status === 'fail')
+  }
+
+  // ── 설계 물기 — 정답은 주인공이 행동하는 문장이다 ──
+  // 정답 choice 는 주인공 이름을 담고, 오답 3종(거시·타인물·추상)은 안 담는다.
+  // 답안 index 가 엉뚱한 곳을 가리키면(자기일관 데이터라 판정 검사는 못 잡음)
+  // 여기서 걸린다.
+  const PROTAG: Record<string, string> = {
+    'sc-hunter-status': '강도윤',
+    'sc-sword-ruin': '진운',
+    'sc-broken-vow': '하은수',
+    'sc-villainess-chains': '카리엘',
+    'sc-boss-mirror': '이재하',
+  }
+  t('PROTAG 가 5문항을 덮는다', Object.keys(PROTAG).length === sc.length)
+  for (const d of sc) {
+    const ans = scAns.find((a) => a.source_key === d.source_key)!
+    const name = PROTAG[d.source_key]
+    t(`'${d.source_key}': 지시문에 주인공 '${name}'`, d.instruction.includes(name))
+    d.choices!.forEach((c, i) => {
+      if (i === ans.answer.index) {
+        t(`'${d.source_key}': 정답 choice[${i}] 에 주인공 이름`, c.includes(name), c)
+      } else {
+        t(`'${d.source_key}': 오답 choice[${i}] 에 주인공 이름 없음`, !c.includes(name), c)
+      }
+    })
+  }
+
+  // ── 표면 지표 물기 — 정답이 자수·자리로 뽑히면 안 된다 ──
+  const cc = (s: string) => s.replace(/\s/g, '').length
+  let longestHits = 0
+  let shortestHits = 0
+  for (const d of sc) {
+    const ans = scAns.find((a) => a.source_key === d.source_key)!
+    const lens = d.choices!.map(cc)
+    const cl = lens[ans.answer.index!]
+    if (cl === Math.max(...lens)) longestHits++
+    if (cl === Math.min(...lens)) shortestHits++
+  }
+  t(`물기: 정답 자수가 5문항 모두에서 최장은 아니다 (실제 ${longestHits}/5)`, longestHits < 5)
+  t(`물기: 정답 자수가 5문항 모두에서 최단도 아니다 (실제 ${shortestHits}/5)`, shortestHits < 5)
+  const idxCount = new Map<number, number>()
+  for (const a of scAns) idxCount.set(a.answer.index!, (idxCount.get(a.answer.index!) ?? 0) + 1)
+  const maxIdx = Math.max(...idxCount.values())
+  t(`물기: 정답 index 가 한 값에 3회 초과로 몰리지 않는다 (최다 ${maxIdx}회)`, maxIdx <= 3,
+    JSON.stringify([...idxCount]))
+
+  // stages 코치
+  const stagesDump = readDump<{ skill_key: string; coach_intro: string; coach_line: string }[]>('stages.json')
+  const st = stagesDump.find((s) => s.skill_key === 'start_choose')!
+  t('stages start_choose 에 coach_intro·coach_line 존재',
+    st.coach_intro.length > 0 && st.coach_line.length > 0)
+}
+
 // ── '쓰지 않을 말' 표시: forbidLabel/forbidDisplay ↔ 채점 (세션 22) ──────
 //
 // scoring_config 에 표시 전용 필드 둘을 더했다. 채점(forbidWords·forbidLemmas)은
@@ -3328,16 +3436,26 @@ console.log('\n[가르침 층: 코치 말풍선 · 조건 요약 · 게이지]')
   // ── 가·나·라: 코치 캐릭터 ──
   t('모든 단계에 coach_intro·coach_line 문자열', stagesDump.every(
     (s) => typeof s.coach_intro === 'string' && typeof s.coach_line === 'string'))
+  // 문장 트랙 10단계 + 도입 1 start_choose(세션 28) = 11단계에 코치가 있다.
+  const COACH_SKILLS = new Set([
+    'reduce_adverb', 'emotion_action', 'trim_padding', 'reduce_repeat', 'adverb_exception',
+    'sensory', 'rhythm', 'dialogue_ratio', 'pov_lock', 'action_reason', 'start_choose',
+  ])
   const withCoach = stagesDump.filter((s) => (s.coach_intro as string).length > 0)
-  t('coach_intro 는 문장 트랙 10단계에만 있다',
-    withCoach.length === 10 && withCoach.every((s) => s.track === 'sentence'),
+  t('coach_intro 는 문장 트랙 10단계 + start_choose 에만 있다',
+    withCoach.length === 11 && withCoach.every((s) => COACH_SKILLS.has(s.skill_key)),
     JSON.stringify(withCoach.map((s) => `${s.skill_key}:${s.track}`)))
-  t('coach_line 도 같은 10단계에만',
-    stagesDump.filter((s) => (s.coach_line as string).length > 0).length === 10 &&
+  t('coach_line 도 같은 11단계에만',
+    stagesDump.filter((s) => (s.coach_line as string).length > 0).length === 11 &&
       stagesDump.every((s) => (s.coach_intro as string).length > 0 === ((s.coach_line as string).length > 0)))
-  t('다른 트랙은 coach_intro·coach_line 이 빈 문자열',
-    stagesDump.filter((s) => s.track !== 'sentence').every(
+  t('그 밖의 단계는 coach_intro·coach_line 이 빈 문자열',
+    stagesDump.filter((s) => !COACH_SKILLS.has(s.skill_key)).every(
       (s) => s.coach_intro === '' && s.coach_line === ''))
+  const scCoach = stagesDump.find((s) => s.skill_key === 'start_choose')!
+  t('start_choose 코치 대사에 실제 콘텐츠 (다섯 줄·카메라)',
+    (scCoach.coach_intro as string).includes('다섯 줄') &&
+      (scCoach.coach_intro as string).length > 60 &&
+      (scCoach.coach_line as string).includes('카메라'))
   // 레거시 intro 는 전부 '' — 화면이 안 쓴다
   t('stages.json 의 intro 는 전부 빈 문자열(레거시)',
     stagesDump.every((s) => s.intro === ''))
