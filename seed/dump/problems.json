@@ -3174,5 +3174,178 @@
     "instruction": "주인공 이재하는 자신이 만든 게임 속 중간보스의 몸에서 깨어났다. 1화의 첫 문장으로, 독자를 주인공에게 붙드는 것을 고르시오.",
     "scoring_mode": "auto",
     "scoring_config": {}
+  },
+  {
+    "type": "convert",
+    "choices": null,
+    "passage": "어딘가 불길하고 낯선 기운이 감도는 아침이었다.",
+    "order_no": 1,
+    "tone_tag": "planned",
+    "genre_tag": "modern",
+    "skill_key": "start_write",
+    "difficulty": 1,
+    "source_key": "sw-hunter-dawn",
+    "source_tag": "original",
+    "instruction": "주인공은 최약체에서 회귀한 헌터 강도윤이다. 위 문장은 분위기만 말하고 아무것도 보여주지 않는다. 강도윤이 보고 듣고 만지는 것으로 첫 문장을 다시 쓰시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 60,
+      "minVerbs": 1,
+      "forbidLabel": "분위기를 직접 말하는 표현",
+      "forbidWords": [
+        "기운",
+        "느낌",
+        "분위기",
+        "불길"
+      ],
+      "forbidDisplay": [
+        "기운",
+        "느낌",
+        "분위기",
+        "불길하다"
+      ],
+      "requireAny": [
+        "강도윤",
+        "도윤"
+      ]
+    }
+  },
+  {
+    "type": "convert",
+    "choices": null,
+    "passage": "불타 버린 장원에는 말로 다 못 할 스산한 기운이 감돌았다.",
+    "order_no": 2,
+    "tone_tag": "planned",
+    "genre_tag": "martial",
+    "skill_key": "start_write",
+    "difficulty": 1,
+    "source_key": "sw-ruin-ash",
+    "source_tag": "original",
+    "instruction": "주인공은 하룻밤에 멸문한 가문의 소년 진운이다. 위 문장은 분위기만 말하고 아무것도 보여주지 않는다. 진운이 보고 듣고 만지는 것으로 첫 문장을 다시 쓰시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 60,
+      "minVerbs": 1,
+      "forbidLabel": "분위기를 직접 말하는 표현",
+      "forbidWords": [
+        "기운",
+        "느낌",
+        "분위기",
+        "스산"
+      ],
+      "forbidDisplay": [
+        "기운",
+        "느낌",
+        "분위기",
+        "스산하다"
+      ],
+      "requireAny": [
+        "진운"
+      ]
+    }
+  },
+  {
+    "type": "convert",
+    "choices": null,
+    "passage": "무겁게 가라앉은 공기 속, 어딘지 서글픈 기운이 도는 오후였다.",
+    "order_no": 3,
+    "tone_tag": "planned",
+    "genre_tag": "romance",
+    "skill_key": "start_write",
+    "difficulty": 1,
+    "source_key": "sw-vow-afternoon",
+    "source_tag": "original",
+    "instruction": "주인공은 결혼식 한 달 전 파혼을 통보받은 하은수다. 위 문장은 분위기만 말하고 아무것도 보여주지 않는다. 하은수가 보고 듣고 만지는 것으로 첫 문장을 다시 쓰시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 60,
+      "minVerbs": 1,
+      "forbidLabel": "분위기를 직접 말하는 표현",
+      "forbidWords": [
+        "기운",
+        "느낌",
+        "분위기",
+        "서글"
+      ],
+      "forbidDisplay": [
+        "기운",
+        "느낌",
+        "분위기",
+        "서글프다"
+      ],
+      "requireAny": [
+        "하은수",
+        "은수"
+      ]
+    }
+  },
+  {
+    "type": "convert",
+    "choices": null,
+    "passage": "처형장에는 무어라 형언할 수 없는 팽팽한 긴장감이 흐르고 있었다.",
+    "order_no": 4,
+    "tone_tag": "planned",
+    "genre_tag": "fantasy",
+    "skill_key": "start_write",
+    "difficulty": 1,
+    "source_key": "sw-scaffold-morning",
+    "source_tag": "original",
+    "instruction": "주인공은 소설 속 처형당하는 악녀 카리엘의 몸에서 깨어났다. 위 문장은 분위기만 말하고 아무것도 보여주지 않는다. 카리엘이 보고 듣고 만지는 것으로 첫 문장을 다시 쓰시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 60,
+      "minVerbs": 1,
+      "forbidLabel": "분위기를 직접 말하는 표현",
+      "forbidWords": [
+        "기운",
+        "느낌",
+        "분위기",
+        "긴장",
+        "형언"
+      ],
+      "forbidDisplay": [
+        "기운",
+        "느낌",
+        "분위기",
+        "긴장감",
+        "형언하다"
+      ],
+      "requireAny": [
+        "카리엘"
+      ]
+    }
+  },
+  {
+    "type": "convert",
+    "choices": null,
+    "passage": "무언가 단단히 잘못되었다는 느낌이 서늘하게 온몸을 감쌌다.",
+    "order_no": 5,
+    "tone_tag": "planned",
+    "genre_tag": "fantasy",
+    "skill_key": "start_write",
+    "difficulty": 1,
+    "source_key": "sw-boss-wake",
+    "source_tag": "original",
+    "instruction": "주인공 이재하는 자신이 만든 게임 속 중간보스의 몸에서 깨어났다. 위 문장은 분위기만 말하고 아무것도 보여주지 않는다. 이재하가 보고 듣고 만지는 것으로 첫 문장을 다시 쓰시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 60,
+      "minVerbs": 1,
+      "forbidLabel": "분위기를 직접 말하는 표현",
+      "forbidWords": [
+        "기운",
+        "느낌",
+        "분위기"
+      ],
+      "forbidDisplay": [
+        "기운",
+        "느낌",
+        "분위기"
+      ],
+      "requireAny": [
+        "이재하",
+        "재하"
+      ]
+    }
   }
 ]

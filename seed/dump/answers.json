@@ -777,6 +777,66 @@
       "ord": 4,
       "blank_key": "",
       "content": "'잘못되었다는 느낌'은 설명이다. 무엇이 보이는지가 없다."
+    },
+    {
+      "source_key": "sw-hunter-dawn",
+      "ord": 1,
+      "blank_key": "",
+      "content": "강도윤은 식은땀에 젖은 베개에서 머리를 들었다. 창밖 하늘이 게이트가 열리던 그날처럼 붉었다."
+    },
+    {
+      "source_key": "sw-hunter-dawn",
+      "ord": 2,
+      "blank_key": "",
+      "content": "알람이 울리기도 전에 강도윤은 눈을 떴다. 왼쪽 손목의 오래된 흉터가 밤새 욱신거렸다."
+    },
+    {
+      "source_key": "sw-ruin-ash",
+      "ord": 1,
+      "blank_key": "",
+      "content": "진운은 무너진 대문 기둥에 손을 짚었다. 손바닥에 아직 식지 않은 재의 온기가 묻어났다."
+    },
+    {
+      "source_key": "sw-ruin-ash",
+      "ord": 2,
+      "blank_key": "",
+      "content": "진운이 마당을 가로지르자 발밑에서 그을린 기왓장이 바스러졌다."
+    },
+    {
+      "source_key": "sw-vow-afternoon",
+      "ord": 1,
+      "blank_key": "",
+      "content": "하은수는 왼손 약지의 반지를 돌려 뺐다. 반지가 있던 자리만 하얗게 남아 있었다."
+    },
+    {
+      "source_key": "sw-vow-afternoon",
+      "ord": 2,
+      "blank_key": "",
+      "content": "하은수는 예식장 상담 전화를 끊고 휴대폰을 엎어 두었다. 식탁 위 커피가 다 식어 있었다."
+    },
+    {
+      "source_key": "sw-scaffold-morning",
+      "ord": 1,
+      "blank_key": "",
+      "content": "카리엘은 손목을 묶은 밧줄을 비틀어 보았다. 거친 올이 살갗을 파고들었다."
+    },
+    {
+      "source_key": "sw-scaffold-morning",
+      "ord": 2,
+      "blank_key": "",
+      "content": "계단을 오르는 카리엘의 맨발 밑에서 돌의 한기가 올라왔다."
+    },
+    {
+      "source_key": "sw-boss-wake",
+      "ord": 1,
+      "blank_key": "",
+      "content": "이재하는 제 손등을 덮은 검은 비늘을 손톱으로 긁어 보았다. 비늘은 꿈쩍도 하지 않았다."
+    },
+    {
+      "source_key": "sw-boss-wake",
+      "ord": 2,
+      "blank_key": "",
+      "content": "몸을 일으키던 이재하는 돌 천장에 머리를 박았다. 침대가 제 방 것보다 두 뼘은 높았다."
     }
   ]
 }

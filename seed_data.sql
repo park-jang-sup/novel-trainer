@@ -401,8 +401,8 @@ on conflict (skill_key) do update set
 insert into stages
   (track, order_no, title, skill_key, summary, is_free, self_checks, intro, coach_intro, coach_line)
 values ('start', 2, '첫 문장 쓰기', 'start_write',
-        '주인공의 감각에서 시작한다', true, array[]::text[], '',
-        '', '')
+        '주인공의 감각에서 시작한다', true, array['첫 문장만 읽고 머릿속에 장면이 그려져? 카메라가 주인공한테 붙어 있어?']::text[], '',
+        '1단계에서 첫 문장을 골랐지? 이번엔 네가 직접 써. ''스산한 기운이 감돌았다''라고 쓰면 독자 머릿속엔 아무 그림도 안 떠. 주인공이 보고 만지는 것 하나를 보여주면, 분위기는 저절로 따라와.', '분위기는 말하지 말고, 보여줘!')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
@@ -532,6 +532,18 @@ select
   1, 'sc-sword-ruin'
 where not exists (select 1 from problems p where p.source_key = 'sc-sword-ruin');
 
+-- sw-hunter-dawn (order_no 1, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'start_write'),
+  'convert', 'auto', '주인공은 최약체에서 회귀한 헌터 강도윤이다. 위 문장은 분위기만 말하고 아무것도 보여주지 않는다. 강도윤이 보고 듣고 만지는 것으로 첫 문장을 다시 쓰시오.',
+  '어딘가 불길하고 낯선 기운이 감도는 아침이었다.', null, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","불길"],"forbidDisplay":["기운","느낌","분위기","불길하다"],"requireAny":["강도윤","도윤"]}'::jsonb,
+  'original', 'modern', 'planned',
+  1, 'sw-hunter-dawn'
+where not exists (select 1 from problems p where p.source_key = 'sw-hunter-dawn');
+
 -- rm-magpie-bridge (order_no 1, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
@@ -628,6 +640,18 @@ select
   1, 'sim-cheong-fear'
 where not exists (select 1 from problems p where p.source_key = 'sim-cheong-fear');
 
+-- sw-ruin-ash (order_no 2, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'start_write'),
+  'convert', 'auto', '주인공은 하룻밤에 멸문한 가문의 소년 진운이다. 위 문장은 분위기만 말하고 아무것도 보여주지 않는다. 진운이 보고 듣고 만지는 것으로 첫 문장을 다시 쓰시오.',
+  '불타 버린 장원에는 말로 다 못 할 스산한 기운이 감돌았다.', null, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","스산"],"forbidDisplay":["기운","느낌","분위기","스산하다"],"requireAny":["진운"]}'::jsonb,
+  'original', 'martial', 'planned',
+  1, 'sw-ruin-ash'
+where not exists (select 1 from problems p where p.source_key = 'sw-ruin-ash');
+
 -- dragon-king-anger (order_no 2, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
@@ -675,6 +699,18 @@ select
   'folktale', 'fantasy', 'planned',
   3, 'woodcutter-shame'
 where not exists (select 1 from problems p where p.source_key = 'woodcutter-shame');
+
+-- sw-vow-afternoon (order_no 3, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'start_write'),
+  'convert', 'auto', '주인공은 결혼식 한 달 전 파혼을 통보받은 하은수다. 위 문장은 분위기만 말하고 아무것도 보여주지 않는다. 하은수가 보고 듣고 만지는 것으로 첫 문장을 다시 쓰시오.',
+  '무겁게 가라앉은 공기 속, 어딘지 서글픈 기운이 도는 오후였다.', null, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","서글"],"forbidDisplay":["기운","느낌","분위기","서글프다"],"requireAny":["하은수","은수"]}'::jsonb,
+  'original', 'romance', 'planned',
+  1, 'sw-vow-afternoon'
+where not exists (select 1 from problems p where p.source_key = 'sw-vow-afternoon');
 
 -- tp-axe-water (order_no 3, difficulty 1)
 insert into problems
@@ -808,6 +844,18 @@ select
   1, 'rp-simcheong-sea'
 where not exists (select 1 from problems p where p.source_key = 'rp-simcheong-sea');
 
+-- sw-scaffold-morning (order_no 4, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'start_write'),
+  'convert', 'auto', '주인공은 소설 속 처형당하는 악녀 카리엘의 몸에서 깨어났다. 위 문장은 분위기만 말하고 아무것도 보여주지 않는다. 카리엘이 보고 듣고 만지는 것으로 첫 문장을 다시 쓰시오.',
+  '처형장에는 무어라 형언할 수 없는 팽팽한 긴장감이 흐르고 있었다.', null, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","긴장","형언"],"forbidDisplay":["기운","느낌","분위기","긴장감","형언하다"],"requireAny":["카리엘"]}'::jsonb,
+  'original', 'fantasy', 'planned',
+  1, 'sw-scaffold-morning'
+where not exists (select 1 from problems p where p.source_key = 'sw-scaffold-morning');
+
 -- rp-kongjwi-jar (order_no 4, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
@@ -891,6 +939,18 @@ select
   'folktale', 'fantasy', 'planned',
   1, 'ae-rabbit-gate'
 where not exists (select 1 from problems p where p.source_key = 'ae-rabbit-gate');
+
+-- sw-boss-wake (order_no 5, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'start_write'),
+  'convert', 'auto', '주인공 이재하는 자신이 만든 게임 속 중간보스의 몸에서 깨어났다. 위 문장은 분위기만 말하고 아무것도 보여주지 않는다. 이재하가 보고 듣고 만지는 것으로 첫 문장을 다시 쓰시오.',
+  '무언가 단단히 잘못되었다는 느낌이 서늘하게 온몸을 감쌌다.', null, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기"],"forbidDisplay":["기운","느낌","분위기"],"requireAny":["이재하","재하"]}'::jsonb,
+  'original', 'fantasy', 'planned',
+  1, 'sw-boss-wake'
+where not exists (select 1 from problems p where p.source_key = 'sw-boss-wake');
 
 -- ae-axe-drop (order_no 5, difficulty 2)
 insert into problems
@@ -1970,6 +2030,20 @@ from problems p
 where p.source_key = 'sc-sword-ruin'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- sw-hunter-dawn ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '강도윤은 식은땀에 젖은 베개에서 머리를 들었다. 창밖 하늘이 게이트가 열리던 그날처럼 붉었다.'
+from problems p
+where p.source_key = 'sw-hunter-dawn'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- sw-hunter-dawn ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '알람이 울리기도 전에 강도윤은 눈을 떴다. 왼쪽 손목의 오래된 흉터가 밤새 욱신거렸다.'
+from problems p
+where p.source_key = 'sw-hunter-dawn'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- rm-magpie-bridge ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '까치들이 날아와 몸을 이었다. 견우는 그 위에 발을 얹었다.'
@@ -2110,6 +2184,20 @@ from problems p
 where p.source_key = 'sim-cheong-fear'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- sw-ruin-ash ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '진운은 무너진 대문 기둥에 손을 짚었다. 손바닥에 아직 식지 않은 재의 온기가 묻어났다.'
+from problems p
+where p.source_key = 'sw-ruin-ash'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- sw-ruin-ash ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '진운이 마당을 가로지르자 발밑에서 그을린 기왓장이 바스러졌다.'
+from problems p
+where p.source_key = 'sw-ruin-ash'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- dragon-king-anger ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '용왕이 옥좌의 팔걸이를 내리쳤다. 산호 술잔이 바닥에 굴렀다.'
@@ -2164,6 +2252,20 @@ insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 2, '', '나무꾼은 두 도끼에서 눈을 돌렸다. 목덜미가 달아올라 뒷걸음질을 쳤다.'
 from problems p
 where p.source_key = 'woodcutter-shame'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- sw-vow-afternoon ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '하은수는 왼손 약지의 반지를 돌려 뺐다. 반지가 있던 자리만 하얗게 남아 있었다.'
+from problems p
+where p.source_key = 'sw-vow-afternoon'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- sw-vow-afternoon ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '하은수는 예식장 상담 전화를 끊고 휴대폰을 엎어 두었다. 식탁 위 커피가 다 식어 있었다.'
+from problems p
+where p.source_key = 'sw-vow-afternoon'
 on conflict (problem_id, ord, blank_key) do nothing;
 
 -- tp-axe-water ord 1 
@@ -2320,6 +2422,20 @@ from problems p
 where p.source_key = 'rp-simcheong-sea'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- sw-scaffold-morning ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '카리엘은 손목을 묶은 밧줄을 비틀어 보았다. 거친 올이 살갗을 파고들었다.'
+from problems p
+where p.source_key = 'sw-scaffold-morning'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- sw-scaffold-morning ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '계단을 오르는 카리엘의 맨발 밑에서 돌의 한기가 올라왔다.'
+from problems p
+where p.source_key = 'sw-scaffold-morning'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- rp-kongjwi-jar ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '콩쥐는 물을 길어다 독에 부었다. 그러나 밑으로 다 새어 나가, 채워도 채워도 독은 차지 않았다. 콩쥐는 항아리를 안은 채 주저앉아 울었다.'
@@ -2388,6 +2504,20 @@ insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 2, '', '도깨비들이 방망이를 휘두를 때마다 은돈과 금돈이 쏟아졌다. "나와라, 뚝딱!" 외침이 이어질수록 보물은 멈추지 않고 쌓여 갔다.'
 from problems p
 where p.source_key = 'rp-goblin-club'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- sw-boss-wake ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '이재하는 제 손등을 덮은 검은 비늘을 손톱으로 긁어 보았다. 비늘은 꿈쩍도 하지 않았다.'
+from problems p
+where p.source_key = 'sw-boss-wake'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- sw-boss-wake ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '몸을 일으키던 이재하는 돌 천장에 머리를 박았다. 침대가 제 방 것보다 두 뼘은 높았다.'
+from problems p
+where p.source_key = 'sw-boss-wake'
 on conflict (problem_id, ord, blank_key) do nothing;
 
 -- ar-cracked-ice ord 1 ①

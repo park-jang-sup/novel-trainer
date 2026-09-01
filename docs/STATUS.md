@@ -4,18 +4,18 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 28 · 커밋 `77e991d` 위
+마지막 갱신: 세션 29 · 커밋 `cf184a0` 위
 
 ---
 
 ## 앱이 지금 할 수 있는 것
 
 ```
-단계 26 · 문항 98 (도입 1 start_choose 5 추가) · 화면이 붙은 유형 11단계분 (문장 1~11, 구성 14·17·19·20, 도입 1)
+단계 26 · 문항 103 (도입 2 start_write 5 추가) · 화면이 붙은 유형 12단계분 (문장 1~11, 구성 14·17·19·20, 도입 1·2)
 문항 화면 스케일  제목 text-3xl · 원문 상자·입력(Editor·FillBody) text-lg(1.125rem) p-5 · Editor rows 7/16 ·
                 컨테이너 max-w-7xl(한 칸 max-w-3xl) · 두 칸 grid [minmax(0,1.4fr) minmax(22rem,1fr)] 왼쪽 우선
 가르침 층       코치 캐릭터 먹물이 ✒️ 말풍선(CoachBubble) — 단계 목록: 제목·요약 아래 coach_intro ·
-                문항 화면: 지시문 위 coach_line (둘 다 stages, 문장 트랙 10단계만, '' 면 안 뜸) ·
+                문항 화면: 지시문 위 coach_line (둘 다 stages, 문장 10 + 도입 1·2, '' 면 안 뜸) ·
                 지시문 아래 조건 요약 한 줄(summarizeConfig — config 파생) ·
                 서술형 게이지 "N문장 · M / 상한자"(모든 텍스트 유형)
                 ★ 레거시 stages.intro 컬럼은 남아 있으나 값 전부 '' · 화면은 coach_* 만 씀
@@ -23,8 +23,9 @@
              모범답안+자기점검 → '다음 문항 →'(미달 '건너뛰기 →') → … → 다 통과면
              '단계 완료 N/N'+'다음 단계 →', 건너뛴 게 있으면 'N/M · 건너뛴 문항 k개'+첫 링크
 ★ 모범답안 있는 문항: 10단계 fill 8 (①②) + 문장 1·2·3·4단계 (reduce_adverb 8 · emotion_action 6 ·
-  trim_padding 8 · reduce_repeat 8, 가·나 blank_key '')
-없는 것       도입 2~4(start_write·start_extend·start_episode) · streak·XP·복습·하트·진도 저장 테이블(안 만든다 — submissions 로만 센다)
+  trim_padding 8 · reduce_repeat 8) + 도입 2 start_write 5, 가·나 blank_key '' ·
+  도입 1 start_choose 5 는 reference 를 선택지별 해설로 씀(가·나 아님)
+없는 것       도입 3~4(start_extend·start_episode) · streak·XP·복습·하트·진도 저장 테이블(안 만든다 — submissions 로만 센다)
 ★ 10단계는 새 skill_key `action_reason`(fill 8). 옛 `action_turn`(convert 8)은 is_active=false — 화면에 '준비 중'
 ```
 
@@ -92,9 +93,42 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 ## 다음 — 순서대로. 하나가 verify 에서 물리기 전에 다음을 안 한다
 
 ```
-1  빈 단계 채우기         도입 2 start_write(convert + requireAny 첫 사용) → 도입 3 start_extend
-                        (continue 첫 사용) → 구성 빈 6단계. 단계당 4~6. 기존 유형만.
+1  빈 단계 채우기         도입 3 start_extend(continue 유형 첫 사용, "세 문장 안에 인물") →
+                        구성 빈 6단계. 단계당 4~6. 기존 유형만.
                         도입 4 start_episode 는 아래 미결(AI 심사 전이라 보류)
+```
+
+### 끝난 것 — 세션 29
+
+```
+도입 2 start_write '첫 문장 쓰기' 5문항 — convert · requireAny 첫 사용
+  설계   passage 는 도입 1(start_choose)의 '추상 분위기' 오답을 글자까지 이어받는다. 학습자는
+         그 문장을 주인공이 보고·듣고·만지는 것으로 다시 쓴다. 원문 그대로 제출은
+         forbidWords(분위기어) + requireAny(주인공 이름) 두 겹으로 막힌다.
+  problems.json  sw- 5건 append (convert · auto · choices null · order_no 1~5 · difficulty 1).
+                 scoring_config: maxChars 60 · minVerbs 1 · forbidLabel '분위기를 직접 말하는 표현' ·
+                 forbidWords(공통 기운·느낌·분위기 + 문항별 불길/스산/서글/긴장·형언) ·
+                 forbidDisplay · requireAny(강도윤·도윤 / 진운 / 하은수·은수 / 카리엘 / 이재하·재하)
+  answers.json   reference 10행 (sw-당 ord 1 가 / 2 나 · blank_key '')
+                 실측 자수(공백만 제외·구두점 포함): 가 41·37·34·32·37 / 나 37·28·37·25·36
+                 실측 동사: 4·3·4·3·4·3·3·2·3·2. 전 행 forbidWords 적중 0 · requireAny 충족 ·
+                 60자 이내 · passage 베낌 아님 · 도입 1 정답 문장 베낌 아님
+  stages.json    start_write coach_intro(분위기는 보여줘)·coach_line·self_checks 1건
+  verify [도입 2 start_write]  5문항 형태·scoring_config · passage 이어받기 대조(글자까지) ·
+         불변식(원문 그대로 → forbidWords fail + requireAny fail) · 모범답안 10행 실측 자수·
+         forbidWords 0·requireAny 포함·베낌 아님 · 단계 간 베낌 방어(sc- 정답 문장 부분 문자열 아님) ·
+         형태소 동사 ≥ 1(서버 있을 때) · 코치·자기점검
+         + COACH_SKILLS 11→12 · [쓰지 않을 말 표시] forbidLabel 14→19(emotion 6+sensory 8+start_write 5)
+  검증   tsc 0 · test:scoring 3297/0(형태소 서버) · check:numbers 0 · gen:seed 무변화
+  ★ DB 반영·눈검사 절차(박 님): seed_data.sql(problems 5·reference 10 신규 insert + stages
+    coach·self_checks do update — 멱등) → seed_check.sql → 브라우저:
+    ① 도입 트랙에서 '첫 문장 쓰기'가 준비 중에서 풀려 링크가 생겼는지
+    ② 단계 목록 coach_intro 말풍선 · 문항 화면 coach_line
+    ③ 아무 문항에서 원문 그대로 제출 → '쓰지 않을 말' + '반드시 넣을 말' 두 검사가 미달로
+       잡히는지 (밑줄은 fail 검사만)
+    ④ 직접 고쳐 통과 → 모범답안 가·나 + 자기점검 한 줄
+    ⑤ 두 칸 화면(scoring key 4개↑) — 오른쪽에 "분위기를 직접 말하는 표현 · 예: …" 범주 줄 +
+       조건 요약 한 줄("60자 이하 · 움직이는 말 1개 이상 · '강도윤' 또는 '도윤' 넣기" 류)
 ```
 
 ### 끝난 것 — 세션 28
@@ -361,6 +395,10 @@ fill 은 인물·사물을 안 본다     덕수 답이 세연 문항을 통과�
                             blanks 에 requireAny 정도 — 지금은 안 한다
 모범답안 베낌은 통과한다        본 뒤 그대로 붙이면 forbidCopyOfFixedLines 를 안 탄다. reference_answers
                             줄도 베낌 검사에 넣을 수 있다(서버가 이미 읽는다). 학습 루프 뒤
+단계 간 베낌(도입 1 정답 → 도입 2 답안)  같은 계열 — 도입 1 정답 문장을 그대로 옮겨 적으면 도입 2 를
+                            통과한다(채팅 실측 5/5). 규칙으로 안 막는다(좋은 문장 필사도 학습은
+                            학습). 낯선 학습자 실사용 때 submissions 로 관찰. verify 는 모범답안이
+                            그 문장을 안 베끼게만 문다
 seed_data 는 갱신을 안 한다    문항 insert 가 `where not exists` 라 기존 행을 안 고친다. 덤프의
                             passage·scoring_config 를 바꾸면 seed_data 만으로는 DB 에 안 들어간다 —
                             DB update 를 따로 돌리고 seed_check 를 실제로 돌려 대조가 통과하는지 본다
