@@ -3750,11 +3750,12 @@ console.log('\n[구성 11 lack: 5문항 + 모범답안 대조]')
     const ords = refs.filter((r) => r.source_key === d.source_key).map((r) => r.ord).sort()
     t(`'${d.source_key}': 가·나 두 세트`, JSON.stringify(ords) === '[1,2]', JSON.stringify(ords))
   }
+  // 세션 31 후기: 박 님 실사용 답안으로 4행 교체 (desk 가 · cafe 가·나 · board 나).
   const LEN: Record<string, [number, number]> = {
-    'lk-desk-nine': [40, 43],
-    'lk-cafe-wait': [40, 42],
+    'lk-desk-nine': [47, 43],
+    'lk-cafe-wait': [48, 56],
     'lk-guard-dawn': [37, 36],
-    'lk-board-rank': [39, 39],
+    'lk-board-rank': [39, 46],
     'lk-tower-shelf': [36, 39],
   }
   for (const r of refs) {
@@ -3805,8 +3806,35 @@ console.log('\n[구성 11 lack: 5문항 + 모범답안 대조]')
       copied.length === 0, JSON.stringify(copied))
   }
 
-  // ── 형태소(서버 있을 때만): 모범답안 동사 ≥ 2 (실측 가 4·5·5·2·2 / 나 5·5·5·2·3) ──
+  // ── 형태소(서버 있을 때만): 모범답안 동사 ≥ 2 ──
+  // 실측(세션 31 후기): 가 6·4·5·2·2 / 나 5·6·5·3·3
   pushRefMorphCheck('구성 11', refs, 'convert', cfgOf)
+
+  // ── update-lack-refs.sql ↔ 덤프 (content 글자까지) — 세션 31 후기 4행 교체 ──
+  // 기존 행이라 이 update 파일이 DB 반영을 담당한다(reference insert 는 on
+  // conflict do nothing). 나머지 6행은 불변.
+  {
+    const updSql = readFileSync(
+      path.join(__dirname, '..', '..', 'seed', 'update-lack-refs.sql'), 'utf8')
+    const rows = [...updSql.matchAll(
+      /update reference_answers set content =\n\s*'((?:[^']|'')*)'\n\s*where problem_id = \(select id from problems where source_key = '([^']*)'\)\n\s*and ord = (\d+) and blank_key = '';/g
+    )].map((m) => ({
+      content: m[1].replace(/''/g, "'"),
+      source_key: m[2],
+      ord: Number(m[3]),
+    }))
+    const CHANGED: [string, number][] = [
+      ['lk-desk-nine', 1], ['lk-cafe-wait', 1], ['lk-cafe-wait', 2], ['lk-board-rank', 2],
+    ]
+    t('update-lack-refs.sql 에 4행', rows.length === 4, `실제=${rows.length}`)
+    for (const [sk, ord] of CHANGED) {
+      const row = rows.find((r) => r.source_key === sk && r.ord === ord)
+      const ref = refs.find((r) => r.source_key === sk && r.ord === ord)
+      t(`update SQL '${sk}' ord${ord} 의 content 가 덤프와 글자까지 같다`,
+        !!row && !!ref && row.content === ref.content,
+        `SQL=${JSON.stringify(row?.content)}`)
+    }
+  }
 
   // ── stages: lack 코치·자기점검 (구성 트랙 첫 코치) ──
   const stagesDump = readDump<{ skill_key: string; coach_intro: string; coach_line: string; self_checks: string[] }[]>('stages.json')

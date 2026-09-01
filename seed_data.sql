@@ -2012,7 +2012,7 @@ where p.source_key = 'dragon-king-anger'
 
 -- lk-desk-nine ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
-select p.id, 1, '', '김하준은 부장보다 삼십 분 먼저 와 회의실 불을 켜 뒀다. 부장이 봤는지 곁눈으로 두 번 확인했다.'
+select p.id, 1, '', '회식 자리에서 김하준은 지난 분기 계약 얘기를 또 꺼냈다. 그거 사실 제가 그린 그림이라고, 잔을 채우며 말했다.'
 from problems p
 where p.source_key = 'lk-desk-nine'
 on conflict (problem_id, ord, blank_key) do nothing;
@@ -2320,14 +2320,14 @@ on conflict (problem_id, ord, blank_key) do nothing;
 
 -- lk-cafe-wait ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
-select p.id, 1, '', '윤소민은 친구가 오기 전에 휴대폰을 세 번 뒤집었다 폈다. 답장 없는 대화창을 열었다가 덮었다.'
+select p.id, 1, '', '윤소민은 친구가 오기 전에 휴대폰을 계속 만지작거렸다. 벌써 세 번이었다. 답장 없는 대화창을 열었다가 덮었다.'
 from problems p
 where p.source_key = 'lk-cafe-wait'
 on conflict (problem_id, ord, blank_key) do nothing;
 
 -- lk-cafe-wait ord 2 
 insert into reference_answers (problem_id, ord, blank_key, content)
-select p.id, 2, '', '윤소민은 점원이 물잔을 채워 주자 고맙다고 두 번 말했다. 그러고는 문이 열릴 때마다 고개를 들었다.'
+select p.id, 2, '', '윤소민은 점원이 물잔을 채워 주자 몇 번째인지 모를 고맙다는 인사와 동시에 물잔을 비웠다. 그러고는 문이 열릴 때마다 고개를 들었다.'
 from problems p
 where p.source_key = 'lk-cafe-wait'
 on conflict (problem_id, ord, blank_key) do nothing;
@@ -2593,7 +2593,7 @@ on conflict (problem_id, ord, blank_key) do nothing;
 
 -- lk-board-rank ord 2 
 insert into reference_answers (problem_id, ord, blank_key, content)
-select p.id, 2, '', '한시우는 동기의 인터뷰 영상을 소리 없이 돌려 보았다. 같은 기술을 허공에 두 번 그려 보았다.'
+select p.id, 2, '', '한시우는 동기의 인터뷰 영상을 소리 없이 돌려 보았다. 화면에 반사된 얼굴이 동기의 모습과 상반되어 있었다.'
 from problems p
 where p.source_key = 'lk-board-rank'
 on conflict (problem_id, ord, blank_key) do nothing;
