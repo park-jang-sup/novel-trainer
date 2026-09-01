@@ -212,7 +212,8 @@ export default function TrainClient({
     }
     return mergeRepeatChecks(
       mergeForbidChecks([
-        ...gradeLocal(dummy, { text: '' }, undefined),
+        // passage 를 넘겨야 forbidPassageCopy 기준 줄이 목록에 뜬다(빈 답이라 pass).
+        ...gradeLocal(dummy, { text: '' }, undefined, problem.passage ?? undefined),
         ...pendingMorphChecks(problem.scoringConfig),
       ])
     )

@@ -132,6 +132,11 @@ export interface ScoringConfig {
    *  부분 문자열 includes 라, 일반명사와 겹치는 이름('하늘')은 sky 를 쓴 것만으로
    *  충족되는 누수가 있다(관찰 항목 — 규칙으로 안 막는다). */
   requireAll?: string[]
+  /** 답안(공백 제거)이 원문 전체(같은 정규화)를 부분 문자열로 포함하면 fail.
+   *  무난한 원문 단계(lack·contrast_char)의 '원문 복사 + 이름' 뚫기를 막는다
+   *  (세션 32 후기 박 님 실증). 원문 일부 유지가 정상인 remove 계열엔 쓰지 마라
+   *  — opt-in 전용. gradeLocal 에 원문을 넘겨야 판정한다(config 가 아니라 인자). */
+  forbidPassageCopy?: boolean
   // coinage
   count?: number
   minLen?: number

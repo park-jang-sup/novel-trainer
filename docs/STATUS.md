@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 32 후기 · 커밋 `b26bb05` 위
+마지막 갱신: 세션 32 후기 2 · 커밋 `2559a4b` 위
 
 ---
 
@@ -90,6 +90,13 @@ AI 는 피드백이지 심판이 아니다     위 재개 조건 전까지
                               꺼내고, 새 면모를 만들면 원장에도 적는다(왕복 규칙) —
                               문항의 단일 출처가 덤프이듯. verify 가 활성 lack·contrast_char
                               문항의 인물 이름이 원장 헤더에 실재하는지 문다
+원문 복사+이름 뚫기는 forbidPassageCopy 로 막는다(세션 32 후기 2)  '무난한 원문' 단계
+                              (lack·contrast_char)는 원문을 그대로 옮기고 이름만 붙이면
+                              maxChars·forbidWords·requireAny 를 다 통과한다(박 님 실증).
+                              scoring_config.forbidPassageCopy: true — 답안(공백 제거)이 원문
+                              전체를 부분 문자열로 품으면 fail. gradeLocal 에 원문을 인자로
+                              넘겨 판정(config 아님). 적용: lack 5 + contrast_char 활성 6 = 11.
+                              ★ remove 계열(원문 일부 유지가 정상)엔 쓰지 마라 — opt-in 전용
 fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀 때 뺀다
 ```
 
@@ -111,6 +118,50 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
                         박 님이 직접 오판을 관찰해 판정 권한 부여를 결정. 여기 쌓이는 답안·
                         판정 기록이 원칙 4 재개 조건의 수집처다.
                         전제: 구성 빈 단계 4개가 먼저 찬다
+```
+
+### 끝난 것 — 세션 32 후기 2 (구성 12 전면 재구성 · 원문 복사 차단)
+
+```
+박 님이 학습자로 완주하며 판정 2건 — 60자 압축을 100자 시연형으로 · 뚫기 구멍 봉함
+
+① 모범답안 전부 미달        60자 2문장 압축은 겉·속 두 층이 퍼즐이 돼 "뭘 알려주는지
+                          모르겠다". 100자 3~4문장 시연형으로 교체 — 겉 행동 → 전환 →
+                          속이 새는 행동이 순서대로 읽히게. answers.json 활성 cc- 12행 교체
+                          실측 자수 가 98·88·89·92·88·96 / 나 87·96·83·89·90·86 ·
+                          동사 가 10·7·10·8·5·10 / 나 8·7·7·9·9·10
+  problems.json  활성 cc- 6건 maxChars 60→100 · minVerbs 2→3 · forbidPassageCopy:true ·
+                 instruction 2건 재작성(cc-ace-siren '겉과 속을 한 장면에' · cc-first-pay
+                 '대비시키시오' — 페어). stages.json contrast_char summary
+                 "상반된 인물을 나란히 세운다" → "겉과 속을 한 장면에 담는다"
+
+② 원문 복사 + 이름 뚫기 실증  "원문 그대로 + 이름" 이 활성 6문항 전부 통과(무난 원문 단계의
+                          구멍 — lack 5건도 동일). forbidPassageCopy 신설(정한 것에 등재).
+  types.ts       forbidPassageCopy?: boolean — 답안(공백 제거)이 원문 전체를 부분
+                 문자열로 품으면 fail. remove 계열 금지 주석
+  local.ts       gradeLocal 서명에 passage?: string 선택 인자(config 아님). default
+                 케이스에 key 'passageCopy' · label '원문 그대로 옮김' · gating ·
+                 fail detail '원문을 고치지 않고 그대로 냈다'
+  index.ts       combine 5번째 인자 passage → gradeLocal 로 전달
+  summary.ts     forbidPassageCopy 면 '원문 그대로 내지 않기' 조각 추가
+  route.ts       .select 에 passage 추가 · combine(…, problem.passage)
+  TrainClient    criteriaChecks 가 problem.passage 를 gradeLocal 에 넘김(두 칸 기준 목록)
+  problems.json  lk- 5건 forbidPassageCopy:true 추가(나머지 불변)
+  seed/update-contrast-v3.sql (신규)  활성 cc- 6(instruction+cfg) · lk- 5(cfg) ·
+                 활성 cc- 모범답안 12행. v2 는 이미 실행됨(비활성 4건)
+
+verify  [구성 12] 실측 자수·config 단언(100·3·forbidPassageCopy true)·lk- 5건도
+        forbidPassageCopy true · 뚫기 물기 11문항(cc 6 + lk 5 — 원문+이름 gradeLocal →
+        passageCopy fail · 요구 검사는 pass) · update-contrast-v3.sql ↔ 덤프(jsonb·글자)
+        [forbidPassageCopy] 유닛 블록(뚫기 fail · 통짜 포함 fail · 정상 pass · passage
+        미지정 시 검사 없음 · combine 전달 · summary · route/TrainClient 배선)
+검증    tsc 0 · test:scoring 4016/0(형태소 서버) · check:numbers 0 · gen:seed 무변화 ·
+        next build 통과 · 물기: local.ts passageCopy 분기 무력화 → 뚫기 물기 11 + 유닛 4 fail 확인 후 복원
+★ DB 절차(박 님)  seed/update-contrast-v3.sql → seed_data.sql(멱등) → seed_check.sql →
+  브라우저 구성 12:
+  ① 어제의 뚫기 답(원문 그대로 + 이름) 재제출 → '원문 그대로 옮김' 미달
+  ② 조건 요약에 "100자 이하 · 움직이는 말 3개 이상 · … · 원문 그대로 내지 않기"
+  ③ 모범답안이 겉 → 속 순서로 읽히는지 — 이번 교체의 핵심
 ```
 
 ### 끝난 것 — 세션 32 후기 (구성 12 재설계)
@@ -599,6 +650,11 @@ fill 은 인물·사물을 안 본다     덕수 답이 세연 문항을 통과�
 무관 내용 통과(도입 2 사례)   '줄넘기 하면 재미있어 하는 이재하 친구' 가 통과 — 이름+동사만 맞추면
                             뚫린다. 9단계 실측 '내용 통째 교체' 계열. 내용 판정은 AI 몫,
                             자기점검이 그 자리. 박 님 뚫기 답안은 AI 재개 때 나쁜 표본 자산
+도입 3(start_extend) 지문 재출력 뚫기  continue 유형도 지문을 그대로 재출력하고 이름만
+                            더하면 requireAny·minVerbs 를 통과할 여지 — 세션 32 후기 2 의
+                            lack·contrast 구멍과 같은 계열. forbidPassageCopy 를 아직 안
+                            붙였다(이어쓰기는 앞 문장 일부 유지가 정상일 수 있어 판단 보류).
+                            낯선 학습자 실사용 관찰 후 판단
 requireAny/requireAll '하늘' 누수  일반명사와 부분 문자열이 겹치는 이름('하늘'=sky)은 인물을
                             안 쓰고 하늘(sky)만 써도 요구 검사가 충족으로 본다(includes).
                             규칙으로 안 막는다(조이면 좋은 답안이 먼저 걸린다) — 내용 판정은

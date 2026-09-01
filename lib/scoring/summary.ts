@@ -32,6 +32,7 @@ export function summarizeConfig(cfg: ScoringConfig): string {
 
   if (cfg.requireAny?.length) parts.push(`'${cfg.requireAny.join("' 또는 '")}' 넣기`)
   if (cfg.requireAll?.length) parts.push(`'${cfg.requireAll.join("' · '")}' 모두 넣기`)
+  if (cfg.forbidPassageCopy) parts.push('원문 그대로 내지 않기')
 
   return parts.join(' · ')
 }

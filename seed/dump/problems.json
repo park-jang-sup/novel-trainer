@@ -3556,7 +3556,8 @@
       "requireAny": [
         "김하준",
         "하준"
-      ]
+      ],
+      "forbidPassageCopy": true
     }
   },
   {
@@ -3593,7 +3594,8 @@
       "requireAny": [
         "윤소민",
         "소민"
-      ]
+      ],
+      "forbidPassageCopy": true
     }
   },
   {
@@ -3625,7 +3627,8 @@
       ],
       "requireAny": [
         "조평"
-      ]
+      ],
+      "forbidPassageCopy": true
     }
   },
   {
@@ -3661,7 +3664,8 @@
       "requireAny": [
         "한시우",
         "시우"
-      ]
+      ],
+      "forbidPassageCopy": true
     }
   },
   {
@@ -3691,7 +3695,8 @@
       ],
       "requireAny": [
         "리안"
-      ]
+      ],
+      "forbidPassageCopy": true
     }
   },
   {
@@ -3749,15 +3754,16 @@
     "difficulty": 1,
     "source_key": "cc-first-pay",
     "source_tag": "original",
-    "instruction": "조평과 유겸을 대비시키시오. 조평은 배곯던 시절을 기억하는 호위, 유겸은 부족함 없이 자란 신참 호위다. 아래 장면에서 두 사람은 똑같이 움직인다. 다시 써서, 같은 일에 두 사람이 서로 다르게 반응하게 하시오.",
+    "instruction": "조평과 유겸을 대비시키시오. 조평은 배곯던 시절이 몸에 남아 제 것엔 인색해도 남의 끼니엔 아깝지 않은 호위다. 유겸은 신세를 지면 도련님 취급이 진짜가 될까 밥값부터 제가 내는 신참이다. 아래 장면을 다시 써서, 같은 삯 앞에서 두 사람이 서로 다르게 움직이게 하시오.",
     "scoring_mode": "auto",
     "scoring_config": {
-      "maxChars": 60,
-      "minVerbs": 2,
+      "maxChars": 100,
+      "minVerbs": 3,
       "requireAll": [
         "조평",
         "유겸"
-      ]
+      ],
+      "forbidPassageCopy": true
     }
   },
   {
@@ -3818,8 +3824,8 @@
     "instruction": "서담의 겉과 속을 한 장면에 담으시오. 서담은 공을 팀에 돌리고 칭찬 앞에서 사양부터 하는 대리다. 그러나 속으로는 그 칭찬을 오래 좋아한다. 아래 장면을 다시 써서, 사양하는 겉과 좋아하는 속이 둘 다 행동으로 보이게 하시오.",
     "scoring_mode": "auto",
     "scoring_config": {
-      "maxChars": 60,
-      "minVerbs": 2,
+      "maxChars": 100,
+      "minVerbs": 3,
       "forbidLabel": "속마음을 직접 말하는 표현",
       "forbidWords": [
         "좋아",
@@ -3834,7 +3840,8 @@
       ],
       "requireAny": [
         "서담"
-      ]
+      ],
+      "forbidPassageCopy": true
     }
   },
   {
@@ -3848,11 +3855,11 @@
     "difficulty": 1,
     "source_key": "cc-ace-siren",
     "source_tag": "original",
-    "instruction": "도현의 겉과 속을 한 장면에 담으시오. 도현은 누구에게나 흐트러짐 없이 친절한 S급 헌터다. 그러나 마음의 울타리 안 사람이 다치면 처음으로 일정이 밀린다. 아래 장면을 다시 써서, 매끄러운 겉과 흔들리는 속이 둘 다 행동으로 보이게 하시오.",
+    "instruction": "도현의 겉과 속을 한 장면에 담으시오. 도현은 누구에게나 같은 온도로 친절한 S급 헌터다. 무전 속 부상자는 그가 마음의 울타리 안에 둔 몇 안 되는 사람이다. 아래 장면을 다시 써서, 흐트러지지 않는 겉과 일정을 처음 미루는 속이 둘 다 행동으로 보이게 하시오.",
     "scoring_mode": "auto",
     "scoring_config": {
-      "maxChars": 60,
-      "minVerbs": 2,
+      "maxChars": 100,
+      "minVerbs": 3,
       "forbidLabel": "속마음을 직접 말하는 표현",
       "forbidWords": [
         "걱정",
@@ -3866,7 +3873,8 @@
       ],
       "requireAny": [
         "도현"
-      ]
+      ],
+      "forbidPassageCopy": true
     }
   },
   {
@@ -3883,8 +3891,8 @@
     "instruction": "유겸의 겉과 속을 한 장면에 담으시오. 유겸은 씀씀이 크고 낙천적인 부잣집 출신 신참 호위다. 그러나 실력을 의심받으면 웃는 얼굴로 제일 험한 일에 손을 든다. 아래 장면을 다시 써서, 웃는 겉과 이 악무는 속이 둘 다 행동으로 보이게 하시오.",
     "scoring_mode": "auto",
     "scoring_config": {
-      "maxChars": 60,
-      "minVerbs": 2,
+      "maxChars": 100,
+      "minVerbs": 3,
       "forbidLabel": "속마음을 직접 말하는 표현",
       "forbidWords": [
         "불안",
@@ -3898,7 +3906,8 @@
       ],
       "requireAny": [
         "유겸"
-      ]
+      ],
+      "forbidPassageCopy": true
     }
   },
   {
@@ -3915,8 +3924,8 @@
     "instruction": "셀라의 겉과 속을 한 장면에 담으시오. 셀라는 모든 것에 값부터 매기는 실용주의 견습이다. 그러나 값을 매기는 것이 그녀가 물건과 사람을 지키는 방식이다. 아래 장면을 다시 써서, 차가운 겉과 지키려는 속이 둘 다 행동으로 보이게 하시오.",
     "scoring_mode": "auto",
     "scoring_config": {
-      "maxChars": 60,
-      "minVerbs": 2,
+      "maxChars": 100,
+      "minVerbs": 3,
       "forbidLabel": "속마음을 직접 말하는 표현",
       "forbidWords": [
         "소중",
@@ -3928,7 +3937,8 @@
       ],
       "requireAny": [
         "셀라"
-      ]
+      ],
+      "forbidPassageCopy": true
     }
   },
   {
@@ -3945,12 +3955,13 @@
     "instruction": "군중과 한시우를 갈라 세우시오. 한시우는 재능 대신 훈련량으로 버티는 B급 헌터다. 아래 장면에서 모두가 같은 곳을 향한다. 다시 써서, 다른 사람들과 한시우가 서로 다른 방향으로 움직이게 하시오.",
     "scoring_mode": "auto",
     "scoring_config": {
-      "maxChars": 60,
-      "minVerbs": 2,
+      "maxChars": 100,
+      "minVerbs": 3,
       "requireAny": [
         "한시우",
         "시우"
-      ]
+      ],
+      "forbidPassageCopy": true
     }
   }
 ]

@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
   // 3. 문항 조회 — 사용자 세션으로 읽는다. RLS가 is_active를 걸러준다.
   const { data: problem } = await supabase
     .from('problems')
-    .select('id, type, scoring_mode, scoring_config')
+    .select('id, type, scoring_mode, scoring_config, passage')
     .eq('id', problemId)
     .single()
   if (!problem) {
@@ -75,9 +75,9 @@ export async function POST(request: NextRequest) {
   //    fill 은 text 가 없고 형태소 검사도 없다 — analyze 를 부르지 않는다.
   const morph = text ? await analyze(text) : null
 
-  // 6. combine() 실행 — 규칙 채점
+  // 6. combine() 실행 — 규칙 채점. passage 는 forbidPassageCopy 만 쓴다.
   const sub: Submission = { text, choiceIndex, order, values, blanks }
-  const result = combine(problem, sub, answer, morph)
+  const result = combine(problem, sub, answer, morph, problem.passage ?? undefined)
 
   // fill 은 빈칸을 선언 순서대로 이어 붙여 submissions.content 에 남긴다.
   // 나중에 사람이 답안을 되짚을 때 어느 칸에 뭘 썼는지 보이게 표식을 붙인다.

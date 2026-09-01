@@ -358,7 +358,10 @@ function quoteChecks(text: string, cfg: ScoringConfig): Check[] {
 export function gradeLocal(
   problem: Problem,
   sub: Submission,
-  answer?: Answer
+  answer?: Answer,
+  // 원문. forbidPassageCopy 만 쓴다 — 다른 검사는 config 로 충분하다. gradeLocal
+  // 은 원래 passage 를 안 받아서(types.ts 주석) 여기만 선택 인자로 확장한다.
+  passage?: string
 ): Check[] {
   const cfg = problem.scoring_config ?? {}
   const checks: Check[] = []
@@ -670,6 +673,24 @@ export function gradeLocal(
           status: missing.length === 0 ? 'pass' : 'fail',
           detail: missing.length === 0 ? cfg.requireAll.join(', ') : `없음: ${missing.join(', ')}`,
           rule: cfg.requireAll.join(', '),
+          gating: true,
+        })
+      }
+
+      // forbidPassageCopy: 원문(공백 제거)을 답안(같은 정규화)이 통째로 품으면
+      // fail. lack·contrast_char 는 원문이 무난한 장면이라 "원문 복사 + 이름"으로
+      // 뚫렸다(세션 32 후기 실증). 원문이 안 넘어오면(passage 미지정) 판정 못 하니
+      // 검사를 안 만든다 — 화면의 기준 목록은 빈 원문을 넘기지 말고 실제 원문을 준다.
+      if (cfg.forbidPassageCopy && passage != null) {
+        const strip = (s: string) => s.replace(/\s/g, '')
+        const p = strip(passage)
+        const copied = p.length > 0 && strip(text).includes(p)
+        checks.push({
+          key: 'passageCopy',
+          label: '원문 그대로 옮김',
+          status: copied ? 'fail' : 'pass',
+          detail: copied ? '원문을 고치지 않고 그대로 냈다' : '고쳐 씀',
+          rule: '원문을 그대로 옮기지 않음',
           gating: true,
         })
       }

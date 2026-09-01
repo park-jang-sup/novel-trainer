@@ -24,10 +24,11 @@ export function combine(
   problem: Problem,
   sub: Submission,
   answer?: Answer,
-  morph?: MorphResult | null
+  morph?: MorphResult | null,
+  passage?: string
 ): GradeResult {
   const cfg = problem.scoring_config ?? {}
-  const checks: Check[] = gradeLocal(problem, sub, answer)
+  const checks: Check[] = gradeLocal(problem, sub, answer, passage)
 
   if (morph) {
     checks.push(...gradeMorph(cfg, morph))

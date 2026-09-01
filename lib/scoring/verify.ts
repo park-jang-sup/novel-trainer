@@ -543,6 +543,46 @@ console.log('\n[requireAll — 구성 12 대비 캐릭터 (세션 32)]')
       "60자 이하 · 움직이는 말 2개 이상 · '김하준' · '서담' 모두 넣기")
 }
 
+console.log('\n[forbidPassageCopy — 원문 복사 차단 (세션 32 후기 2)]')
+{
+  const cfg: ScoringConfig = { forbidPassageCopy: true, requireAny: ['서담'] }
+  const p: Problem = { id: 'pc', type: 'convert', scoring_mode: 'auto', scoring_config: cfg }
+  const PASSAGE = '월례 회의에서 이달의 우수 사원이 발표되었다. 호명된 대리는 앞으로 나가 상을 받았다.'
+  const key = (t: string) =>
+    gradeLocal(p, { text: t }, undefined, PASSAGE).find((c) => c.key === 'passageCopy')
+  // 원문 + 이름만 붙인 뚫기
+  const bypass = key(PASSAGE + ' 서담이었다.')
+  t('passageCopy: 원문 + 이름 뚫기 → fail', bypass?.status === 'fail' &&
+    bypass.detail === '원문을 고치지 않고 그대로 냈다' && bypass.gating === true)
+  // 원문 통짜를 문장 사이에 품어도 잡힌다(공백 무시 정규화)
+  const embed = key('서담은 자리에 앉았다. ' + PASSAGE + ' 그리고 웃었다.')
+  t('passageCopy: 원문 통짜 포함 → fail (공백 무시)', embed?.status === 'fail')
+  // 정상 재작성 — 원문을 안 그대로 옮김
+  const good = key('호명된 서담은 손사래를 치며 반쯤 일어섰다. 그런데 상장은 서류철에 못 들어갔다.')
+  t('passageCopy: 정상 재작성 → pass', good?.status === 'pass' && good.detail === '고쳐 씀')
+  // passage 미지정이면 검사 자체가 안 만들어진다 (화면이 빈 원문을 넘기지 않게)
+  t('passageCopy: passage 미지정 → 검사 없음',
+    gradeLocal(p, { text: PASSAGE }, undefined).find((c) => c.key === 'passageCopy') === undefined)
+  // combine 도 passage 를 5번째 인자로 받아 전달
+  const viaCombine = combine(p, { text: PASSAGE + ' 서담.' }, undefined,
+    emptyMorph({ verbs: ['하'] }), PASSAGE)
+  t('combine: passage 인자 → passageCopy fail 전달',
+    viaCombine.checks.find((c) => c.key === 'passageCopy')?.status === 'fail' &&
+      viaCombine.blocked === true)
+  t('요약: forbidPassageCopy → "원문 그대로 내지 않기"',
+    summarizeConfig({ maxChars: 100, minVerbs: 3, forbidPassageCopy: true }) ===
+      '100자 이하 · 움직이는 말 3개 이상 · 원문 그대로 내지 않기')
+  // 화면·API 배선
+  const root2 = path.join(__dirname, '..', '..')
+  const routeSrc = readFileSync(path.join(root2, 'app', 'api', 'grade', 'route.ts'), 'utf8')
+  t('route.ts 가 passage 를 select 하고 combine 에 넘긴다',
+    /\.select\('id, type, scoring_mode, scoring_config, passage'\)/.test(routeSrc) &&
+      /combine\(problem, sub, answer, morph, problem\.passage \?\? undefined\)/.test(routeSrc))
+  const tcSrc = readFileSync(path.join(root2, 'components', 'train', 'TrainClient.tsx'), 'utf8')
+  t('TrainClient 기준 목록이 gradeLocal 에 passage 를 넘긴다',
+    /gradeLocal\(dummy, \{ text: '' \}, undefined, problem\.passage \?\? undefined\)/.test(tcSrc))
+}
+
 console.log('\n[order]')
 {
   const p: Problem = { id: 'o', type: 'order', scoring_mode: 'auto', scoring_config: {} }
@@ -3745,12 +3785,13 @@ console.log('\n[구성 11 lack: 5문항 + 모범답안 대조]')
   const labels = new Set<string>()
   for (const d of lk) {
     const c = d.scoring_config
-    t(`'${d.source_key}': scoring_config (maxChars 60 · minVerbs 2 · requireAny ≥1 · forbidWords ≥2 · forbidDisplay ≥2)`,
+    t(`'${d.source_key}': scoring_config (maxChars 60 · minVerbs 2 · requireAny ≥1 · forbidWords ≥2 · forbidDisplay ≥2 · forbidPassageCopy)`,
       c.maxChars === 60 && c.minVerbs === 2 &&
         Array.isArray(c.requireAny) && (c.requireAny as string[]).length >= 1 &&
         Array.isArray(c.forbidWords) && (c.forbidWords as string[]).length >= 2 &&
         typeof c.forbidLabel === 'string' && (c.forbidLabel as string).length > 0 &&
-        Array.isArray(c.forbidDisplay) && (c.forbidDisplay as string[]).length >= 2,
+        Array.isArray(c.forbidDisplay) && (c.forbidDisplay as string[]).length >= 2 &&
+        c.forbidPassageCopy === true,
       JSON.stringify(c))
     labels.add(c.forbidLabel as string)
   }
@@ -3770,6 +3811,14 @@ console.log('\n[구성 11 lack: 5문항 + 모범답안 대조]')
       { text: d.passage ?? '' }, undefined, null)
     t(`불변식: '${d.source_key}' 원문 그대로 제출은 requireAny fail`,
       res.checks.find((x) => x.key === 'requireAny')?.status === 'fail')
+    // 뚫기 물기 — 어제의 뚫기(원문 + 이름)는 requireAny 는 통과하고 passageCopy 로 걸린다.
+    const bypass = (d.passage ?? '') + ' ' + req[0]
+    const bp = gradeLocal(
+      { id: d.source_key, type: 'convert', scoring_mode: 'auto', scoring_config: c },
+      { text: bypass }, undefined, d.passage ?? '')
+    t(`뚫기 물기: '${d.source_key}' 원문+이름 → passageCopy fail`,
+      bp.find((x) => x.key === 'passageCopy')?.status === 'fail' &&
+        bp.find((x) => x.key === 'requireAny')?.status === 'pass', JSON.stringify(bp))
   }
 
   // ── 새 지문 5건은 sc- 어느 choices 에도 없다(신작) ──
@@ -3947,8 +3996,11 @@ console.log('\n[구성 12 contrast_char: 재설계 · 활성 6 + 비활성 4]')
   t('활성 order_no: first-pay 3 · 신규 6~10',
     JSON.stringify([...cc.map((d) => d.order_no)].sort((a, b) => a - b)) === '[3,6,7,8,9,10]',
     JSON.stringify(cc.map((d) => `${d.source_key}:${d.order_no}`)))
-  t('활성 전부 maxChars 60 · minVerbs 2',
-    cc.every((d) => d.scoring_config.maxChars === 60 && d.scoring_config.minVerbs === 2))
+  // 세션 32 후기 2: 60자 압축 → 100자 시연형 · 원문 복사 차단
+  t('활성 전부 maxChars 100 · minVerbs 3 · forbidPassageCopy true',
+    cc.every((d) => d.scoring_config.maxChars === 100 && d.scoring_config.minVerbs === 3 &&
+      d.scoring_config.forbidPassageCopy === true),
+    JSON.stringify(cc.map((d) => `${d.source_key}:${d.scoring_config.maxChars}/${d.scoring_config.minVerbs}/${d.scoring_config.forbidPassageCopy}`)))
 
   // cc-first-pay: requireAll 2 유지
   {
@@ -4001,6 +4053,14 @@ console.log('\n[구성 12 contrast_char: 재설계 · 활성 6 + 비활성 4]')
     const reqKey = c.requireAll ? 'requireAll' : 'requireAny'
     t(`불변식: '${d.source_key}' 원문 그대로 제출은 ${reqKey} fail`,
       res.checks.find((x) => x.key === reqKey)?.status === 'fail')
+    // 뚫기 물기 — 어제의 뚫기(원문 + 이름 전부)는 이름 검사는 통과하고 passageCopy 로 걸린다.
+    const bypass = (d.passage ?? '') + ' ' + names.join(' ')
+    const bp = gradeLocal(
+      { id: d.source_key, type: 'convert', scoring_mode: 'auto', scoring_config: c },
+      { text: bypass }, undefined, d.passage ?? '')
+    t(`뚫기 물기: '${d.source_key}' 원문+이름 → passageCopy fail`,
+      bp.find((x) => x.key === 'passageCopy')?.status === 'fail' &&
+        bp.find((x) => x.key === reqKey)?.status === 'pass', JSON.stringify(bp))
   }
 
   // ── 새 지문은 sc- 어느 choices 에도 없다(신작) ──
@@ -4018,14 +4078,14 @@ console.log('\n[구성 12 contrast_char: 재설계 · 활성 6 + 비활성 4]')
     const ords = refs.filter((r) => r.source_key === d.source_key).map((r) => r.ord).sort()
     t(`'${d.source_key}': 가·나 두 세트`, JSON.stringify(ords) === '[1,2]', JSON.stringify(ords))
   }
-  // 실측 자수(공백만 제외) · first-pay 는 세션 32 그대로, 신규 5 는 세션 32 후기
+  // 실측 자수(공백만 제외) — 세션 32 후기 2 로 활성 6건 전부 100자 시연형 교체
   const LEN: Record<string, [number, number]> = {
-    'cc-first-pay': [38, 36],
-    'cc-praise-callout': [44, 41],
-    'cc-ace-siren': [47, 44],
-    'cc-night-shift': [42, 42],
-    'cc-junk-dealer': [43, 46],
-    'cc-flash-crowd': [43, 44],
+    'cc-praise-callout': [98, 87],
+    'cc-ace-siren': [88, 96],
+    'cc-night-shift': [89, 83],
+    'cc-junk-dealer': [92, 89],
+    'cc-flash-crowd': [88, 90],
+    'cc-first-pay': [96, 86],
   }
   for (const r of refs) {
     const cfg = cfgOf.get(r.source_key)!
@@ -4034,9 +4094,11 @@ console.log('\n[구성 12 contrast_char: 재설계 · 활성 6 + 비활성 4]')
     t(`'${r.source_key}' ord${r.ord}: 비어 있지 않다`, r.content.trim().length > 0)
     t(`'${r.source_key}' ord${r.ord}: 자수 ${n} == 실측 ${LEN[r.source_key][r.ord - 1]}`,
       n === LEN[r.source_key][r.ord - 1], `"${r.content}"`)
-    t(`'${r.source_key}' ord${r.ord}: 자수 ${n} ≤ 60`, n <= 60)
-    t(`'${r.source_key}' ord${r.ord}: 지문을 그대로 베끼지 않았다`,
-      r.content.trim() !== passageOf.get(r.source_key)!.trim())
+    t(`'${r.source_key}' ord${r.ord}: 자수 ${n} ≤ 100`, n <= 100)
+    const strip = (s: string) => s.replace(/\s/g, '')
+    t(`'${r.source_key}' ord${r.ord}: 원문을 통짜로 품지 않는다 (passageCopy)`,
+      !strip(r.content).includes(strip(passageOf.get(r.source_key)!)),
+      `"${r.content}"`)
     t(`'${r.source_key}' ord${r.ord}: 요구 이름을 포함`,
       cfg.requireAll
         ? names.every((nm) => r.content.includes(nm))
@@ -4046,8 +4108,8 @@ console.log('\n[구성 12 contrast_char: 재설계 · 활성 6 + 비활성 4]')
     t(`'${r.source_key}' ord${r.ord}: forbidWords 적중 0`, hits.length === 0, JSON.stringify(hits))
     const res = combine(
       { id: r.source_key, type: 'convert', scoring_mode: 'auto', scoring_config: cfg },
-      { text: r.content }, undefined, null)
-    for (const key of ['requireAll', 'requireAny', 'forbidWords', 'maxChars']) {
+      { text: r.content }, undefined, null, passageOf.get(r.source_key)!)
+    for (const key of ['requireAll', 'requireAny', 'forbidWords', 'maxChars', 'passageCopy']) {
       const c = res.checks.find((x) => x.key === key)
       t(`'${r.source_key}' ord${r.ord}: combine 의 ${key} 검사가 pass`,
         !c || c.status === 'pass', JSON.stringify(c))
@@ -4082,8 +4144,59 @@ console.log('\n[구성 12 contrast_char: 재설계 · 활성 6 + 비활성 4]')
       copied.length === 0, JSON.stringify(copied))
   }
 
-  // ── 형태소(서버 있을 때만): 모범답안 동사 ≥ 2 ──
-  // 실측 신규 가 5·4·4·4·3 / 나 4·3·5·5·4 · first-pay 가 3 / 나 5
+  // ── update-contrast-v3.sql ↔ 덤프 (세션 32 후기 2) ──
+  //  v1 없음. v2 = 대비형 cc- 4건 비활성. v3 = 활성 cc- 6건(instruction+cfg) +
+  //  lk- 5건(cfg) + 활성 cc- 모범답안 12행. 기존 행이라 이 파일이 DB 반영을 맡는다.
+  {
+    const sql = readFileSync(
+      path.join(__dirname, '..', '..', 'seed', 'update-contrast-v3.sql'), 'utf8')
+    const canon = (o: unknown): unknown =>
+      Array.isArray(o)
+        ? o.map(canon)
+        : o && typeof o === 'object'
+          ? Object.fromEntries(Object.keys(o as object).sort().map((k) => [k, canon((o as Record<string, unknown>)[k])]))
+          : o
+    const cj = (o: unknown) => JSON.stringify(canon(o))
+
+    const ccUpd = [...sql.matchAll(
+      /update problems set\n\s*instruction = '((?:[^']|'')*)',\n\s*scoring_config = '(.+?)'::jsonb\n\s*where source_key = '([^']*)';/g
+    )].map((m) => ({
+      instruction: m[1].replace(/''/g, "'"),
+      cfg: JSON.parse(m[2]) as Record<string, unknown>,
+      source_key: m[3],
+    }))
+    const lkUpd = [...sql.matchAll(
+      /update problems set\n\s*scoring_config = '(.+?)'::jsonb\n\s*where source_key = '([^']*)';/g
+    )].map((m) => ({ cfg: JSON.parse(m[1]) as Record<string, unknown>, source_key: m[2] }))
+    const refUpd = [...sql.matchAll(
+      /update reference_answers set content =\n\s*'((?:[^']|'')*)'\n\s*where problem_id = \(select id from problems where source_key = '([^']*)'\)\n\s*and ord = (\d+) and blank_key = '';/g
+    )].map((m) => ({ content: m[1].replace(/''/g, "'"), source_key: m[2], ord: Number(m[3]) }))
+
+    t('v3 SQL: 활성 cc- 6행 (instruction+cfg)', ccUpd.length === 6, `실제=${ccUpd.length}`)
+    t('v3 SQL: lk- 5행 (cfg)', lkUpd.length === 5, `실제=${lkUpd.length}`)
+    t('v3 SQL: 활성 cc- 모범답안 12행', refUpd.length === 12, `실제=${refUpd.length}`)
+
+    for (const d of cc) {
+      const row = ccUpd.find((r) => r.source_key === d.source_key)
+      t(`v3 SQL '${d.source_key}' instruction·scoring_config 가 덤프와 같다`,
+        !!row && row.instruction === d.instruction && cj(row.cfg) === cj(d.scoring_config),
+        `SQL cfg=${JSON.stringify(row?.cfg)}`)
+    }
+    for (const d of allProblems.filter((x) => x.skill_key === 'lack')) {
+      const row = lkUpd.find((r) => r.source_key === d.source_key)
+      t(`v3 SQL '${d.source_key}' scoring_config 가 덤프와 같다 (forbidPassageCopy 추가)`,
+        !!row && cj(row.cfg) === cj(d.scoring_config), `SQL cfg=${JSON.stringify(row?.cfg)}`)
+    }
+    for (const r of refs) {
+      const row = refUpd.find((x) => x.source_key === r.source_key && x.ord === r.ord)
+      t(`v3 SQL '${r.source_key}' ord${r.ord} content 가 덤프와 글자까지 같다`,
+        !!row && row.content === r.content, `SQL=${JSON.stringify(row?.content)}`)
+    }
+  }
+
+  // ── 형태소(서버 있을 때만): 모범답안 동사 ≥ 3 (minVerbs 3) ──
+  // 세션 32 후기 2 100자 시연형 실측 — 순서: praise·ace·night·junk·flash·first-pay
+  //   가 10·7·10·8·5·10 / 나 8·7·7·9·9·10
   pushRefMorphCheck('구성 12', refs, 'convert', cfgOf)
 
   // ── 요구 검사 물기 (형태소 불필요) ──
