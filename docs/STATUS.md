@@ -4,14 +4,15 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 32 (보충) · 커밋 `024ca9b` 위
+마지막 갱신: 세션 32 후기 · 커밋 `b26bb05` 위
 
 ---
 
 ## 앱이 지금 할 수 있는 것
 
 ```
-단계 26 · 문항 118 (구성 12 contrast_char 5 추가) · 화면이 붙은 유형 15단계분 (문장 1~11, 구성 11·12·14·17·19·20, 도입 1·2·3)
+단계 26 · 문항 123(비활성 12건 포함 — action_turn 8 + 구성 12 재설계로 밀려난 cc- 4) ·
+화면이 붙은 유형 15단계분 (문장 1~11, 구성 11·12·14·17·19·20, 도입 1·2·3)
 문항 화면 스케일  제목 text-3xl · 원문 상자·입력(Editor·FillBody) text-lg(1.125rem) p-5 · Editor rows 7/16 ·
                 컨테이너 max-w-7xl(한 칸 max-w-3xl) · 두 칸 grid [minmax(0,1.4fr) minmax(22rem,1fr)] 왼쪽 우선
 가르침 층       코치 캐릭터 먹물이 ✒️ 말풍선(CoachBubble) — 단계 목록: 제목·요약 아래 coach_intro ·
@@ -23,8 +24,9 @@
              모범답안+자기점검 → '다음 문항 →'(미달 '건너뛰기 →') → … → 다 통과면
              '단계 완료 N/N'+'다음 단계 →', 건너뛴 게 있으면 'N/M · 건너뛴 문항 k개'+첫 링크
 ★ 모범답안 있는 문항: 10단계 fill 8 (①②) + 문장 1·2·3·4단계 (reduce_adverb 8 · emotion_action 6 ·
-  trim_padding 8 · reduce_repeat 8) + 도입 2·3 각 5 + 구성 11·12(lack·contrast_char) 각 5,
-  가·나 blank_key '' · 도입 1 start_choose 5 는 reference 를 선택지별 해설로 씀(가·나 아님)
+  trim_padding 8 · reduce_repeat 8) + 도입 2·3 각 5 + 구성 11 lack 5 + 구성 12 contrast_char
+  활성 6(cc-first-pay + 신규 5, 옛 대비형 4는 비활성), 가·나 blank_key '' ·
+  도입 1 start_choose 5 는 reference 를 선택지별 해설로 씀(가·나 아님)
 없는 것       도입 4 start_episode(보류 — AI 심사 전) · streak·XP·복습·하트·진도 저장 테이블(안 만든다 — submissions 로만 센다)
 ★ 10단계는 새 skill_key `action_reason`(fill 8). 옛 `action_turn`(convert 8)은 is_active=false — 화면에 '준비 중'
 ```
@@ -84,6 +86,10 @@ repeatTargets 는 부분 문자열을 센다  원문에 대상 낱말을 품은 
                               수정이 어휘 교체를 강요당했다. '항아리' 로 갈아 함정을 걷음(한도는 유지)
 AI 는 피드백이지 심판이 아니다     위 재개 조건 전까지
 문서는 이 파일 하나              STATUS 를 덮어쓴다. 인수인계를 새로 안 쓴다
+인물은 docs/characters.md 가 단일 출처(세션 32 후기)  문항이 인물을 쓰면 원장에서
+                              꺼내고, 새 면모를 만들면 원장에도 적는다(왕복 규칙) —
+                              문항의 단일 출처가 덤프이듯. verify 가 활성 lack·contrast_char
+                              문항의 인물 이름이 원장 헤더에 실재하는지 문다
 fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀 때 뺀다
 ```
 
@@ -105,6 +111,44 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
                         박 님이 직접 오판을 관찰해 판정 권한 부여를 결정. 여기 쌓이는 답안·
                         판정 기록이 원칙 4 재개 조건의 수집처다.
                         전제: 구성 빈 단계 4개가 먼저 찬다
+```
+
+### 끝난 것 — 세션 32 후기 (구성 12 재설계)
+
+```
+'대비 캐릭터' → '입체 캐릭터' — 박 님 판정: 라벨→층위
+  경위   박 님이 학습자로 완주하며 판정 — 옛 문항은 인물이 한 줄 라벨이라
+         "결과만 있고 배움이 없다". 겉과 속의 갭이 이 단계의 진짜 기술이다.
+  docs/characters.md (신설)  인물의 단일 출처 — 문항이 인물을 쓰면 여기서 꺼내고,
+         새 면모를 만들면 여기에도 적는다(왕복 규칙, 정한 것에 등재). 인물 10명
+         (김하준·서담·윤소민·하늘·조평·유겸·한시우·도현·리안·셀라) + 도입 트랙 간이 7명.
+         docs/README.md 목록에 추가
+  비활성 4건  cc-report-credit·cc-street-night·cc-raid-reward·cc-relic-box → is_active
+         false (action_turn 선례). 행 삭제 안 함 — 제출 이력 보존. cc-first-pay 는
+         활성 유지(조평·유겸 프로필 정합 최고). deactivate.json 이 단일 출처
+         (action_turn 8 + 이 4건 = 12) · seed/update-contrast-v2.sql(신규, 박 님 델타)
+  신규 5건  갭 4(cc-praise-callout 서담·cc-ace-siren 도현·cc-night-shift 유겸·
+         cc-junk-dealer 셀라 — forbidLabel '속마음을 직접 말하는 표현' · requireAny ·
+         difficulty 1) + 군중 1(cc-flash-crowd 한시우 — forbid 없음 · requireAny ·
+         difficulty 2). 원문은 결함 없는 무난한 장면 — 원문 그대로는 요구 검사가 막는다
+  answers.json  활성 12행(신규 5×2 + first-pay 2, 비활성 4건 8행은 그대로 보존)
+         실측 자수 가 44·47·42·43·43 / 나 41·44·42·46·44 · 동사 가 5·4·4·4·3 / 나 4·3·5·5·4
+  stages.json    title '입체 캐릭터' · coach_intro(사람은 한 겹이 아니다)·coach_line
+         ('겉 하나, 새는 속 하나!') · self_checks 2줄(겉·속 / 페어)
+  verify [구성 12]  전면 재작성 — 활성 6·비활성 4 분리 · 갭/군중/first-pay 규격 각각 ·
+         원문 불변식(이름 없음·forbid 없음·요구 검사 fail) · 단계 간 베낌 가드 43문장
+         (도입 1 정답 5 + 도입 2·3 모범 20 + lack 모범 10 + 비활성 cc- 모범 8, 비활성도
+         여전히 베끼면 안 되는 문장) · characters.md 왕복 규칙 대조(활성 lack·contrast_char
+         인물 이름이 원장 헤더에 실재) · [불변식: forbidWords 자기 목록]·seed_verify.sql
+         불변식 2 에 contrast_char 예외 추가(lack 과 같은 자리) · deactivate.json 단언 갱신
+         (action_turn 8 + cc- 4) · [쓰지 않을 말 표시] forbidLabel 24→28
+  검증   tsc 0 · test:scoring 3959/0(형태소 서버) · check:numbers 0 · gen:seed 무변화 · next build 통과
+  ★ DB 절차(박 님): seed/update-contrast-v2.sql(비활성 4건) → seed_data.sql(신규 5 +
+    stages 갱신, 멱등) → seed_check.sql → 브라우저 '입체 캐릭터':
+    ① 제목·새 코치 말풍선 ② 문항 6개만 보이는지(옛 4개 사라짐)
+    ③ 갭 문항에서 속마음 단어("불안했다" 류) → '쓰지 않을 말' 미달
+    ④ 통과 → 새 모범답안 + 자기점검 2줄
+    ⑤ 다섯 페어의 소개 두 줄이 대비를 쓰기에 충분한 정보인지 — 이번 재설계의 심장
 ```
 
 ### 끝난 것 — 세션 32
@@ -555,10 +599,12 @@ fill 은 인물·사물을 안 본다     덕수 답이 세연 문항을 통과�
 무관 내용 통과(도입 2 사례)   '줄넘기 하면 재미있어 하는 이재하 친구' 가 통과 — 이름+동사만 맞추면
                             뚫린다. 9단계 실측 '내용 통째 교체' 계열. 내용 판정은 AI 몫,
                             자기점검이 그 자리. 박 님 뚫기 답안은 AI 재개 때 나쁜 표본 자산
-requireAll '하늘' 누수       일반명사와 부분 문자열이 겹치는 이름('하늘'=sky)은 인물을 안 쓰고
-                            하늘(sky)만 써도 requireAll 이 충족으로 본다(includes). 규칙으로 안
-                            막는다(조이면 좋은 답안이 먼저 걸린다). 박 님 실사용 관찰 대상 —
-                            같은 계열: 내용 판정은 AI 몫. verify 가 이 누수를 명시 단언으로 박음
+requireAny/requireAll '하늘' 누수  일반명사와 부분 문자열이 겹치는 이름('하늘'=sky)은 인물을
+                            안 쓰고 하늘(sky)만 써도 요구 검사가 충족으로 본다(includes).
+                            규칙으로 안 막는다(조이면 좋은 답안이 먼저 걸린다) — 내용 판정은
+                            AI 몫. cc-street-night(윤소민·하늘)가 세션 32 후기 재설계로 비활성
+                            내려가 지금은 관찰 중인 활성 문항이 없다. characters.md 의 '하늘'은
+                            등장 예정 — 다음에 세울 때 이 누수를 실측으로 다시 본다
 자모 낱자 검사(후보)         완성형 아닌 낱자(ㄱ-ㅎ·ㅏ-ㅣ)가 답안에 있으면 fail — 형태소 불필요·
                             오탐 여지 낮음. 장난·오타 답안 일부를 잡는다. 신규 규칙이라 박 님
                             승인 뒤 연다

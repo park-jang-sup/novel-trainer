@@ -240,9 +240,9 @@ on conflict (skill_key) do update set
 
 insert into stages
   (track, order_no, title, skill_key, summary, is_free, self_checks, intro, coach_intro, coach_line)
-values ('structure', 12, '대비 캐릭터', 'contrast_char',
-        '상반된 인물을 나란히 세운다', false, array['두 사람의 반응을 서로 바꿔 놓으면 어색해? 안 어색하면 아직 대비가 아니야.']::text[], '',
-        '인물은 혼자 서 있으면 잘 안 보여. 옆에 반대쪽 사람을 세우면 그제야 윤곽이 잡히지. 방법은 하나야 — 같은 일을 겪게 하고, 다르게 반응하게 해. 한쪽이 움켜쥐면 한쪽은 흘려보내는 거야.', '같은 일, 다른 반응!')
+values ('structure', 12, '입체 캐릭터', 'contrast_char',
+        '상반된 인물을 나란히 세운다', false, array['겉과 속이 각각 행동 하나씩으로 보여? 속을 말로 설명해 버리진 않았어?', '두 사람이 나오면 — 반응을 서로 바꿔 놓아도 어색하지 않은지 봐. 안 어색하면 아직 대비가 아니야.']::text[], '',
+        '사람은 한 겹이 아니야. 겉으로 웃는 사람이 속으로 딴생각을 하고, 차가운 사람이 제일 따뜻한 일을 해. 그 두 겹이 한 장면에 같이 보일 때 독자는 ''이 사람 진짜다'' 하고 믿어. 겉 행동 하나, 속이 새는 행동 하나 — 둘 다 보여줘.', '겉 하나, 새는 속 하나!')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
@@ -1156,6 +1156,18 @@ select
   2, 'ae-kongjwi-jar'
 where not exists (select 1 from problems p where p.source_key = 'ae-kongjwi-jar');
 
+-- cc-praise-callout (order_no 6, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'contrast_char'),
+  'convert', 'auto', '서담의 겉과 속을 한 장면에 담으시오. 서담은 공을 팀에 돌리고 칭찬 앞에서 사양부터 하는 대리다. 그러나 속으로는 그 칭찬을 오래 좋아한다. 아래 장면을 다시 써서, 사양하는 겉과 좋아하는 속이 둘 다 행동으로 보이게 하시오.',
+  '월례 회의에서 이달의 우수 사원이 발표되었다. 호명된 대리는 앞으로 나가 상을 받았다.', null, '{"maxChars":60,"minVerbs":2,"forbidLabel":"속마음을 직접 말하는 표현","forbidWords":["좋아","기쁘","기뻤","뿌듯"],"forbidDisplay":["좋아하다","기쁘다","뿌듯하다"],"requireAny":["서담"]}'::jsonb,
+  'original', 'modern', 'planned',
+  1, 'cc-praise-callout'
+where not exists (select 1 from problems p where p.source_key = 'cc-praise-callout');
+
 -- sn-axe-pond (order_no 6, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
@@ -1251,6 +1263,18 @@ select
   'folktale', 'fantasy', 'planned',
   3, 'sn-siblings-tree'
 where not exists (select 1 from problems p where p.source_key = 'sn-siblings-tree');
+
+-- cc-ace-siren (order_no 7, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'contrast_char'),
+  'convert', 'auto', '도현의 겉과 속을 한 장면에 담으시오. 도현은 누구에게나 흐트러짐 없이 친절한 S급 헌터다. 그러나 마음의 울타리 안 사람이 다치면 처음으로 일정이 밀린다. 아래 장면을 다시 써서, 매끄러운 겉과 흔들리는 속이 둘 다 행동으로 보이게 하시오.',
+  '레이드 중에 부상자가 나왔다는 무전이 들어왔다. 에이스는 예정된 인터뷰 장소로 이동하는 중이었다.', null, '{"maxChars":60,"minVerbs":2,"forbidLabel":"속마음을 직접 말하는 표현","forbidWords":["걱정","불안","초조"],"forbidDisplay":["걱정","불안","초조"],"requireAny":["도현"]}'::jsonb,
+  'original', 'modern', 'planned',
+  1, 'cc-ace-siren'
+where not exists (select 1 from problems p where p.source_key = 'cc-ace-siren');
 
 -- rh-axe-pond (order_no 7, difficulty 1)
 insert into problems
@@ -1348,6 +1372,18 @@ select
   2, 'rh-siblings-tree'
 where not exists (select 1 from problems p where p.source_key = 'rh-siblings-tree');
 
+-- cc-night-shift (order_no 8, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'contrast_char'),
+  'convert', 'auto', '유겸의 겉과 속을 한 장면에 담으시오. 유겸은 씀씀이 크고 낙천적인 부잣집 출신 신참 호위다. 그러나 실력을 의심받으면 웃는 얼굴로 제일 험한 일에 손을 든다. 아래 장면을 다시 써서, 웃는 겉과 이 악무는 속이 둘 다 행동으로 보이게 하시오.',
+  '밤길 호위 순번을 정하는 자리였다. 가장 험한 새벽 구간은 아무도 맡으려 하지 않았다.', null, '{"maxChars":60,"minVerbs":2,"forbidLabel":"속마음을 직접 말하는 표현","forbidWords":["불안","자존심","증명"],"forbidDisplay":["불안","자존심","증명하다"],"requireAny":["유겸"]}'::jsonb,
+  'original', 'martial', 'planned',
+  1, 'cc-night-shift'
+where not exists (select 1 from problems p where p.source_key = 'cc-night-shift');
+
 -- mo-axe-pond (order_no 8, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
@@ -1443,6 +1479,18 @@ select
   'folktale', 'fantasy', 'impulsive',
   2, 'mo-siblings-rope'
 where not exists (select 1 from problems p where p.source_key = 'mo-siblings-rope');
+
+-- cc-junk-dealer (order_no 9, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'contrast_char'),
+  'convert', 'auto', '셀라의 겉과 속을 한 장면에 담으시오. 셀라는 모든 것에 값부터 매기는 실용주의 견습이다. 그러나 값을 매기는 것이 그녀가 물건과 사람을 지키는 방식이다. 아래 장면을 다시 써서, 차가운 겉과 지키려는 속이 둘 다 행동으로 보이게 하시오.',
+  '고물상이 유품 값을 반으로 후려쳤다. 견습들은 물건을 다시 싸서 돌아갈 채비를 했다.', null, '{"maxChars":60,"minVerbs":2,"forbidLabel":"속마음을 직접 말하는 표현","forbidWords":["소중","다정"],"forbidDisplay":["소중하다","다정하다"],"requireAny":["셀라"]}'::jsonb,
+  'original', 'fantasy', 'planned',
+  1, 'cc-junk-dealer'
+where not exists (select 1 from problems p where p.source_key = 'cc-junk-dealer');
 
 -- pv-broken-gate (order_no 9, difficulty 1)
 insert into problems
@@ -1731,6 +1779,18 @@ select
   'original', 'martial', 'planned',
   2, 'at-left-draw'
 where not exists (select 1 from problems p where p.source_key = 'at-left-draw');
+
+-- cc-flash-crowd (order_no 10, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'contrast_char'),
+  'convert', 'auto', '군중과 한시우를 갈라 세우시오. 한시우는 재능 대신 훈련량으로 버티는 B급 헌터다. 아래 장면에서 모두가 같은 곳을 향한다. 다시 써서, 다른 사람들과 한시우가 서로 다른 방향으로 움직이게 하시오.',
+  '게이트 공략이 끝나고 취재진이 몰려들었다. 헌터들이 카메라 앞으로 모여들었다.', null, '{"maxChars":60,"minVerbs":2,"requireAny":["한시우","시우"]}'::jsonb,
+  'original', 'modern', 'planned',
+  2, 'cc-flash-crowd'
+where not exists (select 1 from problems p where p.source_key = 'cc-flash-crowd');
 
 -- ch-village-approval (order_no 14, difficulty 1)
 insert into problems
@@ -2910,6 +2970,62 @@ from problems p
 where p.source_key = 'sw-boss-wake'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- cc-praise-callout ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '호명되자 서담은 손사래부터 쳤다. 그러나 상장을 받은 손은 자리로 돌아와서도 한참 그 위에 놓여 있었다.'
+from problems p
+where p.source_key = 'cc-praise-callout'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- cc-praise-callout ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '서담은 박수 소리에 고개를 숙였다. 퇴근길, 가방 속 상장을 꺼내 모서리를 한 번 쓸고 다시 넣었다.'
+from problems p
+where p.source_key = 'cc-praise-callout'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- cc-ace-siren ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '도현은 무전 속 이름을 듣고도 목소리 하나 흐트러지지 않았다. 다만 인터뷰는 취소됐고, 차는 병원으로 돌았다.'
+from problems p
+where p.source_key = 'cc-ace-siren'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- cc-ace-siren ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '인터뷰 질문에 도현은 완벽한 미소로 답을 이었다. 탁자 아래 손은 병원 번호를 띄운 휴대폰을 쥐고 있었다.'
+from problems p
+where p.source_key = 'cc-ace-siren'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- cc-night-shift ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '도련님이 무슨 새벽 경계냐는 말에 유겸은 웃으며 손을 들었다. 그 웃음이 걷힌 건 돌아선 다음이었다.'
+from problems p
+where p.source_key = 'cc-night-shift'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- cc-night-shift ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '유겸은 그게 얼마나 한다고, 웃으며 새벽 구간에 제 이름을 적었다. 붓을 쥔 손등에 힘줄이 서 있었다.'
+from problems p
+where p.source_key = 'cc-night-shift'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- cc-junk-dealer ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '셀라는 은화 열 닢 아래로는 안 판다며 목록을 덮었다. 돌아서는 길엔 유품 보자기 매듭을 한 번 더 조였다.'
+from problems p
+where p.source_key = 'cc-junk-dealer'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- cc-junk-dealer ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '셀라는 값을 다 부르기도 전에 물건을 거둬들였다. 리안이 상자를 다시 묶는 동안 목록만 두 줄 적으며 기다렸다.'
+from problems p
+where p.source_key = 'cc-junk-dealer'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- ar-cracked-ice ord 1 ①
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '①', '건너올 때 저 자리에서 발밑이 울렸다. 도경은 그 소리를 기억했다.'
@@ -3183,11 +3299,25 @@ from problems p
 where p.source_key = 'ar-wind-gate'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- cc-flash-crowd ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '헌터들이 카메라 앞에 줄을 설 때 한시우는 장비 가방을 먼저 쌌다. 훈련장 예약 시간이 십 분 남아 있었다.'
+from problems p
+where p.source_key = 'cc-flash-crowd'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- cc-flash-crowd ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '플래시가 터지는 쪽으로 다들 고개를 돌렸다. 한시우 혼자 무너진 방벽의 제 검흔을 손끝으로 재고 있었다.'
+from problems p
+where p.source_key = 'cc-flash-crowd'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- ── 비활성 ─────────────────────────────────────────────────────────
--- 옛 action_turn convert 8건. 재설계안 11-4·세션 18. 재료·픽스처는 11-5 픽스처 갈아엎기 때 삭제.
+-- 옛 action_turn convert 8건(재설계안 11-4·세션 18. 재료·픽스처는 11-5 픽스처 갈아엎기 때 삭제) + 구성 12 재설계로 밀려난 대비형 cc- 4건(세션 32 후기 — '입체 캐릭터'로 교체. cc-first-pay 는 활성 유지). 제출 이력 보존, 행 삭제 안 함.
 
 update problems set is_active = false
- where source_key in ('at-left-feint', 'at-left-draw', 'at-left-feeler', 'at-broken-gate', 'at-cracked-ice', 'at-bell-rope', 'at-look-back', 'at-edit-log');
+ where source_key in ('at-left-feint', 'at-left-draw', 'at-left-feeler', 'at-broken-gate', 'at-cracked-ice', 'at-bell-rope', 'at-look-back', 'at-edit-log', 'cc-report-credit', 'cc-street-night', 'cc-raid-reward', 'cc-relic-box');
 
 commit;
 

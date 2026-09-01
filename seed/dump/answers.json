@@ -1017,6 +1017,66 @@
       "ord": 2,
       "blank_key": "",
       "content": "리안은 상자를 여는 데 한참이 걸렸다. 셀라는 그사이 목록 양피지에 품목을 두 줄 적었다."
+    },
+    {
+      "source_key": "cc-praise-callout",
+      "ord": 1,
+      "blank_key": "",
+      "content": "호명되자 서담은 손사래부터 쳤다. 그러나 상장을 받은 손은 자리로 돌아와서도 한참 그 위에 놓여 있었다."
+    },
+    {
+      "source_key": "cc-praise-callout",
+      "ord": 2,
+      "blank_key": "",
+      "content": "서담은 박수 소리에 고개를 숙였다. 퇴근길, 가방 속 상장을 꺼내 모서리를 한 번 쓸고 다시 넣었다."
+    },
+    {
+      "source_key": "cc-ace-siren",
+      "ord": 1,
+      "blank_key": "",
+      "content": "도현은 무전 속 이름을 듣고도 목소리 하나 흐트러지지 않았다. 다만 인터뷰는 취소됐고, 차는 병원으로 돌았다."
+    },
+    {
+      "source_key": "cc-ace-siren",
+      "ord": 2,
+      "blank_key": "",
+      "content": "인터뷰 질문에 도현은 완벽한 미소로 답을 이었다. 탁자 아래 손은 병원 번호를 띄운 휴대폰을 쥐고 있었다."
+    },
+    {
+      "source_key": "cc-night-shift",
+      "ord": 1,
+      "blank_key": "",
+      "content": "도련님이 무슨 새벽 경계냐는 말에 유겸은 웃으며 손을 들었다. 그 웃음이 걷힌 건 돌아선 다음이었다."
+    },
+    {
+      "source_key": "cc-night-shift",
+      "ord": 2,
+      "blank_key": "",
+      "content": "유겸은 그게 얼마나 한다고, 웃으며 새벽 구간에 제 이름을 적었다. 붓을 쥔 손등에 힘줄이 서 있었다."
+    },
+    {
+      "source_key": "cc-junk-dealer",
+      "ord": 1,
+      "blank_key": "",
+      "content": "셀라는 은화 열 닢 아래로는 안 판다며 목록을 덮었다. 돌아서는 길엔 유품 보자기 매듭을 한 번 더 조였다."
+    },
+    {
+      "source_key": "cc-junk-dealer",
+      "ord": 2,
+      "blank_key": "",
+      "content": "셀라는 값을 다 부르기도 전에 물건을 거둬들였다. 리안이 상자를 다시 묶는 동안 목록만 두 줄 적으며 기다렸다."
+    },
+    {
+      "source_key": "cc-flash-crowd",
+      "ord": 1,
+      "blank_key": "",
+      "content": "헌터들이 카메라 앞에 줄을 설 때 한시우는 장비 가방을 먼저 쌌다. 훈련장 예약 시간이 십 분 남아 있었다."
+    },
+    {
+      "source_key": "cc-flash-crowd",
+      "ord": 2,
+      "blank_key": "",
+      "content": "플래시가 터지는 쪽으로 다들 고개를 돌렸다. 한시우 혼자 무너진 방벽의 제 검흔을 손끝으로 재고 있었다."
     }
   ]
 }
