@@ -115,6 +115,20 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
   ★ DB 반영·절차(박 님): seed_data.sql(신규 행 insert) → seed_check.sql(갱신된 기대값) →
     브라우저 도입 트랙에서 ① 단계가 "준비 중"에서 풀려 링크가 생겼는지 ② 5문항 목록 ③ 한
     문항 정답/오답 제출 양쪽 판정 ④ 코치 말풍선
+
+choice 해설 층 — 오답 때 이유가 없다는 실사용 요청 (세션 28 둘째)
+  reference_answers 재활용: source_key sc-* · ord = 선택지 번호(1~4) · blank_key '' · content = 해설.
+  RLS "reference after submit"이 제출(통과 무관) 기준이라 오답 뒤에도 읽힘 — 스키마·정책 변경 없음.
+  answers.json  reference 에 20행 (5문항 × ord 1~4)
+  ChoiceExplain.tsx (신규)  오답: 고른 선택지 해설 한 줄만(정답·다른 해설 감춤, 재도전 여지).
+    정답: 4개 전부 + 정답 표식. 캡션 choice 전용("각 문장이 통하는지, 왜 안 통하는지.")
+  TrainClient  type==='choice' 분기 — SelfCheck(가/나) 경로와 분리. 제출 순간 선택지
+    (submittedChoice) 를 해설 대상으로 고정 — 오답 뒤 다른 것 눌러도 안 흔들림
+  verify [도입 1 해설]  20행 완비·비어있지 않음·blank_key '' · 교차 물기(정답 ord 해설엔 결함
+    지적 패턴 없음, 오답 ord 셋엔 있음 — FLAW=없·아직·못·아니·설명·역사서·'가 있다') · 화면 배선
+  ★ DB 반영·절차(박 님): seed_data.sql(reference 20행 신규 insert) → seed_check.sql → 브라우저
+    도입 1에서 ① 오답 제출 → 고른 것의 해설 한 줄만 ② 정답 제출 → 4개 해설 전부 + 정답 표시
+    ③ 가/나 문항(4단계 등)이 안 깨졌는지
 ```
 
 ### 끝난 것 — 세션 27
@@ -321,6 +335,8 @@ rabbit 난도 관찰            4단계 최중량(간·토끼 각 4회 + minVerb
                           .env 의 SCORING_SERVER_URL·SCORING_SERVER_SECRET 을 그쪽으로 맞춘다
 도입 4 start_episode        AI 심사 전이라 보류(세션 5 근거). 재개 시 fill 4칸(핵심 재미→캐릭터→
                             상황→첫 대사) 축소안 검토. 도입 2·3 을 먼저 채운다
+choice 해설 소급             기존 choice 8문항(부사 예외 4 · 궤도 이탈 4) 해설 소급 — 도입 1 방식
+                            확정 후. ChoiceExplain·reference 재활용은 그대로 쓰면 된다
 at-left-feint fill 재료      상황 본문 · 빈칸 위치 · 모범답안 3건. 재설계안 7-5 목록 열둘을 먼저
                             읽고 짠다. 그때 3×3(장르 셋씩)이 찬다
 ar-left-feeler 모범답안       재설계안 7-7 에 가·나·다가 없다. stage2 가 보여줄 것이 없다

@@ -10,6 +10,7 @@ import CheckRow from './CheckRow'
 import Editor from './Editor'
 import FillBody from './FillBody'
 import SelfCheck from './SelfCheck'
+import ChoiceExplain from './ChoiceExplain'
 import RuleText from './RuleText'
 import CoachBubble from './CoachBubble'
 import type { FillBlank } from './FillBlank'
@@ -154,6 +155,8 @@ export default function TrainClient({
 
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<GradeResponse | null>(null)
+  // 제출 순간의 선택지 — 오답 뒤 학습자가 다른 것을 눌러도 해설은 낸 것을 가리킨다.
+  const [submittedChoice, setSubmittedChoice] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const displayChecks = useMemo(
@@ -293,6 +296,7 @@ export default function TrainClient({
         return
       }
       setResult((await res.json()) as GradeResponse)
+      if (problem.type === 'choice') setSubmittedChoice(choiceIndex)
     } catch {
       setError('제출에 실패했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
@@ -598,9 +602,28 @@ export default function TrainClient({
               규칙 검사는 통과했습니다. 내용 심사는 아직 준비 중입니다.
             </p>
           )}
-          {/* 규칙을 통과하고 모범답안이 있으면(10단계 fill · 1단계 등) 모범답안 +
-              자기점검이 판정을 대신한다. 규칙 목록(전부 ○)은 그 아래에 접어 둔다. */}
-          {result.status === 'pass' && result.reference?.length ? (
+          {/* choice: 선택지별 해설(reference_answers 재활용). 오답이면 고른 것
+              한 줄만, 정답이면 4개 전부 + 정답 표식. 가/나(SelfCheck) 경로와
+              분리한다 — 캡션·구조가 다르다. */}
+          {problem.type === 'choice' ? (
+            <>
+              <div>
+                {displayChecks?.map((c) => (
+                  <CheckRow key={c.key} check={c} />
+                ))}
+              </div>
+              {result.reference?.length && submittedChoice !== null ? (
+                <ChoiceExplain
+                  choices={problem.choices ?? []}
+                  reference={result.reference}
+                  chosenIndex={submittedChoice}
+                  passed={result.status === 'pass'}
+                />
+              ) : null}
+            </>
+          ) : /* 규칙을 통과하고 모범답안이 있으면(10단계 fill · 1단계 등) 모범답안 +
+              자기점검이 판정을 대신한다. 규칙 목록(전부 ○)은 그 아래에 접어 둔다. */
+          result.status === 'pass' && result.reference?.length ? (
             <>
               <SelfCheck reference={result.reference} selfChecks={selfChecks} />
               <details className="pt-2">

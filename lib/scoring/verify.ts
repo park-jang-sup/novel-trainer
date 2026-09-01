@@ -3154,6 +3154,64 @@ console.log('\n[도입 1 start_choose: 5문항 신설]')
   const st = stagesDump.find((s) => s.skill_key === 'start_choose')!
   t('stages start_choose 에 coach_intro·coach_line 존재',
     st.coach_intro.length > 0 && st.coach_line.length > 0)
+
+  // ── 해설 층 (세션 28 둘째): reference_answers 재활용 ──
+  // source_key = sc-* · ord = 선택지 번호(1~4) · blank_key '' · content = 해설.
+  // 화면: 오답이면 고른 것 한 줄, 정답이면 4개 전부 + 정답 표식.
+  {
+    interface RefRow2 { source_key: string; ord: number; blank_key: string; content: string }
+    const expl = readDump<{ reference?: RefRow2[] }>('answers.json').reference!
+      .filter((r) => scKeys.has(r.source_key))
+    t('해설: sc-* 5문항 × ord 1~4 = 20행', expl.length === 20, `실제=${expl.length}`)
+    for (const d of sc) {
+      const ords = expl.filter((r) => r.source_key === d.source_key).map((r) => r.ord).sort()
+      t(`해설 '${d.source_key}': ord 1~4 완비`, JSON.stringify(ords) === '[1,2,3,4]', JSON.stringify(ords))
+    }
+    t('해설 전부 blank_key 빈 문자열', expl.every((r) => r.blank_key === ''))
+    t('해설 전부 비어 있지 않다', expl.every((r) => r.content.trim().length > 0))
+
+    // ── 교차 물기: ord 어긋남을 잡는 그물 ──
+    // 오답 해설은 결함을 지적한다("없다·아직·못했다·설명이다·역사서·…에게 가
+    // 있다"). 정답 해설은 그런 지적이 없다. 답안 ord 가 엉뚱한 곳을 가리키면
+    // (자기일관 데이터라 판정 검사는 못 잡음) 여기서 걸린다.
+    const FLAW = ['없', '아직', '못', '아니', '설명', '역사서', '가 있다']
+    const flaws = (s: string) => FLAW.filter((p) => s.includes(p))
+    for (const d of sc) {
+      const ans = scAns.find((a) => a.source_key === d.source_key)!
+      const correctOrd = ans.answer.index! + 1
+      for (const r of expl.filter((x) => x.source_key === d.source_key)) {
+        if (r.ord === correctOrd) {
+          t(`해설 '${d.source_key}' 정답 ord${r.ord}: 결함 지적 패턴 없음`,
+            flaws(r.content).length === 0, `${r.content} ← ${JSON.stringify(flaws(r.content))}`)
+        } else {
+          t(`해설 '${d.source_key}' 오답 ord${r.ord}: 결함 지적 패턴 있음`,
+            flaws(r.content).length > 0, r.content)
+        }
+      }
+    }
+
+    // 화면 배선
+    const root = path.join(__dirname, '..', '..')
+    const ceSrc = readFileSync(path.join(root, 'components', 'train', 'ChoiceExplain.tsx'), 'utf8')
+    t('ChoiceExplain: 오답이면 고른 것 한 줄만 (passed 분기)',
+      /if \(!passed\)/.test(ceSrc) && /choices\[chosenIndex\]/.test(ceSrc))
+    t('ChoiceExplain: 정답이면 choices 전부 순회 + 정답 표식',
+      /choices\.map\(/.test(ceSrc) && /i === chosenIndex/.test(ceSrc) && /정답/.test(ceSrc))
+    t('ChoiceExplain: choice 전용 캡션 (가/나 문구 아님)',
+      ceSrc.includes('각 문장이 통하는지, 왜 안 통하는지.') &&
+        !ceSrc.includes('정해진 답은 없다'))
+    t('ChoiceExplain: ord = index+1 로 해설을 찾는다',
+      /r\.ord === i \+ 1/.test(ceSrc))
+    const tcSrc = readFileSync(path.join(root, 'components', 'train', 'TrainClient.tsx'), 'utf8')
+    t('TrainClient: choice 는 ChoiceExplain 으로 분기 (SelfCheck 경로와 분리)',
+      /problem\.type === 'choice' \? \(/.test(tcSrc) && /<ChoiceExplain/.test(tcSrc))
+    t('TrainClient: ChoiceExplain 에 passed = 통과 여부를 넘긴다',
+      /passed=\{result\.status === 'pass'\}/.test(tcSrc))
+    t('TrainClient: 해설은 제출 순간의 선택지(submittedChoice)를 가리킨다',
+      /setSubmittedChoice\(choiceIndex\)/.test(tcSrc) && /chosenIndex=\{submittedChoice\}/.test(tcSrc))
+    t('TrainClient: 가/나 SelfCheck 경로가 살아 있다',
+      /<SelfCheck reference=\{result\.reference\} selfChecks=\{selfChecks\} \/>/.test(tcSrc))
+  }
 }
 
 // ── '쓰지 않을 말' 표시: forbidLabel/forbidDisplay ↔ 채점 (세션 22) ──────

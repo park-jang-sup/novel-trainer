@@ -657,6 +657,126 @@
       "ord": 3,
       "blank_key": "②",
       "content": "진형이 흩어지자 성문이 그대로 드러났다."
+    },
+    {
+      "source_key": "sc-hunter-status",
+      "ord": 1,
+      "blank_key": "",
+      "content": "세상 설명부터 시작한다. 독자는 아직 누구를 따라가야 할지 모른다."
+    },
+    {
+      "source_key": "sc-hunter-status",
+      "ord": 2,
+      "blank_key": "",
+      "content": "주인공이 구체적인 사물(상태창)을 만진다. 카메라가 강도윤에게 붙는다."
+    },
+    {
+      "source_key": "sc-hunter-status",
+      "ord": 3,
+      "blank_key": "",
+      "content": "카메라가 협회장에게 가 있다. 독자가 붙을 사람이 바뀐다."
+    },
+    {
+      "source_key": "sc-hunter-status",
+      "ord": 4,
+      "blank_key": "",
+      "content": "분위기를 말로 설명한다. 그릴 수 있는 사물이 없다."
+    },
+    {
+      "source_key": "sc-sword-ruin",
+      "ord": 1,
+      "blank_key": "",
+      "content": "세력 지도부터 그린다. 주인공은 아직 화면에 없다."
+    },
+    {
+      "source_key": "sc-sword-ruin",
+      "ord": 2,
+      "blank_key": "",
+      "content": "카메라가 객잔 주인에게 가 있다. 진운의 이야기가 아니게 된다."
+    },
+    {
+      "source_key": "sc-sword-ruin",
+      "ord": 3,
+      "blank_key": "",
+      "content": "부러진 검, 잿더미 — 만질 수 있는 사물 속에서 진운이 깨어난다."
+    },
+    {
+      "source_key": "sc-sword-ruin",
+      "ord": 4,
+      "blank_key": "",
+      "content": "'스산한 기운'은 그림이 안 된다. 사물이 없다."
+    },
+    {
+      "source_key": "sc-broken-vow",
+      "ord": 1,
+      "blank_key": "",
+      "content": "하은수가 청첩장을 접어 버린다. 행동 하나로 상황까지 전한다."
+    },
+    {
+      "source_key": "sc-broken-vow",
+      "ord": 2,
+      "blank_key": "",
+      "content": "결혼론 강의로 시작한다. 이야기가 아니라 설명이다."
+    },
+    {
+      "source_key": "sc-broken-vow",
+      "ord": 3,
+      "blank_key": "",
+      "content": "카메라가 김 실장에게 가 있다. 주인공이 등장하지 못했다."
+    },
+    {
+      "source_key": "sc-broken-vow",
+      "ord": 4,
+      "blank_key": "",
+      "content": "'서글픈 기운'을 말로 알려준다. 보여주는 게 없다."
+    },
+    {
+      "source_key": "sc-villainess-chains",
+      "ord": 1,
+      "blank_key": "",
+      "content": "연호와 정세부터 푼다. '제국력 ○년'은 역사서의 첫 줄이다."
+    },
+    {
+      "source_key": "sc-villainess-chains",
+      "ord": 2,
+      "blank_key": "",
+      "content": "카메라가 대신관에게 가 있다. 깨어난 건 카리엘인데."
+    },
+    {
+      "source_key": "sc-villainess-chains",
+      "ord": 3,
+      "blank_key": "",
+      "content": "'형언할 수 없는 긴장감'은 독자가 그릴 수 없다."
+    },
+    {
+      "source_key": "sc-villainess-chains",
+      "ord": 4,
+      "blank_key": "",
+      "content": "목에 감긴 쇠사슬을 더듬는다 — 처형 직전임이 사물로 전해진다."
+    },
+    {
+      "source_key": "sc-boss-mirror",
+      "ord": 1,
+      "blank_key": "",
+      "content": "게임 소개문으로 시작한다. 주인공은 아직 없다."
+    },
+    {
+      "source_key": "sc-boss-mirror",
+      "ord": 2,
+      "blank_key": "",
+      "content": "거울 속 낯선 얼굴과 눈을 맞춘다. 빙의 상황이 행동 하나로 보인다."
+    },
+    {
+      "source_key": "sc-boss-mirror",
+      "ord": 3,
+      "blank_key": "",
+      "content": "카메라가 병사들에게 가 있다. 이재하가 화면 밖이다."
+    },
+    {
+      "source_key": "sc-boss-mirror",
+      "ord": 4,
+      "blank_key": "",
+      "content": "'잘못되었다는 느낌'은 설명이다. 무엇이 보이는지가 없다."
     }
   ]
 }
