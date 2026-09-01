@@ -48,6 +48,11 @@ interface GradeResponse {
   morphAvailable: boolean
   // fill: 규칙 통과 뒤 화면에 보여줄 모범답안(재설계안 11-2 4번). 채점 정답이 아니다.
   reference?: { ord: number; blank_key: string; content: string }[]
+  // choice: 제출 순간의 선택지. 서버가 아니라 submit()이 결과 객체에 함께
+  // 싣는다 — 별도 상태로 두면 setResult 뒤 async 연속부에서 갱신돼, 결과가
+  // 뜨는 첫 렌더에 아직 반영이 안 돼 해설이 안 나왔다(세션 28 버그). 한
+  // 번의 setResult 로 원자화한다. 오답 뒤 다른 선택지를 눌러도 안 흔들린다.
+  submittedChoiceIndex?: number
 }
 
 interface LoopProps {
@@ -155,8 +160,6 @@ export default function TrainClient({
 
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<GradeResponse | null>(null)
-  // 제출 순간의 선택지 — 오답 뒤 학습자가 다른 것을 눌러도 해설은 낸 것을 가리킨다.
-  const [submittedChoice, setSubmittedChoice] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const displayChecks = useMemo(
@@ -295,8 +298,12 @@ export default function TrainClient({
         setError('제출에 실패했습니다. 잠시 후 다시 시도해 주세요.')
         return
       }
-      setResult((await res.json()) as GradeResponse)
-      if (problem.type === 'choice') setSubmittedChoice(choiceIndex)
+      const data = (await res.json()) as GradeResponse
+      setResult(
+        problem.type === 'choice' && choiceIndex !== null
+          ? { ...data, submittedChoiceIndex: choiceIndex }
+          : data
+      )
     } catch {
       setError('제출에 실패했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
@@ -612,11 +619,11 @@ export default function TrainClient({
                   <CheckRow key={c.key} check={c} />
                 ))}
               </div>
-              {result.reference?.length && submittedChoice !== null ? (
+              {result.reference?.length && result.submittedChoiceIndex != null ? (
                 <ChoiceExplain
                   choices={problem.choices ?? []}
                   reference={result.reference}
-                  chosenIndex={submittedChoice}
+                  chosenIndex={result.submittedChoiceIndex}
                   passed={result.status === 'pass'}
                 />
               ) : null}

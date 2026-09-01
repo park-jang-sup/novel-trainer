@@ -122,13 +122,24 @@ choice 해설 층 — 오답 때 이유가 없다는 실사용 요청 (세션 28
   answers.json  reference 에 20행 (5문항 × ord 1~4)
   ChoiceExplain.tsx (신규)  오답: 고른 선택지 해설 한 줄만(정답·다른 해설 감춤, 재도전 여지).
     정답: 4개 전부 + 정답 표식. 캡션 choice 전용("각 문장이 통하는지, 왜 안 통하는지.")
-  TrainClient  type==='choice' 분기 — SelfCheck(가/나) 경로와 분리. 제출 순간 선택지
-    (submittedChoice) 를 해설 대상으로 고정 — 오답 뒤 다른 것 눌러도 안 흔들림
+  TrainClient  type==='choice' 분기 — SelfCheck(가/나) 경로와 분리. 제출 순간 선택지를
+    해설 대상으로 고정 — 오답 뒤 다른 것 눌러도 안 흔들림
   verify [도입 1 해설]  20행 완비·비어있지 않음·blank_key '' · 교차 물기(정답 ord 해설엔 결함
     지적 패턴 없음, 오답 ord 셋엔 있음 — FLAW=없·아직·못·아니·설명·역사서·'가 있다') · 화면 배선
   ★ DB 반영·절차(박 님): seed_data.sql(reference 20행 신규 insert) → seed_check.sql → 브라우저
     도입 1에서 ① 오답 제출 → 고른 것의 해설 한 줄만 ② 정답 제출 → 4개 해설 전부 + 정답 표시
     ③ 가/나 문항(4단계 등)이 안 깨졌는지
+
+  세션 28 셋째 — 오답 해설 미표시 버그 수정 (실사용 재현)
+  원인   오답 렌더가 'submittedChoice !== null' 게이트에 막혀 있었다. submittedChoice 는
+         setResult 뒤 async 연속부에서 setSubmittedChoice 로만 갱신돼, 결과가 뜨는 첫 렌더
+         에는 아직 null → ChoiceExplain 이 안 그려졌다. (API·RLS 는 정상 — 오답에도
+         reference 4행이 온다. 로컬에서 /api/grade 실호출로 확인.)
+  수정   선택지 번호를 별도 상태 대신 result 객체 안에(submittedChoiceIndex) 실어 한 번의
+         setResult 로 원자화. 게이트는 result.submittedChoiceIndex != null. setSubmittedChoice 제거.
+  verify [도입 1 해설]  배선 물기 보강 — 원자적 탑재(submittedChoiceIndex: choiceIndex)·게이트에
+         pass 조건 없음·별도 상태 부재. 되살리면(옛 분리 상태) 3건 fail 확인.
+  ★ 눈확인(박 님): 도입 1 오답 제출 → 고른 선택지 해설 한 줄이 뜨는지
 ```
 
 ### 끝난 것 — 세션 27

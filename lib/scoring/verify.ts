@@ -3207,8 +3207,22 @@ console.log('\n[도입 1 start_choose: 5문항 신설]')
       /problem\.type === 'choice' \? \(/.test(tcSrc) && /<ChoiceExplain/.test(tcSrc))
     t('TrainClient: ChoiceExplain 에 passed = 통과 여부를 넘긴다',
       /passed=\{result\.status === 'pass'\}/.test(tcSrc))
-    t('TrainClient: 해설은 제출 순간의 선택지(submittedChoice)를 가리킨다',
-      /setSubmittedChoice\(choiceIndex\)/.test(tcSrc) && /chosenIndex=\{submittedChoice\}/.test(tcSrc))
+    // ── 세션 28 셋째: 오답 해설 미표시 버그 ──
+    // 제출 순간의 선택지를 별도 상태(setSubmittedChoice)로 두면 setResult 뒤
+    // async 연속부에서만 갱신돼, 결과가 뜨는 첫 렌더에는 아직 null 이라
+    // 'submittedChoice !== null' 게이트가 해설을 걸렀다. 선택지 번호를 result
+    // 객체에 함께 실어(submittedChoiceIndex) 한 번의 setResult 로 원자화한다.
+    t('TrainClient: 제출 선택지는 result 객체 안에 원자적으로 실린다',
+      /submittedChoiceIndex: choiceIndex/.test(tcSrc) &&
+        /chosenIndex=\{result\.submittedChoiceIndex\}/.test(tcSrc))
+    t('TrainClient: 해설 게이트가 result.submittedChoiceIndex 로 열린다 (별도 상태 아님)',
+      /result\.submittedChoiceIndex != null \?/.test(tcSrc) &&
+        !/setSubmittedChoice/.test(tcSrc))
+    t('TrainClient: 오답(fail)에도 해설을 낸다 — 게이트에 pass 조건이 없다',
+      // choice 분기 안의 ChoiceExplain 게이트: reference 유무 + 선택지만 본다.
+      /result\.reference\?\.length && result\.submittedChoiceIndex != null \? \(\s*<ChoiceExplain/.test(
+        tcSrc.replace(/\s+/g, ' ')
+      ))
     t('TrainClient: 가/나 SelfCheck 경로가 살아 있다',
       /<SelfCheck reference=\{result\.reference\} selfChecks=\{selfChecks\} \/>/.test(tcSrc))
   }
