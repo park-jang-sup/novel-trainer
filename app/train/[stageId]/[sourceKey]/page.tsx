@@ -94,7 +94,7 @@ export default async function TrainProblemPage(
     await Promise.all([
       supabase.from('problems').select('id, source_key, difficulty, stage_id').not('is_active', 'is', false),
       supabase.from('submissions').select('problem_id').eq('passed', true),
-      supabase.from('stages').select('id, track, order_no, self_checks, coach_line'),
+      supabase.from('stages').select('id, track, order_no, skill_key, self_checks, coach_line'),
     ])
 
   const currentStage = (allStages ?? []).find((s) => String(s.id) === actualStageId)
@@ -102,6 +102,9 @@ export default async function TrainProblemPage(
   const selfChecks = (currentStage?.self_checks as string[] | null) ?? []
   // 코치 한 줄. '' 인 단계(구성·도입)는 말풍선이 안 뜬다.
   const coachLine = (currentStage?.coach_line as string | null) ?? ''
+  // 문항 유형 분기용(예: start_write 원문 상자 라벨). 단계에만 있고 문항에는
+  // 없어서 여기서 내려준다.
+  const skillKey = (currentStage?.skill_key as string | null) ?? ''
 
   const stageProblems = (activeProblems ?? [])
     .filter((p) => String(p.stage_id) === actualStageId)
@@ -135,6 +138,7 @@ export default async function TrainProblemPage(
         problem={{
           id: problem.id,
           type: problem.type as ProblemType,
+          skill_key: skillKey,
           instruction: problem.instruction,
           passage: problem.passage,
           choices: problem.choices ?? null,

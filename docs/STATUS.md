@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 29 · 커밋 `cf184a0` 위
+마지막 갱신: 세션 29 후기 · 커밋 `c40a514` 위
 
 ---
 
@@ -129,6 +129,35 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
     ④ 직접 고쳐 통과 → 모범답안 가·나 + 자기점검 한 줄
     ⑤ 두 칸 화면(scoring key 4개↑) — 오른쪽에 "분위기를 직접 말하는 표현 · 예: …" 범주 줄 +
        조건 요약 한 줄("60자 이하 · 움직이는 말 1개 이상 · '강도윤' 또는 '도윤' 넣기" 류)
+
+세션 29 후기 — 도입 2 실사용 발견 4건 (박 님 완주)
+  발견 1  지시문 오독 — splitInstruction 이 첫 문장을 제목으로 떼는데 그게 인물 소개라
+          "위 문장은"이 제목을 가리키는 걸로 읽혔다.
+     처리  instruction 5건 재작성 — 첫 문장을 과제형("○○의 1화 첫 문장을 쓰시오."),
+          지시 대상을 "아래 … 잘못된 첫 문장" 으로 명명. seed/update-start-write.sql
+  발견 2  원문 상자 라벨 '원문' 이 수정 과제로 읽힘.
+     처리  TrainClient passageLabel — skill_key 'start_write' 면 '잘못된 첫 문장'.
+          page.tsx 가 stages.skill_key 를 내려줌(문항엔 skill_key 없음). 지시문 낱말과 일치
+  발견 3  무관 내용 통과 — "줄넘기 하면 재미있어 하는 이재하 친구" 통과. 이름+동사만 맞추면
+          뚫린다. → 수정 아님, 보류. 9단계 실측 '내용 통째 교체' 계열. 내용 판정은 AI 몫,
+          자기점검이 그 자리. 박 님 뚫기 답안은 AI 재개 때 나쁜 표본 자산. (아래 미결)
+  발견 4  '기류'·'오라' 미검출 — 분위기 우회어.
+     처리  forbidWords +5(기류·아우라·기색·낌새·기미) · forbidLemmas 신설 ["오라/NNG"]
+          (aura 는 NNG, 명령형 '돌아오라'·'이리 오라' 는 VV — kiwi 실측, lemma 로만 잡음) ·
+          forbidDisplay +6. 모범답안 10건 오탐 0 · 뚫기 답안 이중 검출 · 충돌 2문 안 걸림
+  coach_intro  "이번엔 네가 직접 써." → "이번엔 직접 써 보자!" (박 님 문구)
+  seed/update-start-write.sql (신규)  problems 5건 instruction + scoring_config jsonb 통째
+    (기존 행이라 update — 원칙 7 · v2 선례). coach_intro 는 seed_data do update.
+  verify  scoring_config 확장 단언 · instruction 규격("…의 1화 첫 문장을 쓰시오." 시작 ·
+    "잘못된 첫 문장" 포함 · "위 문장" 미포함) · 물기(기류/오라 fail · 돌아오라/이리 오라 pass) ·
+    update SQL ↔ 덤프 jsonb · isScored '오라'↔'오라/NNG' · 화면 배선(passageLabel·skillKey)
+  검증  tsc 0 · test:scoring 3372/0(형태소 서버) · check:numbers 0 · gen:seed 무변화
+  ★ DB 반영·눈검사(박 님): seed/update-start-write.sql → seed_data.sql(coach_intro do update, 멱등)
+    → seed_check.sql → 브라우저 도입 2에서
+    ① 제목이 "○○의 1화 첫 문장을 쓰시오." · 원문 상자 라벨 '잘못된 첫 문장'
+    ② 코치 말풍선 "이번엔 직접 써 보자!"
+    ③ '기류' 또는 '오라' 넣은 답 제출 → '쓰지 않을 말' 미달
+    ④ 기존 통과 정상 답(반지 문장 류)이 여전히 통과
 ```
 
 ### 끝난 것 — 세션 28
@@ -399,6 +428,12 @@ fill 은 인물·사물을 안 본다     덕수 답이 세연 문항을 통과�
                             통과한다(채팅 실측 5/5). 규칙으로 안 막는다(좋은 문장 필사도 학습은
                             학습). 낯선 학습자 실사용 때 submissions 로 관찰. verify 는 모범답안이
                             그 문장을 안 베끼게만 문다
+무관 내용 통과(도입 2 사례)   '줄넘기 하면 재미있어 하는 이재하 친구' 가 통과 — 이름+동사만 맞추면
+                            뚫린다. 9단계 실측 '내용 통째 교체' 계열. 내용 판정은 AI 몫,
+                            자기점검이 그 자리. 박 님 뚫기 답안은 AI 재개 때 나쁜 표본 자산
+자모 낱자 검사(후보)         완성형 아닌 낱자(ㄱ-ㅎ·ㅏ-ㅣ)가 답안에 있으면 fail — 형태소 불필요·
+                            오탐 여지 낮음. 장난·오타 답안 일부를 잡는다. 신규 규칙이라 박 님
+                            승인 뒤 연다
 seed_data 는 갱신을 안 한다    문항 insert 가 `where not exists` 라 기존 행을 안 고친다. 덤프의
                             passage·scoring_config 를 바꾸면 seed_data 만으로는 DB 에 안 들어간다 —
                             DB update 를 따로 돌리고 seed_check 를 실제로 돌려 대조가 통과하는지 본다

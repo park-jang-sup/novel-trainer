@@ -3242,6 +3242,7 @@ console.log('\n[도입 2 start_write: 5문항 + 모범답안 대조]')
     type: string
     choices: string[] | null
     passage: string | null
+    instruction: string
     order_no: number
     difficulty: number
     scoring_mode: string
@@ -3268,16 +3269,36 @@ console.log('\n[도입 2 start_write: 5문항 + 모범답안 대조]')
   t('order_no 1~5 각 1회',
     JSON.stringify([...sw.map((d) => d.order_no)].sort()) === '[1,2,3,4,5]',
     JSON.stringify(sw.map((d) => d.order_no)))
+  // 세션 29 후기: '기류'·'오라' 미검출 → forbidWords 5 확장 + forbidLemmas 신설.
+  const FW_COMMON = ['기운', '느낌', '분위기', '기류', '아우라', '기색', '낌새', '기미']
+  const DISP_EXPAND = ['기류', '오라', '아우라', '기색', '낌새', '기미']
   for (const d of sw) {
     const c = d.scoring_config
     const fw = (c.forbidWords ?? []) as string[]
-    t(`'${d.source_key}': scoring_config (maxChars 60 · minVerbs 1 · requireAny · forbid…)`,
+    const disp = (c.forbidDisplay ?? []) as string[]
+    const lem = (c.forbidLemmas ?? []) as string[]
+    t(`'${d.source_key}': scoring_config (maxChars 60 · minVerbs 1 · requireAny · forbidLabel)`,
       c.maxChars === 60 && c.minVerbs === 1 &&
         Array.isArray(c.requireAny) && (c.requireAny as string[]).length >= 1 &&
-        ['기운', '느낌', '분위기'].every((w) => fw.includes(w)) &&
-        c.forbidLabel === '분위기를 직접 말하는 표현' &&
-        Array.isArray(c.forbidDisplay) && (c.forbidDisplay as string[]).length >= 3,
+        c.forbidLabel === '분위기를 직접 말하는 표현',
       JSON.stringify(c))
+    t(`'${d.source_key}': forbidWords ⊇ 공통 8 (기운·느낌·분위기·기류·아우라·기색·낌새·기미)`,
+      FW_COMMON.every((w) => fw.includes(w)), JSON.stringify(fw))
+    t(`'${d.source_key}': forbidLemmas == ['오라/NNG']`,
+      JSON.stringify(lem) === JSON.stringify(['오라/NNG']), JSON.stringify(lem))
+    t(`'${d.source_key}': forbidDisplay 가 확장 6 (기류·오라·아우라·기색·낌새·기미) 포함`,
+      DISP_EXPAND.every((w) => disp.includes(w)), JSON.stringify(disp))
+  }
+
+  // ── 지시문 규격 (세션 29 후기: 첫 문장이 제목으로 떼여 '위 문장'이 오독됨) ──
+  for (const d of sw) {
+    const req0 = ((d.scoring_config.requireAny ?? []) as string[])[0]
+    t(`'${d.source_key}': 지시문이 "…의 1화 첫 문장을 쓰시오." 로 시작`,
+      d.instruction.startsWith(`${req0}의 1화 첫 문장을 쓰시오.`), d.instruction.slice(0, 30))
+    t(`'${d.source_key}': 지시문에 '잘못된 첫 문장' 포함`,
+      d.instruction.includes('잘못된 첫 문장'))
+    t(`'${d.source_key}': 지시문에 '위 문장' 미포함 (제목 오독 원인 제거)`,
+      !d.instruction.includes('위 문장'))
   }
 
   // ── passage 이어받기: 도입 1(start_choose) 의 추상 분위기 오답을 글자까지 ──
@@ -3374,14 +3395,88 @@ console.log('\n[도입 2 start_write: 5문항 + 모범답안 대조]')
   // ── 형태소(서버 있을 때만): 모범답안 동사 ≥ 1 (실측 4·3·4·3·4·3·3·2·3·2) ──
   pushRefMorphCheck('도입 2', refs, 'convert', cfgOf)
 
-  // ── stages: start_write 코치·자기점검 ──
+  // ── 물기(형태소 서버 있을 때만): 확장 금지어가 실제로 걸리고 '오라' 충돌은 안 남 ──
+  {
+    const c0 = cfgOf.get('sw-ruin-ash')!
+    const trap = '진운은 창밖으로 멋진 기류가 흐르는 것을 보았다.' //  기류(forbidWords)
+    const aura = '진운은 반짝이는 오라를 손끝으로 만졌다.' //           오라/NNG(forbidLemmas)
+    const clash1 = '진운은 문을 열고 돌아오라는 외침을 들었다.' //      돌아오/VV — 안 걸림
+    const clash2 = '진운은 이리 오라는 손짓을 보았다.' //              오/VV — 안 걸림
+    aiChainChecks.push((async () => {
+      const m = await morphAnalyze(trap)
+      if (!m) { morphSkipped += 4; console.log('  – 형태소 서버 없음: 도입 2 확장 금지어 물기 건너뜀'); return }
+      const run = async (text: string) => {
+        const morph = text === trap ? m : await morphAnalyze(text)
+        return combine(
+          { id: 'sw-ruin-ash', type: 'convert', scoring_mode: 'auto', scoring_config: c0 },
+          { text }, undefined, morph)
+      }
+      const rt = await run(trap)
+      t("물기: '…멋진 기류가 흐르는…' 은 forbidWords 로 fail",
+        rt.checks.find((c) => c.key === 'forbidWords')?.status === 'fail',
+        JSON.stringify(rt.checks.find((c) => c.key === 'forbidWords')))
+      const ra = await run(aura)
+      t("물기: '반짝이는 오라를…' 은 forbidLemmas(오라/NNG)로 fail",
+        ra.checks.find((c) => c.key === 'forbidLemmas')?.status === 'fail',
+        JSON.stringify(ra.checks.find((c) => c.key === 'forbidLemmas')))
+      for (const [txt, name] of [[clash1, '돌아오라는'], [clash2, '이리 오라는']] as const) {
+        const r = await run(txt)
+        const fl = r.checks.find((c) => c.key === 'forbidLemmas')
+        t(`물기: '${name}' 명령형은 forbidLemmas 에 안 걸린다 (오라 충돌 없음)`,
+          fl?.status !== 'fail', JSON.stringify(fl))
+      }
+    })())
+  }
+
+  // ── update-start-write.sql ↔ 덤프 (instruction · scoring_config jsonb 통째) ──
+  // 세션 27 v2 선례. 기존 행이라 이 update 파일이 DB 반영을 담당한다.
+  {
+    const updSql = readFileSync(
+      path.join(__dirname, '..', '..', 'seed', 'update-start-write.sql'), 'utf8')
+    const canon = (o: unknown): unknown =>
+      Array.isArray(o)
+        ? o.map(canon)
+        : o && typeof o === 'object'
+          ? Object.fromEntries(Object.keys(o as object).sort().map((k) => [k, canon((o as Record<string, unknown>)[k])]))
+          : o
+    const cj = (o: unknown) => JSON.stringify(canon(o))
+    const rows = [...updSql.matchAll(
+      /update problems set\n\s*instruction = '((?:[^']|'')*)',\n\s*scoring_config = '(.+?)'::jsonb\n\s*where source_key = '([^']*)';/g
+    )].map((m) => ({
+      instruction: m[1].replace(/''/g, "'"),
+      cfg: JSON.parse(m[2]) as Record<string, unknown>,
+      source_key: m[3],
+    }))
+    t('update-start-write.sql 에 5행', rows.length === 5, `실제=${rows.length}`)
+    for (const d of sw) {
+      const row = rows.find((r) => r.source_key === d.source_key)
+      t(`update SQL '${d.source_key}' 의 instruction·scoring_config 가 덤프와 같다`,
+        !!row && row.instruction === d.instruction && cj(row.cfg) === cj(d.scoring_config),
+        `SQL=${JSON.stringify(row)}`)
+    }
+  }
+
+  // ── stages: start_write 코치·자기점검 (세션 29 후기 문구) ──
   const stagesDump = readDump<{ skill_key: string; coach_intro: string; coach_line: string; self_checks: string[] }[]>('stages.json')
   const swStage = stagesDump.find((s) => s.skill_key === 'start_write')!
   t('stages start_write 의 coach_intro·coach_line 이 비어 있지 않다',
     swStage.coach_intro.length > 0 && swStage.coach_line.length > 0)
+  t("stages start_write coach_intro 에 '이번엔 직접 써 보자!' (세션 29 후기)",
+    swStage.coach_intro.includes('이번엔 직접 써 보자!') &&
+      !swStage.coach_intro.includes('이번엔 네가 직접 써.'))
   t('stages start_write 의 self_checks 1건',
     Array.isArray(swStage.self_checks) && swStage.self_checks.length === 1 &&
       swStage.self_checks[0].length > 0, JSON.stringify(swStage.self_checks))
+
+  // ── 화면 배선: start_write 원문 상자 라벨 (세션 29 후기) ──
+  const root = path.join(__dirname, '..', '..')
+  const tcSrc = readFileSync(path.join(root, 'components', 'train', 'TrainClient.tsx'), 'utf8')
+  t("TrainClient: start_write 면 passageLabel 이 '잘못된 첫 문장'",
+    /problem\.skill_key === 'start_write'\s*\n?\s*\?\s*'잘못된 첫 문장'/.test(tcSrc))
+  const pageSrc = readFileSync(
+    path.join(root, 'app', 'train', '[stageId]', '[sourceKey]', 'page.tsx'), 'utf8')
+  t('page.tsx: stages 에서 skill_key 를 읽어 TrainClient 에 넘긴다',
+    /select\('id, track, order_no, skill_key/.test(pageSrc) && /skill_key: skillKey/.test(pageSrc))
 }
 
 // ── '쓰지 않을 말' 표시: forbidLabel/forbidDisplay ↔ 채점 (세션 22) ──────
@@ -3455,6 +3550,18 @@ console.log('\n[쓰지 않을 말 표시: forbidLabel/forbidDisplay ↔ 채점]'
     t('물기: 채점에 없는 "억울하다"는 실재로 안 잡힌다',
       isScored('억울하다', fw, fl) === false)
     t('물기: 실제 목록의 "화나다"는 잡힌다', isScored('화나다', fw, fl) === true)
+  }
+
+  // 세션 29 후기: start_write 의 표시어 '오라'는 forbidLemmas('오라/NNG')에만
+  // 대응한다 — stemOf 가 '다' 로 안 끝나는 낱말을 그대로 두므로 isScored 가
+  // 표제어(l.split('/')[0])와 맞춰 잡아야 정상.
+  {
+    const sw0 = withDisplay.find((d) => d.skill_key === 'start_write')!
+    const fw = sw0.scoring_config.forbidWords ?? []
+    const fl = sw0.scoring_config.forbidLemmas ?? []
+    t("start_write: 표시 '오라' 가 forbidLemmas('오라/NNG')로 잡힌다",
+      isScored('오라', fw, fl) === true)
+    t("start_write: 표시 '기류' 는 forbidWords 로 잡힌다", isScored('기류', fw, fl) === true)
   }
 
   // 규칙 없는 문항은 안 깨진다 — forbidWords 만 있고 forbidLabel 없는 문항의

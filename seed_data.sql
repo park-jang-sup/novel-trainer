@@ -402,7 +402,7 @@ insert into stages
   (track, order_no, title, skill_key, summary, is_free, self_checks, intro, coach_intro, coach_line)
 values ('start', 2, '첫 문장 쓰기', 'start_write',
         '주인공의 감각에서 시작한다', true, array['첫 문장만 읽고 머릿속에 장면이 그려져? 카메라가 주인공한테 붙어 있어?']::text[], '',
-        '1단계에서 첫 문장을 골랐지? 이번엔 네가 직접 써. ''스산한 기운이 감돌았다''라고 쓰면 독자 머릿속엔 아무 그림도 안 떠. 주인공이 보고 만지는 것 하나를 보여주면, 분위기는 저절로 따라와.', '분위기는 말하지 말고, 보여줘!')
+        '1단계에서 첫 문장을 골랐지? 이번엔 직접 써 보자! ''스산한 기운이 감돌았다''라고 쓰면 독자 머릿속엔 아무 그림도 안 떠. 주인공이 보고 만지는 것 하나를 보여주면, 분위기는 저절로 따라와.', '분위기는 말하지 말고, 보여줘!')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
@@ -538,8 +538,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'start_write'),
-  'convert', 'auto', '주인공은 최약체에서 회귀한 헌터 강도윤이다. 위 문장은 분위기만 말하고 아무것도 보여주지 않는다. 강도윤이 보고 듣고 만지는 것으로 첫 문장을 다시 쓰시오.',
-  '어딘가 불길하고 낯선 기운이 감도는 아침이었다.', null, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","불길"],"forbidDisplay":["기운","느낌","분위기","불길하다"],"requireAny":["강도윤","도윤"]}'::jsonb,
+  'convert', 'auto', '강도윤의 1화 첫 문장을 쓰시오. 주인공은 최약체에서 회귀한 헌터 강도윤이다. 아래는 분위기만 말하고 아무것도 보여주지 못한 잘못된 첫 문장이다. 저렇게 쓰지 말고, 강도윤이 보고 듣고 만지는 것 하나에서 시작하는 첫 문장을 새로 쓰시오.',
+  '어딘가 불길하고 낯선 기운이 감도는 아침이었다.', null, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","불길","기류","아우라","기색","낌새","기미"],"forbidLemmas":["오라/NNG"],"forbidDisplay":["기운","느낌","분위기","불길하다","기류","오라","아우라","기색","낌새","기미"],"requireAny":["강도윤","도윤"]}'::jsonb,
   'original', 'modern', 'planned',
   1, 'sw-hunter-dawn'
 where not exists (select 1 from problems p where p.source_key = 'sw-hunter-dawn');
@@ -646,8 +646,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'start_write'),
-  'convert', 'auto', '주인공은 하룻밤에 멸문한 가문의 소년 진운이다. 위 문장은 분위기만 말하고 아무것도 보여주지 않는다. 진운이 보고 듣고 만지는 것으로 첫 문장을 다시 쓰시오.',
-  '불타 버린 장원에는 말로 다 못 할 스산한 기운이 감돌았다.', null, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","스산"],"forbidDisplay":["기운","느낌","분위기","스산하다"],"requireAny":["진운"]}'::jsonb,
+  'convert', 'auto', '진운의 1화 첫 문장을 쓰시오. 주인공은 하룻밤에 멸문한 가문의 소년 진운이다. 아래는 분위기만 말하고 아무것도 보여주지 못한 잘못된 첫 문장이다. 저렇게 쓰지 말고, 진운이 보고 듣고 만지는 것 하나에서 시작하는 첫 문장을 새로 쓰시오.',
+  '불타 버린 장원에는 말로 다 못 할 스산한 기운이 감돌았다.', null, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","스산","기류","아우라","기색","낌새","기미"],"forbidLemmas":["오라/NNG"],"forbidDisplay":["기운","느낌","분위기","스산하다","기류","오라","아우라","기색","낌새","기미"],"requireAny":["진운"]}'::jsonb,
   'original', 'martial', 'planned',
   1, 'sw-ruin-ash'
 where not exists (select 1 from problems p where p.source_key = 'sw-ruin-ash');
@@ -706,8 +706,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'start_write'),
-  'convert', 'auto', '주인공은 결혼식 한 달 전 파혼을 통보받은 하은수다. 위 문장은 분위기만 말하고 아무것도 보여주지 않는다. 하은수가 보고 듣고 만지는 것으로 첫 문장을 다시 쓰시오.',
-  '무겁게 가라앉은 공기 속, 어딘지 서글픈 기운이 도는 오후였다.', null, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","서글"],"forbidDisplay":["기운","느낌","분위기","서글프다"],"requireAny":["하은수","은수"]}'::jsonb,
+  'convert', 'auto', '하은수의 1화 첫 문장을 쓰시오. 주인공은 결혼식 한 달 전 파혼을 통보받은 하은수다. 아래는 분위기만 말하고 아무것도 보여주지 못한 잘못된 첫 문장이다. 저렇게 쓰지 말고, 하은수가 보고 듣고 만지는 것 하나에서 시작하는 첫 문장을 새로 쓰시오.',
+  '무겁게 가라앉은 공기 속, 어딘지 서글픈 기운이 도는 오후였다.', null, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","서글","기류","아우라","기색","낌새","기미"],"forbidLemmas":["오라/NNG"],"forbidDisplay":["기운","느낌","분위기","서글프다","기류","오라","아우라","기색","낌새","기미"],"requireAny":["하은수","은수"]}'::jsonb,
   'original', 'romance', 'planned',
   1, 'sw-vow-afternoon'
 where not exists (select 1 from problems p where p.source_key = 'sw-vow-afternoon');
@@ -850,8 +850,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'start_write'),
-  'convert', 'auto', '주인공은 소설 속 처형당하는 악녀 카리엘의 몸에서 깨어났다. 위 문장은 분위기만 말하고 아무것도 보여주지 않는다. 카리엘이 보고 듣고 만지는 것으로 첫 문장을 다시 쓰시오.',
-  '처형장에는 무어라 형언할 수 없는 팽팽한 긴장감이 흐르고 있었다.', null, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","긴장","형언"],"forbidDisplay":["기운","느낌","분위기","긴장감","형언하다"],"requireAny":["카리엘"]}'::jsonb,
+  'convert', 'auto', '카리엘의 1화 첫 문장을 쓰시오. 주인공은 소설 속 처형당하는 악녀 카리엘의 몸에서 깨어났다. 아래는 분위기만 말하고 아무것도 보여주지 못한 잘못된 첫 문장이다. 저렇게 쓰지 말고, 카리엘이 보고 듣고 만지는 것 하나에서 시작하는 첫 문장을 새로 쓰시오.',
+  '처형장에는 무어라 형언할 수 없는 팽팽한 긴장감이 흐르고 있었다.', null, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","긴장","형언","기류","아우라","기색","낌새","기미"],"forbidLemmas":["오라/NNG"],"forbidDisplay":["기운","느낌","분위기","긴장감","형언하다","기류","오라","아우라","기색","낌새","기미"],"requireAny":["카리엘"]}'::jsonb,
   'original', 'fantasy', 'planned',
   1, 'sw-scaffold-morning'
 where not exists (select 1 from problems p where p.source_key = 'sw-scaffold-morning');
@@ -946,8 +946,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'start_write'),
-  'convert', 'auto', '주인공 이재하는 자신이 만든 게임 속 중간보스의 몸에서 깨어났다. 위 문장은 분위기만 말하고 아무것도 보여주지 않는다. 이재하가 보고 듣고 만지는 것으로 첫 문장을 다시 쓰시오.',
-  '무언가 단단히 잘못되었다는 느낌이 서늘하게 온몸을 감쌌다.', null, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기"],"forbidDisplay":["기운","느낌","분위기"],"requireAny":["이재하","재하"]}'::jsonb,
+  'convert', 'auto', '이재하의 1화 첫 문장을 쓰시오. 주인공 이재하는 자신이 만든 게임 속 중간보스의 몸에서 깨어났다. 아래는 분위기만 말하고 아무것도 보여주지 못한 잘못된 첫 문장이다. 저렇게 쓰지 말고, 이재하가 보고 듣고 만지는 것 하나에서 시작하는 첫 문장을 새로 쓰시오.',
+  '무언가 단단히 잘못되었다는 느낌이 서늘하게 온몸을 감쌌다.', null, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","기류","아우라","기색","낌새","기미"],"forbidLemmas":["오라/NNG"],"forbidDisplay":["기운","느낌","분위기","기류","오라","아우라","기색","낌새","기미"],"requireAny":["이재하","재하"]}'::jsonb,
   'original', 'fantasy', 'planned',
   1, 'sw-boss-wake'
 where not exists (select 1 from problems p where p.source_key = 'sw-boss-wake');

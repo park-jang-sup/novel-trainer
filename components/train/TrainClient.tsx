@@ -29,6 +29,7 @@ interface PublicConfig {
 interface PublicProblem {
   id: string
   type: ProblemType
+  skill_key: string
   instruction: string
   passage: string | null
   choices: string[] | null
@@ -245,7 +246,15 @@ export default function TrainClient({
         .join('\n\n')
 
   const isTextType = TEXT_TYPES.includes(problem.type)
-  const passageLabel = problem.type === 'coinage' || problem.type === 'count' ? '힌트' : '원문'
+  // 도입 2(start_write)의 원문 상자는 '고쳐 쓸 나쁜 예'다 — '원문'이라 부르면
+  // 학습자가 그것을 수정 과제로 읽는다(실사용). 지시문의 '잘못된 첫 문장'과
+  // 같은 낱말을 써서 화면·지시문이 서로를 가리키게 한다.
+  const passageLabel =
+    problem.skill_key === 'start_write'
+      ? '잘못된 첫 문장'
+      : problem.type === 'coinage' || problem.type === 'count'
+        ? '힌트'
+        : '원문'
 
   const canSubmit = (() => {
     if (submitting) return false
