@@ -2719,19 +2719,26 @@ console.log('\n[3단계 trim_padding: 모범답안 대조]')
   pushRefMorphCheck('3단계', refs, 'remove', cfgOf)
 }
 
-// ── 4단계 reduce_repeat(반복 표현 제거): 모범답안 대조 (세션 25) ─────────
+// ── 4단계 reduce_repeat(반복 표현 제거): 원문·모범답안 대조 (세션 27) ─────
+//
+// 세션 27: 실사용에서 원문 8건이 "문제를 위해 일부러 어색하게 쓴 문장"이라는
+// 판정을 받아, 원작 전래동화(저작권 소멸)의 장면·대사로 소설다운 원문을 다시
+// 썼다. 반복 결함(repeatTargets 초과)은 훈련 목적상 의도적으로 유지한다.
+//
+// 새 원칙(4단계 자수 상한): maxChars = 새 원문의 countChars(공백 제외) 그대로.
+// 반복 고치기가 압축을 강요하면 안 된다(세션 23 원칙의 4단계 판). 원문 그대로
+// 제출하는 꼼수는 자수가 아니라 repeatTargets('겹친 말')에서 걸린다 — 이 검사는
+// 형태소가 필요 없다(답안 문자열의 낱말 횟수).
 //
 // answers.json 의 reference[] 에 8문항 × ord 1(가)/2(나) = 16행. blank_key ''.
-// 3단계와 같은 결 — 다만 이 단계의 핵심은 maxRepeat(같은 말 2회까지)라
-// 형태소가 있어야 온전히 잰다. 원문 8건은 각자 한 어휘를 3~4회 되풀이해
-// maxRepeat 에 걸린다(그래서 걷어내기가 성립한다).
-console.log('\n[4단계 reduce_repeat: 모범답안 대조]')
+console.log('\n[4단계 reduce_repeat: 원문·모범답안 대조]')
 {
   interface RpProblem {
     source_key: string
     skill_key: string
     type: string
     passage: string | null
+    instruction: string
     scoring_config: ScoringConfig
   }
   const seedDir = path.join(__dirname, '..', '..', 'seed', 'dump')
@@ -2757,6 +2764,15 @@ console.log('\n[4단계 reduce_repeat: 모범답안 대조]')
     t(`'${d.source_key}': 가·나 두 세트`, JSON.stringify(ords) === '[1,2]', JSON.stringify(ords))
   }
 
+  // ── 불변식: maxChars == countChars(새 원문) — 세션 27 새 원칙을 코드로 문다 ──
+  // 반복 고치기가 압축을 강요하면 안 된다. 상한이 원문 자수 그대로면 원문을
+  // 그대로 내도 자수로는 안 걸린다 — 대신 repeatTargets 로 걸린다(아래 물기).
+  for (const d of rp) {
+    const max = d.scoring_config.maxChars as number
+    const n = countChars(d.passage ?? '')
+    t(`'${d.source_key}': maxChars ${max} == 원문 자수 ${n}`, max === n, `"${d.passage}"`)
+  }
+
   for (const r of refs) {
     const cfg = cfgOf.get(r.source_key)!
     const max = (cfg.maxChars as number | undefined) ?? 9999
@@ -2768,7 +2784,7 @@ console.log('\n[4단계 reduce_repeat: 모범답안 대조]')
     // repeatTargets — 모범답안이 이 한도 안이어야 한다(형태소 불필요).
     const rt = (cfg.repeatTargets ?? []) as { word: string; max: number }[]
     const over = rt.filter((tg) => countOccurrences(r.content, tg.word) > tg.max)
-    t(`'${r.source_key}' ord${r.ord}: repeatTargets 한도 안`, over.length === 0,
+    t(`'${r.source_key}' ord${r.ord}: repeatTargets 전 단어 한도 안`, over.length === 0,
       JSON.stringify(over.map((tg) => `${tg.word} ${countOccurrences(r.content, tg.word)}/${tg.max}`)))
     // 출하 코드(combine)로도 같은 결론
     const res = combine(
@@ -2778,17 +2794,119 @@ console.log('\n[4단계 reduce_repeat: 모범답안 대조]')
       res.checks.find((c) => c.key === 'repeatTargets')?.status === 'pass')
   }
 
-  // 물기(형태소 불필요): 원문 8건은 repeatTargets 에 걸린다 — 드디어 반복으로 잡힘.
+  // 물기(형태소 불필요): 새 원문 8건을 그대로 제출하면 repeatTargets('겹친 말')
+  // 로 걸린다. 초과 단어·횟수까지 대조한다 — 어느 낱말이 몇 회여서 걸렸는지.
+  const RAW_OVER: Record<string, Record<string, number>> = {
+    'rp-axe-gold': { 도끼: 6, 산신령: 2 },
+    'rp-heungbu-gourd': { 박: 5, 흥부: 2 },
+    'rp-simcheong-sea': { 바다: 5, 심청: 3 },
+    // kongjwi: 우물 + 물을×3 + 물은 = 5회 (부분 문자열). 세션 27 후기에 마지막
+    // 문장 '물동이' → '항아리' 로 갈아 6→5. 한도는 그대로 2회 (올리면 한 음절 구멍).
+    'rp-kongjwi-jar': { 물: 5, 콩쥐: 3 },
+    'rp-magpie-bridge': { 다리: 5 },
+    'rp-rabbit-liver': { 간: 4, 토끼: 4 },
+    'rp-siblings-rope': { 동아줄: 4, 오누이: 3 },
+    'rp-goblin-club': { 방망이: 4, 도깨비: 2 },
+  }
+  t('RAW_OVER 가 8문항을 덮는다', Object.keys(RAW_OVER).length === rp.length)
   for (const d of rp) {
     const rt = (d.scoring_config.repeatTargets ?? []) as { word: string; max: number }[]
-    t(`'${d.source_key}': repeatTargets 8건 지정 (word·max)`,
+    t(`'${d.source_key}': repeatTargets 지정 (word·max)`,
       rt.length >= 1 && rt.every((tg) => tg.word.length > 0 && tg.max >= 1), JSON.stringify(rt))
     const res = combine(
       { id: d.source_key, type: 'remove', scoring_mode: 'auto', scoring_config: d.scoring_config },
       { text: d.passage ?? '' }, undefined, null)
     const rtCheck = res.checks.find((c) => c.key === 'repeatTargets')!
-    t(`물기: '${d.source_key}' 원문이 repeatTargets 에 걸린다 (겹친 말)`,
+    t(`물기: '${d.source_key}' 원문 그대로 제출은 '겹친 말' fail`,
       rtCheck.status === 'fail' && rtCheck.label === '겹친 말', JSON.stringify(rtCheck))
+    // 원문은 자수로는 안 걸린다(maxChars == 원문 자수)
+    t(`물기: '${d.source_key}' 원문은 maxChars 로는 안 걸린다`,
+      res.checks.find((c) => c.key === 'maxChars')?.status !== 'fail')
+    // 초과 단어·횟수 대조 — evidence 는 "낱말 N회"
+    const want = RAW_OVER[d.source_key]
+    const got = Object.fromEntries(
+      (rtCheck.evidence ?? []).map((e) => {
+        const mm = e.match(/^(.+?) (\d+)회$/)!
+        return [mm[1], Number(mm[2])]
+      })
+    )
+    t(`물기: '${d.source_key}' 초과 낱말·횟수가 예상과 같다`,
+      JSON.stringify(got) === JSON.stringify(want),
+      `got=${JSON.stringify(got)} want=${JSON.stringify(want)}`)
+    // 직접 countOccurrences 로도 같은 값
+    for (const [w, c] of Object.entries(want)) {
+      t(`물기: '${d.source_key}' countOccurrences('${w}')=${c}`,
+        countOccurrences(d.passage ?? '', w) === c)
+    }
+  }
+
+  // ── rp-siblings-rope: 옛 '밧줄' → 원작 어휘 '동아줄' (세션 27) ──
+  {
+    const sr = rp.find((d) => d.source_key === 'rp-siblings-rope')!
+    const words = ((sr.scoring_config.repeatTargets ?? []) as { word: string }[]).map((tg) => tg.word)
+    t("rp-siblings-rope: repeatTargets 에 '밧줄' 없음", !words.includes('밧줄'), JSON.stringify(words))
+    t("rp-siblings-rope: repeatTargets 에 '동아줄'·'오누이' 있음",
+      words.includes('동아줄') && words.includes('오누이'), JSON.stringify(words))
+    t("rp-siblings-rope: 지시문에 '동아줄이 튼튼하다는 것' 포함",
+      sr.instruction.includes('동아줄이 튼튼하다는 것'), sr.instruction)
+    const jointext = [
+      ...rp.map((d) => `${d.passage}\n${d.instruction}\n${JSON.stringify(d.scoring_config)}`),
+      ...refs.map((r) => r.content),
+    ].join('\n')
+    t("물기: '밧줄' 이 4단계 덤프(원문·지시문·설정·모범답안) 어디에도 없다",
+      !jointext.includes('밧줄'))
+  }
+
+  // ── rp-kongjwi-jar: 합성어 함정 제거 (세션 27 후기, 실사용 발견) ──
+  // repeatTargets 는 부분 문자열을 센다. 원문의 '물동이' 가 '물' 을 선점해, 맨
+  // '물' 반복만 고친 정직한 답이 한도(2회)를 못 넘어 어휘 교체를 강요당했다.
+  // 마지막 문장의 '물동이' → '항아리'. 한도는 그대로 — 올리면 한 음절 구멍이 열린다.
+  {
+    const kj = rp.find((d) => d.source_key === 'rp-kongjwi-jar')!
+    const kjRefs = refs.filter((r) => r.source_key === 'rp-kongjwi-jar')
+    t("rp-kongjwi-jar: 원문에 '물동이' 가 없다 (합성어 함정 가드)",
+      !(kj.passage ?? '').includes('물동이'), kj.passage ?? '')
+    t("rp-kongjwi-jar: 모범답안에도 '물동이' 가 없다",
+      kjRefs.every((r) => !r.content.includes('물동이')),
+      JSON.stringify(kjRefs.map((r) => r.content)))
+    // 한도는 물 2 · 콩쥐 2 그대로
+    const rt = (kj.scoring_config.repeatTargets ?? []) as { word: string; max: number }[]
+    t("rp-kongjwi-jar: repeatTargets 한도 물 2 · 콩쥐 2 유지",
+      JSON.stringify(rt) === JSON.stringify([{ word: '물', max: 2 }, { word: '콩쥐', max: 2 }]),
+      JSON.stringify(rt))
+    // 학습자 경로 물기: '우물' 을 살린 정직한 답이 repeatTargets 를 통과한다
+    // (물 2회 — '우물' 포함, 콩쥐 2회). 함정이 걷혀 어휘 교체 없이 고칠 수 있다.
+    const honest =
+      '콩쥐는 우물에서 물을 길어다 부었지만 독 밑으로 다 새어 나갔다. 채워도 채워도 차지 않았다. 콩쥐는 항아리를 안은 채 주저앉아 울었다.'
+    t("물기: '우물' 을 살린 정직한 답이 물 2회 · 콩쥐 2회",
+      countOccurrences(honest, '물') === 2 && countOccurrences(honest, '콩쥐') === 2,
+      `물=${countOccurrences(honest, '물')} 콩쥐=${countOccurrences(honest, '콩쥐')}`)
+    const hres = combine(
+      { id: kj.source_key, type: 'remove', scoring_mode: 'auto', scoring_config: kj.scoring_config },
+      { text: honest }, undefined, null)
+    t("물기: '우물' 을 살린 정직한 답이 repeatTargets 통과 (함정이 걷혔다)",
+      hres.checks.find((c) => c.key === 'repeatTargets')?.status === 'pass',
+      JSON.stringify(hres.checks.find((c) => c.key === 'repeatTargets')))
+  }
+
+  // ── 물기: 옛 passage 가 덤프 어디에도 안 남아 있다 (세션 27 교체) ──
+  {
+    const dumpText =
+      readFileSync(path.join(seedDir, 'problems.json'), 'utf8') +
+      readFileSync(path.join(seedDir, 'answers.json'), 'utf8')
+    const GONE = [
+      '산신령이 금도끼를 들었다.',
+      '흥부는 박을 켰다.',
+      '심청은 바다를 보았다.',
+      '콩쥐는 물을 길었다.',
+      '까치들이 다리를 놓았다.',
+      '용왕은 간을 요구했다.',
+      '오누이는 밧줄을 잡았다.',
+      '도깨비가 방망이를 두드렸다.',
+    ]
+    for (const g of GONE) {
+      t(`물기: 옛 원문 "${g}" 가 덤프에 안 남아 있다`, !dumpText.includes(g))
+    }
   }
 
   // ── 화면 병합: maxRepeat('반복 어휘') + repeatTargets('겹친 말') → 한 행 ──
@@ -2837,59 +2955,90 @@ console.log('\n[4단계 reduce_repeat: 모범답안 대조]')
   t('TrainClient 가 displayChecks·criteriaChecks 에 mergeRepeatChecks 를 쓴다',
     (trainSrc.match(/mergeRepeatChecks\(/g) ?? []).length >= 2)
 
-  // update SQL 이 덤프와 갈리지 않았는지
+  // update SQL 이 덤프와 갈리지 않았는지 — 세션 27.
+  //  v2 (update-reduce-repeat-v2.sql): rp- 8건 passage·instruction·scoring_config
+  //     (jsonb 통째로) + reference_answers 16행 content. 이미 DB 에 실행됐다.
+  //  v3 (update-reduce-repeat-v3.sql): v2 실행 후 추가 패치 — kongjwi 합성어 함정
+  //     제거(물동이→항아리). problems 1건 passage + reference 1행 content.
+  //  v2 를 얹고 v3 을 덮어쓴 최종 상태가 덤프와 같아야 한다(v3 가 나중, v3 가 이김).
   {
-    const updSql = readFileSync(
-      path.join(__dirname, '..', '..', 'seed', 'update-reduce-repeat.sql'), 'utf8')
-    const rows = [...updSql.matchAll(
-      /update problems set scoring_config = '(.+?)'::jsonb\s*\n\s*where source_key = '([^']*)';/g
-    )].map((m) => ({ cfg: JSON.parse(m[1]) as Record<string, unknown>, source_key: m[2] }))
-    t('update SQL 에 8행', rows.length === 8, `실제=${rows.length}`)
-    const canon = (o: unknown) => JSON.stringify(o, Object.keys(o as object).sort())
+    const parseUpd = (file: string) => {
+      const sql = readFileSync(path.join(__dirname, '..', '..', 'seed', file), 'utf8')
+      const prob = [...sql.matchAll(
+        /update problems set\n\s*passage = '((?:[^']|'')*)',\n(?:\s*instruction = '((?:[^']|'')*)',\n)?\s*scoring_config = '(.+?)'::jsonb\n\s*where source_key = '([^']*)';/g
+      )].map((m) => ({
+        passage: m[1].replace(/''/g, "'"),
+        instruction: m[2]?.replace(/''/g, "'"),
+        cfg: JSON.parse(m[3]) as Record<string, unknown>,
+        source_key: m[4],
+      }))
+      // v3 은 scoring_config 을 안 싣는다 — passage 만 갱신하는 update 도 잡는다
+      const probPassageOnly = [...sql.matchAll(
+        /update problems set\n\s*passage = '((?:[^']|'')*)'\n\s*where source_key = '([^']*)';/g
+      )].map((m) => ({ passage: m[1].replace(/''/g, "'"), source_key: m[2] }))
+      const ref = [...sql.matchAll(
+        /update reference_answers set content =\n\s*'((?:[^']|'')*)'\n\s*where problem_id = \(select id from problems where source_key = '([^']*)'\)\n\s*and ord = (\d+) and blank_key = '';/g
+      )].map((m) => ({
+        content: m[1].replace(/''/g, "'"),
+        source_key: m[2],
+        ord: Number(m[3]),
+      }))
+      return { prob, probPassageOnly, ref }
+    }
+    // deep canonical: 객체 키 정렬 + 배열 원소 재귀
+    const canon = (o: unknown): unknown =>
+      Array.isArray(o)
+        ? o.map(canon)
+        : o && typeof o === 'object'
+          ? Object.fromEntries(Object.keys(o as object).sort().map((k) => [k, canon((o as Record<string, unknown>)[k])]))
+          : o
+    const cj = (o: unknown) => JSON.stringify(canon(o))
+
+    const v2 = parseUpd('update-reduce-repeat-v2.sql')
+    const v3 = parseUpd('update-reduce-repeat-v3.sql')
+    t('v2 SQL 에 problems update 8행', v2.prob.length === 8, `실제=${v2.prob.length}`)
+    t('v2 SQL 에 reference_answers update 16행', v2.ref.length === 16, `실제=${v2.ref.length}`)
+    t('v3 SQL 에 kongjwi passage update 1건', v3.probPassageOnly.length === 1 &&
+      v3.probPassageOnly[0].source_key === 'rp-kongjwi-jar',
+      JSON.stringify(v3.probPassageOnly))
+    t('v3 SQL 에 kongjwi reference update 1행', v3.ref.length === 1 &&
+      v3.ref[0].source_key === 'rp-kongjwi-jar' && v3.ref[0].ord === 1,
+      JSON.stringify(v3.ref))
+    t("v3 SQL 이 싣는 데이터에 '물동이' 가 없다 (항아리로 갈았다)",
+      !v3.probPassageOnly[0].passage.includes('물동이') && !v3.ref[0].content.includes('물동이'))
+
+    // 최종 passage/instruction/cfg: v2 → v3(passage) 덮어쓰기
+    const finalPassage = new Map<string, string>()
+    const finalInstr = new Map<string, string>()
+    const finalCfg = new Map<string, unknown>()
+    for (const r of v2.prob) {
+      finalPassage.set(r.source_key, r.passage)
+      finalInstr.set(r.source_key, r.instruction!)
+      finalCfg.set(r.source_key, r.cfg)
+    }
+    for (const r of v3.probPassageOnly) finalPassage.set(r.source_key, r.passage)
     for (const d of rp) {
-      const row = rows.find((r) => r.source_key === d.source_key)
-      t(`update SQL '${d.source_key}' 의 scoring_config 가 덤프와 같다`,
-        !!row && canon(row.cfg) === canon(d.scoring_config), `SQL=${JSON.stringify(row?.cfg)}`)
+      t(`v2+v3 최종 '${d.source_key}' passage 가 덤프와 같다`,
+        finalPassage.get(d.source_key) === d.passage,
+        `SQL=${JSON.stringify(finalPassage.get(d.source_key))}`)
+      t(`v2 '${d.source_key}' instruction·scoring_config 가 덤프와 같다`,
+        finalInstr.get(d.source_key) === d.instruction &&
+          cj(finalCfg.get(d.source_key)) === cj(d.scoring_config),
+        `SQL instr=${JSON.stringify(finalInstr.get(d.source_key))}`)
+    }
+
+    // 최종 reference content: v2 → v3 덮어쓰기
+    const finalRef = new Map<string, string>()
+    for (const r of [...v2.ref, ...v3.ref]) finalRef.set(`${r.source_key}#${r.ord}`, r.content)
+    for (const r of refs) {
+      t(`v2+v3 최종 '${r.source_key}' ord${r.ord} content 가 덤프와 같다`,
+        finalRef.get(`${r.source_key}#${r.ord}`) === r.content,
+        `SQL=${JSON.stringify(finalRef.get(`${r.source_key}#${r.ord}`))}`)
     }
   }
 
   // 형태소 규칙(동사·반복 ≤ 2) — 서버 있을 때만. 모범답안이 제 규칙을 지킨다.
   pushRefMorphCheck('4단계', refs, 'remove', cfgOf)
-
-  // 물기: 원문 8건은 그대로 내면 미달이다(걷어내기가 성립). 반복 어휘가
-  // 3~4회씩 있는데, 형태소 서버의 maxRepeat 는 두 음절 이상만 세므로
-  // 한 음절 반복(박·물·간)은 자수 초과로 걸린다 — 어느 쪽이든 미달이면 된다.
-  aiChainChecks.push(
-    (async () => {
-      const probe = await morphAnalyze(rp[0].passage ?? '')
-      if (!probe) {
-        morphSkipped += rp.length
-        console.log(`  – 형태소 서버 없음: 4단계 원문 ${rp.length}건의 물기를 건너뜀`)
-        return
-      }
-      let repeatFails = 0
-      for (const d of rp) {
-        const m = d === rp[0] ? probe : await morphAnalyze(d.passage ?? '')
-        if (!m) {
-          morphSkipped++
-          console.log(`  – '${d.source_key}' 원문: 형태소 응답 없음, 건너뜀`)
-          continue
-        }
-        const res = combine(
-          { id: d.source_key, type: 'remove', scoring_mode: 'auto', scoring_config: d.scoring_config },
-          { text: d.passage ?? '' },
-          undefined,
-          m
-        )
-        t(`물기: '${d.source_key}' 원문 그대로는 미달 (걷어내기가 성립)`,
-          res.status === 'fail',
-          JSON.stringify(res.checks.filter((c) => c.status === 'fail').map((c) => c.key)))
-        if (res.checks.find((c) => c.key === 'maxRepeat')?.status === 'fail') repeatFails++
-      }
-      t('물기: 원문 여럿이 maxRepeat 로도 걸린다 (반복 기제가 실재)', repeatFails >= 5,
-        `maxRepeat 로 걸린 원문 수=${repeatFails}`)
-    })()
-  )
 }
 
 // ── '쓰지 않을 말' 표시: forbidLabel/forbidDisplay ↔ 채점 (세션 22) ──────

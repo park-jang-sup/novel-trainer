@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 26 · 커밋 `4ac4ee9` 위
+마지막 갱신: 세션 27 · 커밋 `cb83f98` 위
 
 ---
 
@@ -64,6 +64,9 @@ fill 분량은 글자만 센다          countLetters — 한글·영문·숫자
 3단계류 자수 상한 = 필수+2       지우기 단계(trim_padding 등)의 maxChars 는 '필수 문장을 원문
                               그대로 남긴 정직한 답 자수 + 2'. 지우기가 고쳐쓰기를 강요하면
                               안 된다 — 세션 23 실사용 발견(정직한 40자 답이 상한 38 에 걸림)
+4단계 자수 상한 = 원문 자수 그대로  반복 고치기가 압축을 강요하면 안 된다(세션 23 원칙의 4단계 판).
+                              rp- maxChars = 새 원문 countChars(공백 제외). 원문 그대로 내는 꼼수는
+                              자수가 아니라 repeatTargets('겹친 말')에서 걸린다. verify 가 불변식으로 문다
 조건 요약은 손으로 안 적는다      문항 화면 지시문 아래 한 줄은 summarizeConfig(scoring_config)
                               파생. 상세는 오른쪽 '무엇을 봅니다' 패널. 임계값 숫자는 코드가 학습자
                               말로 옮긴다("42자 이하 · 움직이는 말 3개 이상 …")
@@ -71,6 +74,10 @@ fill 분량은 글자만 센다          countLetters — 한글·영문·숫자
                               [{word,max}] — 형태소 아님, 답안 문자열의 낱말 횟수. 검사 key
                               repeatTargets · 라벨 '겹친 말'. 4단계 rp- 8문항에 지정. 새 반복
                               문항은 이걸로 감시 대상을 박는다
+repeatTargets 는 부분 문자열을 센다  원문에 대상 낱말을 품은 합성어('우물'·'물동이' 안의 '물')를
+                              두려면, 학습자가 그 합성어를 남기고도 한도 안이 되는지 미리 센다.
+                              세션 27 후기 실사용 — kongjwi 원문 '물동이' 가 '물' 을 선점해 정직한
+                              수정이 어휘 교체를 강요당했다. '항아리' 로 갈아 함정을 걷음(한도는 유지)
 AI 는 피드백이지 심판이 아니다     위 재개 조건 전까지
 문서는 이 파일 하나              STATUS 를 덮어쓴다. 인수인계를 새로 안 쓴다
 fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀 때 뺀다
@@ -86,6 +93,42 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 
 ```
 1  빈 단계 채우기         도입 4단계 → 구성 빈 6단계 → 절단신공. 단계당 4~6. 기존 유형만
+```
+
+### 끝난 것 — 세션 27
+
+```
+4단계 reduce_repeat 원문·모범답안 전면 교체 (실사용: 원문 8건이 "일부러 어색한 문장" 판정)
+  problems.json  rp- 8건 passage 를 원작 전래동화(저작권 소멸)의 장면·대사로 다시 씀. 반복 결함
+                 (repeatTargets 초과)은 훈련 목적상 유지. maxChars = 새 원문 countChars(공백 제외)
+                 그대로 (45→88·35→64·46→86·34→68·38→85·44→101·40→91·41→83)
+  rp-siblings-rope  repeatTargets '밧줄' → '동아줄'·'오누이'(원작 어휘) · instruction "동아줄이
+                 튼튼하다는 것은 남길 것" 으로 교체
+  answers.json   reference rp- 16행 content 를 새 원문에 맞춰 다시 씀 (가 69·51·69·58·81·84·77·62 /
+                 나 46·50·60·51·60·58·56·56 — 전부 새 maxChars 안, repeatTargets 한도 안)
+  seed/update-reduce-repeat-v2.sql  problems 8건(passage·instruction·scoring_config jsonb 통째로)
+                 + reference_answers 16행 content. seed_data 는 기존 행을 안 고쳐서(insert where not
+                 exists · on conflict do nothing) 덤프에서 뽑아 update 로 낸다. v2 하나만 돌리면 됨
+                 (세션 26 update-reduce-repeat.sql 안 돌렸어도 — v2 가 scoring_config 통째로 실음)
+  verify [4단계]  불변식 maxChars == countChars(새 원문) · 원문 8건 그대로 제출은 '겹친 말' fail
+                 (초과 낱말·횟수까지: 도끼6·박5·바다5·물6·다리5·간4·동아줄4·방망이4 + 산신령2>1·
+                 흥부2>1·심청3>2·콩쥐3>2·토끼4>2·오누이3>2·도깨비2>1) · 모범답안 16행 자수·베낌·
+                 repeatTargets 한도·형태소(서버 있을 때) · siblings 밧줄 없음/동아줄·오누이 있음 ·
+                 v2 SQL ↔ 덤프 대조 · 물기: 옛 passage 8개 fragment 가 덤프에 안 남음
+  검증  tsc 0 · test:scoring (형태소 서버 띄우고) · check:numbers 0 · gen:seed 무변화
+
+kongjwi 합성어 함정 제거 — 물동이 → 항아리 (세션 27 후기, 실사용 발견)
+  실사용: 원문 '우물'+'물동이' 가 부분 문자열로 '물' 2회를 선점 → 맨 '물' 반복만 고쳐서는
+  통과 불가(정직한 수정이 어휘 교체를 강요당함). 마지막 문장 물동이→항아리. 한도(물 2회)는
+  그대로 — 올리면 한 음절 '물' 구멍이 다시 열린다. 자수 68 동일이라 scoring_config 안 건드림.
+  problems.json  rp-kongjwi-jar passage 만 (물 6회→5회 · 콩쥐 3회 · 68자)
+  answers.json   rp-kongjwi-jar ord 1(가) content 만 (물 1회 · 58자). ord 2 나는 그대로
+  seed/update-reduce-repeat-v3.sql (신규)  v2 는 이미 DB 실행됨 — passage 1건 + reference 1행만
+  verify  원문 물기 물 6→5 대조 · '물동이' 없다 가드 · 학습자 경로('우물' 살린 정직한 답)가
+          repeatTargets 통과 단언 · v2+v3 최종상태 ↔ 덤프 대조(v3 가 v2 위에 덮음)
+  ★ DB 반영·절차(박 님): (v2 는 이미 실행) seed/update-reduce-repeat-v3.sql → seed_data.sql(멱등)
+    → seed_check.sql → 브라우저 4단계에서 ① 새 원문(항아리)이 뜨는지 ② 원문 그대로 붙여넣기가
+    '겹친 말' 미달인지 ③ '우물' 을 살린 정직한 수정이 통과하는지 ④ 완주
 ```
 
 ### 끝난 것 — 세션 26
