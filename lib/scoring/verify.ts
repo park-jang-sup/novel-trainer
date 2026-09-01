@@ -3456,6 +3456,25 @@ console.log('\n[도입 2 start_write: 5문항 + 모범답안 대조]')
     }
   }
 
+  // ── 없는 컬럼 가드 (세션 29 후기 2: 박 님이 Supabase 에서 42703) ──
+  // 덤프의 order_no 는 gen-seed 시드 순서용 덤프 전용 필드다 — problems 테이블에
+  // order_no 컬럼은 없다. update SQL 꼬리의 확인용 select 가 'p.order_no' 로
+  // 정렬하려다 실패했다(update·commit 뒤라 데이터는 반영됨). verify 는 SQL 을
+  // 실행하지 않아 로컬에서 못 잡던 종류라, 텍스트로 막는다. 문항 정렬은
+  // difficulty·source_key (app/train/[stageId]/page.tsx).
+  {
+    const seedSqlDir = path.join(__dirname, '..', '..', 'seed')
+    const bad: string[] = []
+    for (const f of readdirSync(seedSqlDir).filter((n) => n.endsWith('.sql'))) {
+      const src = readFileSync(path.join(seedSqlDir, f), 'utf8')
+      // 주석 줄은 뺀다 — 이 가드 자신의 설명이 걸리지 않게.
+      const code = src.split('\n').filter((l) => !l.trimStart().startsWith('--')).join('\n')
+      if (/\bp\.order_no\b/.test(code)) bad.push(f)
+    }
+    t("seed/*.sql 에 'p.order_no' 참조가 없다 (problems 에 order_no 컬럼 없음)",
+      bad.length === 0, JSON.stringify(bad))
+  }
+
   // ── stages: start_write 코치·자기점검 (세션 29 후기 문구) ──
   const stagesDump = readDump<{ skill_key: string; coach_intro: string; coach_line: string; self_checks: string[] }[]>('stages.json')
   const swStage = stagesDump.find((s) => s.skill_key === 'start_write')!

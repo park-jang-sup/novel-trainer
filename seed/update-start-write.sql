@@ -48,10 +48,13 @@ update problems set
 commit;
 
 -- 눈으로 확인한다 — instruction 첫머리·forbidWords·forbidLemmas.
+-- ★ order_no 로 정렬하지 않는다 — problems 에 order_no 컬럼이 없다(덤프의
+--   order_no 는 gen-seed 시드 순서용 덤프 전용 필드). 앱 정렬과 같게
+--   difficulty·source_key 로 (app/train/[stageId]/page.tsx).
 select p.source_key,
        left(p.instruction, 18) as instr_head,
        p.scoring_config->'forbidWords' as forbid_words,
        p.scoring_config->'forbidLemmas' as forbid_lemmas
   from problems p join stages s on s.id = p.stage_id
  where s.skill_key = 'start_write'
- order by p.difficulty, p.order_no;
+ order by p.difficulty, p.source_key;

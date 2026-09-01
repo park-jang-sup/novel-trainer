@@ -158,6 +158,10 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
     ② 코치 말풍선 "이번엔 직접 써 보자!"
     ③ '기류' 또는 '오라' 넣은 답 제출 → '쓰지 않을 말' 미달
     ④ 기존 통과 정상 답(반지 문장 류)이 여전히 통과
+  후기 2  update SQL 꼬리 확인 select 가 p.order_no 참조로 42703 실패(update·commit 뒤라
+    데이터는 반영됨). problems 에 order_no 컬럼 없음 — 덤프의 order_no 는 gen-seed 시드
+    순서용 덤프 전용 필드. 57행 order by 를 difficulty·source_key 로. verify 는 SQL 을
+    실행 안 해 로컬에서 못 잡는 종류 — seed/*.sql 텍스트에 'p.order_no' 없음 가드 추가
 ```
 
 ### 끝난 것 — 세션 28
