@@ -837,6 +837,66 @@
       "ord": 2,
       "blank_key": "",
       "content": "몸을 일으키던 이재하는 돌 천장에 머리를 박았다. 침대가 제 방 것보다 두 뼘은 높았다."
+    },
+    {
+      "source_key": "se-hunter-gate",
+      "ord": 1,
+      "blank_key": "",
+      "content": "그 일상 한복판에서 강도윤은 폐쇄 구역 철조망을 넘고 있었다. 장갑 낀 손이 녹슨 철망을 움켜쥐었다."
+    },
+    {
+      "source_key": "se-hunter-gate",
+      "ord": 2,
+      "blank_key": "",
+      "content": "강도윤에게는 아니었다. 그는 오늘도 출입 금지 표지판 아래에서 헌터 면허증을 만지작거렸다."
+    },
+    {
+      "source_key": "se-sword-five",
+      "ord": 1,
+      "blank_key": "",
+      "content": "그 다섯 어디에도 진운의 자리는 없었다. 소년은 세가의 높은 담 아래에서 목검을 고쳐 쥐었다."
+    },
+    {
+      "source_key": "se-sword-five",
+      "ord": 2,
+      "blank_key": "",
+      "content": "진운은 그 이름들을 땔감 패듯 외웠다. 도끼가 장작에 박힐 때마다 하나씩."
+    },
+    {
+      "source_key": "se-vow-deal",
+      "ord": 1,
+      "blank_key": "",
+      "content": "하은수는 그 큰 거래를 한 달 앞두고 물렀다. 웨딩홀 위약금 안내문을 두 번 접으면서."
+    },
+    {
+      "source_key": "se-vow-deal",
+      "ord": 2,
+      "blank_key": "",
+      "content": "하은수는 방금 그 거래에서 풀려났다. 손에는 계약금 환불 확인서가 들려 있었다."
+    },
+    {
+      "source_key": "se-rose-heir",
+      "ord": 1,
+      "blank_key": "",
+      "content": "그 삼백 년의 마지막에 에스텔이 서 있었다. 압류 딱지가 붙은 대문 앞에서, 가문의 검을 등에 고쳐 멨다."
+    },
+    {
+      "source_key": "se-rose-heir",
+      "ord": 2,
+      "blank_key": "",
+      "content": "에스텔은 그 오랜 이름값을 오늘 치렀다. 황궁에서 온 소환장이 손안에서 구겨졌다."
+    },
+    {
+      "source_key": "se-phoenix-mound",
+      "ord": 1,
+      "blank_key": "",
+      "content": "그 구단의 불펜에서 서준혁은 혼자 공을 던지고 있었다. 방출 통보서가 글러브 옆에 접혀 있었다."
+    },
+    {
+      "source_key": "se-phoenix-mound",
+      "ord": 2,
+      "blank_key": "",
+      "content": "서준혁은 그 기록의 끝자리에 이름을 올린 투수였다. 그는 빈 마운드의 흙을 스파이크로 골랐다."
     }
   ]
 }

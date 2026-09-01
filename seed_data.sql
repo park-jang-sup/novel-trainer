@@ -417,8 +417,8 @@ on conflict (skill_key) do update set
 insert into stages
   (track, order_no, title, skill_key, summary, is_free, self_checks, intro, coach_intro, coach_line)
 values ('start', 3, '도입 잇기', 'start_extend',
-        '세 문장 안에 인물을 세운다', true, array[]::text[], '',
-        '', '')
+        '세 문장 안에 인물을 세운다', true, array['지문과 내 문장을 이어 읽으면 한 사람 이야기로 느껴져? 주인공이 나와서 뭐라도 하고 있어?']::text[], '',
+        '세상 설명으로 시작했으면 빨리 착지해야 해. 독자가 기다려 주는 건 딱 세 문장. 설명이 끝나기 전에 주인공을 무대에 올려서 뭐라도 하게 만들어. 카메라는 하늘이 아니라 사람한테 붙이는 거야.', '세 문장 안에, 주인공 등장!')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
@@ -532,6 +532,18 @@ select
   1, 'sc-sword-ruin'
 where not exists (select 1 from problems p where p.source_key = 'sc-sword-ruin');
 
+-- se-hunter-gate (order_no 1, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'start_extend'),
+  'continue', 'auto', '강도윤이 나오게 이어 쓰시오. 주인공은 최약체에서 회귀한 헌터 강도윤이다. 아래 문장은 세상 설명만 하고 아직 아무도 보여주지 않는다. 이어지는 한두 문장을 써서, 강도윤이 나타나 움직이게 하시오.',
+  '대격변 이후 삼십 년, 게이트는 인류의 일상이 되었다.', null, '{"maxChars":60,"minVerbs":1,"requireAny":["강도윤","도윤"]}'::jsonb,
+  'original', 'modern', 'planned',
+  1, 'se-hunter-gate'
+where not exists (select 1 from problems p where p.source_key = 'se-hunter-gate');
+
 -- sw-hunter-dawn (order_no 1, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
@@ -628,6 +640,18 @@ select
   1, 'heungbu-joy'
 where not exists (select 1 from problems p where p.source_key = 'heungbu-joy');
 
+-- se-sword-five (order_no 2, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'start_extend'),
+  'continue', 'auto', '진운이 나오게 이어 쓰시오. 주인공은 하룻밤에 멸문한 가문의 소년 진운이다. 아래 문장은 세상 설명만 하고 아직 아무도 보여주지 않는다. 이어지는 한두 문장을 써서, 진운이 나타나 움직이게 하시오.',
+  '강호에는 오래전부터 다섯 세가가 천하를 나누어 다스려 왔다.', null, '{"maxChars":60,"minVerbs":1,"requireAny":["진운"]}'::jsonb,
+  'original', 'martial', 'planned',
+  1, 'se-sword-five'
+where not exists (select 1 from problems p where p.source_key = 'se-sword-five');
+
 -- sim-cheong-fear (order_no 2, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
@@ -699,6 +723,18 @@ select
   'folktale', 'fantasy', 'planned',
   3, 'woodcutter-shame'
 where not exists (select 1 from problems p where p.source_key = 'woodcutter-shame');
+
+-- se-vow-deal (order_no 3, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'start_extend'),
+  'continue', 'auto', '하은수가 나오게 이어 쓰시오. 주인공은 결혼식 한 달 전 파혼을 통보받은 하은수다. 아래 문장은 세상 설명만 하고 아직 아무도 보여주지 않는다. 이어지는 한두 문장을 써서, 하은수가 나타나 움직이게 하시오.',
+  '결혼이란 예로부터 두 집안이 맺는 가장 큰 거래였다.', null, '{"maxChars":60,"minVerbs":1,"requireAny":["하은수","은수"]}'::jsonb,
+  'original', 'romance', 'planned',
+  1, 'se-vow-deal'
+where not exists (select 1 from problems p where p.source_key = 'se-vow-deal');
 
 -- sw-vow-afternoon (order_no 3, difficulty 1)
 insert into problems
@@ -844,6 +880,18 @@ select
   1, 'rp-simcheong-sea'
 where not exists (select 1 from problems p where p.source_key = 'rp-simcheong-sea');
 
+-- se-rose-heir (order_no 4, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'start_extend'),
+  'continue', 'auto', '에스텔이 나오게 이어 쓰시오. 주인공은 몰락한 은빛 장미 가문의 마지막 후계 에스텔이다. 아래 문장은 세상 설명만 하고 아직 아무도 보여주지 않는다. 이어지는 한두 문장을 써서, 에스텔이 나타나 움직이게 하시오.',
+  '왕국력 삼백 년, 은빛 장미 가문은 대대로 황실의 검을 맡아 왔다.', null, '{"maxChars":60,"minVerbs":1,"requireAny":["에스텔"]}'::jsonb,
+  'original', 'fantasy', 'planned',
+  1, 'se-rose-heir'
+where not exists (select 1 from problems p where p.source_key = 'se-rose-heir');
+
 -- sw-scaffold-morning (order_no 4, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
@@ -939,6 +987,18 @@ select
   'folktale', 'fantasy', 'planned',
   1, 'ae-rabbit-gate'
 where not exists (select 1 from problems p where p.source_key = 'ae-rabbit-gate');
+
+-- se-phoenix-mound (order_no 5, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'start_extend'),
+  'continue', 'auto', '서준혁이 나오게 이어 쓰시오. 주인공은 방출 통보를 받은 서울 피닉스의 투수 서준혁이다. 아래 문장은 세상 설명만 하고 아직 아무도 보여주지 않는다. 이어지는 한두 문장을 써서, 서준혁이 나타나 움직이게 하시오.',
+  '프로야구 최하위 구단 서울 피닉스는 창단 이후 우승이 없었다.', null, '{"maxChars":60,"minVerbs":1,"requireAny":["서준혁","준혁"]}'::jsonb,
+  'original', 'modern', 'planned',
+  1, 'se-phoenix-mound'
+where not exists (select 1 from problems p where p.source_key = 'se-phoenix-mound');
 
 -- sw-boss-wake (order_no 5, difficulty 1)
 insert into problems
@@ -2030,6 +2090,20 @@ from problems p
 where p.source_key = 'sc-sword-ruin'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- se-hunter-gate ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '그 일상 한복판에서 강도윤은 폐쇄 구역 철조망을 넘고 있었다. 장갑 낀 손이 녹슨 철망을 움켜쥐었다.'
+from problems p
+where p.source_key = 'se-hunter-gate'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- se-hunter-gate ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '강도윤에게는 아니었다. 그는 오늘도 출입 금지 표지판 아래에서 헌터 면허증을 만지작거렸다.'
+from problems p
+where p.source_key = 'se-hunter-gate'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- sw-hunter-dawn ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '강도윤은 식은땀에 젖은 베개에서 머리를 들었다. 창밖 하늘이 게이트가 열리던 그날처럼 붉었다.'
@@ -2170,6 +2244,20 @@ from problems p
 where p.source_key = 'heungbu-joy'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- se-sword-five ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '그 다섯 어디에도 진운의 자리는 없었다. 소년은 세가의 높은 담 아래에서 목검을 고쳐 쥐었다.'
+from problems p
+where p.source_key = 'se-sword-five'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- se-sword-five ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '진운은 그 이름들을 땔감 패듯 외웠다. 도끼가 장작에 박힐 때마다 하나씩.'
+from problems p
+where p.source_key = 'se-sword-five'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- sim-cheong-fear ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '심청은 치맛자락을 움켜쥐었다. 발이 뱃전 앞에서 멈췄다.'
@@ -2252,6 +2340,20 @@ insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 2, '', '나무꾼은 두 도끼에서 눈을 돌렸다. 목덜미가 달아올라 뒷걸음질을 쳤다.'
 from problems p
 where p.source_key = 'woodcutter-shame'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- se-vow-deal ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '하은수는 그 큰 거래를 한 달 앞두고 물렀다. 웨딩홀 위약금 안내문을 두 번 접으면서.'
+from problems p
+where p.source_key = 'se-vow-deal'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- se-vow-deal ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '하은수는 방금 그 거래에서 풀려났다. 손에는 계약금 환불 확인서가 들려 있었다.'
+from problems p
+where p.source_key = 'se-vow-deal'
 on conflict (problem_id, ord, blank_key) do nothing;
 
 -- sw-vow-afternoon ord 1 
@@ -2422,6 +2524,20 @@ from problems p
 where p.source_key = 'rp-simcheong-sea'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- se-rose-heir ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '그 삼백 년의 마지막에 에스텔이 서 있었다. 압류 딱지가 붙은 대문 앞에서, 가문의 검을 등에 고쳐 멨다.'
+from problems p
+where p.source_key = 'se-rose-heir'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- se-rose-heir ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '에스텔은 그 오랜 이름값을 오늘 치렀다. 황궁에서 온 소환장이 손안에서 구겨졌다.'
+from problems p
+where p.source_key = 'se-rose-heir'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- sw-scaffold-morning ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '카리엘은 손목을 묶은 밧줄을 비틀어 보았다. 거친 올이 살갗을 파고들었다.'
@@ -2504,6 +2620,20 @@ insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 2, '', '도깨비들이 방망이를 휘두를 때마다 은돈과 금돈이 쏟아졌다. "나와라, 뚝딱!" 외침이 이어질수록 보물은 멈추지 않고 쌓여 갔다.'
 from problems p
 where p.source_key = 'rp-goblin-club'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- se-phoenix-mound ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '그 구단의 불펜에서 서준혁은 혼자 공을 던지고 있었다. 방출 통보서가 글러브 옆에 접혀 있었다.'
+from problems p
+where p.source_key = 'se-phoenix-mound'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- se-phoenix-mound ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '서준혁은 그 기록의 끝자리에 이름을 올린 투수였다. 그는 빈 마운드의 흙을 스파이크로 골랐다.'
+from problems p
+where p.source_key = 'se-phoenix-mound'
 on conflict (problem_id, ord, blank_key) do nothing;
 
 -- sw-boss-wake ord 1 

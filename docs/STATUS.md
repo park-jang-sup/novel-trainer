@@ -4,18 +4,18 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 29 후기 · 커밋 `c40a514` 위
+마지막 갱신: 세션 30 · 커밋 `c798469` 위
 
 ---
 
 ## 앱이 지금 할 수 있는 것
 
 ```
-단계 26 · 문항 103 (도입 2 start_write 5 추가) · 화면이 붙은 유형 12단계분 (문장 1~11, 구성 14·17·19·20, 도입 1·2)
+단계 26 · 문항 108 (도입 3 start_extend 5 추가) · 화면이 붙은 유형 13단계분 (문장 1~11, 구성 14·17·19·20, 도입 1·2·3)
 문항 화면 스케일  제목 text-3xl · 원문 상자·입력(Editor·FillBody) text-lg(1.125rem) p-5 · Editor rows 7/16 ·
                 컨테이너 max-w-7xl(한 칸 max-w-3xl) · 두 칸 grid [minmax(0,1.4fr) minmax(22rem,1fr)] 왼쪽 우선
 가르침 층       코치 캐릭터 먹물이 ✒️ 말풍선(CoachBubble) — 단계 목록: 제목·요약 아래 coach_intro ·
-                문항 화면: 지시문 위 coach_line (둘 다 stages, 문장 10 + 도입 1·2, '' 면 안 뜸) ·
+                문항 화면: 지시문 위 coach_line (둘 다 stages, 문장 10 + 도입 1·2·3, '' 면 안 뜸) ·
                 지시문 아래 조건 요약 한 줄(summarizeConfig — config 파생) ·
                 서술형 게이지 "N문장 · M / 상한자"(모든 텍스트 유형)
                 ★ 레거시 stages.intro 컬럼은 남아 있으나 값 전부 '' · 화면은 coach_* 만 씀
@@ -23,9 +23,9 @@
              모범답안+자기점검 → '다음 문항 →'(미달 '건너뛰기 →') → … → 다 통과면
              '단계 완료 N/N'+'다음 단계 →', 건너뛴 게 있으면 'N/M · 건너뛴 문항 k개'+첫 링크
 ★ 모범답안 있는 문항: 10단계 fill 8 (①②) + 문장 1·2·3·4단계 (reduce_adverb 8 · emotion_action 6 ·
-  trim_padding 8 · reduce_repeat 8) + 도입 2 start_write 5, 가·나 blank_key '' ·
+  trim_padding 8 · reduce_repeat 8) + 도입 2 start_write 5 + 도입 3 start_extend 5, 가·나 blank_key '' ·
   도입 1 start_choose 5 는 reference 를 선택지별 해설로 씀(가·나 아님)
-없는 것       도입 3~4(start_extend·start_episode) · streak·XP·복습·하트·진도 저장 테이블(안 만든다 — submissions 로만 센다)
+없는 것       도입 4 start_episode(보류 — AI 심사 전) · streak·XP·복습·하트·진도 저장 테이블(안 만든다 — submissions 로만 센다)
 ★ 10단계는 새 skill_key `action_reason`(fill 8). 옛 `action_turn`(convert 8)은 is_active=false — 화면에 '준비 중'
 ```
 
@@ -93,9 +93,38 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 ## 다음 — 순서대로. 하나가 verify 에서 물리기 전에 다음을 안 한다
 
 ```
-1  빈 단계 채우기         도입 3 start_extend(continue 유형 첫 사용, "세 문장 안에 인물") →
-                        구성 빈 6단계. 단계당 4~6. 기존 유형만.
+1  빈 단계 채우기         구성 트랙 빈 단계(lack 11 · contrast_char 12 · likability 13 · info_gap 15 ·
+                        cliffhanger_adv 16 · first_hook 18). 단계당 4~6. 기존 유형만.
                         도입 4 start_episode 는 아래 미결(AI 심사 전이라 보류)
+```
+
+### 끝난 것 — 세션 30
+
+```
+도입 3 start_extend '도입 잇기' 5문항 — continue 유형 첫 사용 · 코드 0줄
+  설계   구성 C(전이 확인용): 지문 이어받기 3 + 새 지문 2. 도입 1 의 '거시 서술' 오답을
+         글자까지 이어받아(hunter·sword·vow), 학습자가 세상 설명 뒤에 주인공을 무대에
+         올린다. 새 지문 2 는 신작 — 새 인물 에스텔(로판)·서준혁(야구).
+  축     금지가 아니라 요구 — requireAny(주인공 이름) + minVerbs 1(움직임). forbid 계열 없음.
+  problems.json  se- 5건 append (continue · auto · order_no 1~5 · maxChars 60 · minVerbs 1 · requireAny)
+  answers.json   reference 10행 (가·나 · blank_key '')
+                 실측 자수 가 42·39·35·43·40 / 나 40·31·34·35·40 · 동사 가 4·2·2·4·2 / 나 1·3·2·3·3
+  stages.json    start_extend coach_intro(세 문장 안에 착지)·coach_line·self_checks 1건
+  verify [도입 3 start_extend]  5문항 형태·scoring_config · 지문 이어받기 대조(3건) · 새 지문 신작(2건) ·
+         불변식(지문에 이름 없음 · 지문 그대로 → requireAny fail) · 모범답안 10행 실측 자수·requireAny·
+         베낌 아님 · 단계 간 베낌 가드(도입 1 정답 5 + 도입 2 모범 10 = 15문장 부분 문자열 아님) ·
+         형태소 동사 ≥ 1(서버 있을 때) · 코치·자기점검
+         + COACH_SKILLS 12→13 · withSelfChecks +start_extend
+  검증   tsc 0 · test:scoring 3512/0(형태소 서버) · check:numbers 0 · gen:seed 무변화
+  ★ DB 반영·눈검사(박 님): seed_data.sql(se- 5·reference 10 신규 insert + stages do update, 멱등)
+    → seed_check.sql → 브라우저:
+    ① 도입 트랙에서 '도입 잇기' 링크 생김 · 코치 말풍선(목록 intro · 문항 line)
+    ② 이름 없는 이어쓰기 제출 → '반드시 넣을 말' 미달
+    ③ 직접 이어 써서 통과 → 모범답안 가·나 + 자기점검
+    ④ 한 칸 화면(scoring key 3개 — 두 칸 아님) · 조건 요약
+       ("60자 이하 · 움직이는 말 1개 이상 · '강도윤' 또는 '도윤' 넣기" 류)
+    ⑤ 새 인물 2건(에스텔·서준혁) 지시문·지문이 어색하지 않은지 — 처음 보는 인물이
+       소개 한 문장으로 충분한지가 이번 눈검사의 핵심
 ```
 
 ### 끝난 것 — 세션 29
@@ -423,6 +452,7 @@ at-left-feint fill 재료      상황 본문 · 빈칸 위치 · 모범답안 3�
 ar-left-feeler 모범답안       재설계안 7-7 에 가·나·다가 없다. stage2 가 보여줄 것이 없다
 fill 지시문 예시 접기         단계에서 첫 문항만 예시를 펼치고 뒤 문항에선 접는다(길다)
 'fill' 표기                  화면의 유형 표시 'fill' 을 '빈칸 채우기' 로
+'continue' 표기               유형 표기 'continue' 영문 노출 — 'fill' 표기 계열. 한꺼번에 손본다
 fill minChars 8 은 코드 기본값  feint 시드 때 blanks 마다 minChars 를 명시하고 `?? 8` 기본값을 뺀다
 fill 은 인물·사물을 안 본다     덕수 답이 세연 문항을 통과한다. 자기점검이 그 자리. 규칙으로 잡으려면
                             blanks 에 requireAny 정도 — 지금은 안 한다

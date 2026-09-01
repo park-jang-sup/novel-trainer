@@ -19,7 +19,7 @@
 --
 -- expect는 CTE가 아니라 임시 테이블이다. CTE는 그것이 붙은 statement
 -- 하나에만 유효해서, 검사 넷을 한 do 블록 안에서 나눠 적으려면 매번
--- 103행짜리 values를 다시 적어야 한다. 임시 테이블로 한 번만 채운다.
+-- 108행짜리 values를 다시 적어야 한다. 임시 테이블로 한 번만 채운다.
 --
 -- 마지막 문장이 select인 것은 의도다. Supabase 편집기가 NOTICE를
 -- 안 띄워서, raise notice로 끝내면 "통과"와 "파일이 잘려 안 돌았다"가
@@ -53,6 +53,7 @@ insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) v
   ('sc-broken-vow', '975e276c800e1f6f562d4a462c8285ee', 64, null, null, '{}'::jsonb),
   ('sc-hunter-status', '82487150a19c7d1e9561289563ab5686', 59, null, null, '{}'::jsonb),
   ('sc-sword-ruin', 'f1f47ee171f808996a236698a869b801', 61, null, null, '{}'::jsonb),
+  ('se-hunter-gate', '62ab30de0712e714c52213ee3ed06376', 110, '9ac1c6f16279c2cbab5f92b3f14e8c39', 30, '{"maxChars":60,"minVerbs":1,"requireAny":["강도윤","도윤"]}'::jsonb),
   ('sw-hunter-dawn', '2bf4eabe64837d47705d8600139f5d0a', 133, '724320c924377fcd8e480c209ab2819c', 26, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","불길","기류","아우라","기색","낌새","기미"],"forbidLemmas":["오라/NNG"],"forbidDisplay":["기운","느낌","분위기","불길하다","기류","오라","아우라","기색","낌새","기미"],"requireAny":["강도윤","도윤"]}'::jsonb),
   ('rm-magpie-bridge', '8c9989ae73ed1155503dbb3a1f20ae19', 101, '44abb15a305e9a456abfca5a65342dd4', 53, '{"maxChars":34,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb),
   ('rm-rabbit-court', 'c4a134de4c38ba8c8649c03ac9c494bd', 78, '5b89814326a3b13cf5aa33dbb50ca7d9', 62, '{"maxChars":40,"minVerbs":3,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb),
@@ -61,12 +62,14 @@ insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) v
   ('sc-villainess-chains', '6af165c8036e50698cedfed900aaa13b', 68, null, null, '{}'::jsonb),
   ('rm-goblin-club', '4af82dadf8273d39e9012e06a7199f05', 94, 'e5fe17def733f583bd84b79d9d7a7ab3', 65, '{"maxChars":42,"minVerbs":3,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":2}'::jsonb),
   ('heungbu-joy', '3d67b9991f63f7137c1e6ba4fa094d1d', 22, 'da937ab22e4be877e917c12dd2b7f4a0', 32, '{"maxChars":60,"minVerbs":2,"maxAdverbs":1,"forbidWords":["기뻤","기쁘","기뻐","기쁨","행복","신났","신나","즐거","좋았"],"maxModifiers":2,"forbidLabel":"기쁨을 직접 말하는 표현","forbidDisplay":["기쁘다","기쁨","행복하다","신나다","좋다","즐거워하다"]}'::jsonb),
+  ('se-sword-five', '09dd0bbee3a594d19b961c717b8ee5ac', 110, '6c20c49ed9e85d426a68e4d6b02d9ddb', 33, '{"maxChars":60,"minVerbs":1,"requireAny":["진운"]}'::jsonb),
   ('sim-cheong-fear', '1ce88519de2a3b56c4602e5f1de52085', 46, '349f86cbb5b24dad2ed5a49d55af3aff', 31, '{"maxChars":60,"minVerbs":1,"maxAdverbs":1,"forbidWords":["두려","두렵","무서","겁먹","떨렸","공포","질렸"],"maxModifiers":2,"forbidLabel":"두려움을 직접 말하는 표현","forbidDisplay":["두렵다","무서워하다","겁먹다","떨다","공포"]}'::jsonb),
   ('sw-ruin-ash', '5381ed986b6441aff186c8f1cbb7e5eb', 133, '5d5a0fed6c475e128d7f769cb9238155', 33, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","스산","기류","아우라","기색","낌새","기미"],"forbidLemmas":["오라/NNG"],"forbidDisplay":["기운","느낌","분위기","스산하다","기류","오라","아우라","기색","낌새","기미"],"requireAny":["진운"]}'::jsonb),
   ('dragon-king-anger', '11ddecaa296705d33bb7247f1b59c364', 24, 'd90f2aadfc1d6f7dec8b7e1971db46d4', 29, '{"maxChars":60,"minVerbs":2,"maxAdverbs":1,"forbidWords":["화났","화가 났","화가 나서","화가 치밀","분노","노여","성났","격분","짜증","치밀어","치밀었"],"maxModifiers":2,"forbidLabel":"분노를 직접 말하는 표현","forbidDisplay":["화나다","분노","짜증","치밀다","성나다","격분","노여워하다"]}'::jsonb),
   ('kongjwi-grief', '35f520990c3cf5aaf25482a2f0d491af', 38, 'f7b2bbb8765ace19f4f133dd592d867a', 37, '{"maxChars":70,"minVerbs":2,"maxAdverbs":1,"forbidWords":["서러","서럽","슬프","슬펐","슬픔","눈물","흐느","비참","원망"],"maxModifiers":2,"forbidLabel":"서러움을 직접 말하는 표현","forbidDisplay":["서럽다","슬프다","눈물","흐느끼다","비참하다","원망"]}'::jsonb),
   ('gyeonu-longing', 'd4fee3ce734cc2b298a0e7e4c777f338', 38, 'f28b2dfea5c35325d2d8dc27de70734e', 37, '{"maxChars":70,"minVerbs":2,"maxAdverbs":1,"forbidWords":["그리웠","그리워","그리움","그립","보고 싶","외로","쓸쓸","사무치","애틋"],"maxModifiers":2,"forbidLabel":"그리움을 직접 말하는 표현","forbidDisplay":["그립다","그리움","보고 싶다","쓸쓸하다","사무치다","애틋하다"]}'::jsonb),
   ('woodcutter-shame', 'a6f56f8890743432bc48983269612cbd', 25, '5ecd0f5785f56bd76b039f6273a80f33', 38, '{"maxChars":65,"minVerbs":2,"maxAdverbs":1,"forbidWords":["부끄","창피","민망","수치스","낯뜨거","뻘개"],"maxModifiers":2,"forbidLabel":"부끄러움을 직접 말하는 표현","forbidDisplay":["부끄럽다","창피하다","민망하다","수치스럽다"]}'::jsonb),
+  ('se-vow-deal', 'bd07fbe9831c4576b081f9e2a09bd608', 115, 'eb400c635c85ce775a2b96beb6aaaf3e', 29, '{"maxChars":60,"minVerbs":1,"requireAny":["하은수","은수"]}'::jsonb),
   ('sw-vow-afternoon', '2ace2c8496a0bcd86c7d50344ef4bb93', 138, '02a05525996b0db530dcb82e69a1e4a9', 35, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","서글","기류","아우라","기색","낌새","기미"],"forbidLemmas":["오라/NNG"],"forbidDisplay":["기운","느낌","분위기","서글프다","기류","오라","아우라","기색","낌새","기미"],"requireAny":["하은수","은수"]}'::jsonb),
   ('tp-axe-water', '96f5ca0e7a0e469b0bee177a53855ad9', 135, '26b338bc7f1b667978b981a81341d2b3', 91, '{"maxChars":42,"minVerbs":3,"maxRepeat":2}'::jsonb),
   ('tp-heungbu-yard', '5f48dd91543f08bb1eb0b7ffe45088ec', 136, '42c60aefd16e062afbf4fe2bc5eb6404', 87, '{"maxChars":41,"minVerbs":3,"maxRepeat":2}'::jsonb),
@@ -79,6 +82,7 @@ insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) v
   ('rp-axe-gold', '1923f3bd3896a41facdc89d04e9c0444', 23, '9041a207282177090f0bb3726540675f', 113, '{"maxChars":88,"minVerbs":3,"maxRepeat":2,"repeatTargets":[{"word":"도끼","max":2},{"word":"나무꾼","max":2},{"word":"산신령","max":1}]}'::jsonb),
   ('rp-heungbu-gourd', 'abe00269b9cf9de6d03bab6f3aad86dd', 43, 'bc662a82c425a4665ea8ebc5f9cd57e8', 85, '{"maxChars":64,"minVerbs":3,"maxRepeat":2,"repeatTargets":[{"word":"박","max":2},{"word":"흥부","max":1}]}'::jsonb),
   ('rp-simcheong-sea', '1923f3bd3896a41facdc89d04e9c0444', 23, 'fbe337b4cc6f3edfef43b536177937f8', 111, '{"maxChars":86,"minVerbs":3,"maxRepeat":2,"repeatTargets":[{"word":"바다","max":2},{"word":"심청","max":2}]}'::jsonb),
+  ('se-rose-heir', '3a5d3b3a8092147d90a891b00a203db5', 118, 'c9dede8a5a73e739720395c77955203c', 37, '{"maxChars":60,"minVerbs":1,"requireAny":["에스텔"]}'::jsonb),
   ('sw-scaffold-morning', '34c777a65f63f0db452221a1c8aa8de4', 142, '4bd9b21f6ebf2f91ea43ea830bc1a069', 36, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","긴장","형언","기류","아우라","기색","낌새","기미"],"forbidLemmas":["오라/NNG"],"forbidDisplay":["기운","느낌","분위기","긴장감","형언하다","기류","오라","아우라","기색","낌새","기미"],"requireAny":["카리엘"]}'::jsonb),
   ('rp-kongjwi-jar', '1923f3bd3896a41facdc89d04e9c0444', 23, 'a843dfb6b1cf55cbffdb1870467be11c', 92, '{"maxChars":68,"minVerbs":3,"maxRepeat":2,"repeatTargets":[{"word":"물","max":2},{"word":"콩쥐","max":2}]}'::jsonb),
   ('rp-magpie-bridge', '1923f3bd3896a41facdc89d04e9c0444', 23, 'c599b72be684fc33ff7a22bc19d75224', 110, '{"maxChars":85,"minVerbs":3,"maxRepeat":2,"repeatTargets":[{"word":"다리","max":2}]}'::jsonb),
@@ -87,6 +91,7 @@ insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) v
   ('rp-goblin-club', 'ffd522567376018a709ddaee7f1973a4', 46, '2073ca5eed15c143d03990a6e61edd13', 105, '{"maxChars":83,"minVerbs":4,"maxRepeat":2,"repeatTargets":[{"word":"방망이","max":2},{"word":"도깨비","max":1}]}'::jsonb),
   ('ae-gyeonu-bridge', 'd0b29ca3e9ef3a7469ae9654c5571880', 69, 'cf2ba72479f268c26ad5005d2878436f', 14, '{}'::jsonb),
   ('ae-rabbit-gate', 'd0b29ca3e9ef3a7469ae9654c5571880', 69, '265c8e8798aa4c9fed7e1d0da0652a1d', 15, '{}'::jsonb),
+  ('se-phoenix-mound', '4b7687245dfe4c4faba21154873d650c', 118, 'ea5d5a25fd72ea19f8f2ce9eba4327f1', 34, '{"maxChars":60,"minVerbs":1,"requireAny":["서준혁","준혁"]}'::jsonb),
   ('sw-boss-wake', '3a4863b41b3091052b4f462d2636a4fc', 145, '714fe9eef4385a917bebded82aecd0bb', 32, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","기류","아우라","기색","낌새","기미"],"forbidLemmas":["오라/NNG"],"forbidDisplay":["기운","느낌","분위기","기류","오라","아우라","기색","낌새","기미"],"requireAny":["이재하","재하"]}'::jsonb),
   ('ae-axe-drop', 'f5b8d17c8e33f178f65d364d801ec11b', 84, null, null, '{}'::jsonb),
   ('ae-kongjwi-jar', 'a890bd3fe800ba68d3baed1c1b5b98eb', 41, null, null, '{}'::jsonb),
