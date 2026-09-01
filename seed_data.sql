@@ -225,8 +225,8 @@ on conflict (skill_key) do update set
 insert into stages
   (track, order_no, title, skill_key, summary, is_free, self_checks, intro, coach_intro, coach_line)
 values ('structure', 11, '결핍 부여', 'lack',
-        '완벽한 인물을 만들지 않는다', false, array[]::text[], '',
-        '', '')
+        '완벽한 인물을 만들지 않는다', false, array['결핍이라는 말 없이도, 이 사람이 뭐에 굶주렸는지 남이 맞힐 수 있어?']::text[], '',
+        '여기서부턴 문장이 아니라 사람을 만들 거야. 완벽한 주인공은 매력이 없어 — 뭔가 빈 구석이 있어야 독자가 마음을 줘. 근데 ''그는 외로웠다''라고 쓰면 아무도 안 믿어. 결핍은 말이 아니라 버릇으로 새어 나오는 거야.', '결핍은 말하지 말고, 버릇으로 새게 해!')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
@@ -448,6 +448,18 @@ on conflict (skill_key) do update set
 
 -- ── 문항 ────────────────────────────────────────────────────────────
 
+-- lk-desk-nine (order_no 1, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'lack'),
+  'convert', 'auto', '김하준에게 인정 욕구를 얹으시오. 김하준은 기획팀 3년 차 대리다. 아래는 아무 결핍도 없는 무난한 장면이다. 다시 써서, 인정받고 싶다는 말 없이 행동과 버릇만으로 그 마음이 드러나게 하시오.',
+  '기획팀 3년 차 대리는 오늘도 아홉 시 정각에 자리에 앉았다. 컴퓨터를 켜고 메일함을 열었다.', null, '{"maxChars":60,"minVerbs":2,"forbidLabel":"인정 욕구를 직접 말하는 표현","forbidWords":["인정","칭찬","알아주"],"forbidDisplay":["인정","칭찬","알아주다"],"requireAny":["김하준","하준"]}'::jsonb,
+  'original', 'modern', 'planned',
+  1, 'lk-desk-nine'
+where not exists (select 1 from problems p where p.source_key = 'lk-desk-nine');
+
 -- rm-axe-pond (order_no 1, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
@@ -640,6 +652,18 @@ select
   1, 'heungbu-joy'
 where not exists (select 1 from problems p where p.source_key = 'heungbu-joy');
 
+-- lk-cafe-wait (order_no 2, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'lack'),
+  'convert', 'auto', '윤소민에게 애정 결핍을 얹으시오. 윤소민은 카페에서 친구를 기다리는 중이다. 아래는 아무 결핍도 없는 무난한 장면이다. 다시 써서, 외롭다는 말 없이 행동과 버릇만으로 그 마음이 드러나게 하시오.',
+  '카페 창가 자리에서 친구를 기다렸다. 창밖으로 오후의 사람들이 지나갔다.', null, '{"maxChars":60,"minVerbs":2,"forbidLabel":"외로움을 직접 말하는 표현","forbidWords":["사랑","애정","외로","쓸쓸","관심"],"forbidDisplay":["사랑","애정","외롭다","쓸쓸하다","관심"],"requireAny":["윤소민","소민"]}'::jsonb,
+  'original', 'romance', 'planned',
+  1, 'lk-cafe-wait'
+where not exists (select 1 from problems p where p.source_key = 'lk-cafe-wait');
+
 -- se-sword-five (order_no 2, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
@@ -723,6 +747,18 @@ select
   'folktale', 'fantasy', 'planned',
   3, 'woodcutter-shame'
 where not exists (select 1 from problems p where p.source_key = 'woodcutter-shame');
+
+-- lk-guard-dawn (order_no 3, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'lack'),
+  'convert', 'auto', '조평에게 가난의 기억을 얹으시오. 조평은 상단의 호위 무사다. 아래는 아무 결핍도 없는 무난한 장면이다. 다시 써서, 가난했다는 말 없이 행동과 버릇만으로 그 기억이 드러나게 하시오.',
+  '상단의 호위 무사는 새벽같이 일어나 검을 손질했다. 마당을 한 바퀴 돌고 아침상을 받았다.', null, '{"maxChars":60,"minVerbs":2,"forbidLabel":"가난을 직접 말하는 표현","forbidWords":["가난","굶","궁핍"],"forbidDisplay":["가난","굶다","궁핍"],"requireAny":["조평"]}'::jsonb,
+  'original', 'martial', 'planned',
+  1, 'lk-guard-dawn'
+where not exists (select 1 from problems p where p.source_key = 'lk-guard-dawn');
 
 -- se-vow-deal (order_no 3, difficulty 1)
 insert into problems
@@ -843,6 +879,18 @@ select
   'folktale', 'fantasy', 'impulsive',
   3, 'tp-goblin-mark'
 where not exists (select 1 from problems p where p.source_key = 'tp-goblin-mark');
+
+-- lk-board-rank (order_no 4, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'lack'),
+  'convert', 'auto', '한시우에게 열등감을 얹으시오. 한시우는 B급 헌터다. 아래는 아무 결핍도 없는 무난한 장면이다. 다시 써서, 부럽다는 말 없이 행동과 버릇만으로 그 마음이 드러나게 하시오.',
+  'B급 헌터는 아침 훈련을 마치고 협회 게시판 앞을 지나쳤다. 오늘의 의뢰 목록이 붙어 있었다.', null, '{"maxChars":60,"minVerbs":2,"forbidLabel":"열등감을 직접 말하는 표현","forbidWords":["열등","부럽","부러워","질투","뒤처"],"forbidDisplay":["열등감","부럽다","질투","뒤처지다"],"requireAny":["한시우","시우"]}'::jsonb,
+  'original', 'modern', 'planned',
+  1, 'lk-board-rank'
+where not exists (select 1 from problems p where p.source_key = 'lk-board-rank');
 
 -- rp-axe-gold (order_no 4, difficulty 1)
 insert into problems
@@ -987,6 +1035,18 @@ select
   'folktale', 'fantasy', 'planned',
   1, 'ae-rabbit-gate'
 where not exists (select 1 from problems p where p.source_key = 'ae-rabbit-gate');
+
+-- lk-tower-shelf (order_no 5, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'lack'),
+  'convert', 'auto', '리안에게 그리움을 얹으시오. 리안은 스승을 잃은 마탑의 견습 마법사다. 아래는 아무 결핍도 없는 무난한 장면이다. 다시 써서, 그립다는 말 없이 행동과 버릇만으로 그 마음이 드러나게 하시오.',
+  '마탑의 견습 마법사는 도서관에서 주문서를 정리했다. 서가 사이로 오후 햇살이 들었다.', null, '{"maxChars":60,"minVerbs":2,"forbidLabel":"그리움을 직접 말하는 표현","forbidWords":["그립","그리워"],"forbidDisplay":["그립다","그리워하다"],"requireAny":["리안"]}'::jsonb,
+  'original', 'fantasy', 'planned',
+  1, 'lk-tower-shelf'
+where not exists (select 1 from problems p where p.source_key = 'lk-tower-shelf');
 
 -- se-phoenix-mound (order_no 5, difficulty 1)
 insert into problems
@@ -1950,6 +2010,20 @@ where p.source_key = 'dragon-king-anger'
 -- 화면에 보여줄 것이다(재설계안 11-2 4번). RLS 는 seed_schema.sql 이
 -- 건다: 그 문항에 제출 기록이 있는 학습자만 읽는다.
 
+-- lk-desk-nine ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '김하준은 부장보다 삼십 분 먼저 와 회의실 불을 켜 뒀다. 부장이 봤는지 곁눈으로 두 번 확인했다.'
+from problems p
+where p.source_key = 'lk-desk-nine'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- lk-desk-nine ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '보고서를 올린 뒤 김하준은 메신저 창을 열어 두었다. 팀장의 확인했다는 한 줄을 새로 고치며 기다렸다.'
+from problems p
+where p.source_key = 'lk-desk-nine'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- rm-axe-pond ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '나무꾼이 도끼를 휘둘렀다. 자루가 빠지고 도끼가 연못에 떨어졌다.'
@@ -2244,6 +2318,20 @@ from problems p
 where p.source_key = 'heungbu-joy'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- lk-cafe-wait ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '윤소민은 친구가 오기 전에 휴대폰을 세 번 뒤집었다 폈다. 답장 없는 대화창을 열었다가 덮었다.'
+from problems p
+where p.source_key = 'lk-cafe-wait'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- lk-cafe-wait ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '윤소민은 점원이 물잔을 채워 주자 고맙다고 두 번 말했다. 그러고는 문이 열릴 때마다 고개를 들었다.'
+from problems p
+where p.source_key = 'lk-cafe-wait'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- se-sword-five ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '그 다섯 어디에도 진운의 자리는 없었다. 소년은 세가의 높은 담 아래에서 목검을 고쳐 쥐었다.'
@@ -2340,6 +2428,20 @@ insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 2, '', '나무꾼은 두 도끼에서 눈을 돌렸다. 목덜미가 달아올라 뒷걸음질을 쳤다.'
 from problems p
 where p.source_key = 'woodcutter-shame'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- lk-guard-dawn ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '조평은 아침상의 밥알 한 톨까지 긁어 먹었다. 남은 찬은 종이에 싸서 봇짐 안쪽에 넣었다.'
+from problems p
+where p.source_key = 'lk-guard-dawn'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- lk-guard-dawn ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '조평은 새 검집을 받고도 헌 검집을 버리지 못했다. 손잡이의 해진 끈을 다시 감아 맸다.'
+from problems p
+where p.source_key = 'lk-guard-dawn'
 on conflict (problem_id, ord, blank_key) do nothing;
 
 -- se-vow-deal ord 1 
@@ -2482,6 +2584,20 @@ from problems p
 where p.source_key = 'tp-goblin-mark'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- lk-board-rank ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '한시우는 협회 게시판의 승급 명단을 끝까지 읽었다. 동기의 이름에서 손가락이 한 번 멈췄다.'
+from problems p
+where p.source_key = 'lk-board-rank'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- lk-board-rank ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '한시우는 동기의 인터뷰 영상을 소리 없이 돌려 보았다. 같은 기술을 허공에 두 번 그려 보았다.'
+from problems p
+where p.source_key = 'lk-board-rank'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- rp-axe-gold ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '산신령이 번쩍이는 금도끼를 들어 보였다. "이것이 네 것이냐?" 나무꾼은 고개를 저었다. "제 것이 아닙니다." 은도끼가 나왔을 때도 나무꾼은 고개를 저었다.'
@@ -2620,6 +2736,20 @@ insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 2, '', '도깨비들이 방망이를 휘두를 때마다 은돈과 금돈이 쏟아졌다. "나와라, 뚝딱!" 외침이 이어질수록 보물은 멈추지 않고 쌓여 갔다.'
 from problems p
 where p.source_key = 'rp-goblin-club'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- lk-tower-shelf ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '리안은 스승의 낡은 지팡이를 새 지팡이 옆에 세워 두었다. 먼지는 낡은 쪽부터 닦았다.'
+from problems p
+where p.source_key = 'lk-tower-shelf'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- lk-tower-shelf ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '리안은 주문서를 정리하다 여백의 손글씨 앞에서 멈췄다. 그 갈피만 끈으로 따로 묶어 두었다.'
+from problems p
+where p.source_key = 'lk-tower-shelf'
 on conflict (problem_id, ord, blank_key) do nothing;
 
 -- se-phoenix-mound ord 1 

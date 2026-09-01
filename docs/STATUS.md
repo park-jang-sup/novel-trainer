@@ -4,18 +4,18 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 30 · 커밋 `c798469` 위
+마지막 갱신: 세션 31 · 커밋 `638395c` 위
 
 ---
 
 ## 앱이 지금 할 수 있는 것
 
 ```
-단계 26 · 문항 108 (도입 3 start_extend 5 추가) · 화면이 붙은 유형 13단계분 (문장 1~11, 구성 14·17·19·20, 도입 1·2·3)
+단계 26 · 문항 113 (구성 11 lack 5 추가) · 화면이 붙은 유형 14단계분 (문장 1~11, 구성 11·14·17·19·20, 도입 1·2·3)
 문항 화면 스케일  제목 text-3xl · 원문 상자·입력(Editor·FillBody) text-lg(1.125rem) p-5 · Editor rows 7/16 ·
                 컨테이너 max-w-7xl(한 칸 max-w-3xl) · 두 칸 grid [minmax(0,1.4fr) minmax(22rem,1fr)] 왼쪽 우선
 가르침 층       코치 캐릭터 먹물이 ✒️ 말풍선(CoachBubble) — 단계 목록: 제목·요약 아래 coach_intro ·
-                문항 화면: 지시문 위 coach_line (둘 다 stages, 문장 10 + 도입 1·2·3, '' 면 안 뜸) ·
+                문항 화면: 지시문 위 coach_line (둘 다 stages, 문장 10 + 도입 1·2·3 + 구성 11, '' 면 안 뜸) ·
                 지시문 아래 조건 요약 한 줄(summarizeConfig — config 파생) ·
                 서술형 게이지 "N문장 · M / 상한자"(모든 텍스트 유형)
                 ★ 레거시 stages.intro 컬럼은 남아 있으나 값 전부 '' · 화면은 coach_* 만 씀
@@ -23,8 +23,8 @@
              모범답안+자기점검 → '다음 문항 →'(미달 '건너뛰기 →') → … → 다 통과면
              '단계 완료 N/N'+'다음 단계 →', 건너뛴 게 있으면 'N/M · 건너뛴 문항 k개'+첫 링크
 ★ 모범답안 있는 문항: 10단계 fill 8 (①②) + 문장 1·2·3·4단계 (reduce_adverb 8 · emotion_action 6 ·
-  trim_padding 8 · reduce_repeat 8) + 도입 2 start_write 5 + 도입 3 start_extend 5, 가·나 blank_key '' ·
-  도입 1 start_choose 5 는 reference 를 선택지별 해설로 씀(가·나 아님)
+  trim_padding 8 · reduce_repeat 8) + 도입 2·3 start_write·start_extend 각 5 + 구성 11 lack 5,
+  가·나 blank_key '' · 도입 1 start_choose 5 는 reference 를 선택지별 해설로 씀(가·나 아님)
 없는 것       도입 4 start_episode(보류 — AI 심사 전) · streak·XP·복습·하트·진도 저장 테이블(안 만든다 — submissions 로만 센다)
 ★ 10단계는 새 skill_key `action_reason`(fill 8). 옛 `action_turn`(convert 8)은 is_active=false — 화면에 '준비 중'
 ```
@@ -93,9 +93,41 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 ## 다음 — 순서대로. 하나가 verify 에서 물리기 전에 다음을 안 한다
 
 ```
-1  빈 단계 채우기         구성 트랙 빈 단계(lack 11 · contrast_char 12 · likability 13 · info_gap 15 ·
+1  빈 단계 채우기         구성 12 contrast_char → 나머지 구성 빈 단계(likability 13 · info_gap 15 ·
                         cliffhanger_adv 16 · first_hook 18). 단계당 4~6. 기존 유형만.
                         도입 4 start_episode 는 아래 미결(AI 심사 전이라 보류)
+```
+
+### 끝난 것 — 세션 31
+
+```
+구성 11 lack '결핍 부여' 5문항 — convert · 구성 트랙 첫 신설 · 코드 0줄
+  설계   2단계(emotion_action)의 캐릭터 버전 — 순간 감정이 아니라 지속 상태(결핍)를
+         버릇으로 새어 나오게. 5종 결핍(인정·애정·가난·열등·그리움) × 새 인물 5명
+         (김하준·윤소민·조평·한시우·리안). 근거: 문항설계서 5-05 · 02 CH-04 · 정리본 20-4
+  원문 구조  이름 없이 직함·상황만 담은 무난한 장면(결함 없음) — 원문 그대로 제출은
+         forbidWords 가 아니라 requireAny(주인공 이름)가 막는다(도입 3 구조)
+  problems.json  lk- 5건 (convert · auto · order_no 1~5 · maxChars 60 · minVerbs 2 ·
+         forbidLabel(문항별 상이)·forbidWords·forbidDisplay · requireAny)
+  answers.json   reference 10행 (가·나 · blank_key '')
+         실측 자수 가 40·40·37·39·36 / 나 43·42·36·39·39 · 동사 가 4·5·5·2·2 / 나 5·5·5·2·3
+  stages.json    lack coach_intro(사람을 만든다·버릇으로 새게)·coach_line·self_checks 1건
+  verify [구성 11 lack]  5문항 형태·scoring_config(forbidLabel 문항별 상이) · 원문 불변식
+         (이름 없음 · forbidWords 없음 · 원문 그대로 → requireAny fail) · 모범답안 10행 실측·
+         forbid 0·requireAny·베낌 아님 · 단계 간 베낌 가드 25문장(도입 1 정답 5 + 도입 2·3 모범 20) ·
+         형태소 동사 ≥ 2(서버 있을 때) · 코치·자기점검
+         + COACH_SKILLS 13→14 · [쓰지 않을 말 표시] forbidLabel 19→24 · [자기점검] +lack
+         + [불변식: forbidWords 자기 목록] · seed_verify.sql 불변식 2 에서 lack 제외
+           (무난 장면이 원문 — 이 불변식 대상 아님)
+  검증   tsc 0 · test:scoring 3699/0(형태소 서버) · check:numbers 0 · gen:seed 무변화
+  ★ DB 반영·눈검사(박 님): seed_data.sql(lk- 5·reference 10 신규 insert + stages do update, 멱등)
+    → seed_check.sql → 브라우저:
+    ① 구성 트랙 '결핍 부여' 링크 생김 · 코치 말풍선(구성 트랙 첫 코치)
+    ② 원문 그대로 제출 → '반드시 넣을 말' 미달
+    ③ 결핍 단어 직접 쓴 답("한시우는 동기가 부러웠다" 류) → '쓰지 않을 말' 미달
+    ④ 직접 통과 → 모범답안 가·나 + 자기점검 · 두 칸 화면(scoring key 4개)
+    ⑤ 다섯 결핍이 학습자 눈에 서로 달라 보이는지 — 같은 문제의 반복으로 느껴지면
+       그게 다음 처리 대상
 ```
 
 ### 끝난 것 — 세션 30

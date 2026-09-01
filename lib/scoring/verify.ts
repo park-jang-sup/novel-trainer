@@ -710,17 +710,22 @@ console.log('\n[오탐 감시: 감각 묘사 좋은 답안]')
   })
 }
 
-// ── 불변식: 덤프 53문항 전부가 자기 forbidWords/forbidLemmas에 걸리는가 ──
+// ── 불변식: forbidWords 있는 덤프 문항이 자기 목록에 걸리는가 (lack 제외) ──
 //
 // seed_verify.sql의 불변식 2와 같은 것을 TS 쪽에서도 본다. DB에 실제로
 // 적용해 보지 않고도(DB 명령은 여기서 금지되어 있다) 여기서 먼저 잡을 수
 // 있다. CONVERT_SEEDS의 6문항과 대상이 겹치지만, 지금은 그대로 둔다 —
 // 중복 제거는 다음 작업의 몫이다.
-console.log('\n[불변식: 덤프 53문항이 자기 forbidWords/forbidLemmas에 걸림]')
+//
+// ★ 예외: 구성 11 lack(세션 31). 이 단계의 원문은 결함이 없는 무난한 장면이라
+//   자기 forbidWords 를 일부러 안 담는다 — 결핍은 학습자가 얹는다. 이 불변식은
+//   적용되지 않는다([구성 11 lack] 블록이 '원문에 forbidWords 없음'을 따로 문다).
+console.log('\n[불변식: forbidWords 있는 덤프 문항이 자기 목록에 걸림 (lack 제외)]')
 {
   interface DumpProblem {
     passage: string | null
     source_key: string
+    skill_key: string
     scoring_config: { forbidWords?: string[]; forbidLemmas?: string[] }
   }
 
@@ -731,6 +736,7 @@ console.log('\n[불변식: 덤프 53문항이 자기 forbidWords/forbidLemmas에
 
   const skipped: string[] = []
   for (const dp of dumpProblems) {
+    if (dp.skill_key === 'lack') continue // 무난한 장면이 원문 — 학습자가 결핍을 얹는다
     const forbidWords = dp.scoring_config?.forbidWords
     if (!forbidWords || forbidWords.length === 0) continue
 
@@ -3658,6 +3664,160 @@ console.log('\n[도입 3 start_extend: 5문항 + 모범답안 대조]')
       seStage.self_checks[0].length > 0, JSON.stringify(seStage.self_checks))
 }
 
+// ── 구성 11 lack(결핍 부여): 5문항 + 모범답안 대조 (세션 31) ──────────────
+//
+// convert 유형 · 구성 트랙 첫 신설. 2단계(emotion_action)의 캐릭터 버전 —
+// 순간 감정이 아니라 지속 상태(결핍)를 버릇으로 새어 나오게 한다. 원문은
+// 이름 없이 직함·상황만 담은 무난한 장면이라, 원문 그대로 제출은 결함이
+// 없어 requireAny(이름)가 막는다. 근거: 문항설계서 5-05 · 02 CH-04 · 정리본 20-4.
+console.log('\n[구성 11 lack: 5문항 + 모범답안 대조]')
+{
+  interface LkProblem {
+    source_key: string
+    skill_key: string
+    type: string
+    choices: string[] | null
+    passage: string | null
+    instruction: string
+    order_no: number
+    difficulty: number
+    scoring_mode: string
+    scoring_config: ScoringConfig
+  }
+  const seedDir = path.join(__dirname, '..', '..', 'seed', 'dump')
+  const readDump = <T,>(f: string): T =>
+    JSON.parse(readFileSync(path.join(seedDir, f), 'utf8').replace(/^﻿/, '')) as T
+
+  const allProblems = readDump<LkProblem[]>('problems.json')
+  const lk = allProblems.filter((d) => d.skill_key === 'lack')
+  const lkKeys = new Set(lk.map((d) => d.source_key))
+  const answersDump = readDump<{
+    reference?: RefRow[]
+    answers?: { source_key: string; answer: { kind: string; index?: number } }[]
+  }>('answers.json')
+  const refs = (answersDump.reference ?? []).filter((r) => lkKeys.has(r.source_key))
+  const cfgOf = new Map(lk.map((d) => [d.source_key, d.scoring_config]))
+  const passageOf = new Map(lk.map((d) => [d.source_key, d.passage ?? '']))
+
+  t('덤프에 lack 5문항', lk.length === 5, `실제=${lk.length}`)
+  t('전부 convert · auto · choices null · difficulty 1', lk.every(
+    (d) => d.type === 'convert' && d.scoring_mode === 'auto' && d.choices === null && d.difficulty === 1))
+  t('order_no 1~5 각 1회',
+    JSON.stringify([...lk.map((d) => d.order_no)].sort()) === '[1,2,3,4,5]',
+    JSON.stringify(lk.map((d) => d.order_no)))
+  const labels = new Set<string>()
+  for (const d of lk) {
+    const c = d.scoring_config
+    t(`'${d.source_key}': scoring_config (maxChars 60 · minVerbs 2 · requireAny ≥1 · forbidWords ≥2 · forbidDisplay ≥2)`,
+      c.maxChars === 60 && c.minVerbs === 2 &&
+        Array.isArray(c.requireAny) && (c.requireAny as string[]).length >= 1 &&
+        Array.isArray(c.forbidWords) && (c.forbidWords as string[]).length >= 2 &&
+        typeof c.forbidLabel === 'string' && (c.forbidLabel as string).length > 0 &&
+        Array.isArray(c.forbidDisplay) && (c.forbidDisplay as string[]).length >= 2,
+      JSON.stringify(c))
+    labels.add(c.forbidLabel as string)
+  }
+  t('forbidLabel 이 문항별로 다르다 (동일 문구 아님)', labels.size === lk.length, JSON.stringify([...labels]))
+
+  // ── 원문 불변식: 이름 없음 · forbidWords 미적중 · 원문 그대로 → requireAny fail ──
+  for (const d of lk) {
+    const c = d.scoring_config
+    const req = (c.requireAny as string[]) ?? []
+    const fw = (c.forbidWords as string[]) ?? []
+    t(`불변식: '${d.source_key}' 원문에 주인공 이름이 없다`,
+      !req.some((w) => (d.passage ?? '').includes(w)), d.passage ?? '')
+    t(`불변식: '${d.source_key}' 원문에 forbidWords 가 없다 (무난 장면)`,
+      findForbidden(d.passage ?? '', fw).length === 0, d.passage ?? '')
+    const res = combine(
+      { id: d.source_key, type: 'convert', scoring_mode: 'auto', scoring_config: c },
+      { text: d.passage ?? '' }, undefined, null)
+    t(`불변식: '${d.source_key}' 원문 그대로 제출은 requireAny fail`,
+      res.checks.find((x) => x.key === 'requireAny')?.status === 'fail')
+  }
+
+  // ── 새 지문 5건은 sc- 어느 choices 에도 없다(신작) ──
+  const allScChoices = new Set(
+    allProblems.filter((p) => p.skill_key === 'start_choose').flatMap((p) => p.choices ?? []))
+  for (const d of lk) {
+    t(`'${d.source_key}': 새 지문 — sc- 어느 choices 에도 없다`,
+      !allScChoices.has(d.passage ?? ''), d.passage ?? '')
+  }
+
+  // ── 모범답안 10행 ──
+  t('모범답안 10행', refs.length === 10, `실제=${refs.length}`)
+  t('모범답안 전부 blank_key 빈 문자열', refs.every((r) => r.blank_key === ''))
+  for (const d of lk) {
+    const ords = refs.filter((r) => r.source_key === d.source_key).map((r) => r.ord).sort()
+    t(`'${d.source_key}': 가·나 두 세트`, JSON.stringify(ords) === '[1,2]', JSON.stringify(ords))
+  }
+  const LEN: Record<string, [number, number]> = {
+    'lk-desk-nine': [40, 43],
+    'lk-cafe-wait': [40, 42],
+    'lk-guard-dawn': [37, 36],
+    'lk-board-rank': [39, 39],
+    'lk-tower-shelf': [36, 39],
+  }
+  for (const r of refs) {
+    const cfg = cfgOf.get(r.source_key)!
+    const n = countChars(r.content)
+    t(`'${r.source_key}' ord${r.ord}: 비어 있지 않다`, r.content.trim().length > 0)
+    t(`'${r.source_key}' ord${r.ord}: 자수 ${n} == 실측 ${LEN[r.source_key][r.ord - 1]}`,
+      n === LEN[r.source_key][r.ord - 1], `"${r.content}"`)
+    t(`'${r.source_key}' ord${r.ord}: 자수 ${n} ≤ 60`, n <= 60)
+    t(`'${r.source_key}' ord${r.ord}: 지문을 그대로 베끼지 않았다`,
+      r.content.trim() !== passageOf.get(r.source_key)!.trim())
+    const hits = findForbidden(r.content, (cfg.forbidWords as string[] | undefined) ?? [])
+    t(`'${r.source_key}' ord${r.ord}: forbidWords 적중 0`, hits.length === 0, JSON.stringify(hits))
+    const req = (cfg.requireAny as string[] | undefined) ?? []
+    t(`'${r.source_key}' ord${r.ord}: requireAny 중 하나를 포함`,
+      req.some((w) => r.content.includes(w)), JSON.stringify(req))
+    const res = combine(
+      { id: r.source_key, type: 'convert', scoring_mode: 'auto', scoring_config: cfg },
+      { text: r.content }, undefined, null)
+    for (const key of ['forbidWords', 'requireAny', 'maxChars']) {
+      const c = res.checks.find((x) => x.key === key)
+      t(`'${r.source_key}' ord${r.ord}: combine 의 ${key} 검사가 pass`,
+        !c || c.status === 'pass', JSON.stringify(c))
+    }
+  }
+
+  // ── 단계 간 베낌 가드: 도입 1 정답 5 + 도입 2 모범 10 + 도입 3 모범 10 = 25문장 ──
+  const priorSentences: string[] = []
+  {
+    const scAnsIdx = new Map(
+      (answersDump.answers ?? []).filter((a) => a.answer.kind === 'choice')
+        .map((a) => [a.source_key, a.answer.index!]))
+    for (const p of allProblems.filter((x) => x.skill_key === 'start_choose')) {
+      const idx = scAnsIdx.get(p.source_key)
+      if (idx != null && p.choices) priorSentences.push(p.choices[idx].replace(/\.$/, ''))
+    }
+    for (const r of answersDump.reference ?? []) {
+      if (r.source_key.startsWith('sw-') || r.source_key.startsWith('se-')) {
+        priorSentences.push(r.content.replace(/\.$/, ''))
+      }
+    }
+  }
+  t('단계 간 베낌 가드: 대조원이 25문장 (도입 1 정답 5 + 도입 2 모범 10 + 도입 3 모범 10)',
+    priorSentences.length === 25, `실제=${priorSentences.length}`)
+  for (const r of refs) {
+    const copied = priorSentences.filter((s) => r.content.includes(s))
+    t(`단계 간 베낌 가드: '${r.source_key}' ord${r.ord} 이 앞 단계 문장을 안 베꼈다`,
+      copied.length === 0, JSON.stringify(copied))
+  }
+
+  // ── 형태소(서버 있을 때만): 모범답안 동사 ≥ 2 (실측 가 4·5·5·2·2 / 나 5·5·5·2·3) ──
+  pushRefMorphCheck('구성 11', refs, 'convert', cfgOf)
+
+  // ── stages: lack 코치·자기점검 (구성 트랙 첫 코치) ──
+  const stagesDump = readDump<{ skill_key: string; coach_intro: string; coach_line: string; self_checks: string[] }[]>('stages.json')
+  const lkStage = stagesDump.find((s) => s.skill_key === 'lack')!
+  t('stages lack 의 coach_intro·coach_line 이 비어 있지 않다',
+    lkStage.coach_intro.length > 0 && lkStage.coach_line.length > 0)
+  t('stages lack 의 self_checks 1건',
+    Array.isArray(lkStage.self_checks) && lkStage.self_checks.length === 1 &&
+      lkStage.self_checks[0].length > 0, JSON.stringify(lkStage.self_checks))
+}
+
 // ── '쓰지 않을 말' 표시: forbidLabel/forbidDisplay ↔ 채점 (세션 22) ──────
 //
 // scoring_config 에 표시 전용 필드 둘을 더했다. 채점(forbidWords·forbidLemmas)은
@@ -3697,12 +3857,13 @@ console.log('\n[쓰지 않을 말 표시: forbidLabel/forbidDisplay ↔ 채점]'
   const withDisplay = readDump<FwProblem[]>('problems.json').filter(
     (d) => d.scoring_config.forbidLabel !== undefined
   )
-  t('덤프에 forbidLabel 을 채운 문항 19', withDisplay.length === 19, `실제=${withDisplay.length}`)
+  t('덤프에 forbidLabel 을 채운 문항 24', withDisplay.length === 24, `실제=${withDisplay.length}`)
   t(
-    '전부 emotion_action 6 + sensory 8 + start_write 5',
+    '전부 emotion_action 6 + sensory 8 + start_write 5 + lack 5',
     withDisplay.filter((d) => d.skill_key === 'emotion_action').length === 6 &&
       withDisplay.filter((d) => d.skill_key === 'sensory').length === 8 &&
-      withDisplay.filter((d) => d.skill_key === 'start_write').length === 5
+      withDisplay.filter((d) => d.skill_key === 'start_write').length === 5 &&
+      withDisplay.filter((d) => d.skill_key === 'lack').length === 5
   )
 
   for (const d of withDisplay) {
@@ -3789,7 +3950,7 @@ console.log('\n[쓰지 않을 말 표시: forbidLabel/forbidDisplay ↔ 채점]'
 
   // update SQL 이 덤프와 갈리지 않았는지 (scoring_config 를 jsonb 로 비교).
   // update-forbid-display.sql 은 세션 22 의 기존 14문항(emotion_action·sensory)만
-  // 담는다 — start_write 5 는 새 insert 라 seed_data.sql 에 통째로 들어간다.
+  // 담는다 — start_write 5 · lack 5 는 새 insert 라 seed_data.sql 에 통째로 들어간다.
   {
     const updSql = readFileSync(path.join(root, 'seed', 'update-forbid-display.sql'), 'utf8')
     const rows = [...updSql.matchAll(
@@ -3797,7 +3958,7 @@ console.log('\n[쓰지 않을 말 표시: forbidLabel/forbidDisplay ↔ 채점]'
     )].map((m) => ({ cfg: JSON.parse(m[1]) as Record<string, unknown>, source_key: m[2] }))
     t('update SQL 에 14행이 있다', rows.length === 14, `실제=${rows.length}`)
     const canon = (o: unknown) => JSON.stringify(o, Object.keys(o as object).sort())
-    for (const d of withDisplay.filter((x) => x.skill_key !== 'start_write')) {
+    for (const d of withDisplay.filter((x) => !['start_write', 'lack'].includes(x.skill_key))) {
       const row = rows.find((r) => r.source_key === d.source_key)
       t(`update SQL '${d.source_key}' 의 scoring_config 가 덤프와 같다`,
         !!row && canon(row.cfg) === canon(d.scoring_config),
@@ -3918,9 +4079,14 @@ console.log('\n[자기점검 self_checks: 시드 ↔ 화면]')
     JSON.stringify(scOf('start_extend')) ===
       JSON.stringify(['지문과 내 문장을 이어 읽으면 한 사람 이야기로 느껴져? 주인공이 나와서 뭐라도 하고 있어?'])
   )
+  t(
+    'lack 자기점검 한 줄 (세션 31)',
+    JSON.stringify(scOf('lack')) ===
+      JSON.stringify(['결핍이라는 말 없이도, 이 사람이 뭐에 굶주렸는지 남이 맞힐 수 있어?'])
+  )
   const withSelfChecks = [
     'reduce_adverb', 'emotion_action', 'trim_padding', 'reduce_repeat', 'action_reason',
-    'start_write', 'start_extend',
+    'start_write', 'start_extend', 'lack',
   ]
   t(
     '나머지 단계는 빈 배열(자기점검 칸이 안 뜬다)',
@@ -3966,19 +4132,19 @@ console.log('\n[가르침 층: 코치 말풍선 · 조건 요약 · 게이지]')
   // ── 가·나·라: 코치 캐릭터 ──
   t('모든 단계에 coach_intro·coach_line 문자열', stagesDump.every(
     (s) => typeof s.coach_intro === 'string' && typeof s.coach_line === 'string'))
-  // 문장 트랙 10단계 + 도입 1 start_choose(세션 28) + 도입 2 start_write(세션 29)
-  // + 도입 3 start_extend(세션 30) = 13단계에 코치가 있다.
+  // 문장 트랙 10단계 + 도입 1·2·3(start_choose·start_write·start_extend, 세션 28~30)
+  // + 구성 11 lack(세션 31) = 14단계에 코치가 있다.
   const COACH_SKILLS = new Set([
     'reduce_adverb', 'emotion_action', 'trim_padding', 'reduce_repeat', 'adverb_exception',
     'sensory', 'rhythm', 'dialogue_ratio', 'pov_lock', 'action_reason',
-    'start_choose', 'start_write', 'start_extend',
+    'start_choose', 'start_write', 'start_extend', 'lack',
   ])
   const withCoach = stagesDump.filter((s) => (s.coach_intro as string).length > 0)
-  t('coach_intro 는 문장 트랙 10단계 + start_choose + start_write + start_extend 에만 있다',
-    withCoach.length === 13 && withCoach.every((s) => COACH_SKILLS.has(s.skill_key)),
+  t('coach_intro 는 문장 10 + 도입 1·2·3 + 구성 11 lack 에만 있다',
+    withCoach.length === 14 && withCoach.every((s) => COACH_SKILLS.has(s.skill_key)),
     JSON.stringify(withCoach.map((s) => `${s.skill_key}:${s.track}`)))
-  t('coach_line 도 같은 13단계에만',
-    stagesDump.filter((s) => (s.coach_line as string).length > 0).length === 13 &&
+  t('coach_line 도 같은 14단계에만',
+    stagesDump.filter((s) => (s.coach_line as string).length > 0).length === 14 &&
       stagesDump.every((s) => (s.coach_intro as string).length > 0 === ((s.coach_line as string).length > 0)))
   t('그 밖의 단계는 coach_intro·coach_line 이 빈 문자열',
     stagesDump.filter((s) => !COACH_SKILLS.has(s.skill_key)).every(

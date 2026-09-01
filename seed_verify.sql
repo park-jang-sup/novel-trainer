@@ -50,9 +50,15 @@ begin
   --
   --     검사 대상은 forbidWords 나 forbidLemmas 중 하나라도 가진 문항이다.
   --     둘 다 없는 문항은 건너뛴다.
+  --
+  --     ★ 예외: 구성 11 lack(세션 31). 이 단계의 지문은 결함 없는 무난한
+  --       장면이라 자기 forbidWords 를 일부러 안 담는다 — 결핍은 학습자가
+  --       얹는다. requireAny(주인공 이름)가 지문 복사 제출을 막는다.
   select string_agg(p.source_key, ', ') into v_bad
     from problems p
+    join stages s on s.id = p.stage_id
    where p.type = 'convert'
+     and s.skill_key <> 'lack'
      and (p.scoring_config ? 'forbidWords' or p.scoring_config ? 'forbidLemmas')
      and not (
        exists (

@@ -3525,5 +3525,173 @@
         "준혁"
       ]
     }
+  },
+  {
+    "type": "convert",
+    "choices": null,
+    "passage": "기획팀 3년 차 대리는 오늘도 아홉 시 정각에 자리에 앉았다. 컴퓨터를 켜고 메일함을 열었다.",
+    "order_no": 1,
+    "tone_tag": "planned",
+    "genre_tag": "modern",
+    "skill_key": "lack",
+    "difficulty": 1,
+    "source_key": "lk-desk-nine",
+    "source_tag": "original",
+    "instruction": "김하준에게 인정 욕구를 얹으시오. 김하준은 기획팀 3년 차 대리다. 아래는 아무 결핍도 없는 무난한 장면이다. 다시 써서, 인정받고 싶다는 말 없이 행동과 버릇만으로 그 마음이 드러나게 하시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 60,
+      "minVerbs": 2,
+      "forbidLabel": "인정 욕구를 직접 말하는 표현",
+      "forbidWords": [
+        "인정",
+        "칭찬",
+        "알아주"
+      ],
+      "forbidDisplay": [
+        "인정",
+        "칭찬",
+        "알아주다"
+      ],
+      "requireAny": [
+        "김하준",
+        "하준"
+      ]
+    }
+  },
+  {
+    "type": "convert",
+    "choices": null,
+    "passage": "카페 창가 자리에서 친구를 기다렸다. 창밖으로 오후의 사람들이 지나갔다.",
+    "order_no": 2,
+    "tone_tag": "planned",
+    "genre_tag": "romance",
+    "skill_key": "lack",
+    "difficulty": 1,
+    "source_key": "lk-cafe-wait",
+    "source_tag": "original",
+    "instruction": "윤소민에게 애정 결핍을 얹으시오. 윤소민은 카페에서 친구를 기다리는 중이다. 아래는 아무 결핍도 없는 무난한 장면이다. 다시 써서, 외롭다는 말 없이 행동과 버릇만으로 그 마음이 드러나게 하시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 60,
+      "minVerbs": 2,
+      "forbidLabel": "외로움을 직접 말하는 표현",
+      "forbidWords": [
+        "사랑",
+        "애정",
+        "외로",
+        "쓸쓸",
+        "관심"
+      ],
+      "forbidDisplay": [
+        "사랑",
+        "애정",
+        "외롭다",
+        "쓸쓸하다",
+        "관심"
+      ],
+      "requireAny": [
+        "윤소민",
+        "소민"
+      ]
+    }
+  },
+  {
+    "type": "convert",
+    "choices": null,
+    "passage": "상단의 호위 무사는 새벽같이 일어나 검을 손질했다. 마당을 한 바퀴 돌고 아침상을 받았다.",
+    "order_no": 3,
+    "tone_tag": "planned",
+    "genre_tag": "martial",
+    "skill_key": "lack",
+    "difficulty": 1,
+    "source_key": "lk-guard-dawn",
+    "source_tag": "original",
+    "instruction": "조평에게 가난의 기억을 얹으시오. 조평은 상단의 호위 무사다. 아래는 아무 결핍도 없는 무난한 장면이다. 다시 써서, 가난했다는 말 없이 행동과 버릇만으로 그 기억이 드러나게 하시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 60,
+      "minVerbs": 2,
+      "forbidLabel": "가난을 직접 말하는 표현",
+      "forbidWords": [
+        "가난",
+        "굶",
+        "궁핍"
+      ],
+      "forbidDisplay": [
+        "가난",
+        "굶다",
+        "궁핍"
+      ],
+      "requireAny": [
+        "조평"
+      ]
+    }
+  },
+  {
+    "type": "convert",
+    "choices": null,
+    "passage": "B급 헌터는 아침 훈련을 마치고 협회 게시판 앞을 지나쳤다. 오늘의 의뢰 목록이 붙어 있었다.",
+    "order_no": 4,
+    "tone_tag": "planned",
+    "genre_tag": "modern",
+    "skill_key": "lack",
+    "difficulty": 1,
+    "source_key": "lk-board-rank",
+    "source_tag": "original",
+    "instruction": "한시우에게 열등감을 얹으시오. 한시우는 B급 헌터다. 아래는 아무 결핍도 없는 무난한 장면이다. 다시 써서, 부럽다는 말 없이 행동과 버릇만으로 그 마음이 드러나게 하시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 60,
+      "minVerbs": 2,
+      "forbidLabel": "열등감을 직접 말하는 표현",
+      "forbidWords": [
+        "열등",
+        "부럽",
+        "부러워",
+        "질투",
+        "뒤처"
+      ],
+      "forbidDisplay": [
+        "열등감",
+        "부럽다",
+        "질투",
+        "뒤처지다"
+      ],
+      "requireAny": [
+        "한시우",
+        "시우"
+      ]
+    }
+  },
+  {
+    "type": "convert",
+    "choices": null,
+    "passage": "마탑의 견습 마법사는 도서관에서 주문서를 정리했다. 서가 사이로 오후 햇살이 들었다.",
+    "order_no": 5,
+    "tone_tag": "planned",
+    "genre_tag": "fantasy",
+    "skill_key": "lack",
+    "difficulty": 1,
+    "source_key": "lk-tower-shelf",
+    "source_tag": "original",
+    "instruction": "리안에게 그리움을 얹으시오. 리안은 스승을 잃은 마탑의 견습 마법사다. 아래는 아무 결핍도 없는 무난한 장면이다. 다시 써서, 그립다는 말 없이 행동과 버릇만으로 그 마음이 드러나게 하시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 60,
+      "minVerbs": 2,
+      "forbidLabel": "그리움을 직접 말하는 표현",
+      "forbidWords": [
+        "그립",
+        "그리워"
+      ],
+      "forbidDisplay": [
+        "그립다",
+        "그리워하다"
+      ],
+      "requireAny": [
+        "리안"
+      ]
+    }
   }
 ]
