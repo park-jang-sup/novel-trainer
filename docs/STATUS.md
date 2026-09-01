@@ -129,6 +129,15 @@ kongjwi 합성어 함정 제거 — 물동이 → 항아리 (세션 27 후기, �
   ★ DB 반영·절차(박 님): (v2 는 이미 실행) seed/update-reduce-repeat-v3.sql → seed_data.sql(멱등)
     → seed_check.sql → 브라우저 4단계에서 ① 새 원문(항아리)이 뜨는지 ② 원문 그대로 붙여넣기가
     '겹친 말' 미달인지 ③ '우물' 을 살린 정직한 수정이 통과하는지 ④ 완주
+
+magpie 가 를 박 님 실제 통과 답안으로 교체 — 학습자 답이 모범답안을 이긴 첫 사례
+  문장 연결 압축('놓았고, … 이어졌다') + 대사 귀속 명시('직녀를 향해 내달렸다'). 원문·
+  scoring_config·나는 그대로. 새 가 80자(≤ maxChars 85) · 5문장 · 다리 2회 · 지문 베낌 아님.
+  answers.json  rp-magpie-bridge ord 1(가) content 만
+  seed/update-reduce-repeat-v4.sql (신규)  v3 까지 DB 실행됨 — reference 1행만
+  verify  update SQL 대조를 v2+v3+v4 최종상태로 · v4 는 magpie reference 1행만(passage·cfg 무변)
+  ★ DB 반영·절차(박 님): (v2·v3 는 이미 실행) seed/update-reduce-repeat-v4.sql → seed_data.sql(멱등)
+    → seed_check.sql → 브라우저 4단계 magpie 통과 화면에서 새 가가 뜨는지
 ```
 
 ### 끝난 것 — 세션 26

@@ -2101,7 +2101,7 @@ on conflict (problem_id, ord, blank_key) do nothing;
 
 -- rp-magpie-bridge ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
-select p.id, 1, '', '까치들이 은하수 위로 다리를 놓았다. 강 건너까지 길게 이어진 길이었다. 견우는 떨리는 발로 그 위에 올랐다. 다리가 출렁일 때마다 까치들이 날개를 퍼덕였다. "직녀님!" 견우는 내달렸다.'
+select p.id, 1, '', '까치들이 은하수 위로 다리를 놓았고, 강 건너까지 길게 이어졌다. 견우는 떨리는 발로 올랐다. 다리가 출렁일 때마다 까치들이 날개를 퍼덕였다. "직녀님!" 견우는 직녀를 향해 내달렸다.'
 from problems p
 where p.source_key = 'rp-magpie-bridge'
 on conflict (problem_id, ord, blank_key) do nothing;

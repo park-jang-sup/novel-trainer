@@ -2958,9 +2958,11 @@ console.log('\n[4단계 reduce_repeat: 원문·모범답안 대조]')
   // update SQL 이 덤프와 갈리지 않았는지 — 세션 27.
   //  v2 (update-reduce-repeat-v2.sql): rp- 8건 passage·instruction·scoring_config
   //     (jsonb 통째로) + reference_answers 16행 content. 이미 DB 에 실행됐다.
-  //  v3 (update-reduce-repeat-v3.sql): v2 실행 후 추가 패치 — kongjwi 합성어 함정
-  //     제거(물동이→항아리). problems 1건 passage + reference 1행 content.
-  //  v2 를 얹고 v3 을 덮어쓴 최종 상태가 덤프와 같아야 한다(v3 가 나중, v3 가 이김).
+  //  v3 (update-reduce-repeat-v3.sql): v2 실행 후 — kongjwi 합성어 함정 제거
+  //     (물동이→항아리). problems 1건 passage + reference 1행 content.
+  //  v4 (update-reduce-repeat-v4.sql): v3 실행 후 — magpie 가를 박 님 실제 통과
+  //     답안으로 교체. reference 1행 content.
+  //  v2 → v3 → v4 순으로 덮어쓴 최종 상태가 덤프와 같아야 한다(뒤가 이김).
   {
     const parseUpd = (file: string) => {
       const sql = readFileSync(path.join(__dirname, '..', '..', 'seed', file), 'utf8')
@@ -2996,6 +2998,7 @@ console.log('\n[4단계 reduce_repeat: 원문·모범답안 대조]')
 
     const v2 = parseUpd('update-reduce-repeat-v2.sql')
     const v3 = parseUpd('update-reduce-repeat-v3.sql')
+    const v4 = parseUpd('update-reduce-repeat-v4.sql')
     t('v2 SQL 에 problems update 8행', v2.prob.length === 8, `실제=${v2.prob.length}`)
     t('v2 SQL 에 reference_answers update 16행', v2.ref.length === 16, `실제=${v2.ref.length}`)
     t('v3 SQL 에 kongjwi passage update 1건', v3.probPassageOnly.length === 1 &&
@@ -3006,6 +3009,10 @@ console.log('\n[4단계 reduce_repeat: 원문·모범답안 대조]')
       JSON.stringify(v3.ref))
     t("v3 SQL 이 싣는 데이터에 '물동이' 가 없다 (항아리로 갈았다)",
       !v3.probPassageOnly[0].passage.includes('물동이') && !v3.ref[0].content.includes('물동이'))
+    t('v4 SQL 은 magpie reference 1행만 (passage·cfg 안 건드림)',
+      v4.ref.length === 1 && v4.ref[0].source_key === 'rp-magpie-bridge' && v4.ref[0].ord === 1 &&
+      v4.prob.length === 0 && v4.probPassageOnly.length === 0,
+      JSON.stringify(v4))
 
     // 최종 passage/instruction/cfg: v2 → v3(passage) 덮어쓰기
     const finalPassage = new Map<string, string>()
@@ -3018,7 +3025,7 @@ console.log('\n[4단계 reduce_repeat: 원문·모범답안 대조]')
     }
     for (const r of v3.probPassageOnly) finalPassage.set(r.source_key, r.passage)
     for (const d of rp) {
-      t(`v2+v3 최종 '${d.source_key}' passage 가 덤프와 같다`,
+      t(`v2+v3+v4 최종 '${d.source_key}' passage 가 덤프와 같다`,
         finalPassage.get(d.source_key) === d.passage,
         `SQL=${JSON.stringify(finalPassage.get(d.source_key))}`)
       t(`v2 '${d.source_key}' instruction·scoring_config 가 덤프와 같다`,
@@ -3027,11 +3034,11 @@ console.log('\n[4단계 reduce_repeat: 원문·모범답안 대조]')
         `SQL instr=${JSON.stringify(finalInstr.get(d.source_key))}`)
     }
 
-    // 최종 reference content: v2 → v3 덮어쓰기
+    // 최종 reference content: v2 → v3 → v4 덮어쓰기
     const finalRef = new Map<string, string>()
-    for (const r of [...v2.ref, ...v3.ref]) finalRef.set(`${r.source_key}#${r.ord}`, r.content)
+    for (const r of [...v2.ref, ...v3.ref, ...v4.ref]) finalRef.set(`${r.source_key}#${r.ord}`, r.content)
     for (const r of refs) {
-      t(`v2+v3 최종 '${r.source_key}' ord${r.ord} content 가 덤프와 같다`,
+      t(`v2+v3+v4 최종 '${r.source_key}' ord${r.ord} content 가 덤프와 같다`,
         finalRef.get(`${r.source_key}#${r.ord}`) === r.content,
         `SQL=${JSON.stringify(finalRef.get(`${r.source_key}#${r.ord}`))}`)
     }
