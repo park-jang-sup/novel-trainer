@@ -19,7 +19,7 @@
 --
 -- expect는 CTE가 아니라 임시 테이블이다. CTE는 그것이 붙은 statement
 -- 하나에만 유효해서, 검사 넷을 한 do 블록 안에서 나눠 적으려면 매번
--- 127행짜리 values를 다시 적어야 한다. 임시 테이블로 한 번만 채운다.
+-- 132행짜리 values를 다시 적어야 한다. 임시 테이블로 한 번만 채운다.
 --
 -- 마지막 문장이 select인 것은 의도다. Supabase 편집기가 NOTICE를
 -- 안 띄워서, raise notice로 끝내면 "통과"와 "파일이 잘려 안 돌았다"가
@@ -47,6 +47,7 @@ create temporary table expect (
 
 insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) values
   ('cc-report-credit', '6fb8a461655328aa3d9179bd6b953735', 123, 'de38611eebf908e329853f1801444b33', 41, '{"maxChars":60,"minVerbs":2,"requireAll":["김하준","서담"]}'::jsonb),
+  ('ig-gate-wait', '44ab13056de0cac7d50784cf6ef2851c', 189, 'aca4a537225c773c04f22664395c527c', 71, '{"maxChars":100,"minVerbs":3,"forbidLabel":"서술자가 사실을 말해 주는 표현","forbidWords":["몰랐","알지 못","모르고 있","눈치채지 못","알 리 없","훗날"],"forbidDisplay":["몰랐다","알지 못했다","눈치채지 못했다","훗날"]}'::jsonb),
   ('lk-desk-nine', '5ed701d19c837118675f85e347e27d3e', 108, 'c78005fc2b863deb8545e5823326867c', 52, '{"maxChars":60,"minVerbs":2,"forbidLabel":"인정 욕구를 직접 말하는 표현","forbidWords":["인정","칭찬","알아주"],"forbidDisplay":["인정","칭찬","알아주다"],"requireAny":["김하준","하준"],"forbidPassageCopy":true}'::jsonb),
   ('lk2-broken-sword', 'a8496a5244723f5fe8984f78a0c2b443', 181, '5baedb6a94fd7a2baab7959d64c71435', 129, '{"maxChars":100,"minVerbs":3,"forbidLabel":"인물을 평가하는 말","forbidWords":["착하","착한","따뜻","다정","친절","배려","좋은 사람","마음씨","인심"],"forbidDisplay":["착하다","따뜻하다","다정하다","친절하다","배려하다"],"forbidPassageCopy":true}'::jsonb),
   ('rm-axe-pond', '767bce97ba0984cb0aaa18ad470b183b', 99, 'f32376318db1d3b5936bc5bdaed0f9f7', 49, '{"maxChars":36,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb),
@@ -66,6 +67,7 @@ insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) v
   ('rm-goblin-club', '4af82dadf8273d39e9012e06a7199f05', 94, 'e5fe17def733f583bd84b79d9d7a7ab3', 65, '{"maxChars":42,"minVerbs":3,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":2}'::jsonb),
   ('cc-street-night', '17f220cf6e32c147e09c8a33fc1b646b', 109, 'b3f5a5ae8305051c09b7229a52f3fcb9', 45, '{"maxChars":60,"minVerbs":2,"requireAll":["윤소민","하늘"]}'::jsonb),
   ('heungbu-joy', '3d67b9991f63f7137c1e6ba4fa094d1d', 22, 'da937ab22e4be877e917c12dd2b7f4a0', 32, '{"maxChars":60,"minVerbs":2,"maxAdverbs":1,"forbidWords":["기뻤","기쁘","기뻐","기쁨","행복","신났","신나","즐거","좋았"],"maxModifiers":2,"forbidLabel":"기쁨을 직접 말하는 표현","forbidDisplay":["기쁘다","기쁨","행복하다","신나다","좋다","즐거워하다"]}'::jsonb),
+  ('ig-left-cup', '294734e2cd08f477fdf5a13468ad628c', 221, '629736d7fbf75883805fd33e36f2fca8', 116, '{"maxChars":100,"minVerbs":3,"forbidLabel":"서술자가 사실을 말해 주는 표현","forbidWords":["몰랐","알지 못","모르고 있","눈치채지 못","알 리 없","훗날"],"forbidLemmas":["독/NNG"],"forbidDisplay":["몰랐다","알지 못했다","눈치채지 못했다","훗날","독"],"forbidPassageCopy":true}'::jsonb),
   ('lk-cafe-wait', 'e3855757130d7e30167c1af0c33a9bc2', 109, '7308f28a423268f7d0fe88778d4a6ca9', 40, '{"maxChars":60,"minVerbs":2,"forbidLabel":"외로움을 직접 말하는 표현","forbidWords":["사랑","애정","외로","쓸쓸","관심"],"forbidDisplay":["사랑","애정","외롭다","쓸쓸하다","관심"],"requireAny":["윤소민","소민"],"forbidPassageCopy":true}'::jsonb),
   ('lk2-deal-credit', '657fa20865f883729d7964419f16bb9e', 133, 'aa3e2eee4f42051398f527262aa74820', 120, '{"maxChars":100,"minVerbs":3,"forbidLabel":"능력을 늘어놓거나 인물을 평가하는 말","forbidWords":["최고","표창","기록","착하","착한","따뜻","다정","친절","배려","좋은 사람","마음씨"],"forbidDisplay":["최고","표창","기록","착하다","따뜻하다","다정하다","친절하다"],"forbidPassageCopy":true}'::jsonb),
   ('se-sword-five', '09dd0bbee3a594d19b961c717b8ee5ac', 110, '6c20c49ed9e85d426a68e4d6b02d9ddb', 33, '{"maxChars":60,"minVerbs":1,"requireAny":["진운"]}'::jsonb),
@@ -83,6 +85,7 @@ insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) v
   ('tp-axe-water', '96f5ca0e7a0e469b0bee177a53855ad9', 135, '26b338bc7f1b667978b981a81341d2b3', 91, '{"maxChars":42,"minVerbs":3,"maxRepeat":2}'::jsonb),
   ('tp-heungbu-yard', '5f48dd91543f08bb1eb0b7ffe45088ec', 136, '42c60aefd16e062afbf4fe2bc5eb6404', 87, '{"maxChars":41,"minVerbs":3,"maxRepeat":2}'::jsonb),
   ('tp-simcheong-rail', '9cf7af2b087e33e8952659cb583e7f17', 113, '2c68ea80cc8fc425c70af016b9600864', 81, '{"maxChars":39,"minVerbs":3,"maxRepeat":2}'::jsonb),
+  ('ig-umbrella-walnut', 'bdb493f241457289f0a4dbab826858b8', 245, '4a1fc003445a0f4fcf080a0aedc5d3f7', 128, '{"maxChars":100,"minVerbs":3,"requireAll":["소민","하늘"],"forbidLabel":"서술자가 사실을 말해 주거나 풀어 주는 표현","forbidWords":["몰랐","알지 못","모르고 있","눈치채지 못","알 리 없","훗날","사실은","고백","털어놓","알고 보니","오해였"],"forbidDisplay":["몰랐다","알지 못했다","훗날","사실은","고백하다","털어놓다","알고 보니"],"forbidPassageCopy":true}'::jsonb),
   ('tp-gyeonu-river', '9cf7af2b087e33e8952659cb583e7f17', 113, 'c552444862473f89926ba108004f4806', 85, '{"maxChars":35,"minVerbs":2,"maxRepeat":2}'::jsonb),
   ('tp-kongjwi-crack', '6d34dd648af5a2e17cd58839496a3d76', 134, '7f4d27d99cca66c188bd4f8ce31347a4', 87, '{"maxChars":38,"minVerbs":2,"maxRepeat":2}'::jsonb),
   ('tp-rabbit-gate', '9cf7af2b087e33e8952659cb583e7f17', 113, '16ccb3562d6164f5ec4961788ab1f670', 82, '{"maxChars":36,"minVerbs":3,"maxRepeat":2}'::jsonb),
@@ -95,6 +98,7 @@ insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) v
   ('rp-simcheong-sea', '1923f3bd3896a41facdc89d04e9c0444', 23, 'fbe337b4cc6f3edfef43b536177937f8', 111, '{"maxChars":86,"minVerbs":3,"maxRepeat":2,"repeatTargets":[{"word":"바다","max":2},{"word":"심청","max":2}]}'::jsonb),
   ('se-rose-heir', '3a5d3b3a8092147d90a891b00a203db5', 118, 'c9dede8a5a73e739720395c77955203c', 37, '{"maxChars":60,"minVerbs":1,"requireAny":["에스텔"]}'::jsonb),
   ('sw-scaffold-morning', '34c777a65f63f0db452221a1c8aa8de4', 142, '4bd9b21f6ebf2f91ea43ea830bc1a069', 36, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","긴장","형언","기류","아우라","기색","낌새","기미"],"forbidLemmas":["오라/NNG"],"forbidDisplay":["기운","느낌","분위기","긴장감","형언하다","기류","오라","아우라","기색","낌새","기미"],"requireAny":["카리엘"]}'::jsonb),
+  ('ig-cafe-scar', '817ab3d845586e52a90a6348897d603c', 189, 'a1f24a96c0e97b063380e33d3d032db0', 106, '{"maxChars":100,"minVerbs":3,"forbidLabel":"서술자가 사실을 말해 주는 표현","forbidWords":["몰랐","알지 못","모르고 있","눈치채지 못","알 리 없","훗날","용의자"],"forbidDisplay":["몰랐다","알지 못했다","눈치채지 못했다","훗날","용의자"],"forbidPassageCopy":true}'::jsonb),
   ('lk2-night-raid', '84b8b831e1624e2edafe7dd2219fb974', 173, '002990572979e1df0d74d415a19dd7d5', 116, '{"maxChars":100,"minVerbs":3,"requireAll":["노아","카일"],"forbidLabel":"인물을 평가하는 말","forbidWords":["착하","착한","따뜻","다정","친절","배려","좋은 사람","마음씨","인심","마음에 들"],"forbidDisplay":["착하다","따뜻하다","다정하다","친절하다","배려하다","마음에 들다"],"forbidPassageCopy":true}'::jsonb),
   ('rp-kongjwi-jar', '1923f3bd3896a41facdc89d04e9c0444', 23, 'a843dfb6b1cf55cbffdb1870467be11c', 92, '{"maxChars":68,"minVerbs":3,"maxRepeat":2,"repeatTargets":[{"word":"물","max":2},{"word":"콩쥐","max":2}]}'::jsonb),
   ('rp-magpie-bridge', '1923f3bd3896a41facdc89d04e9c0444', 23, 'c599b72be684fc33ff7a22bc19d75224', 110, '{"maxChars":85,"minVerbs":3,"maxRepeat":2,"repeatTargets":[{"word":"다리","max":2}]}'::jsonb),
@@ -109,6 +113,7 @@ insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) v
   ('sw-boss-wake', '3a4863b41b3091052b4f462d2636a4fc', 145, '714fe9eef4385a917bebded82aecd0bb', 32, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","기류","아우라","기색","낌새","기미"],"forbidLemmas":["오라/NNG"],"forbidDisplay":["기운","느낌","분위기","기류","오라","아우라","기색","낌새","기미"],"requireAny":["이재하","재하"]}'::jsonb),
   ('ae-axe-drop', 'f5b8d17c8e33f178f65d364d801ec11b', 84, null, null, '{}'::jsonb),
   ('ae-kongjwi-jar', 'a890bd3fe800ba68d3baed1c1b5b98eb', 41, null, null, '{}'::jsonb),
+  ('ig-ball-envelope', 'a410c3ae4343a4f213f9abf4a722a893', 206, '0bc69ed925985008b0dc828477a80675', 123, '{"maxChars":100,"minVerbs":3,"forbidLabel":"서술자가 사실을 말해 주거나 풀어 주는 표현","forbidWords":["몰랐","알지 못","모르고 있","눈치채지 못","알 리 없","훗날","사실은","고백","털어놓","알고 보니","오해였","해명"],"forbidDisplay":["몰랐다","알지 못했다","훗날","사실은","고백하다","털어놓다","알고 보니","해명하다"],"forbidPassageCopy":true}'::jsonb),
   ('cc-praise-callout', 'bbe7411c27e6f1a0c8b2d626f421173a', 149, '890a0ee75d54d1a46001aa83408f7039', 48, '{"maxChars":100,"minVerbs":3,"forbidLabel":"속마음을 직접 말하는 표현","forbidWords":["좋아","기쁘","기뻤","뿌듯"],"forbidDisplay":["좋아하다","기쁘다","뿌듯하다"],"forbidPassageCopy":true}'::jsonb),
   ('sn-axe-pond', 'e60d21d41febc3e8e1284191bf0f3abd', 219, '50938045d3b3668de7c80eda697f43ee', 36, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"],"forbidLabel":"눈에 기대는 표현","forbidDisplay":["눈","빛","색","시선","모습","그림자","어둠","보다","보이다","바라보다","쳐다보다","살펴보다","밝다","어둡다","붉다","푸르다","하얗다","검다","빛나다","번쩍이다","반짝이다"]}'::jsonb),
   ('sn-heungbu-barn', 'f543f767eb0d33cf5991f41736c2931c', 218, '5286dea572a76e4feeb92d0e851c8c19', 42, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"],"forbidLabel":"눈에 기대는 표현","forbidDisplay":["눈","빛","색","시선","모습","그림자","어둠","보다","보이다","바라보다","쳐다보다","살펴보다","밝다","어둡다","붉다","푸르다","하얗다","검다","빛나다","번쩍이다","반짝이다"]}'::jsonb),

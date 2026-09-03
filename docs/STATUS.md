@@ -4,15 +4,15 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 33 정정 · 커밋 `9fd5051` 위
+마지막 갱신: 세션 34 · 커밋 `b2c4437` 위
 
 ---
 
 ## 앱이 지금 할 수 있는 것
 
 ```
-단계 26 · 문항 127(비활성 12건 포함 — action_turn 8 + 구성 12 재설계로 밀려난 cc- 4,
-활성 119→123) · 화면이 붙은 유형 16단계분 (문장 1~11, 구성 11·12·13·14·17·19·20, 도입 1·2·3)
+단계 26 · 문항 132(비활성 12건 포함 — action_turn 8 + 구성 12 재설계로 밀려난 cc- 4,
+활성 123→128) · 화면이 붙은 유형 17단계분 (문장 1~11, 구성 11·12·13·14·15·17·19·20, 도입 1·2·3)
 문항 화면 스케일  제목 text-3xl · 원문 상자·입력(Editor·FillBody) text-lg(1.125rem) p-5 · Editor rows 7/16 ·
                 컨테이너 max-w-7xl(한 칸 max-w-3xl) · 두 칸 grid [minmax(0,1.4fr) minmax(22rem,1fr)] 왼쪽 우선
 가르침 층       코치 캐릭터 먹물이 ✒️ 말풍선(CoachBubble) — 단계 목록: 제목·요약 아래 coach_intro ·
@@ -25,7 +25,8 @@
              '단계 완료 N/N'+'다음 단계 →', 건너뛴 게 있으면 'N/M · 건너뛴 문항 k개'+첫 링크
 ★ 모범답안 있는 문항: 10단계 fill 8 (①②) + 문장 1·2·3·4단계 (reduce_adverb 8 · emotion_action 6 ·
   trim_padding 8 · reduce_repeat 8) + 도입 2·3 각 5 + 구성 11 lack 5 + 구성 12 contrast_char
-  활성 6(cc-first-pay + 신규 5, 옛 대비형 4는 비활성) + 구성 13 likability 4, 가·나 blank_key '' ·
+  활성 6(cc-first-pay + 신규 5, 옛 대비형 4는 비활성) + 구성 13 likability 4 +
+  구성 15 info_gap 5, 가·나 blank_key '' ·
   도입 1 start_choose 5 는 reference 를 선택지별 해설로 씀(가·나 아님)
 없는 것       도입 4 start_episode(보류 — AI 심사 전) · streak·XP·복습·하트·진도 저장 테이블(안 만든다 — submissions 로만 센다)
 ★ 10단계는 새 skill_key `action_reason`(fill 8). 옛 `action_turn`(convert 8)은 is_active=false — 화면에 '준비 중'
@@ -115,9 +116,9 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 ## 다음 — 순서대로. 하나가 verify 에서 물리기 전에 다음을 안 한다
 
 ```
-1  구성 15 info_gap      구성 13 likability 로 규격 5조 첫 적용 끝(세션 33). 이어서 나머지 구성
-                        빈 단계(info_gap 15 · cliffhanger_adv 16 · first_hook 18) 단계당 4~6.
-                        기존 유형만.
+1  구성 16 cliffhanger_adv  구성 15 info_gap 로 세 번째 규격 5조 단계 끝(세션 34). 이어서 남은
+                        구성 빈 단계(cliffhanger_adv 16 · first_hook 18) 단계당 4~6. 기존
+                        유형만.
                         도입 4 start_episode 는 아래 미결(AI 심사 전이라 보류)
 2  보스 문항(가칭)      전 단계를 마친 뒤, 배운 규칙 전부를 걸고 짧은 소설 한 편을 쓰는
                         졸업 문항. 도입 4 start_episode 자리의 확장. 두 층: ① 규칙+자기점검이
@@ -125,6 +126,74 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
                         박 님이 직접 오판을 관찰해 판정 권한 부여를 결정. 여기 쌓이는 답안·
                         판정 기록이 원칙 4 재개 조건의 수집처다.
                         전제: 구성 빈 단계 4개가 먼저 찬다
+```
+
+### 끝난 것 — 세션 34 (구성 15 info_gap '정보 비대칭' 신설 · 규격 5조 세 번째 적용)
+
+```
+★ 구성 13 likability: 저장소 쪽은 닫혔다(커밋 9fd5051·b2c4437). DB 반영·브라우저
+  눈검사 결과는 박 님 보고 대기 — 세션 안에서 "됐어"로 넘어와 명시 확인은 없었다.
+  꾸며 적지 않고 그대로 남긴다.
+
+경위  설계안 승인 → 견본 1건(ig-left-cup) 확인 → 나머지 4건 일괄 확정 순서로
+      진행(박 님). 5번(ig-ball-envelope, 오해 유예)은 3번(ig-umbrella-walnut,
+      헛짚기)과 "해소의 유예"라는 한 줄로 구별돼 별개 문항으로 유지됐다 —
+      겹치는 설계처럼 보였지만 하나로 합치지 않았다. ig-gate-wait 는 "숨은
+      선의"(영주가 실은 빵을 굽거나 열병을 앓아 문을 못 열었다) 초안이 박 님
+      반려("당위가 조잡하고 빵의 의미가 없다") → 영주가 실제 악역인 이유
+      (평민 견습을 들이면 웃음거리 / 전령의 기를 꺾으려는 의도)로 교체됐다.
+      forbidWords 목록에서 '줄은'은 "밧줄은"에 오검출돼 뺐고, '독'은 문자열이면
+      독자·독촉·고독에 걸려 forbidLemmas(독/NNG)로 옮겼다. requireAll '하늘'
+      누수는 이번 문항(ig-umbrella-walnut)에서 실재 확인 — 고치지 않고 진행.
+
+신규 5문항  ig-gate-wait(convert·forbidPassageCopy 없음 — 원문 유지가 정답
+  형태) · ig-left-cup(continue·forbidLemmas 독/NNG, 견본) · ig-umbrella-walnut
+  (continue·requireAll 소민·하늘) · ig-cafe-scar(convert·유일한 결함 원문) ·
+  ig-ball-envelope(continue). forbidLabel 두 갈래 — 3건 '서술자가 사실을 말해
+  주는 표현' / 2건(umbrella·ball) '…말해 주거나 풀어 주는 표현'(오해까지 다룸).
+  전부 신규 행 — update SQL 없이 seed_data.sql insert 로 들어간다.
+stages.json  info_gap summary·coach_intro·coach_line·self_checks 2줄 채움
+  (title '정보 비대칭' 유지). "독자에게 하나를 더 쥐여 주면 답답함이 기대감이 된다"
+docs/characters.md  윤소민 등장에 ig-umbrella-walnut 추가. 하늘 등장을
+  "(예정)" → "ig-umbrella-walnut(requireAll 누수 실재 확인 — 알려진 한계로
+  두고 진행)"으로 확정. 신규 간이 5명(에린·위강·박형사·이레나·카시안).
+
+verify.ts  [구성 15 info_gap] 블록 신설 — 유형 continue 3/convert 2 ·
+  forbidPassageCopy 4건(gate-wait 제외, 명시 검사) · forbidLemmas(left-cup만
+  독/NNG) · requireAll(umbrella-walnut 만 소민·하늘) · forbidLabel 두 갈래 대조 ·
+  '줄은'이 forbidWords·forbidDisplay 어디에도 없음을 5문항 전수로 검사 ·
+  원문 불변식(결함 원문은 cafe-scar 하나뿐 — gate-wait 는 결함이 '정보 0'이라
+  이 불변식으로는 못 잡는 유형임을 별도로 명시) · 모범 10건 pass(실측
+  kiwipiepy 그대로) · 나쁜 표본 7건 fail(forbidWords 6건 즉시 · forbidLemmas
+  1건은 morph 서버 있을 때만) · lemma 오검출 점검 2건 pass(고독/독촉/독자적 ·
+  밧줄은 섞임) · 하늘 누수 표본 1건을 "현재 pass — 알려진 한계"로 등재(고치는
+  날 뒤집을 자리) · 단계 간 베낌 가드 63문장(기존 55 + 활성 likability 8) ·
+  숫자 반복 표현 부재 가드 · stages coach·self_checks 대조
+  [불변식: forbidWords 자기 목록] info_gap 무난 문항 4건(source_key 단위) 예외
+    추가 — left-cup·umbrella-walnut·ball-envelope 는 헛짚기 전 무난한 장면이라,
+    gate-wait 는 결함이 forbid 어휘가 아니라 '정보 0'이라(이 검사로는 못 잡음)
+  [쓰지 않을 말 표시] forbidLabel 32→37 · update-forbid-display.sql 제외
+    목록에 info_gap 추가
+  [가르침 층] COACH_SKILLS 16→17 · [자기점검] withSelfChecks +info_gap
+  왕복 규칙: nameSkills 에 info_gap 추가 · 이름 추출에 네 번째 정규식 열 —
+    지시문의 '둘째 문장' 머리("○○는/은 …", 첫 마침표 뒤)에서 뽑는다
+    (gate-wait·left-cup·ball-envelope. cafe-scar 는 기존 "아래 장면을 고쳐
+    쓰시오. ○○는" 패턴으로 이미 잡힌다). characters.md 대조를 완전 일치
+    에서 부분 문자열 포함으로 넓힘 — ig-umbrella-walnut 의 requireAll이
+    '소민'(윤소민의 애칭)만 쓰는 것을 원장 헤더 '윤소민'과 잇기 위해서다
+  seed_verify.sql  불변식 2 에 info_gap 무난 문항 4건 source_key 예외
+    (ig-left-cup·ig-umbrella-walnut·ig-ball-envelope 는 type continue 라
+    이미 안 걸리지만 명시로도 뺐다 · ig-gate-wait 는 type convert 라 이
+    예외가 없으면 실제로 걸린다 — 결함 유형이 forbid 어휘가 아니라서 뺐다)
+검증  tsc 0 · next typegen · test:scoring 4463/0(형태소 서버 켜짐) ·
+      check:numbers 0 · gen:seed(문항 127→132·모범답안 177→187) · next build
+      통과 · 물기 3건: characters.md 부분 문자열 대조를 완전 일치로 되돌려
+      '소민' 대조 fail 확인 / seed_verify.sql 예외 목록에서 ig-gate-wait 를
+      빼 자기 forbidWords 불변식 fail 확인 / ig-left-cup forbidLemmas 를
+      config 에서 지워 관련 단언 4건(정확히·표시 대조·나쁜 표본·오검출 점검)
+      fail 확인 — 셋 다 복원
+★ DB 절차(박 님)  seed_data.sql(멱등) → seed_check.sql → 브라우저 '정보 비대칭'
+  5문항 눈검사. problems 에 order_no 컬럼 없음 — 확인 select 에 쓰지 말 것.
 ```
 
 ### 끝난 것 — 세션 33 (구성 13 likability '호감 확보' 신설 · 규격 5조 첫 적용)
@@ -857,9 +926,10 @@ fill 은 인물·사물을 안 본다     덕수 답이 세연 문항을 통과�
 requireAny/requireAll '하늘' 누수  일반명사와 부분 문자열이 겹치는 이름('하늘'=sky)은 인물을
                             안 쓰고 하늘(sky)만 써도 요구 검사가 충족으로 본다(includes).
                             규칙으로 안 막는다(조이면 좋은 답안이 먼저 걸린다) — 내용 판정은
-                            AI 몫. cc-street-night(윤소민·하늘)가 세션 32 후기 재설계로 비활성
-                            내려가 지금은 관찰 중인 활성 문항이 없다. characters.md 의 '하늘'은
-                            등장 예정 — 다음에 세울 때 이 누수를 실측으로 다시 본다
+                            AI 몫. ★ 실재 확인(세션 34) — ig-umbrella-walnut(requireAll
+                            소민·하늘)의 표본 "저녁 하늘이 붉게 물들었다…"가 인물 하늘 없이
+                            pass 하는 것을 verify 픽스처로 등재. 고칠지·어떻게 고칠지(lemma
+                            NNP 요구 등)는 박 님 결정 대기 — 지금은 알려진 한계로 두고 진행
 자모 낱자 검사(후보)         완성형 아닌 낱자(ㄱ-ㅎ·ㅏ-ㅣ)가 답안에 있으면 fail — 형태소 불필요·
                             오탐 여지 낮음. 장난·오타 답안 일부를 잡는다. 신규 규칙이라 박 님
                             승인 뒤 연다

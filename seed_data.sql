@@ -289,8 +289,8 @@ on conflict (skill_key) do update set
 insert into stages
   (track, order_no, title, skill_key, summary, is_free, self_checks, intro, coach_intro, coach_line)
 values ('structure', 15, '정보 비대칭', 'info_gap',
-        '답답함을 기대감으로 바꾼다', false, array[]::text[], '',
-        '', '')
+        '독자에게 하나를 더 쥐여 주면 답답함이 기대감이 된다', false, array['독자가 인물보다 뭘 하나 더 알아? 그 하나를 한 줄로 말할 수 있어?', '''몰랐다''고 서술자가 말해 줬어? 지워도 독자가 알아채면 된 거야.']::text[], '',
+        '답답한 장면이 나쁜 게 아니야 — 독자가 인물보다 아무것도 더 모를 때만 나빠. 인물은 모르는 사실 하나를 독자한테 먼저 쥐여 줘. 그러면 인물이 헛짚는 걸 보면서도 독자는 짜증 대신 ''언제 알아채지?'' 하고 기다려. 그 기다림이 기대감이야. 단, ''그는 몰랐다''고 네가 말해 주면 안 돼 — 독자가 스스로 알아채게.', '독자한테 하나 더 쥐여 주고, 인물은 헛짚게!')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
@@ -459,6 +459,18 @@ select
   'original', 'modern', 'planned',
   1, 'cc-report-credit'
 where not exists (select 1 from problems p where p.source_key = 'cc-report-credit');
+
+-- ig-gate-wait (order_no 1, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'info_gap'),
+  'convert', 'auto', '아래 장면을 고쳐 쓰시오. 에린은 영주에게 청원할 일이 있어 성문 앞을 떠나지 못하는 견습 기사다. 원문은 에린도 독자도 아무것도 모른 채 기다리기만 해서 답답하기만 하다. 독자에게만 사실 하나를 먼저 준 뒤(영주가 왜 문을 열지 않는지), 에린은 그것을 모른 채 같은 행동을 하게 다시 쓰시오. 서술자가 ''몰랐다''고 말해 주지는 마시오.',
+  '에린은 성문 앞에서 사흘째 기다렸다. 영주는 문을 열어 주지 않았다. 아무도 이유를 말하지 않았다. 에린은 다시 문을 두드렸다.', null, '{"maxChars":100,"minVerbs":3,"forbidLabel":"서술자가 사실을 말해 주는 표현","forbidWords":["몰랐","알지 못","모르고 있","눈치채지 못","알 리 없","훗날"],"forbidDisplay":["몰랐다","알지 못했다","눈치채지 못했다","훗날"]}'::jsonb,
+  'original', 'fantasy', 'planned',
+  1, 'ig-gate-wait'
+where not exists (select 1 from problems p where p.source_key = 'ig-gate-wait');
 
 -- lk-desk-nine (order_no 1, difficulty 1)
 insert into problems
@@ -688,6 +700,18 @@ select
   1, 'heungbu-joy'
 where not exists (select 1 from problems p where p.source_key = 'heungbu-joy');
 
+-- ig-left-cup (order_no 2, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'info_gap'),
+  'continue', 'auto', '독자는 알고 위강은 모르는 채로 장면을 이어 쓰시오. 위강은 표국 일을 마치고 돌아오는 길에 객잔에 든 검객으로, 제 실력을 믿어 남을 의심할 줄 모른다. 원문에서 독자는 왼쪽 잔에 가루가 들어가는 것을 보았지만 위강은 보지 못했다. 원문을 읽고 다음에 올 장면을, 위강이 그 사실을 모른 채 잔을 두고 움직이고 주인이 그것에 반응하되, ''몰랐다''처럼 서술자가 사실을 말해 주지 않게 작성하시오.',
+  '객잔 주인이 술 두 잔을 내오다 등을 돌린 채 왼쪽 잔에 가루를 털어 넣었다. 창가의 고양이만 그쪽을 보고 있었다. 위강은 자리에 앉아 왼쪽 잔을 제 앞으로 끌어당겼다. 주인은 마주 앉아 오른쪽 잔을 들었다.', null, '{"maxChars":100,"minVerbs":3,"forbidLabel":"서술자가 사실을 말해 주는 표현","forbidWords":["몰랐","알지 못","모르고 있","눈치채지 못","알 리 없","훗날"],"forbidLemmas":["독/NNG"],"forbidDisplay":["몰랐다","알지 못했다","눈치채지 못했다","훗날","독"],"forbidPassageCopy":true}'::jsonb,
+  'original', 'martial', 'planned',
+  1, 'ig-left-cup'
+where not exists (select 1 from problems p where p.source_key = 'ig-left-cup');
+
 -- lk-cafe-wait (order_no 2, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
@@ -892,6 +916,18 @@ select
   1, 'tp-simcheong-rail'
 where not exists (select 1 from problems p where p.source_key = 'tp-simcheong-rail');
 
+-- ig-umbrella-walnut (order_no 3, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'info_gap'),
+  'continue', 'auto', '독자만 둘 다 알고 두 사람은 서로 모르는 채로 이어 쓰시오. 소민은 서운해도 말 대신 그 사람이 좋아하는 걸 사 들고 먼저 찾아가는 사람이고, 하늘은 아끼는 사람일수록 말은 짧고 우산·약 같은 실질적인 것만 말없이 두고 가는 사람이다. 원문에서 독자는 둘이 서로를 챙긴 것을 보았지만 두 사람은 상대가 저를 귀찮아한다고 여기고 있다. 원문을 읽고 다음에 올 장면을, 둘 다 헛짚은 채 행동하되 마음을 말하거나 풀어 주지 않게 작성하시오.',
+  '장마 예보가 뜬 아침, 하늘은 소민의 가방에 접이식 우산을 넣어 두고 아무 말 없이 먼저 나갔다. 소민은 하늘이 좋아하는 호두과자를 사 들고 하늘의 집 앞까지 갔다가 불 꺼진 창을 보고 돌아섰다. 그날 밤 둘의 대화창은 조용했다.', null, '{"maxChars":100,"minVerbs":3,"requireAll":["소민","하늘"],"forbidLabel":"서술자가 사실을 말해 주거나 풀어 주는 표현","forbidWords":["몰랐","알지 못","모르고 있","눈치채지 못","알 리 없","훗날","사실은","고백","털어놓","알고 보니","오해였"],"forbidDisplay":["몰랐다","알지 못했다","훗날","사실은","고백하다","털어놓다","알고 보니"],"forbidPassageCopy":true}'::jsonb,
+  'original', 'modern', 'planned',
+  2, 'ig-umbrella-walnut'
+where not exists (select 1 from problems p where p.source_key = 'ig-umbrella-walnut');
+
 -- tp-gyeonu-river (order_no 3, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
@@ -1035,6 +1071,18 @@ select
   'original', 'fantasy', 'planned',
   1, 'sw-scaffold-morning'
 where not exists (select 1 from problems p where p.source_key = 'sw-scaffold-morning');
+
+-- ig-cafe-scar (order_no 4, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'info_gap'),
+  'convert', 'auto', '아래 장면을 고쳐 쓰시오. 박형사는 사흘째 한 남자를 쫓는 강력반 형사고, 원문의 구석 자리 남자가 그 사람이다. 원문은 서술자가 ''몰랐다''·''훗날''로 사실을 말해 버려 독자가 알아챌 재미가 없다. 서술자 문장을 지우고, 독자가 스스로 알아채도록 사물이나 행동 하나를 장면에 두어 다시 쓰시오. 박형사는 끝까지 알아채지 못한 채여야 한다.',
+  '박형사는 카페 구석 자리의 남자를 지나쳐 창가에 앉았다. 그 남자가 사흘째 쫓던 용의자라는 걸 그는 몰랐다. 훗날 그는 이 순간을 두고두고 곱씹게 된다. 남자는 커피를 마시며 신문을 넘겼다.', null, '{"maxChars":100,"minVerbs":3,"forbidLabel":"서술자가 사실을 말해 주는 표현","forbidWords":["몰랐","알지 못","모르고 있","눈치채지 못","알 리 없","훗날","용의자"],"forbidDisplay":["몰랐다","알지 못했다","눈치채지 못했다","훗날","용의자"],"forbidPassageCopy":true}'::jsonb,
+  'original', 'modern', 'planned',
+  2, 'ig-cafe-scar'
+where not exists (select 1 from problems p where p.source_key = 'ig-cafe-scar');
 
 -- lk2-night-raid (order_no 4, difficulty 2)
 insert into problems
@@ -1203,6 +1251,18 @@ select
   'folktale', 'fantasy', 'planned',
   2, 'ae-kongjwi-jar'
 where not exists (select 1 from problems p where p.source_key = 'ae-kongjwi-jar');
+
+-- ig-ball-envelope (order_no 5, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'info_gap'),
+  'continue', 'auto', '오해를 만들되 풀지 마시오. 이레나는 카시안에게 마음이 있으면서 먼저 묻지는 못하는 영애고, 카시안은 이레나의 오빠 부탁으로 심부름을 하는 중이다. 원문에서 독자는 그 입맞춤이 청혼 편지 심부름이라는 것을 알지만 이레나는 모른다. 원문을 읽고 다음에 올 장면을, 오해가 굳어지되 언젠가 풀릴 실마리 하나(봉투·답장·오빠)를 장면 안에 두고 지금은 풀지 않게 작성하시오.',
+  '무도회에서 이레나는 카시안이 다른 영애의 손등에 입을 맞추는 것을 보았다. 카시안은 그 영애에게 이레나의 오빠가 보낸 청혼 편지를 전하는 중이었고, 답장은 오빠에게 돌아갈 것이었다. 이레나는 부채를 접고 발코니로 나갔다.', null, '{"maxChars":100,"minVerbs":3,"forbidLabel":"서술자가 사실을 말해 주거나 풀어 주는 표현","forbidWords":["몰랐","알지 못","모르고 있","눈치채지 못","알 리 없","훗날","사실은","고백","털어놓","알고 보니","오해였","해명"],"forbidDisplay":["몰랐다","알지 못했다","훗날","사실은","고백하다","털어놓다","알고 보니","해명하다"],"forbidPassageCopy":true}'::jsonb,
+  'original', 'romance', 'planned',
+  2, 'ig-ball-envelope'
+where not exists (select 1 from problems p where p.source_key = 'ig-ball-envelope');
 
 -- cc-praise-callout (order_no 6, difficulty 1)
 insert into problems
@@ -2192,6 +2252,20 @@ from problems p
 where p.source_key = 'cc-report-credit'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- ig-gate-wait ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '영주는 평민 견습 기사 따위를 들이면 영지의 웃음거리가 된다며 문지기에게 열지 말라고 일렀다. 에린은 사흘째 성문 앞에서 청원서를 품에 넣은 채 문을 두드렸다. 문지기는 오늘도 안 된다고만 했다. 에린은 계단에 앉아 해가 지기를 기다렸다.'
+from problems p
+where p.source_key = 'ig-gate-wait'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ig-gate-wait ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '영주는 백작가 전령의 기를 꺾겠다며 사흘을 채우거든 그때 들이라고 집사에게 일렀다. 에린은 사흘째 아침도 성문 앞에 청원서를 들고 서 있었다. 문지기가 오늘도 안 된다고 하자 그녀는 청원서를 접어 품에 넣었다. 계단에 앉아 밤을 기다렸다.'
+from problems p
+where p.source_key = 'ig-gate-wait'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- lk-desk-nine ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '회식 자리에서 김하준은 지난 분기 계약 얘기를 또 꺼냈다. 그거 사실 제가 그린 그림이라고, 잔을 채우며 말했다.'
@@ -2528,6 +2602,20 @@ from problems p
 where p.source_key = 'heungbu-joy'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- ig-left-cup ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '위강은 왼쪽 잔을 들어 주인에게 먼저 권했다. 손님이 먼저 드는 법은 없다며 잔을 바꿔 주인 앞에 놓았다. 주인은 제 앞에 온 잔을 내려다본 채 손을 뻗지 않았다. 위강은 오른쪽 잔을 비우고 한 잔 더 달라고 했다.'
+from problems p
+where p.source_key = 'ig-left-cup'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ig-left-cup ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '위강은 잔을 코끝까지 들었다가 향이 좋다며 다시 내려놓았다. 길에서 있었던 일을 늘어놓는 동안 주인의 눈은 그 잔에서 떠나지 않았다. 고양이가 탁자로 뛰어올라 왼쪽 잔 옆을 맴돌았다. 위강은 웃으며 고양이를 안아 내리고 다시 잔을 들었다.'
+from problems p
+where p.source_key = 'ig-left-cup'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- lk-cafe-wait ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '윤소민은 친구가 오기 전에 휴대폰을 계속 만지작거렸다. 벌써 세 번이었다. 답장 없는 대화창을 열었다가 덮었다.'
@@ -2766,6 +2854,20 @@ from problems p
 where p.source_key = 'tp-simcheong-rail'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- ig-umbrella-walnut ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '이튿날 소민은 호두과자 봉지를 들고 나갔다가 하늘을 보고 가방에 밀어 넣었다. 하늘은 소민 가방에서 삐져나온 우산 손잡이를 보고 잘 챙겼네, 하고만 했다. 소민은 이거 누가 넣었는지도 모른다고 웃었다. 하늘은 그래, 하고 먼저 걸었다.'
+from problems p
+where p.source_key = 'ig-umbrella-walnut'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ig-umbrella-walnut ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '비가 오자 소민은 가방 속 우산을 꺼내 들고 잠깐 멈췄다. 하늘은 옆에서 제 우산을 펴며 소민 쪽으로 반을 기울였다. 소민은 괜찮다며 제 우산을 펴 하늘에게서 한 걸음 떨어졌다. 하늘은 기울였던 우산을 도로 세우고 말없이 걸었다.'
+from problems p
+where p.source_key = 'ig-umbrella-walnut'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- tp-gyeonu-river ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '견우는 강가에 나왔다. 까치들이 하늘을 덮었다. 견우는 강물에 발을 담갔다.'
@@ -2934,6 +3036,20 @@ from problems p
 where p.source_key = 'sw-scaffold-morning'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- ig-cafe-scar ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '박형사는 수배 전단을 접어 주머니에 넣고 카페에 들어섰다. 구석 자리 남자가 신문을 올려 얼굴을 가리자 왼손 등의 긴 흉터가 신문 위로 드러났다. 박형사는 그 옆을 지나 창가에 앉았다. 주머니 속 전단에는 왼손 흉터가 크게 그려져 있었다.'
+from problems p
+where p.source_key = 'ig-cafe-scar'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ig-cafe-scar ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '구석 자리 남자는 박형사를 보고 신문을 한 장 더 올렸다. 박형사는 창가에 앉아 전단 속 얼굴을 들여다봤다. 남자는 커피값을 놓고 문 쪽으로 걸었고, 지나칠 때 두 사람의 어깨가 스쳤다. 박형사는 미안하다고 말하고 다시 전단으로 눈을 내렸다.'
+from problems p
+where p.source_key = 'ig-cafe-scar'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- lk2-night-raid ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '노아는 발을 돌려 처진 병사를 등에 업었다. 제 방패는 버리고 병사의 창만 챙겨 숲으로 뛰었다. 대열 끝에 마지막으로 닿은 그를 카일이 말없이 보고 있었다. 이튿날 카일은 제 방패를 노아 자리에 세워 두고 갔다.'
@@ -3072,6 +3188,20 @@ insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 2, '', '몸을 일으키던 이재하는 돌 천장에 머리를 박았다. 침대가 제 방 것보다 두 뼘은 높았다.'
 from problems p
 where p.source_key = 'sw-boss-wake'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ig-ball-envelope ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '카시안이 따라 나오자 이레나는 난간 쪽으로 돌아섰다. 그가 입을 열기 전에 오빠가 안에서 그를 불렀고, 카시안은 인사만 남기고 들어갔다. 이레나는 그가 두고 간 봉투를 집었다가 뜯지 않고 탁자에 놓았다. 봉투에는 오빠 인장이 찍혀 있었다.'
+from problems p
+where p.source_key = 'ig-ball-envelope'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ig-ball-envelope ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '이레나는 카시안이 다가오기 전에 마차를 불러 떠났다. 카시안은 계단까지 나와 손을 들었지만 마차는 모퉁이를 돌았다. 그는 안으로 돌아가 영애의 답장을 받아 오빠에게 건넸다. 오빠는 그것을 이레나에게 보여 주려고 서재 책상에 올렸다.'
+from problems p
+where p.source_key = 'ig-ball-envelope'
 on conflict (problem_id, ord, blank_key) do nothing;
 
 -- cc-praise-callout ord 1 
