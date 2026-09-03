@@ -1,6 +1,7 @@
--- 구성 12 최종 확정 v4 — 박 님 견본 규격 반영 (세션 32 후기 3).
+-- 구성 12 최종 확정 v4 — 박 님 견본 규격 반영 (세션 32 후기 3) + 셀라 재설계·
+-- 유겸 용병 전환 정정(세션 32 후기 4). 미푸시 흐름이라 이 파일 하나에 합쳐 둔다.
 --
--- 박 님이 직접 수정한 도현 견본이 기준이다: ① 인물 설명은 겉·속의 관계까지
+-- 후기 3: 박 님이 직접 수정한 도현 견본이 기준이다: ① 인물 설명은 겉·속의 관계까지
 -- ("친절해 보이지만 오히려…") ② 과제는 "원문을 읽고 다음에 올 장면을 작성"
 -- — 대체가 아니라 이어쓰기이므로 type 을 convert → continue 로 전환(채점 경로
 -- 동일) ③ 답안은 지시문 정보만으로 자립, 함축·원장 내부 언어 금지 ④ 이름
@@ -9,21 +10,28 @@
 -- 두 칸 화면은 forbidWords 가 있어 유지). cc-flash-crowd 는 requireAny, cc-first-pay
 -- 는 requireAll 을 그대로 둔다 — 갈라 세우기·대비가 그 두 문항의 과제 본질이다.
 --
+-- 후기 4: 박 님 판정 — "문제 퀄리티가 원장을 이긴다". 원장은 재료지 상전이
+-- 아니다. cc-junk-dealer 를 유품·견습·리안 연결을 걷어 셀라를 저잣거리 만물상
+-- 상인으로 재설계. cc-night-shift·cc-first-pay 의 유겸을 "신참 호위"에서
+-- "젊은 용병"으로 전환(이번엔 상단 호위 의뢰를 맡은 것으로). 숫자 반복 표현
+-- ("두 번"·"세 번" 류) 전역 금지 — 옛 모범답안 문구에 있던 것도 걷었다.
+--
 -- seed/dump/{problems,answers}.json 이 단일 출처. problems 는 기존 행이라 seed_data 의
 -- insert(where not exists)로는 안 들어간다 — 이 update 를 따로 낸다. reference 는
 -- seed_data 재실행으로 안 갱신되므로 아래에 함께 싣는다(on conflict do nothing).
 -- lk- 5건은 이번 라운드에 안 건드린다(update-contrast-v3.sql 이 이미 반영).
 -- 순서: update-contrast-v3.sql(이미 실행됨) → 이 파일 → seed_data.sql(멱등) →
--- seed_check.sql. 재실행 안전.
+-- seed_check.sql. 재실행 안전 — 후기 3 만 이미 돌렸어도 이 파일 재실행으로 후기 4
+-- 정정까지 같이 덮인다(멱등).
 
 begin;
 
 -- ── 활성 cc- 6건: type convert → continue · instruction 재작성 · 갭 4 requireAny 삭제 ──
 
--- cc-first-pay (requireAll 유지)
+-- cc-first-pay (requireAll 유지 · 유겸 "신참" → "젊은 용병")
 update problems set
   type = 'continue',
-  instruction = '조평과 유겸을 대비시키시오. 조평은 배곯던 시절이 몸에 남아 제 것엔 인색해도 남의 끼니엔 아깝지 않은 호위다. 유겸은 신세를 지면 도련님 취급이 진짜가 될까 밥값부터 제가 내는 신참이다. 원문을 읽고 다음에 올 장면을, 같은 삯 앞에서 두 사람이 서로 다르게 움직이게 작성하시오.',
+  instruction = '조평과 유겸을 대비시키시오. 조평은 배곯던 시절이 몸에 남아 제 것엔 인색해도 남의 끼니엔 아깝지 않은 호위다. 유겸은 신세를 지면 도련님 취급이 진짜가 될까 밥값부터 제가 내는 젊은 용병이다. 원문을 읽고 다음에 올 장면을, 같은 삯 앞에서 두 사람이 서로 다르게 움직이게 작성하시오.',
   scoring_config = '{"maxChars":100,"minVerbs":3,"requireAll":["조평","유겸"],"forbidPassageCopy":true}'::jsonb
  where source_key = 'cc-first-pay';
 
@@ -41,17 +49,18 @@ update problems set
   scoring_config = '{"maxChars":100,"minVerbs":3,"forbidLabel":"속마음을 직접 말하는 표현","forbidWords":["걱정","불안","초조"],"forbidDisplay":["걱정","불안","초조"],"forbidPassageCopy":true}'::jsonb
  where source_key = 'cc-ace-siren';
 
--- cc-night-shift (requireAny 삭제)
+-- cc-night-shift (requireAny 삭제 · 유겸 "신참 호위" → "젊은 용병"·상단 호위 의뢰)
 update problems set
   type = 'continue',
-  instruction = '유겸의 겉과 속을 한 장면에 담으시오. 유겸은 부잣집에서 나와 제 힘을 시험하러 온 신참 호위다. 도련님 소리가 제일 싫어서, 실력을 의심받으면 웃는 얼굴로 제일 험한 일을 자원한다. 원문을 읽고 다음에 올 장면을, 웃는 겉과 이를 무는 속이 둘 다 행동으로 보이게 작성하시오.',
+  instruction = '유겸의 겉과 속을 한 장면에 담으시오. 유겸은 부잣집에서 나와 제 힘을 시험하러 나선 젊은 용병이다. 이번에는 상단 호위 의뢰를 맡았다. 도련님 소리가 제일 싫어서, 실력을 의심받으면 웃는 얼굴로 제일 험한 일을 자원한다. 원문을 읽고 다음에 올 장면을, 웃는 겉과 이를 무는 속이 둘 다 행동으로 보이게 작성하시오.',
   scoring_config = '{"maxChars":100,"minVerbs":3,"forbidLabel":"속마음을 직접 말하는 표현","forbidWords":["불안","자존심","증명"],"forbidDisplay":["불안","자존심","증명하다"],"forbidPassageCopy":true}'::jsonb
  where source_key = 'cc-night-shift';
 
--- cc-junk-dealer (requireAny 삭제)
+-- cc-junk-dealer (requireAny 삭제 · 유품·견습·리안 연결 제거 — 셀라는 만물상 상인)
 update problems set
   type = 'continue',
-  instruction = '셀라의 겉과 속을 한 장면에 담으시오. 셀라는 뭐든 값부터 매기는 냉정한 견습이다. 하지만 그 계산은 욕심이 아니라 지키는 방식이다 — 제값을 받아야 물건도 사람도 함부로 다뤄지지 않는다고 믿는다. 원문을 읽고 다음에 올 장면을, 차가운 겉과 지키려는 속이 둘 다 행동으로 보이게 작성하시오.',
+  passage = '손님이 낡은 은시계 값을 반으로 후려쳤다. 상인은 물건을 도로 거둘 채비를 했다.',
+  instruction = '셀라의 겉과 속을 한 장면에 담으시오. 셀라는 저잣거리에서 만물상을 하는 젊은 상인이다. 뭐든 값부터 매기는 차가운 사람이지만, 그 계산은 욕심이 아니다 — 제값을 받아야 물건도 사람도 함부로 다뤄지지 않는다고 믿는다. 원문을 읽고 다음에 올 장면을, 값을 깎아 주지 않는 차가운 겉과 물건을 아끼는 속이 둘 다 행동으로 보이게 작성하시오.',
   scoring_config = '{"maxChars":100,"minVerbs":3,"forbidLabel":"속마음을 직접 말하는 표현","forbidWords":["소중","다정"],"forbidDisplay":["소중하다","다정하다"],"forbidPassageCopy":true}'::jsonb
  where source_key = 'cc-junk-dealer';
 
@@ -102,7 +111,7 @@ update reference_answers set content =
 
 -- cc-night-shift ord 1
 update reference_answers set content =
-  '도련님이 새벽 경계도 서겠냐는 말에 웃음이 돌았다. 유겸은 더 크게 웃으며 명부에 제 이름을 적었다. 그게 얼마나 한다고요, 하는 목소리도 가벼웠다. 그러나 붓을 내려놓는 손등에는 힘줄이 서 있었다.'
+  '도련님이 새벽 경계도 서겠냐는 말에 웃음이 돌았다. 유겸은 머슥하게 따라 웃었다. 그러나 그 웃음에 반박하듯 명부에 제 이름을 적었다. 붓을 내려놓는 손등에는 힘줄이 서 있었다.'
  where problem_id = (select id from problems where source_key = 'cc-night-shift')
    and ord = 1 and blank_key = '';
 
@@ -114,13 +123,13 @@ update reference_answers set content =
 
 -- cc-junk-dealer ord 1
 update reference_answers set content =
-  '셀라는 값을 듣자마자 목록을 덮었다. 은화 열 닢 아래로는 안 판다는 목소리에 흥정의 여지가 없었다. 돌아가는 길, 셀라는 수레 위 유품 보자기를 다시 여몄다. 매듭이 풀리지 않게 두 번을 더 조였다.'
+  '셀라는 값을 듣자마자 장부를 덮었다. 은화 열 닢 아래로는 안 판다는 목소리에 흥정의 여지가 없었다. 손님이 나가자 셀라는 은시계를 부드러운 천으로 한 번 닦아 제자리에 눕혔다.'
  where problem_id = (select id from problems where source_key = 'cc-junk-dealer')
    and ord = 1 and blank_key = '';
 
 -- cc-junk-dealer ord 2
 update reference_answers set content =
-  '셀라는 물건을 도로 싸며 값을 두 번 말하지 않았다. 장부에는 오늘 값만 짧게 적었다. 다만 상자를 드는 리안의 손이 느려지자, 셀라는 제 몫의 짐을 먼저 지고 앞서 걸었다. 재촉하는 말 대신 걸음만 늦췄다.'
+  '셀라는 은시계를 도로 거두며 값을 다시 말하지 않았다. 흥정이 깨져도 표정 하나 변하지 않았다. 그런데 시계를 진열장에 되놓는 손길만은 조심스러웠다. 유리에 남은 지문을 닦아 내고도, 값표는 고치지 않았다.'
  where problem_id = (select id from problems where source_key = 'cc-junk-dealer')
    and ord = 2 and blank_key = '';
 

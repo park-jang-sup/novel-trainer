@@ -4099,8 +4099,8 @@ console.log('\n[구성 12 contrast_char: 재설계 · 활성 6 + 비활성 4]')
   const LEN: Record<string, [number, number]> = {
     'cc-praise-callout': [95, 80],
     'cc-ace-siren': [75, 98],
-    'cc-night-shift': [84, 82],
-    'cc-junk-dealer': [82, 84],
+    'cc-night-shift': [75, 82],
+    'cc-junk-dealer': [74, 88],
     'cc-flash-crowd': [84, 81],
     'cc-first-pay': [96, 86],
   }
@@ -4180,13 +4180,15 @@ console.log('\n[구성 12 contrast_char: 재설계 · 활성 6 + 비활성 4]')
           : o
     const cj = (o: unknown) => JSON.stringify(canon(o))
 
+    // passage 대입은 cc-junk-dealer(세션 32 후기 4 — 유품→은시계)만 갖는다. 선택 그룹.
     const ccUpd = [...sql.matchAll(
-      /update problems set\n\s*type = '([^']*)',\n\s*instruction = '((?:[^']|'')*)',\n\s*scoring_config = '(.+?)'::jsonb\n\s*where source_key = '([^']*)';/g
+      /update problems set\n\s*type = '([^']*)',\n\s*(?:passage = '((?:[^']|'')*)',\n\s*)?instruction = '((?:[^']|'')*)',\n\s*scoring_config = '(.+?)'::jsonb\n\s*where source_key = '([^']*)';/g
     )].map((m) => ({
       type: m[1],
-      instruction: m[2].replace(/''/g, "'"),
-      cfg: JSON.parse(m[3]) as Record<string, unknown>,
-      source_key: m[4],
+      passage: m[2] != null ? m[2].replace(/''/g, "'") : undefined,
+      instruction: m[3].replace(/''/g, "'"),
+      cfg: JSON.parse(m[4]) as Record<string, unknown>,
+      source_key: m[5],
     }))
     const refUpd = [...sql.matchAll(
       /update reference_answers set content =\n\s*'((?:[^']|'')*)'\n\s*where problem_id = \(select id from problems where source_key = '([^']*)'\)\n\s*and ord = (\d+) and blank_key = '';/g
@@ -4201,7 +4203,15 @@ console.log('\n[구성 12 contrast_char: 재설계 · 활성 6 + 비활성 4]')
         !!row && row.type === d.type && row.instruction === d.instruction &&
           cj(row.cfg) === cj(d.scoring_config),
         `SQL type=${row?.type} cfg=${JSON.stringify(row?.cfg)}`)
+      if (row?.passage != null) {
+        t(`v4 SQL '${d.source_key}' passage 가 덤프와 같다 (세션 32 후기 4 정정)`,
+          row.passage === d.passage, `SQL passage=${row.passage}`)
+      }
     }
+    t("v4 SQL: passage 대입은 'cc-junk-dealer' 한 건뿐 (세션 32 후기 4)",
+      ccUpd.filter((r) => r.passage != null).length === 1 &&
+        ccUpd.find((r) => r.passage != null)?.source_key === 'cc-junk-dealer',
+      JSON.stringify(ccUpd.map((r) => [r.source_key, r.passage != null])))
     for (const r of refs) {
       const row = refUpd.find((x) => x.source_key === r.source_key && x.ord === r.ord)
       t(`v4 SQL '${r.source_key}' ord${r.ord} content 가 덤프와 글자까지 같다`,
@@ -4211,8 +4221,10 @@ console.log('\n[구성 12 contrast_char: 재설계 · 활성 6 + 비활성 4]')
 
   // ── 형태소(서버 있을 때만): 모범답안 동사 ≥ 3 (minVerbs 3) ──
   // 세션 32 후기 3 박 님 견본 규격 재교체 실측 — 순서: praise·ace·night·junk·flash·first-pay
-  //   가 10·7·8·7·5·10 / 나 8·9·7·8·9·10
+  //   가 10·7·8·6·5·10 / 나 8·9·7·8·9·10
   // (도현 정정 합본 v2: ace 가 자수 71→75·동사 6→7 / 나 자수 96→98·동사 9 불변)
+  // (세션 32 후기 4: 셀라 재설계 — junk 가 자수 82→74·동사 7→6 / 나 자수 84→88·동사
+  //   8 불변. 유겸 용병 전환 — night 가 자수 84→75·동사 8 불변)
   pushRefMorphCheck('구성 12', refs, 'continue', cfgOf)
 
   // ── 요구 검사 물기 (형태소 불필요) ──

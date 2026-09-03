@@ -778,7 +778,7 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'contrast_char'),
-  'continue', 'auto', '조평과 유겸을 대비시키시오. 조평은 배곯던 시절이 몸에 남아 제 것엔 인색해도 남의 끼니엔 아깝지 않은 호위다. 유겸은 신세를 지면 도련님 취급이 진짜가 될까 밥값부터 제가 내는 신참이다. 원문을 읽고 다음에 올 장면을, 같은 삯 앞에서 두 사람이 서로 다르게 움직이게 작성하시오.',
+  'continue', 'auto', '조평과 유겸을 대비시키시오. 조평은 배곯던 시절이 몸에 남아 제 것엔 인색해도 남의 끼니엔 아깝지 않은 호위다. 유겸은 신세를 지면 도련님 취급이 진짜가 될까 밥값부터 제가 내는 젊은 용병이다. 원문을 읽고 다음에 올 장면을, 같은 삯 앞에서 두 사람이 서로 다르게 움직이게 작성하시오.',
   '상단이 첫 삯을 나눠 주었다. 두 호위는 주머니를 받아 들고 숙소로 돌아갔다.', null, '{"maxChars":100,"minVerbs":3,"requireAll":["조평","유겸"],"forbidPassageCopy":true}'::jsonb,
   'original', 'martial', 'planned',
   1, 'cc-first-pay'
@@ -1378,7 +1378,7 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'contrast_char'),
-  'continue', 'auto', '유겸의 겉과 속을 한 장면에 담으시오. 유겸은 부잣집에서 나와 제 힘을 시험하러 온 신참 호위다. 도련님 소리가 제일 싫어서, 실력을 의심받으면 웃는 얼굴로 제일 험한 일을 자원한다. 원문을 읽고 다음에 올 장면을, 웃는 겉과 이를 무는 속이 둘 다 행동으로 보이게 작성하시오.',
+  'continue', 'auto', '유겸의 겉과 속을 한 장면에 담으시오. 유겸은 부잣집에서 나와 제 힘을 시험하러 나선 젊은 용병이다. 이번에는 상단 호위 의뢰를 맡았다. 도련님 소리가 제일 싫어서, 실력을 의심받으면 웃는 얼굴로 제일 험한 일을 자원한다. 원문을 읽고 다음에 올 장면을, 웃는 겉과 이를 무는 속이 둘 다 행동으로 보이게 작성하시오.',
   '밤길 호위 순번을 정하는 자리였다. 가장 험한 새벽 구간은 아무도 맡으려 하지 않았다.', null, '{"maxChars":100,"minVerbs":3,"forbidLabel":"속마음을 직접 말하는 표현","forbidWords":["불안","자존심","증명"],"forbidDisplay":["불안","자존심","증명하다"],"forbidPassageCopy":true}'::jsonb,
   'original', 'martial', 'planned',
   1, 'cc-night-shift'
@@ -1486,8 +1486,8 @@ insert into problems
    source_tag, genre_tag, tone_tag, difficulty, source_key)
 select
   (select id from stages where skill_key = 'contrast_char'),
-  'continue', 'auto', '셀라의 겉과 속을 한 장면에 담으시오. 셀라는 뭐든 값부터 매기는 냉정한 견습이다. 하지만 그 계산은 욕심이 아니라 지키는 방식이다 — 제값을 받아야 물건도 사람도 함부로 다뤄지지 않는다고 믿는다. 원문을 읽고 다음에 올 장면을, 차가운 겉과 지키려는 속이 둘 다 행동으로 보이게 작성하시오.',
-  '고물상이 유품 값을 반으로 후려쳤다. 견습들은 물건을 다시 싸서 돌아갈 채비를 했다.', null, '{"maxChars":100,"minVerbs":3,"forbidLabel":"속마음을 직접 말하는 표현","forbidWords":["소중","다정"],"forbidDisplay":["소중하다","다정하다"],"forbidPassageCopy":true}'::jsonb,
+  'continue', 'auto', '셀라의 겉과 속을 한 장면에 담으시오. 셀라는 저잣거리에서 만물상을 하는 젊은 상인이다. 뭐든 값부터 매기는 차가운 사람이지만, 그 계산은 욕심이 아니다 — 제값을 받아야 물건도 사람도 함부로 다뤄지지 않는다고 믿는다. 원문을 읽고 다음에 올 장면을, 값을 깎아 주지 않는 차가운 겉과 물건을 아끼는 속이 둘 다 행동으로 보이게 작성하시오.',
+  '손님이 낡은 은시계 값을 반으로 후려쳤다. 상인은 물건을 도로 거둘 채비를 했다.', null, '{"maxChars":100,"minVerbs":3,"forbidLabel":"속마음을 직접 말하는 표현","forbidWords":["소중","다정"],"forbidDisplay":["소중하다","다정하다"],"forbidPassageCopy":true}'::jsonb,
   'original', 'fantasy', 'planned',
   1, 'cc-junk-dealer'
 where not exists (select 1 from problems p where p.source_key = 'cc-junk-dealer');
@@ -3000,7 +3000,7 @@ on conflict (problem_id, ord, blank_key) do nothing;
 
 -- cc-night-shift ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
-select p.id, 1, '', '도련님이 새벽 경계도 서겠냐는 말에 웃음이 돌았다. 유겸은 더 크게 웃으며 명부에 제 이름을 적었다. 그게 얼마나 한다고요, 하는 목소리도 가벼웠다. 그러나 붓을 내려놓는 손등에는 힘줄이 서 있었다.'
+select p.id, 1, '', '도련님이 새벽 경계도 서겠냐는 말에 웃음이 돌았다. 유겸은 머슥하게 따라 웃었다. 그러나 그 웃음에 반박하듯 명부에 제 이름을 적었다. 붓을 내려놓는 손등에는 힘줄이 서 있었다.'
 from problems p
 where p.source_key = 'cc-night-shift'
 on conflict (problem_id, ord, blank_key) do nothing;
@@ -3014,14 +3014,14 @@ on conflict (problem_id, ord, blank_key) do nothing;
 
 -- cc-junk-dealer ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
-select p.id, 1, '', '셀라는 값을 듣자마자 목록을 덮었다. 은화 열 닢 아래로는 안 판다는 목소리에 흥정의 여지가 없었다. 돌아가는 길, 셀라는 수레 위 유품 보자기를 다시 여몄다. 매듭이 풀리지 않게 두 번을 더 조였다.'
+select p.id, 1, '', '셀라는 값을 듣자마자 장부를 덮었다. 은화 열 닢 아래로는 안 판다는 목소리에 흥정의 여지가 없었다. 손님이 나가자 셀라는 은시계를 부드러운 천으로 한 번 닦아 제자리에 눕혔다.'
 from problems p
 where p.source_key = 'cc-junk-dealer'
 on conflict (problem_id, ord, blank_key) do nothing;
 
 -- cc-junk-dealer ord 2 
 insert into reference_answers (problem_id, ord, blank_key, content)
-select p.id, 2, '', '셀라는 물건을 도로 싸며 값을 두 번 말하지 않았다. 장부에는 오늘 값만 짧게 적었다. 다만 상자를 드는 리안의 손이 느려지자, 셀라는 제 몫의 짐을 먼저 지고 앞서 걸었다. 재촉하는 말 대신 걸음만 늦췄다.'
+select p.id, 2, '', '셀라는 은시계를 도로 거두며 값을 다시 말하지 않았다. 흥정이 깨져도 표정 하나 변하지 않았다. 그런데 시계를 진열장에 되놓는 손길만은 조심스러웠다. 유리에 남은 지문을 닦아 내고도, 값표는 고치지 않았다.'
 from problems p
 where p.source_key = 'cc-junk-dealer'
 on conflict (problem_id, ord, blank_key) do nothing;
