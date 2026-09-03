@@ -57,9 +57,10 @@ begin
   --       대상에서 이미 빠지지만 명시로도 뺀다).
   --       이 단계들의 지문은 결함 없는 무난한 장면이라 자기 forbidWords 를 일부러
   --       안 담는다 — 결핍/속마음/평가어는 학습자가 얹는다. requireAny·requireAll
-  --       (주인공 이름)이 지문 복사 제출을 막는다. likability 는 skill 전체가
-  --       아니라 이 2건만 예외다 — lk2-deal-credit·lk2-night-shift-bill 은
-  --       결함 원문이라 계속 걸려야 한다.
+  --       (주인공 이름)이 지문 복사 제출을 막는다. likability 2건은 원문에
+  --       이름이 있으므로 forbidPassageCopy 가 그 역할을 한다. likability 는
+  --       skill 전체가 아니라 이 2건만 예외다 — lk2-deal-credit·
+  --       lk2-night-shift-bill 은 결함 원문이라 계속 걸려야 한다.
   select string_agg(p.source_key, ', ') into v_bad
     from problems p
     join stages s on s.id = p.stage_id

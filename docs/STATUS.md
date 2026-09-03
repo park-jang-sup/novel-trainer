@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 33 · 커밋 `87bf86d` 위
+마지막 갱신: 세션 33 정정 · 커밋 `9fd5051` 위
 
 ---
 
@@ -131,17 +131,21 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 
 ```
 경위  설계안 승인 → 견본 1건(lk2-broken-sword, 한시우 재사용) 확인 → 나머지 3건
-      일괄 확정 순서로 진행(박 님). lk2-night-shift-bill 은 여러 후보 상황 중
-      6번째로 고른 것 — forbid 방향을 반전(평가어9 대신 불행한 태도어)하는
-      이번 배치의 유일한 예외로 확정됐다.
+      일괄 확정 순서로 진행(박 님). lk2-deal-credit 은 박 님이 앞선 두 초안
+      (무협 표사 공 넘기기 — 설정 논리 파탄)을 반려한 뒤 상황 후보 10개 중
+      6번(회사 프레젠테이션)을 고른 것. lk2-night-shift-bill 은 초안 그대로
+      확정 — forbid 방향을 반전(평가어9 대신 불행한 태도어)하는 이번 배치의
+      유일한 예외.
 
 신규 4문항  lk2-broken-sword(continue·한시우 재사용) · lk2-deal-credit(convert·
   문지호/정유나) · lk2-night-shift-bill(convert·고은재, forbid 방향 반전) ·
-  lk2-night-raid(continue·노아/카일, requireAll 2명 — 유일하게 원문에 이름이
-  이미 있다). 4건 전부 forbidPassageCopy true. 전부 신규 행 — update SQL
-  없이 seed_data.sql insert 로 들어간다.
+  lk2-night-raid(continue·노아/카일, requireAll 2명 — 두 사람이 과제 본질).
+  4건 전부 forbidPassageCopy true. lack·contrast 와 달리 4건 모두 원문에
+  인물 이름이 이미 있다 — 이름 요구가 아니라 forbidPassageCopy 가 원문
+  복사를 막는다. 전부 신규 행 — update SQL 없이 seed_data.sql insert 로
+  들어간다.
 stages.json  likability summary·coach_intro·coach_line·self_checks 2줄 채움
-  (title '호감 확보' 유지). "능력이 아니라 궁할 때 내놓는 것으로 응원산다"
+  (title '호감 확보' 유지). "능력이 아니라 궁할 때 내놓는 것으로 응원받는다"
 docs/characters.md  한시우 매력에 한 줄 추가(검을 내주고 돌려받겠다는 말로
   시혜를 지운다) + 등장에 lk2-broken-sword. 신규 간이 4명(문지호·고은재·
   노아·카일) — 재사용되면 9층 규격으로 승격.
@@ -149,8 +153,8 @@ docs/characters.md  한시우 매력에 한 줄 추가(검을 내주고 돌려�
 verify.ts  [구성 13 likability] 블록 신설 — 유형 continue 2/convert 2 ·
   requireAll(night-raid) · forbid 방향(3건 평가어9 / 1건 반전) · 원문 불변식
   (결함 원문 2건만 자기 forbidWords 에 걸림 · 4건 공통 passageCopy 불변식 —
-  night-raid 는 원문에 이름이 이미 있어 '이름 없음' 불변식은 그 문항엔 안
-  맞는다는 것도 같이 문다) · 모범 8건 pass(실측 kiwipiepy 그대로) · 나쁜 표본
+  4건 모두 원문에 이름이 있어 lack·contrast 의 '원문에 이름 없음' 불변식은
+  likability 에 적용하지 않는다) · 모범 8건 pass(실측 kiwipiepy 그대로) · 나쁜 표본
   6건 fail(forbidWords 4건 즉시 · minVerbs 2건은 morph 서버 있을 때만) ·
   단계 간 베낌 가드 55문장(기존 43 + 활성 contrast_char 12) · 숫자 반복
   표현 부재 가드 · stages coach·self_checks 대조
