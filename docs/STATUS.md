@@ -4,15 +4,15 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 32 후기 4 · 커밋 `a17fa96` 위
+마지막 갱신: 세션 33 · 커밋 `87bf86d` 위
 
 ---
 
 ## 앱이 지금 할 수 있는 것
 
 ```
-단계 26 · 문항 123(비활성 12건 포함 — action_turn 8 + 구성 12 재설계로 밀려난 cc- 4) ·
-화면이 붙은 유형 15단계분 (문장 1~11, 구성 11·12·14·17·19·20, 도입 1·2·3)
+단계 26 · 문항 127(비활성 12건 포함 — action_turn 8 + 구성 12 재설계로 밀려난 cc- 4,
+활성 119→123) · 화면이 붙은 유형 16단계분 (문장 1~11, 구성 11·12·13·14·17·19·20, 도입 1·2·3)
 문항 화면 스케일  제목 text-3xl · 원문 상자·입력(Editor·FillBody) text-lg(1.125rem) p-5 · Editor rows 7/16 ·
                 컨테이너 max-w-7xl(한 칸 max-w-3xl) · 두 칸 grid [minmax(0,1.4fr) minmax(22rem,1fr)] 왼쪽 우선
 가르침 층       코치 캐릭터 먹물이 ✒️ 말풍선(CoachBubble) — 단계 목록: 제목·요약 아래 coach_intro ·
@@ -25,7 +25,7 @@
              '단계 완료 N/N'+'다음 단계 →', 건너뛴 게 있으면 'N/M · 건너뛴 문항 k개'+첫 링크
 ★ 모범답안 있는 문항: 10단계 fill 8 (①②) + 문장 1·2·3·4단계 (reduce_adverb 8 · emotion_action 6 ·
   trim_padding 8 · reduce_repeat 8) + 도입 2·3 각 5 + 구성 11 lack 5 + 구성 12 contrast_char
-  활성 6(cc-first-pay + 신규 5, 옛 대비형 4는 비활성), 가·나 blank_key '' ·
+  활성 6(cc-first-pay + 신규 5, 옛 대비형 4는 비활성) + 구성 13 likability 4, 가·나 blank_key '' ·
   도입 1 start_choose 5 는 reference 를 선택지별 해설로 씀(가·나 아님)
 없는 것       도입 4 start_episode(보류 — AI 심사 전) · streak·XP·복습·하트·진도 저장 테이블(안 만든다 — submissions 로만 센다)
 ★ 10단계는 새 skill_key `action_reason`(fill 8). 옛 `action_turn`(convert 8)은 is_active=false — 화면에 '준비 중'
@@ -115,9 +115,9 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 ## 다음 — 순서대로. 하나가 verify 에서 물리기 전에 다음을 안 한다
 
 ```
-1  구성 13 likability    구성 12 규격 5조(세션 32 후기 3·4) 적용 첫 단계. 단계당 4~6. 기존
-                        유형만. 끝나면 나머지 구성 빈 단계(info_gap 15 · cliffhanger_adv 16 ·
-                        first_hook 18)로 이어간다.
+1  구성 15 info_gap      구성 13 likability 로 규격 5조 첫 적용 끝(세션 33). 이어서 나머지 구성
+                        빈 단계(info_gap 15 · cliffhanger_adv 16 · first_hook 18) 단계당 4~6.
+                        기존 유형만.
                         도입 4 start_episode 는 아래 미결(AI 심사 전이라 보류)
 2  보스 문항(가칭)      전 단계를 마친 뒤, 배운 규칙 전부를 걸고 짧은 소설 한 편을 쓰는
                         졸업 문항. 도입 4 start_episode 자리의 확장. 두 층: ① 규칙+자기점검이
@@ -125,6 +125,56 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
                         박 님이 직접 오판을 관찰해 판정 권한 부여를 결정. 여기 쌓이는 답안·
                         판정 기록이 원칙 4 재개 조건의 수집처다.
                         전제: 구성 빈 단계 4개가 먼저 찬다
+```
+
+### 끝난 것 — 세션 33 (구성 13 likability '호감 확보' 신설 · 규격 5조 첫 적용)
+
+```
+경위  설계안 승인 → 견본 1건(lk2-broken-sword, 한시우 재사용) 확인 → 나머지 3건
+      일괄 확정 순서로 진행(박 님). lk2-night-shift-bill 은 여러 후보 상황 중
+      6번째로 고른 것 — forbid 방향을 반전(평가어9 대신 불행한 태도어)하는
+      이번 배치의 유일한 예외로 확정됐다.
+
+신규 4문항  lk2-broken-sword(continue·한시우 재사용) · lk2-deal-credit(convert·
+  문지호/정유나) · lk2-night-shift-bill(convert·고은재, forbid 방향 반전) ·
+  lk2-night-raid(continue·노아/카일, requireAll 2명 — 유일하게 원문에 이름이
+  이미 있다). 4건 전부 forbidPassageCopy true. 전부 신규 행 — update SQL
+  없이 seed_data.sql insert 로 들어간다.
+stages.json  likability summary·coach_intro·coach_line·self_checks 2줄 채움
+  (title '호감 확보' 유지). "능력이 아니라 궁할 때 내놓는 것으로 응원산다"
+docs/characters.md  한시우 매력에 한 줄 추가(검을 내주고 돌려받겠다는 말로
+  시혜를 지운다) + 등장에 lk2-broken-sword. 신규 간이 4명(문지호·고은재·
+  노아·카일) — 재사용되면 9층 규격으로 승격.
+
+verify.ts  [구성 13 likability] 블록 신설 — 유형 continue 2/convert 2 ·
+  requireAll(night-raid) · forbid 방향(3건 평가어9 / 1건 반전) · 원문 불변식
+  (결함 원문 2건만 자기 forbidWords 에 걸림 · 4건 공통 passageCopy 불변식 —
+  night-raid 는 원문에 이름이 이미 있어 '이름 없음' 불변식은 그 문항엔 안
+  맞는다는 것도 같이 문다) · 모범 8건 pass(실측 kiwipiepy 그대로) · 나쁜 표본
+  6건 fail(forbidWords 4건 즉시 · minVerbs 2건은 morph 서버 있을 때만) ·
+  단계 간 베낌 가드 55문장(기존 43 + 활성 contrast_char 12) · 숫자 반복
+  표현 부재 가드 · stages coach·self_checks 대조
+  [불변식: forbidWords 자기 목록] likability 무난 원문 2건(source_key 단위)
+    예외 추가 — skill 전체가 아니라 source_key 단위로 좁힌 첫 사례
+  [쓰지 않을 말 표시] forbidLabel 28→32 · isScored 에 ㅂ 불규칙(밉다→미워)
+    자모 변형 후보 추가(세션 33 첫 실증 — 기존 휴리스틱의 사각) ·
+    update-forbid-display.sql 제외 목록에 likability 추가
+  [가르침 층] COACH_SKILLS 15→16 · [자기점검] withSelfChecks +likability
+  왕복 규칙: nameSkills 에 likability 추가 · 이름 추출 정규식 2종 확장
+    ("읽는 사람이 ○○를 응원하고 싶게" · "아래 장면을 고쳐 쓰시오. ○○의
+    능력은/○○는") · charHeaders 가 '간이' 절의 한 줄 나열(이름(태그))도
+    합쳐 읽게 확장 — 문지호·고은재·노아·카일이 `##` 헤더가 아니어도 통과
+  seed_verify.sql  불변식 2 에 likability 무난 원문 2건 source_key 예외
+    (night-shift-bill·deal-credit 은 결함 원문이라 계속 걸려야 한다 — 이미
+    p.type='convert' 필터로 안 걸리지만 명시로도 뺐다)
+검증  tsc 0 · next typegen · test:scoring 4213/0(형태소 서버 켜짐) ·
+      check:numbers 0 · gen:seed(문항 123→127·모범답안 169→177) · next build
+      통과 · 물기 2건: isScored 의 ㅂ 불규칙 변형 제거 → '밉다' 대조 fail
+      확인 후 복원 / lk2-broken-sword forbidPassageCopy 를 false 로 낮춰
+      3개 단언(config·불변식·나쁜 표본) fail 확인 후 복원
+★ DB 절차(박 님)  seed_data.sql(멱등 insert + stages upsert) → seed_check.sql
+  → 브라우저 '호감 확보' 4문항 눈검사. problems 에 order_no 컬럼 없음 —
+  확인 select 에 쓰지 말 것.
 ```
 
 ### 끝난 것 — 세션 32 후기 4, 최종 (셀라 재설계·유겸 용병 전환)

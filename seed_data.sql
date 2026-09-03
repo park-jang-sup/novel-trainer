@@ -257,8 +257,8 @@ on conflict (skill_key) do update set
 insert into stages
   (track, order_no, title, skill_key, summary, is_free, self_checks, intro, coach_intro, coach_line)
 values ('structure', 13, '호감 확보', 'likability',
-        '초반에 응원할 이유를 만든다', false, array[]::text[], '',
-        '', '')
+        '궁할 때 내놓는 것으로 응원받는다', false, array['이 사람을 처음 보는 남이 읽어도 응원하고 싶어? 네가 예뻐서 말고.', '이 사람이 뭘 내놨어 — 시간·돈·체면·제 몫? 내놓은 게 없으면 아직 호감이 아니야.']::text[], '',
+        '능력은 기대하게 만들고, 사람이 응원하게 만들어. 근데 응원은 잘나갈 때 안 생겨 — 궁할 때 뭘 내놓는지 볼 때 생겨. 작가 눈엔 내 주인공이 어차피 예뻐. 문제는 처음 보는 남의 눈이야. ''착하다''고 말하지 말고, 이 사람이 손해 보는 순간 하나를 보여줘.', '착하다 말고, 손해 보는 순간 하나!')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
@@ -471,6 +471,18 @@ select
   'original', 'modern', 'planned',
   1, 'lk-desk-nine'
 where not exists (select 1 from problems p where p.source_key = 'lk-desk-nine');
+
+-- lk2-broken-sword (order_no 1, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'likability'),
+  'continue', 'auto', '읽는 사람이 한시우를 응원하고 싶게 만드시오. 한시우는 재능 있는 동료들 사이에서 훈련량 하나로 버티는 B급 헌터다. 남의 성적을 제 채점표처럼 읽어 속이 쓰리지만, 그래서 노력하는 사람만은 깎아내리지 못한다. 원문을 읽고 다음에 올 장면을, ''착하다''는 말 없이 한시우가 손해 보는 선택 하나가 행동으로 보이게 작성하시오.',
+  '보상 명단이 붙었다. 한시우의 이름은 이번에도 없었다. 훈련장 구석에서 후배가 부러진 검을 내려다보고 있었다. 다음 달 심사까지 새 검을 구할 길이 없다고 했다. 한시우의 등에는 그 심사에 쓰려고 반년을 아껴 산 검이 걸려 있었다.', null, '{"maxChars":100,"minVerbs":3,"forbidLabel":"인물을 평가하는 말","forbidWords":["착하","착한","따뜻","다정","친절","배려","좋은 사람","마음씨","인심"],"forbidDisplay":["착하다","따뜻하다","다정하다","친절하다","배려하다"],"forbidPassageCopy":true}'::jsonb,
+  'original', 'modern', 'planned',
+  1, 'lk2-broken-sword'
+where not exists (select 1 from problems p where p.source_key = 'lk2-broken-sword');
 
 -- rm-axe-pond (order_no 1, difficulty 1)
 insert into problems
@@ -688,6 +700,18 @@ select
   1, 'lk-cafe-wait'
 where not exists (select 1 from problems p where p.source_key = 'lk-cafe-wait');
 
+-- lk2-deal-credit (order_no 2, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'likability'),
+  'convert', 'auto', '아래 장면을 고쳐 쓰시오. 문지호의 능력은 원문이 이미 다 보여 준다. 하지만 강한 사람을 독자는 기대할 뿐 응원하지는 않는다. 능력 서술은 한 문장으로 줄이고, 문지호가 정유나를 위해 손해 보는 선택 하나를 행동으로 보이게 다시 쓰시오.',
+  '문지호가 발표를 마쳤다. 클라이언트는 그 자리에서 계약서에 서명했다. 입사 오 년 만에 팀 최고 수주 기록이었고, 그는 사내 표창을 연달아 받은 사람이었다. 자료를 밤새 만든 후배 정유나는 회의실 구석에 서 있었다.', null, '{"maxChars":100,"minVerbs":3,"forbidLabel":"능력을 늘어놓거나 인물을 평가하는 말","forbidWords":["최고","표창","기록","착하","착한","따뜻","다정","친절","배려","좋은 사람","마음씨"],"forbidDisplay":["최고","표창","기록","착하다","따뜻하다","다정하다","친절하다"],"forbidPassageCopy":true}'::jsonb,
+  'original', 'modern', 'planned',
+  1, 'lk2-deal-credit'
+where not exists (select 1 from problems p where p.source_key = 'lk2-deal-credit');
+
 -- se-sword-five (order_no 2, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
@@ -795,6 +819,18 @@ select
   'original', 'martial', 'planned',
   1, 'lk-guard-dawn'
 where not exists (select 1 from problems p where p.source_key = 'lk-guard-dawn');
+
+-- lk2-night-shift-bill (order_no 3, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'likability'),
+  'convert', 'auto', '아래 장면을 고쳐 쓰시오. 고은재는 편의점 야간 근무로 아버지 병원비를 대는 사람이다. 상황이 힘든 것은 독자가 봐줄 수 있지만, 태도까지 힘들면 응원할 자리가 없어진다. 야간 근무와 모자란 병원비는 그대로 두고, 은재가 그 상황에서 하는 행동으로 태도만 바꿔 다시 쓰시오.',
+  '고은재는 편의점 야간 근무를 마치고 병원비 고지서를 꺼냈다. 이번 달도 모자랐다. 왜 나만 이렇게 사나 싶어 눈물이 났다. 세상이 다 미웠다.', null, '{"maxChars":100,"minVerbs":3,"forbidLabel":"불행한 태도를 말하는 표현","forbidWords":["미웠","미워","싫었","싫어","왜 나만","한숨","눈물","울었","울며","불쌍","억울","지긋지긋","원망"],"forbidDisplay":["밉다","싫다","한숨","눈물","울다","억울하다","원망하다"],"forbidPassageCopy":true}'::jsonb,
+  'original', 'modern', 'planned',
+  1, 'lk2-night-shift-bill'
+where not exists (select 1 from problems p where p.source_key = 'lk2-night-shift-bill');
 
 -- se-vow-deal (order_no 3, difficulty 1)
 insert into problems
@@ -999,6 +1035,18 @@ select
   'original', 'fantasy', 'planned',
   1, 'sw-scaffold-morning'
 where not exists (select 1 from problems p where p.source_key = 'sw-scaffold-morning');
+
+-- lk2-night-raid (order_no 4, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'likability'),
+  'continue', 'auto', '노아를 지켜보던 카일의 태도가 바뀌게 하시오. 노아는 말수 없이 시킨 일만 하는 신입이라 겁쟁이로 보이지만, 남이 안 보는 데서 먼저 움직이는 사람이다. 카일은 신입을 믿지 않는 부단장이다. 원문을 읽고 다음에 올 장면을, 노아가 손해 보는 선택 하나를 하고 그것을 본 카일이 행동 하나로 반응하게 작성하시오.',
+  '야습이었다. 카일이 후퇴를 외쳤고 용병들이 숲으로 흩어졌다. 신입 노아는 대열 맨 뒤에서 뛰고 있었다. 그 뒤로 다리를 다친 병사 하나가 처졌다. 카일은 신입은 보름을 못 넘긴다고 말하고 다니는 부단장이었다.', null, '{"maxChars":100,"minVerbs":3,"requireAll":["노아","카일"],"forbidLabel":"인물을 평가하는 말","forbidWords":["착하","착한","따뜻","다정","친절","배려","좋은 사람","마음씨","인심","마음에 들"],"forbidDisplay":["착하다","따뜻하다","다정하다","친절하다","배려하다","마음에 들다"],"forbidPassageCopy":true}'::jsonb,
+  'original', 'fantasy', 'planned',
+  2, 'lk2-night-raid'
+where not exists (select 1 from problems p where p.source_key = 'lk2-night-raid');
 
 -- rp-kongjwi-jar (order_no 4, difficulty 2)
 insert into problems
@@ -2158,6 +2206,20 @@ from problems p
 where p.source_key = 'lk-desk-nine'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- lk2-broken-sword ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '한시우는 명단 앞에서 발을 돌렸다. 후배 옆에 앉아 부러진 검을 받아 들고 날을 살폈다. 이건 못 쓴다고 말하고 제 등의 검을 풀어 후배 무릎에 얹었다. 심사 끝나면 돌려받겠다고 했다.'
+from problems p
+where p.source_key = 'lk2-broken-sword'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- lk2-broken-sword ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '후배가 부러진 검을 등 뒤로 감췄다. 한시우는 못 본 척 옆에 앉았다가 제 검을 풀어 후배 발치에 놓았다. 목검으로도 된다고만 했다. 그날 밤 한시우는 창고에서 목검을 꺼내 새벽 훈련에 나갔다.'
+from problems p
+where p.source_key = 'lk2-broken-sword'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- rm-axe-pond ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '나무꾼이 도끼를 휘둘렀다. 자루가 빠지고 도끼가 연못에 떨어졌다.'
@@ -2480,6 +2542,20 @@ from problems p
 where p.source_key = 'lk-cafe-wait'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- lk2-deal-credit ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '문지호가 발표를 마치자 클라이언트가 그 자리에서 서명했다. 회식에서 부장이 잔을 들자 지호는 정유나를 제 자리로 끌어다 세웠다. 자료는 이 사람이 만들었다고 하고 제 잔은 내려놓았다. 이튿날 보고서 첫 줄에는 유나 이름이 올라갔다.'
+from problems p
+where p.source_key = 'lk2-deal-credit'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- lk2-deal-credit ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '계약서에 서명이 끝나자 문지호는 회의실 구석의 정유나를 앞으로 불렀다. 클라이언트에게 실무 담당은 이 사람이라고 소개하고 명함을 건네게 했다. 다음 미팅 일정은 유나가 잡았다. 지호는 그 미팅에 들어가지 않았다.'
+from problems p
+where p.source_key = 'lk2-deal-credit'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- se-sword-five ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '그 다섯 어디에도 진운의 자리는 없었다. 소년은 세가의 높은 담 아래에서 목검을 고쳐 쥐었다.'
@@ -2604,6 +2680,20 @@ insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 2, '', '조평은 새 검집을 받고도 헌 검집을 버리지 못했다. 손잡이의 해진 끈을 다시 감아 맸다.'
 from problems p
 where p.source_key = 'lk-guard-dawn'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- lk2-night-shift-bill ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '고은재는 야간 근무를 마치고 병원비 고지서를 폈다. 모자란 액수를 손끝으로 짚어 보고, 폐기 삼각김밥 하나를 챙겨 병원으로 갔다. 아버지 침대 옆에서 김밥을 반으로 갈라 나눠 먹었다. 오늘 건 진짜 맛있네요, 하고 은재가 먼저 웃었다.'
+from problems p
+where p.source_key = 'lk2-night-shift-bill'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- lk2-night-shift-bill ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '고은재는 고지서의 모자란 액수를 노트 맨 위에 옮겨 적었다. 그 아래 이번 주 비는 시간을 칸칸이 채워 넣었다. 마지막 칸엔 아빠 산책이라 적고 동그라미를 쳤다. 편의점을 나서며 점장에게 다음 근무를 더 잡을 수 있냐고 문자를 보냈다.'
+from problems p
+where p.source_key = 'lk2-night-shift-bill'
 on conflict (problem_id, ord, blank_key) do nothing;
 
 -- se-vow-deal ord 1 
@@ -2842,6 +2932,20 @@ insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 2, '', '계단을 오르는 카리엘의 맨발 밑에서 돌의 한기가 올라왔다.'
 from problems p
 where p.source_key = 'sw-scaffold-morning'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- lk2-night-raid ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '노아는 발을 돌려 처진 병사를 등에 업었다. 제 방패는 버리고 병사의 창만 챙겨 숲으로 뛰었다. 대열 끝에 마지막으로 닿은 그를 카일이 말없이 보고 있었다. 이튿날 카일은 제 방패를 노아 자리에 세워 두고 갔다.'
+from problems p
+where p.source_key = 'lk2-night-raid'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- lk2-night-raid ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '노아는 뛰던 걸음을 멈추고 병사에게 돌아갔다. 병사를 부축해 숲까지 걷는 동안 추격자 둘이 붙었고, 노아는 병사를 먼저 밀어 넣고 혼자 돌아섰다. 카일이 나무 뒤에서 나와 그 옆에 섰다. 다음 순번표에서 노아는 카일 옆자리였다.'
+from problems p
+where p.source_key = 'lk2-night-raid'
 on conflict (problem_id, ord, blank_key) do nothing;
 
 -- rp-kongjwi-jar ord 1 

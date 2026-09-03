@@ -19,7 +19,7 @@
 --
 -- expect는 CTE가 아니라 임시 테이블이다. CTE는 그것이 붙은 statement
 -- 하나에만 유효해서, 검사 넷을 한 do 블록 안에서 나눠 적으려면 매번
--- 123행짜리 values를 다시 적어야 한다. 임시 테이블로 한 번만 채운다.
+-- 127행짜리 values를 다시 적어야 한다. 임시 테이블로 한 번만 채운다.
 --
 -- 마지막 문장이 select인 것은 의도다. Supabase 편집기가 NOTICE를
 -- 안 띄워서, raise notice로 끝내면 "통과"와 "파일이 잘려 안 돌았다"가
@@ -48,6 +48,7 @@ create temporary table expect (
 insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) values
   ('cc-report-credit', '6fb8a461655328aa3d9179bd6b953735', 123, 'de38611eebf908e329853f1801444b33', 41, '{"maxChars":60,"minVerbs":2,"requireAll":["김하준","서담"]}'::jsonb),
   ('lk-desk-nine', '5ed701d19c837118675f85e347e27d3e', 108, 'c78005fc2b863deb8545e5823326867c', 52, '{"maxChars":60,"minVerbs":2,"forbidLabel":"인정 욕구를 직접 말하는 표현","forbidWords":["인정","칭찬","알아주"],"forbidDisplay":["인정","칭찬","알아주다"],"requireAny":["김하준","하준"],"forbidPassageCopy":true}'::jsonb),
+  ('lk2-broken-sword', 'a8496a5244723f5fe8984f78a0c2b443', 181, '5baedb6a94fd7a2baab7959d64c71435', 129, '{"maxChars":100,"minVerbs":3,"forbidLabel":"인물을 평가하는 말","forbidWords":["착하","착한","따뜻","다정","친절","배려","좋은 사람","마음씨","인심"],"forbidDisplay":["착하다","따뜻하다","다정하다","친절하다","배려하다"],"forbidPassageCopy":true}'::jsonb),
   ('rm-axe-pond', '767bce97ba0984cb0aaa18ad470b183b', 99, 'f32376318db1d3b5936bc5bdaed0f9f7', 49, '{"maxChars":36,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb),
   ('rm-heungbu-swallow', '422bcd35e5ed12611f1c159741b8d284', 101, '6c9ffa5102ba47bf88f994870c85a89a', 46, '{"maxChars":34,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":2}'::jsonb),
   ('rm-kongjwi-jar', '3fc7a0a23aea08179dbcc07b8b58fd04', 114, 'dca740c6656f2f5a81e2f3589df6af2a', 64, '{"maxChars":39,"minVerbs":4,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":2}'::jsonb),
@@ -66,6 +67,7 @@ insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) v
   ('cc-street-night', '17f220cf6e32c147e09c8a33fc1b646b', 109, 'b3f5a5ae8305051c09b7229a52f3fcb9', 45, '{"maxChars":60,"minVerbs":2,"requireAll":["윤소민","하늘"]}'::jsonb),
   ('heungbu-joy', '3d67b9991f63f7137c1e6ba4fa094d1d', 22, 'da937ab22e4be877e917c12dd2b7f4a0', 32, '{"maxChars":60,"minVerbs":2,"maxAdverbs":1,"forbidWords":["기뻤","기쁘","기뻐","기쁨","행복","신났","신나","즐거","좋았"],"maxModifiers":2,"forbidLabel":"기쁨을 직접 말하는 표현","forbidDisplay":["기쁘다","기쁨","행복하다","신나다","좋다","즐거워하다"]}'::jsonb),
   ('lk-cafe-wait', 'e3855757130d7e30167c1af0c33a9bc2', 109, '7308f28a423268f7d0fe88778d4a6ca9', 40, '{"maxChars":60,"minVerbs":2,"forbidLabel":"외로움을 직접 말하는 표현","forbidWords":["사랑","애정","외로","쓸쓸","관심"],"forbidDisplay":["사랑","애정","외롭다","쓸쓸하다","관심"],"requireAny":["윤소민","소민"],"forbidPassageCopy":true}'::jsonb),
+  ('lk2-deal-credit', '657fa20865f883729d7964419f16bb9e', 133, 'aa3e2eee4f42051398f527262aa74820', 120, '{"maxChars":100,"minVerbs":3,"forbidLabel":"능력을 늘어놓거나 인물을 평가하는 말","forbidWords":["최고","표창","기록","착하","착한","따뜻","다정","친절","배려","좋은 사람","마음씨"],"forbidDisplay":["최고","표창","기록","착하다","따뜻하다","다정하다","친절하다"],"forbidPassageCopy":true}'::jsonb),
   ('se-sword-five', '09dd0bbee3a594d19b961c717b8ee5ac', 110, '6c20c49ed9e85d426a68e4d6b02d9ddb', 33, '{"maxChars":60,"minVerbs":1,"requireAny":["진운"]}'::jsonb),
   ('sim-cheong-fear', '1ce88519de2a3b56c4602e5f1de52085', 46, '349f86cbb5b24dad2ed5a49d55af3aff', 31, '{"maxChars":60,"minVerbs":1,"maxAdverbs":1,"forbidWords":["두려","두렵","무서","겁먹","떨렸","공포","질렸"],"maxModifiers":2,"forbidLabel":"두려움을 직접 말하는 표현","forbidDisplay":["두렵다","무서워하다","겁먹다","떨다","공포"]}'::jsonb),
   ('sw-ruin-ash', '5381ed986b6441aff186c8f1cbb7e5eb', 133, '5d5a0fed6c475e128d7f769cb9238155', 33, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","스산","기류","아우라","기색","낌새","기미"],"forbidLemmas":["오라/NNG"],"forbidDisplay":["기운","느낌","분위기","스산하다","기류","오라","아우라","기색","낌새","기미"],"requireAny":["진운"]}'::jsonb),
@@ -75,6 +77,7 @@ insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) v
   ('woodcutter-shame', 'a6f56f8890743432bc48983269612cbd', 25, '5ecd0f5785f56bd76b039f6273a80f33', 38, '{"maxChars":65,"minVerbs":2,"maxAdverbs":1,"forbidWords":["부끄","창피","민망","수치스","낯뜨거","뻘개"],"maxModifiers":2,"forbidLabel":"부끄러움을 직접 말하는 표현","forbidDisplay":["부끄럽다","창피하다","민망하다","수치스럽다"]}'::jsonb),
   ('cc-first-pay', 'f5ddc3901183fba9486c630eda5895ed', 160, 'a9e6c1cf8e10e91a35cb754b518b31e3', 43, '{"maxChars":100,"minVerbs":3,"requireAll":["조평","유겸"],"forbidPassageCopy":true}'::jsonb),
   ('lk-guard-dawn', '71aaceffdda2ed06e2e1a7f934b6a5e8', 102, '46c0ab8ef1488e972d1cdab7c10afe23', 50, '{"maxChars":60,"minVerbs":2,"forbidLabel":"가난을 직접 말하는 표현","forbidWords":["가난","굶","궁핍"],"forbidDisplay":["가난","굶다","궁핍"],"requireAny":["조평"],"forbidPassageCopy":true}'::jsonb),
+  ('lk2-night-shift-bill', '8ba346bd8afd524a89854d58692d5530', 153, '823daa67a2d67f0485b3277651ccb244', 79, '{"maxChars":100,"minVerbs":3,"forbidLabel":"불행한 태도를 말하는 표현","forbidWords":["미웠","미워","싫었","싫어","왜 나만","한숨","눈물","울었","울며","불쌍","억울","지긋지긋","원망"],"forbidDisplay":["밉다","싫다","한숨","눈물","울다","억울하다","원망하다"],"forbidPassageCopy":true}'::jsonb),
   ('se-vow-deal', 'bd07fbe9831c4576b081f9e2a09bd608', 115, 'eb400c635c85ce775a2b96beb6aaaf3e', 29, '{"maxChars":60,"minVerbs":1,"requireAny":["하은수","은수"]}'::jsonb),
   ('sw-vow-afternoon', '2ace2c8496a0bcd86c7d50344ef4bb93', 138, '02a05525996b0db530dcb82e69a1e4a9', 35, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","서글","기류","아우라","기색","낌새","기미"],"forbidLemmas":["오라/NNG"],"forbidDisplay":["기운","느낌","분위기","서글프다","기류","오라","아우라","기색","낌새","기미"],"requireAny":["하은수","은수"]}'::jsonb),
   ('tp-axe-water', '96f5ca0e7a0e469b0bee177a53855ad9', 135, '26b338bc7f1b667978b981a81341d2b3', 91, '{"maxChars":42,"minVerbs":3,"maxRepeat":2}'::jsonb),
@@ -92,6 +95,7 @@ insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) v
   ('rp-simcheong-sea', '1923f3bd3896a41facdc89d04e9c0444', 23, 'fbe337b4cc6f3edfef43b536177937f8', 111, '{"maxChars":86,"minVerbs":3,"maxRepeat":2,"repeatTargets":[{"word":"바다","max":2},{"word":"심청","max":2}]}'::jsonb),
   ('se-rose-heir', '3a5d3b3a8092147d90a891b00a203db5', 118, 'c9dede8a5a73e739720395c77955203c', 37, '{"maxChars":60,"minVerbs":1,"requireAny":["에스텔"]}'::jsonb),
   ('sw-scaffold-morning', '34c777a65f63f0db452221a1c8aa8de4', 142, '4bd9b21f6ebf2f91ea43ea830bc1a069', 36, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","긴장","형언","기류","아우라","기색","낌새","기미"],"forbidLemmas":["오라/NNG"],"forbidDisplay":["기운","느낌","분위기","긴장감","형언하다","기류","오라","아우라","기색","낌새","기미"],"requireAny":["카리엘"]}'::jsonb),
+  ('lk2-night-raid', '84b8b831e1624e2edafe7dd2219fb974', 173, '002990572979e1df0d74d415a19dd7d5', 116, '{"maxChars":100,"minVerbs":3,"requireAll":["노아","카일"],"forbidLabel":"인물을 평가하는 말","forbidWords":["착하","착한","따뜻","다정","친절","배려","좋은 사람","마음씨","인심","마음에 들"],"forbidDisplay":["착하다","따뜻하다","다정하다","친절하다","배려하다","마음에 들다"],"forbidPassageCopy":true}'::jsonb),
   ('rp-kongjwi-jar', '1923f3bd3896a41facdc89d04e9c0444', 23, 'a843dfb6b1cf55cbffdb1870467be11c', 92, '{"maxChars":68,"minVerbs":3,"maxRepeat":2,"repeatTargets":[{"word":"물","max":2},{"word":"콩쥐","max":2}]}'::jsonb),
   ('rp-magpie-bridge', '1923f3bd3896a41facdc89d04e9c0444', 23, 'c599b72be684fc33ff7a22bc19d75224', 110, '{"maxChars":85,"minVerbs":3,"maxRepeat":2,"repeatTargets":[{"word":"다리","max":2}]}'::jsonb),
   ('rp-rabbit-liver', '1923f3bd3896a41facdc89d04e9c0444', 23, 'a942e7741a5692070d57ca1380c858cf', 131, '{"maxChars":101,"minVerbs":5,"maxRepeat":2,"repeatTargets":[{"word":"간","max":2},{"word":"토끼","max":2}]}'::jsonb),

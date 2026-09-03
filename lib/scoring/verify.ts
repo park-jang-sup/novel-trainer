@@ -779,11 +779,14 @@ console.log('\n[오탐 감시: 감각 묘사 좋은 답안]')
 // 있다. CONVERT_SEEDS의 6문항과 대상이 겹치지만, 지금은 그대로 둔다 —
 // 중복 제거는 다음 작업의 몫이다.
 //
-// ★ 예외: 구성 11 lack(세션 31) · 구성 12 contrast_char 갭 문항(세션 32 후기).
+// ★ 예외: 구성 11 lack(세션 31) · 구성 12 contrast_char 갭 문항(세션 32 후기) ·
+//   구성 13 likability 무난 원문 2건(세션 33 — lk2-broken-sword·lk2-night-raid).
 //   이 단계들의 원문은 결함이 없는 무난한 장면이라 자기 forbidWords 를 일부러
-//   안 담는다 — 결핍/속마음은 학습자가 얹는다. 각 단계 블록이 '원문에
-//   forbidWords 없음'을 따로 문다.
-console.log('\n[불변식: forbidWords 있는 덤프 문항이 자기 목록에 걸림 (lack·contrast_char 제외)]')
+//   안 담는다 — 결핍/속마음/평가어는 학습자가 얹는다. 각 단계 블록이 '원문에
+//   forbidWords 없음'을 따로 문다. likability 는 skill 전체가 아니라 이 2건만
+//   예외다 — lk2-deal-credit·lk2-night-shift-bill 은 결함 원문(능력 과시·불행한
+//   태도)이라 계속 자기 forbidWords 에 걸려야 한다.
+console.log('\n[불변식: forbidWords 있는 덤프 문항이 자기 목록에 걸림 (lack·contrast_char·likability 무난 2건 제외)]')
 {
   interface DumpProblem {
     passage: string | null
@@ -797,9 +800,11 @@ console.log('\n[불변식: forbidWords 있는 덤프 문항이 자기 목록에 
   const raw = readFileSync(dumpPath, 'utf8').replace(/^\uFEFF/, '')
   const dumpProblems: DumpProblem[] = JSON.parse(raw)
 
+  const likabilityPlainKeys = new Set(['lk2-broken-sword', 'lk2-night-raid'])
   const skipped: string[] = []
   for (const dp of dumpProblems) {
     if (dp.skill_key === 'lack' || dp.skill_key === 'contrast_char') continue // 무난한 장면이 원문
+    if (likabilityPlainKeys.has(dp.source_key)) continue // 무난한 장면이 원문 (likability 는 source_key 단위)
     const forbidWords = dp.scoring_config?.forbidWords
     if (!forbidWords || forbidWords.length === 0) continue
 
@@ -4251,18 +4256,32 @@ console.log('\n[구성 12 contrast_char: 재설계 · 활성 6 + 비활성 4]')
   t('docs/characters.md 가 있다', charMd.length > 0)
   const charHeaders = new Set(
     [...charMd.matchAll(/^##\s+([^\s—]+)\s+—/gm)].map((m) => m[1]))
+  // 간이 절(헤더에 '간이' 를 포함하는 절)의 이름도 합친다 — 도입 트랙 간이 7명 +
+  // 구성 13 간이 4명(문지호·고은재·노아·카일)은 '## 이름 — …' 헤더가 아니라
+  // 한 줄 나열("이름(태그)")이라 위 정규식에 안 걸린다(세션 33).
+  for (const section of charMd.split(/^##\s+/m)) {
+    if (!/^[^\n]*간이/.test(section)) continue
+    for (const m of section.matchAll(/([^\s·()]+)\(/g)) charHeaders.add(m[1])
+  }
   t('원장에 인물 헤더 10명 이상', charHeaders.size >= 10, JSON.stringify([...charHeaders]))
-  // 활성 lack·contrast_char 문항의 대표 이름이 원장 헤더에 실재한다.
+  // 활성 lack·contrast_char·likability 문항의 대표 이름이 원장에 실재한다.
   // 세션 32 후기 3: 갭 4건은 requireAny 가 없다 — scoring_config 에 이름이 없으므로
   // instruction 의 "○○의 겉과 속을 한 장면에" 머리말에서 이름을 뽑는다.
-  const nameSkills = new Set(['lack', 'contrast_char'])
+  // 세션 33: likability 도 이름이 없는 문항이 있다 — "읽는 사람이 ○○를 응원하고
+  // 싶게 만드시오." · "아래 장면을 고쳐 쓰시오. ○○의 능력은…" · "…○○는 …" 세 머리말.
+  const nameSkills = new Set(['lack', 'contrast_char', 'likability'])
   for (const d of allProblems.filter((p) => nameSkills.has(p.skill_key) && !deadSet.has(p.source_key))) {
     const c = d.scoring_config
     const canon = (c.requireAll as string[] | undefined)
       ?? (c.requireAny as string[] | undefined)?.slice(0, 1)
       ?? (() => {
-        const m = /^(\S+?)의 겉과 속을 한 장면에/.exec(d.instruction)
-        return m ? [m[1]] : []
+        const m1 = /^(\S+?)의 겉과 속을 한 장면에/.exec(d.instruction)
+        if (m1) return [m1[1]]
+        const m2 = /^읽는 사람이 (\S+?)(?:를|을) 응원하고 싶게 만드시오/.exec(d.instruction)
+        if (m2) return [m2[1]]
+        const m3 = /^아래 장면을 고쳐 쓰시오\. (\S+?)(?:의 능력은|는)/.exec(d.instruction)
+        if (m3) return [m3[1]]
+        return []
       })()
     t(`왕복 규칙: '${d.source_key}' 에서 대표 이름을 뽑을 수 있다`, canon.length > 0, d.instruction)
     for (const nm of canon) {
@@ -4282,6 +4301,299 @@ console.log('\n[구성 12 contrast_char: 재설계 · 활성 6 + 비활성 4]')
   t('stages contrast_char 의 self_checks 2건 (겉·속 / 페어)',
     Array.isArray(ccStage.self_checks) && ccStage.self_checks.length === 2 &&
       ccStage.self_checks.every((s) => s.length > 0), JSON.stringify(ccStage.self_checks))
+}
+
+// ── 구성 13 likability(호감 확보): 신설 4문항 (세션 33) ──────────────────
+//
+// 규격 5조(세션 32 후기 4) 첫 적용. 능력 과시가 아니라 궁할 때 내놓는 것으로
+// 응원을 산다 — '착하다' 류 평가어 직서술 금지(forbidLabel '인물을 평가하는
+// 말'). lk2-night-shift-bill 은 방향이 반대다: 결함은 상황이 아니라 태도라
+// forbid 는 평가어9 가 아니라 불행한 태도어를 막는다(박 님 결정). 4문항
+// 전부 신규 행 — update SQL 없음, seed_data.sql insert 로 들어간다.
+console.log('\n[구성 13 likability: 신설 4문항]')
+{
+  interface Lk2Problem {
+    source_key: string
+    skill_key: string
+    type: string
+    choices: string[] | null
+    passage: string | null
+    instruction: string
+    difficulty: number
+    scoring_mode: string
+    scoring_config: ScoringConfig
+  }
+  const seedDir = path.join(__dirname, '..', '..', 'seed', 'dump')
+  const readDump = <T,>(f: string): T =>
+    JSON.parse(readFileSync(path.join(seedDir, f), 'utf8').replace(/^﻿/, '')) as T
+
+  const allProblems = readDump<Lk2Problem[]>('problems.json')
+  const lk2 = allProblems.filter((d) => d.skill_key === 'likability')
+  const lk2Keys = new Set(lk2.map((d) => d.source_key))
+  const answersDump = readDump<{ reference?: RefRow[] }>('answers.json')
+  const refs = (answersDump.reference ?? []).filter((r) => lk2Keys.has(r.source_key))
+  const cfgOf = new Map(lk2.map((d) => [d.source_key, d.scoring_config]))
+  const typeOf = new Map(lk2.map((d) => [d.source_key, d.type]))
+  const passageOf = new Map(lk2.map((d) => [d.source_key, d.passage ?? '']))
+
+  t('활성 likability 4문항', lk2.length === 4, `실제=${lk2.length}`)
+  t('유형 continue 2 · convert 2',
+    lk2.filter((d) => d.type === 'continue').length === 2 &&
+      lk2.filter((d) => d.type === 'convert').length === 2,
+    JSON.stringify(lk2.map((d) => `${d.source_key}:${d.type}`)))
+  t('4건 전부 auto · choices null · forbidPassageCopy true', lk2.every(
+    (d) => d.scoring_mode === 'auto' && d.scoring_config.forbidPassageCopy === true))
+  t('4건 전부 maxChars 100 · minVerbs 3',
+    lk2.every((d) => d.scoring_config.maxChars === 100 && d.scoring_config.minVerbs === 3))
+
+  // night-raid 만 requireAll(노아·카일) — 나머지 3건은 이름 강제 없음
+  {
+    const nr = lk2.find((d) => d.source_key === 'lk2-night-raid')!
+    const ra = nr.scoring_config.requireAll as string[] | undefined
+    t("'lk2-night-raid': requireAll 정확히 2명(노아·카일)",
+      Array.isArray(ra) && ra.length === 2 && ra.includes('노아') && ra.includes('카일'),
+      JSON.stringify(ra))
+    for (const key of ['lk2-broken-sword', 'lk2-deal-credit', 'lk2-night-shift-bill']) {
+      const d = lk2.find((x) => x.source_key === key)!
+      t(`'${key}': requireAll·requireAny 없음`,
+        d.scoring_config.requireAll === undefined && d.scoring_config.requireAny === undefined)
+    }
+  }
+
+  // night-shift-bill 은 forbid 방향이 반대 — 평가어9 가 아니라 불행한 태도어
+  {
+    const d = lk2.find((x) => x.source_key === 'lk2-night-shift-bill')!
+    const fw = (d.scoring_config.forbidWords as string[]) ?? []
+    t("'lk2-night-shift-bill': forbid 가 평가어9 를 안 담고, 불행 태도어를 담는다",
+      !fw.includes('착하') && !fw.includes('착한') && fw.includes('한숨') && fw.includes('눈물'),
+      JSON.stringify(fw))
+  }
+  // 나머지 3건은 평가어9 를 forbidWords 에 담는다(핵심 낱말 교집합으로 확인)
+  {
+    const core = ['착하', '착한', '따뜻', '다정', '친절', '배려']
+    for (const key of ['lk2-broken-sword', 'lk2-deal-credit', 'lk2-night-raid']) {
+      const fw = (lk2.find((x) => x.source_key === key)!.scoring_config.forbidWords as string[]) ?? []
+      t(`'${key}': forbidWords 가 평가어9 핵심 낱말을 담는다`,
+        core.every((w) => fw.includes(w)), JSON.stringify(fw))
+    }
+  }
+
+  // ── 원문 불변식: 결함 원문 2건(deal-credit·night-shift-bill)만 자기
+  //    forbidWords 에 걸린다. 무난 원문 2건(broken-sword·night-raid)은 안 걸린다.
+  for (const d of lk2) {
+    const fw = (d.scoring_config.forbidWords as string[]) ?? []
+    const hits = findForbidden(d.passage ?? '', fw)
+    if (d.source_key === 'lk2-deal-credit' || d.source_key === 'lk2-night-shift-bill') {
+      t(`불변식: '${d.source_key}' (결함 원문) 이 자기 forbidWords 에 걸린다`,
+        hits.length > 0, JSON.stringify(hits))
+    } else {
+      t(`불변식: '${d.source_key}' (무난 원문) 이 자기 forbidWords 에 안 걸린다`,
+        hits.length === 0, JSON.stringify(hits))
+    }
+  }
+  // night-raid 만 이름이 이미 원문에 있다(노아·카일 둘 다 등장 — 대비형 lack·
+  // contrast_char 의 '무난 원문에 이름 없음' 관행과 다르다. requireAll 은 '이름을
+  // 몰래 추가'가 아니라 '이어쓰기에서도 둘 다 계속 나오게'가 목적). 그래서
+  // 원문 그대로 제출은 requireAll 은 통과하고 passageCopy 로 걸린다 — 4건 전부
+  // 공통인 이 불변식만 문다(이름 유무는 문항마다 다르다).
+  for (const d of lk2) {
+    const bp = gradeLocal(
+      { id: d.source_key, type: d.type as ProblemType, scoring_mode: 'auto', scoring_config: d.scoring_config },
+      { text: d.passage ?? '' }, undefined, d.passage ?? '')
+    t(`불변식: '${d.source_key}' 원문 그대로 제출은 passageCopy fail`,
+      bp.find((c) => c.key === 'passageCopy')?.status === 'fail', JSON.stringify(bp))
+  }
+  {
+    const nr = lk2.find((d) => d.source_key === 'lk2-night-raid')!
+    t("'lk2-night-raid' 원문에 노아·카일 이름이 이미 있다(요구 검사가 '몰래 이름 추가'를 막는 게 아니다)",
+      (nr.passage ?? '').includes('노아') && (nr.passage ?? '').includes('카일'), nr.passage ?? '')
+  }
+
+  // ── 모범답안 8행 (활성 4 × 가·나) ──
+  t('활성 모범답안 8행', refs.length === 8, `실제=${refs.length}`)
+  t('모범답안 전부 blank_key 빈 문자열', refs.every((r) => r.blank_key === ''))
+  for (const d of lk2) {
+    const ords = refs.filter((r) => r.source_key === d.source_key).map((r) => r.ord).sort()
+    t(`'${d.source_key}': 가·나 두 세트`, JSON.stringify(ords) === '[1,2]', JSON.stringify(ords))
+  }
+  // 실측(kiwipiepy 실호출) 자수(공백 제외) — 순서: broken-sword·deal-credit·night-shift-bill·night-raid
+  const LEN: Record<string, [number, number]> = {
+    'lk2-broken-sword': [75, 79],
+    'lk2-deal-credit': [98, 91],
+    'lk2-night-shift-bill': [98, 96],
+    'lk2-night-raid': [86, 95],
+  }
+  for (const r of refs) {
+    const cfg = cfgOf.get(r.source_key)!
+    const n = countChars(r.content)
+    t(`'${r.source_key}' ord${r.ord}: 비어 있지 않다`, r.content.trim().length > 0)
+    t(`'${r.source_key}' ord${r.ord}: 자수 ${n} == 실측 ${LEN[r.source_key][r.ord - 1]}`,
+      n === LEN[r.source_key][r.ord - 1], `"${r.content}"`)
+    t(`'${r.source_key}' ord${r.ord}: 자수 ≤ 100`, n <= 100)
+    t(`'${r.source_key}' ord${r.ord}: 4문장`, countSentences(r.content) === 4,
+      `실제=${countSentences(r.content)}`)
+    const strip = (s: string) => s.replace(/\s/g, '')
+    t(`'${r.source_key}' ord${r.ord}: 원문을 통짜로 품지 않는다 (passageCopy)`,
+      !strip(r.content).includes(strip(passageOf.get(r.source_key)!)), `"${r.content}"`)
+    const hits = findForbidden(r.content, (cfg.forbidWords as string[] | undefined) ?? [])
+    t(`'${r.source_key}' ord${r.ord}: forbidWords 적중 0`, hits.length === 0, JSON.stringify(hits))
+    if (cfg.requireAll) {
+      const names = cfg.requireAll as string[]
+      t(`'${r.source_key}' ord${r.ord}: requireAll 이름 전부 포함`,
+        names.every((nm) => r.content.includes(nm)), JSON.stringify(names))
+    }
+    const res = combine(
+      { id: r.source_key, type: typeOf.get(r.source_key) as ProblemType, scoring_mode: 'auto', scoring_config: cfg },
+      { text: r.content }, undefined, null, passageOf.get(r.source_key)!)
+    for (const key of ['requireAll', 'forbidWords', 'maxChars', 'passageCopy']) {
+      const c = res.checks.find((x) => x.key === key)
+      t(`'${r.source_key}' ord${r.ord}: combine 의 ${key} 검사가 pass`,
+        !c || c.status === 'pass', JSON.stringify(c))
+    }
+  }
+
+  // ── 나쁜 표본 6건 — 박 님 기대값대로 fail (형태소 불필요한 4건은 즉시,
+  //    minVerbs 2건은 서버 있을 때만 aiChainChecks 로 문다) ──
+  {
+    const bs = lk2.find((d) => d.source_key === 'lk2-broken-sword')!
+    const dc = lk2.find((d) => d.source_key === 'lk2-deal-credit')!
+    const ns = lk2.find((d) => d.source_key === 'lk2-night-shift-bill')!
+    const nr = lk2.find((d) => d.source_key === 'lk2-night-raid')!
+    const runLocal = (d: Lk2Problem, text: string) => gradeLocal(
+      { id: d.source_key, type: d.type as ProblemType, scoring_mode: 'auto', scoring_config: d.scoring_config },
+      { text }, undefined, d.passage ?? '')
+
+    // 1. broken-sword — 평가어 직서술 → forbidWords 2
+    {
+      const text = '한시우는 착한 사람이라 후배를 그냥 두지 못했다. 따뜻한 마음으로 검을 내주었다. 후배는 감동했다.'
+      const checks = runLocal(bs, text)
+      const fw = checks.find((c) => c.key === 'forbidWords')
+      t("나쁜 표본: broken-sword 평가어 직서술 → forbidWords fail(2건)",
+        fw?.status === 'fail' && findForbidden(text, bs.scoring_config.forbidWords as string[]).length === 2,
+        JSON.stringify(fw))
+    }
+    // 2. broken-sword — 원문 통째 + 한 문장 → passageCopy fail (+ maxChars 104)
+    {
+      const text = `${bs.passage} 한시우는 도왔다.`
+      const checks = runLocal(bs, text)
+      t('나쁜 표본: broken-sword 원문 통째+한 문장 → passageCopy fail · maxChars 104 초과',
+        checks.find((c) => c.key === 'passageCopy')?.status === 'fail' &&
+          checks.find((c) => c.key === 'maxChars')?.status === 'fail' &&
+          countChars(text) === 104,
+        JSON.stringify(checks))
+    }
+    // 4. deal-credit — 원문 통째 + 한 문장 → forbidWords 3 + passageCopy + maxChars 104
+    {
+      const text = `${dc.passage} 지호는 유나에게 고맙다고 했다.`
+      const checks = runLocal(dc, text)
+      t('나쁜 표본: deal-credit 원문 통째+한 문장 → forbidWords(3)·passageCopy·maxChars 전부 fail',
+        checks.find((c) => c.key === 'forbidWords')?.status === 'fail' &&
+          findForbidden(text, dc.scoring_config.forbidWords as string[]).length === 3 &&
+          checks.find((c) => c.key === 'passageCopy')?.status === 'fail' &&
+          checks.find((c) => c.key === 'maxChars')?.status === 'fail' &&
+          countChars(text) === 104,
+        JSON.stringify(checks))
+    }
+    // 5. night-shift-bill — 불행 태도어 → forbidWords 1
+    {
+      const text = '고은재는 야간 근무를 마치고 고지서를 폈다. 이번 달도 모자랐다. 한숨이 나왔다. 그래도 병원으로 갔다.'
+      const checks = runLocal(ns, text)
+      t('나쁜 표본: night-shift-bill 불행 태도어("한숨") → forbidWords fail(1건)',
+        checks.find((c) => c.key === 'forbidWords')?.status === 'fail' &&
+          findForbidden(text, ns.scoring_config.forbidWords as string[]).length === 1,
+        JSON.stringify(checks.find((c) => c.key === 'forbidWords')))
+    }
+    // 6. night-raid — 평가어 직서술 → forbidWords 2 (minVerbs 2 는 morph 물기에서)
+    {
+      const text = '노아는 빵을 부상병에게 주었다. 카일은 그 모습이 마음에 들었다. 노아는 착한 신입이었다.'
+      const checks = runLocal(nr, text)
+      t('나쁜 표본: night-raid 평가어 직서술 → forbidWords fail(2건)',
+        checks.find((c) => c.key === 'forbidWords')?.status === 'fail' &&
+          findForbidden(text, nr.scoring_config.forbidWords as string[]).length === 2,
+        JSON.stringify(checks.find((c) => c.key === 'forbidWords')))
+    }
+
+    // 3·6′ — minVerbs 는 형태소 서버가 있어야 잰다. 없으면 건너뛴다.
+    aiChainChecks.push((async () => {
+      const t1 = '한시우에게 그 검은 반년의 결과였다. 그래도 후배의 검이 더 급했다.'
+      const m1 = await morphAnalyze(t1)
+      if (!m1) {
+        morphSkipped += 2
+        console.log('  – 형태소 서버 없음: 구성 13 likability minVerbs 물기 2건 건너뜀')
+        return
+      }
+      t('나쁜 표본: broken-sword 동사 없이 사실만 나열 → minVerbs fail(동사 0)',
+        m1.verbs.length === 0 &&
+          combine({ id: bs.source_key, type: 'continue', scoring_mode: 'auto', scoring_config: bs.scoring_config },
+            { text: t1 }, undefined, m1).checks.find((c) => c.key === 'minVerbs')?.status === 'fail',
+        JSON.stringify(m1.verbs))
+
+      const t2 = '노아는 빵을 부상병에게 주었다. 카일은 그 모습이 마음에 들었다. 노아는 착한 신입이었다.'
+      const m2 = await morphAnalyze(t2)
+      t('나쁜 표본: night-raid 동사 2개 → minVerbs fail(3 미만)',
+        !!m2 && m2.verbs.length === 2 &&
+          combine({ id: nr.source_key, type: 'continue', scoring_mode: 'auto', scoring_config: nr.scoring_config },
+            { text: t2 }, undefined, m2).checks.find((c) => c.key === 'minVerbs')?.status === 'fail',
+        JSON.stringify(m2?.verbs))
+    })())
+  }
+
+  // ── 단계 간 베낌 가드: 43(도입1 정답5+도입2·3 모범20+lack 모범10+비활성cc- 8)
+  //    + 활성 contrast_char 모범 12 = 55문장. likability 는 contrast_char 다음
+  //    단계라 활성 cc- 답안도 이제 '이전 문장'이다.
+  const priorSentences: string[] = []
+  {
+    const scAnsIdx = new Map(
+      (readDump<{ answers?: { source_key: string; answer: { kind: string; index?: number } }[] }>('answers.json').answers ?? [])
+        .filter((a) => a.answer.kind === 'choice')
+        .map((a) => [a.source_key, a.answer.index!]))
+    for (const p of allProblems.filter((x) => x.skill_key === 'start_choose')) {
+      const idx = scAnsIdx.get(p.source_key)
+      if (idx != null && p.choices) priorSentences.push(p.choices[idx].replace(/\.$/, ''))
+    }
+    const deactivate = readDump<{ source_keys: string[] }>('deactivate.json')
+    const deadCc = new Set(deactivate.source_keys.filter((k) => k.startsWith('cc-')))
+    const activeCc = new Set(
+      allProblems.filter((p) => p.skill_key === 'contrast_char' && !deadCc.has(p.source_key)).map((p) => p.source_key))
+    for (const r of answersDump.reference ?? []) {
+      if (r.source_key.startsWith('sw-') || r.source_key.startsWith('se-') ||
+        r.source_key.startsWith('lk-') || deadCc.has(r.source_key) || activeCc.has(r.source_key)) {
+        priorSentences.push(r.content.replace(/\.$/, ''))
+      }
+    }
+  }
+  t('단계 간 베낌 가드: 대조원 55문장 (기존 43 + 활성 contrast_char 모범 12)',
+    priorSentences.length === 55, `실제=${priorSentences.length}`)
+  for (const r of refs) {
+    const copied = priorSentences.filter((s) => r.content.includes(s))
+    t(`단계 간 베낌 가드: '${r.source_key}' ord${r.ord} 이 앞 단계 문장을 안 베꼈다`,
+      copied.length === 0, JSON.stringify(copied))
+  }
+
+  // ── 형태소(서버 있을 때만): 모범답안 동사 ≥ 3 (minVerbs 3) ──
+  // 세션 33 실측 — 순서: broken-sword·deal-credit·night-shift-bill·night-raid
+  //   가 13·9·11·9 / 나 10·6·11·10
+  pushRefMorphCheck('구성 13', refs, 'continue', cfgOf)
+
+  // ── 숫자 반복 표현("두 번"·"세 번" 류) 부재 가드(세션 32 후기 4 규격) ──
+  for (const r of refs) {
+    t(`'${r.source_key}' ord${r.ord}: 숫자 반복 표현("N 번" 류) 없음`,
+      !/(한|두|세|네|다섯|여섯|일곱|여덟|아홉|열)\s*번/.test(r.content), r.content)
+  }
+
+  // ── stages: likability 코치·자기점검 (신설 문구) ──
+  const stagesDump2 = readDump<{ skill_key: string; title: string; summary: string; coach_intro: string; coach_line: string; self_checks: string[] }[]>('stages.json')
+  const lkStage = stagesDump2.find((s) => s.skill_key === 'likability')!
+  t("stages likability title '호감 확보' 유지", lkStage.title === '호감 확보')
+  t("stages likability summary '궁할 때 내놓는 것으로 응원받는다'",
+    lkStage.summary === '궁할 때 내놓는 것으로 응원받는다')
+  t('stages likability coach_intro·coach_line 이 비어 있지 않다',
+    lkStage.coach_intro.length > 0 && lkStage.coach_line.length > 0)
+  t("stages likability coach_line '착하다 말고, 손해 보는 순간 하나!'",
+    lkStage.coach_line === '착하다 말고, 손해 보는 순간 하나!')
+  t('stages likability 의 self_checks 2건',
+    Array.isArray(lkStage.self_checks) && lkStage.self_checks.length === 2 &&
+      lkStage.self_checks.every((s) => s.length > 0), JSON.stringify(lkStage.self_checks))
 }
 
 // ── '쓰지 않을 말' 표시: forbidLabel/forbidDisplay ↔ 채점 (세션 22) ──────
@@ -4311,11 +4623,18 @@ console.log('\n[쓰지 않을 말 표시: forbidLabel/forbidDisplay ↔ 채점]'
   // 쪽을 품으면 대응으로 본다 — '화나'(ㅎㅘㄴㅏ)는 '화났'(ㅎㅘㄴㅏㅆ)의 앞이고,
   // '낯뜨거'는 '낯뜨겁'의 앞이다(ㅂ 불규칙·시제 어미를 이렇게 흡수한다).
   const nfd = (s: string) => s.normalize('NFD')
+  // ㅂ 불규칙(밉다→미워, 덥다→더워 등): 어간 마지막 자모가 받침 ㅂ 면, 그걸 뗀
+  // 형태도 비교 후보에 넣는다 — '밉'(ㅁㅣㅂ) 만으로는 '미워'(ㅁㅣㅇㅝ)와 안
+  // 겹치지만, ㅂ 을 뗀 '미'(ㅁㅣ)는 겹친다(세션 33 — lk2-night-shift-bill '밉다').
+  // ★ NFD 종성 ㅂ 은 U+11B8(HANGUL JONGSEONG PIEUP) — 자판의 ㅂ(U+3142, 호환 자모)과
+  //   다른 코드포인트다. 반드시 이 상수로 비교한다.
+  const BATCHIM_B = 'ᆸ'
   const isScored = (display: string, fw: string[], fl: string[]) => {
     const stem = nfd(stemOf(display))
+    const stemVariants = stem.endsWith(BATCHIM_B) ? [stem, stem.slice(0, -1)] : [stem]
     const overlaps = (target: string) => {
       const a = nfd(target)
-      return a.includes(stem) || stem.includes(a)
+      return stemVariants.some((sv) => a.includes(sv) || sv.includes(a))
     }
     return fw.some(overlaps) || fl.some((l) => overlaps(l.split('/')[0]))
   }
@@ -4325,14 +4644,15 @@ console.log('\n[쓰지 않을 말 표시: forbidLabel/forbidDisplay ↔ 채점]'
   const withDisplay = readDump<FwProblem[]>('problems.json').filter(
     (d) => d.scoring_config.forbidLabel !== undefined
   )
-  t('덤프에 forbidLabel 을 채운 문항 28', withDisplay.length === 28, `실제=${withDisplay.length}`)
+  t('덤프에 forbidLabel 을 채운 문항 32', withDisplay.length === 32, `실제=${withDisplay.length}`)
   t(
-    '전부 emotion_action 6 + sensory 8 + start_write 5 + lack 5 + contrast_char 4',
+    '전부 emotion_action 6 + sensory 8 + start_write 5 + lack 5 + contrast_char 4 + likability 4',
     withDisplay.filter((d) => d.skill_key === 'emotion_action').length === 6 &&
       withDisplay.filter((d) => d.skill_key === 'sensory').length === 8 &&
       withDisplay.filter((d) => d.skill_key === 'start_write').length === 5 &&
       withDisplay.filter((d) => d.skill_key === 'lack').length === 5 &&
-      withDisplay.filter((d) => d.skill_key === 'contrast_char').length === 4
+      withDisplay.filter((d) => d.skill_key === 'contrast_char').length === 4 &&
+      withDisplay.filter((d) => d.skill_key === 'likability').length === 4
   )
 
   for (const d of withDisplay) {
@@ -4427,7 +4747,7 @@ console.log('\n[쓰지 않을 말 표시: forbidLabel/forbidDisplay ↔ 채점]'
     )].map((m) => ({ cfg: JSON.parse(m[1]) as Record<string, unknown>, source_key: m[2] }))
     t('update SQL 에 14행이 있다', rows.length === 14, `실제=${rows.length}`)
     const canon = (o: unknown) => JSON.stringify(o, Object.keys(o as object).sort())
-    for (const d of withDisplay.filter((x) => !['start_write', 'lack', 'contrast_char'].includes(x.skill_key))) {
+    for (const d of withDisplay.filter((x) => !['start_write', 'lack', 'contrast_char', 'likability'].includes(x.skill_key))) {
       const row = rows.find((r) => r.source_key === d.source_key)
       t(`update SQL '${d.source_key}' 의 scoring_config 가 덤프와 같다`,
         !!row && canon(row.cfg) === canon(d.scoring_config),
@@ -4561,9 +4881,17 @@ console.log('\n[자기점검 self_checks: 시드 ↔ 화면]')
         '두 사람이 나오면 — 반응을 서로 바꿔 놓아도 어색하지 않은지 봐. 안 어색하면 아직 대비가 아니야.',
       ])
   )
+  t(
+    'likability 자기점검 두 줄 (세션 33)',
+    JSON.stringify(scOf('likability')) ===
+      JSON.stringify([
+        '이 사람을 처음 보는 남이 읽어도 응원하고 싶어? 네가 예뻐서 말고.',
+        '이 사람이 뭘 내놨어 — 시간·돈·체면·제 몫? 내놓은 게 없으면 아직 호감이 아니야.',
+      ])
+  )
   const withSelfChecks = [
     'reduce_adverb', 'emotion_action', 'trim_padding', 'reduce_repeat', 'action_reason',
-    'start_write', 'start_extend', 'lack', 'contrast_char',
+    'start_write', 'start_extend', 'lack', 'contrast_char', 'likability',
   ]
   t(
     '나머지 단계는 빈 배열(자기점검 칸이 안 뜬다)',
@@ -4609,19 +4937,19 @@ console.log('\n[가르침 층: 코치 말풍선 · 조건 요약 · 게이지]')
   // ── 가·나·라: 코치 캐릭터 ──
   t('모든 단계에 coach_intro·coach_line 문자열', stagesDump.every(
     (s) => typeof s.coach_intro === 'string' && typeof s.coach_line === 'string'))
-  // 문장 트랙 10단계 + 도입 1·2·3(세션 28~30) + 구성 11 lack·12 contrast_char
-  // (세션 31·32) = 15단계에 코치가 있다.
+  // 문장 트랙 10단계 + 도입 1·2·3(세션 28~30) + 구성 11 lack·12 contrast_char·
+  // 13 likability(세션 31~33) = 16단계에 코치가 있다.
   const COACH_SKILLS = new Set([
     'reduce_adverb', 'emotion_action', 'trim_padding', 'reduce_repeat', 'adverb_exception',
     'sensory', 'rhythm', 'dialogue_ratio', 'pov_lock', 'action_reason',
-    'start_choose', 'start_write', 'start_extend', 'lack', 'contrast_char',
+    'start_choose', 'start_write', 'start_extend', 'lack', 'contrast_char', 'likability',
   ])
   const withCoach = stagesDump.filter((s) => (s.coach_intro as string).length > 0)
-  t('coach_intro 는 문장 10 + 도입 1·2·3 + 구성 11·12 에만 있다',
-    withCoach.length === 15 && withCoach.every((s) => COACH_SKILLS.has(s.skill_key)),
+  t('coach_intro 는 문장 10 + 도입 1·2·3 + 구성 11·12·13 에만 있다',
+    withCoach.length === 16 && withCoach.every((s) => COACH_SKILLS.has(s.skill_key)),
     JSON.stringify(withCoach.map((s) => `${s.skill_key}:${s.track}`)))
-  t('coach_line 도 같은 15단계에만',
-    stagesDump.filter((s) => (s.coach_line as string).length > 0).length === 15 &&
+  t('coach_line 도 같은 16단계에만',
+    stagesDump.filter((s) => (s.coach_line as string).length > 0).length === 16 &&
       stagesDump.every((s) => (s.coach_intro as string).length > 0 === ((s.coach_line as string).length > 0)))
   t('그 밖의 단계는 coach_intro·coach_line 이 빈 문자열',
     stagesDump.filter((s) => !COACH_SKILLS.has(s.skill_key)).every(

@@ -51,15 +51,21 @@ begin
   --     검사 대상은 forbidWords 나 forbidLemmas 중 하나라도 가진 문항이다.
   --     둘 다 없는 문항은 건너뛴다.
   --
-  --     ★ 예외: 구성 11 lack(세션 31) · 구성 12 contrast_char(세션 32 후기).
-  --       두 단계의 지문은 결함 없는 무난한 장면이라 자기 forbidWords 를 일부러
-  --       안 담는다 — 결핍/속마음은 학습자가 얹는다. requireAny·requireAll
-  --       (주인공 이름)이 지문 복사 제출을 막는다.
+  --     ★ 예외: 구성 11 lack(세션 31) · 구성 12 contrast_char(세션 32 후기) ·
+  --       구성 13 likability 무난 원문 2건(세션 33 — lk2-broken-sword·
+  --       lk2-night-raid, 둘 다 type continue라 이 검사(p.type = 'convert')
+  --       대상에서 이미 빠지지만 명시로도 뺀다).
+  --       이 단계들의 지문은 결함 없는 무난한 장면이라 자기 forbidWords 를 일부러
+  --       안 담는다 — 결핍/속마음/평가어는 학습자가 얹는다. requireAny·requireAll
+  --       (주인공 이름)이 지문 복사 제출을 막는다. likability 는 skill 전체가
+  --       아니라 이 2건만 예외다 — lk2-deal-credit·lk2-night-shift-bill 은
+  --       결함 원문이라 계속 걸려야 한다.
   select string_agg(p.source_key, ', ') into v_bad
     from problems p
     join stages s on s.id = p.stage_id
    where p.type = 'convert'
      and s.skill_key not in ('lack', 'contrast_char')
+     and p.source_key not in ('lk2-broken-sword', 'lk2-night-raid')
      and (p.scoring_config ? 'forbidWords' or p.scoring_config ? 'forbidLemmas')
      and not (
        exists (

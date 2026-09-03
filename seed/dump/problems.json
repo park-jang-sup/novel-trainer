@@ -3951,5 +3951,173 @@
       ],
       "forbidPassageCopy": true
     }
+  },
+  {
+    "type": "continue",
+    "choices": null,
+    "passage": "보상 명단이 붙었다. 한시우의 이름은 이번에도 없었다. 훈련장 구석에서 후배가 부러진 검을 내려다보고 있었다. 다음 달 심사까지 새 검을 구할 길이 없다고 했다. 한시우의 등에는 그 심사에 쓰려고 반년을 아껴 산 검이 걸려 있었다.",
+    "order_no": 1,
+    "tone_tag": "planned",
+    "genre_tag": "modern",
+    "skill_key": "likability",
+    "difficulty": 1,
+    "source_key": "lk2-broken-sword",
+    "source_tag": "original",
+    "instruction": "읽는 사람이 한시우를 응원하고 싶게 만드시오. 한시우는 재능 있는 동료들 사이에서 훈련량 하나로 버티는 B급 헌터다. 남의 성적을 제 채점표처럼 읽어 속이 쓰리지만, 그래서 노력하는 사람만은 깎아내리지 못한다. 원문을 읽고 다음에 올 장면을, '착하다'는 말 없이 한시우가 손해 보는 선택 하나가 행동으로 보이게 작성하시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 100,
+      "minVerbs": 3,
+      "forbidLabel": "인물을 평가하는 말",
+      "forbidWords": [
+        "착하",
+        "착한",
+        "따뜻",
+        "다정",
+        "친절",
+        "배려",
+        "좋은 사람",
+        "마음씨",
+        "인심"
+      ],
+      "forbidDisplay": [
+        "착하다",
+        "따뜻하다",
+        "다정하다",
+        "친절하다",
+        "배려하다"
+      ],
+      "forbidPassageCopy": true
+    }
+  },
+  {
+    "type": "convert",
+    "choices": null,
+    "passage": "문지호가 발표를 마쳤다. 클라이언트는 그 자리에서 계약서에 서명했다. 입사 오 년 만에 팀 최고 수주 기록이었고, 그는 사내 표창을 연달아 받은 사람이었다. 자료를 밤새 만든 후배 정유나는 회의실 구석에 서 있었다.",
+    "order_no": 2,
+    "tone_tag": "planned",
+    "genre_tag": "modern",
+    "skill_key": "likability",
+    "difficulty": 1,
+    "source_key": "lk2-deal-credit",
+    "source_tag": "original",
+    "instruction": "아래 장면을 고쳐 쓰시오. 문지호의 능력은 원문이 이미 다 보여 준다. 하지만 강한 사람을 독자는 기대할 뿐 응원하지는 않는다. 능력 서술은 한 문장으로 줄이고, 문지호가 정유나를 위해 손해 보는 선택 하나를 행동으로 보이게 다시 쓰시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 100,
+      "minVerbs": 3,
+      "forbidLabel": "능력을 늘어놓거나 인물을 평가하는 말",
+      "forbidWords": [
+        "최고",
+        "표창",
+        "기록",
+        "착하",
+        "착한",
+        "따뜻",
+        "다정",
+        "친절",
+        "배려",
+        "좋은 사람",
+        "마음씨"
+      ],
+      "forbidDisplay": [
+        "최고",
+        "표창",
+        "기록",
+        "착하다",
+        "따뜻하다",
+        "다정하다",
+        "친절하다"
+      ],
+      "forbidPassageCopy": true
+    }
+  },
+  {
+    "type": "convert",
+    "choices": null,
+    "passage": "고은재는 편의점 야간 근무를 마치고 병원비 고지서를 꺼냈다. 이번 달도 모자랐다. 왜 나만 이렇게 사나 싶어 눈물이 났다. 세상이 다 미웠다.",
+    "order_no": 3,
+    "tone_tag": "planned",
+    "genre_tag": "modern",
+    "skill_key": "likability",
+    "difficulty": 1,
+    "source_key": "lk2-night-shift-bill",
+    "source_tag": "original",
+    "instruction": "아래 장면을 고쳐 쓰시오. 고은재는 편의점 야간 근무로 아버지 병원비를 대는 사람이다. 상황이 힘든 것은 독자가 봐줄 수 있지만, 태도까지 힘들면 응원할 자리가 없어진다. 야간 근무와 모자란 병원비는 그대로 두고, 은재가 그 상황에서 하는 행동으로 태도만 바꿔 다시 쓰시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 100,
+      "minVerbs": 3,
+      "forbidLabel": "불행한 태도를 말하는 표현",
+      "forbidWords": [
+        "미웠",
+        "미워",
+        "싫었",
+        "싫어",
+        "왜 나만",
+        "한숨",
+        "눈물",
+        "울었",
+        "울며",
+        "불쌍",
+        "억울",
+        "지긋지긋",
+        "원망"
+      ],
+      "forbidDisplay": [
+        "밉다",
+        "싫다",
+        "한숨",
+        "눈물",
+        "울다",
+        "억울하다",
+        "원망하다"
+      ],
+      "forbidPassageCopy": true
+    }
+  },
+  {
+    "type": "continue",
+    "choices": null,
+    "passage": "야습이었다. 카일이 후퇴를 외쳤고 용병들이 숲으로 흩어졌다. 신입 노아는 대열 맨 뒤에서 뛰고 있었다. 그 뒤로 다리를 다친 병사 하나가 처졌다. 카일은 신입은 보름을 못 넘긴다고 말하고 다니는 부단장이었다.",
+    "order_no": 4,
+    "tone_tag": "planned",
+    "genre_tag": "fantasy",
+    "skill_key": "likability",
+    "difficulty": 2,
+    "source_key": "lk2-night-raid",
+    "source_tag": "original",
+    "instruction": "노아를 지켜보던 카일의 태도가 바뀌게 하시오. 노아는 말수 없이 시킨 일만 하는 신입이라 겁쟁이로 보이지만, 남이 안 보는 데서 먼저 움직이는 사람이다. 카일은 신입을 믿지 않는 부단장이다. 원문을 읽고 다음에 올 장면을, 노아가 손해 보는 선택 하나를 하고 그것을 본 카일이 행동 하나로 반응하게 작성하시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 100,
+      "minVerbs": 3,
+      "requireAll": [
+        "노아",
+        "카일"
+      ],
+      "forbidLabel": "인물을 평가하는 말",
+      "forbidWords": [
+        "착하",
+        "착한",
+        "따뜻",
+        "다정",
+        "친절",
+        "배려",
+        "좋은 사람",
+        "마음씨",
+        "인심",
+        "마음에 들"
+      ],
+      "forbidDisplay": [
+        "착하다",
+        "따뜻하다",
+        "다정하다",
+        "친절하다",
+        "배려하다",
+        "마음에 들다"
+      ],
+      "forbidPassageCopy": true
+    }
   }
 ]
