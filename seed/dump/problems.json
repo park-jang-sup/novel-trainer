@@ -3744,7 +3744,7 @@
     }
   },
   {
-    "type": "convert",
+    "type": "continue",
     "choices": null,
     "passage": "상단이 첫 삯을 나눠 주었다. 두 호위는 주머니를 받아 들고 숙소로 돌아갔다.",
     "order_no": 3,
@@ -3754,7 +3754,7 @@
     "difficulty": 1,
     "source_key": "cc-first-pay",
     "source_tag": "original",
-    "instruction": "조평과 유겸을 대비시키시오. 조평은 배곯던 시절이 몸에 남아 제 것엔 인색해도 남의 끼니엔 아깝지 않은 호위다. 유겸은 신세를 지면 도련님 취급이 진짜가 될까 밥값부터 제가 내는 신참이다. 아래 장면을 다시 써서, 같은 삯 앞에서 두 사람이 서로 다르게 움직이게 하시오.",
+    "instruction": "조평과 유겸을 대비시키시오. 조평은 배곯던 시절이 몸에 남아 제 것엔 인색해도 남의 끼니엔 아깝지 않은 호위다. 유겸은 신세를 지면 도련님 취급이 진짜가 될까 밥값부터 제가 내는 신참이다. 원문을 읽고 다음에 올 장면을, 같은 삯 앞에서 두 사람이 서로 다르게 움직이게 작성하시오.",
     "scoring_mode": "auto",
     "scoring_config": {
       "maxChars": 100,
@@ -3811,7 +3811,7 @@
     }
   },
   {
-    "type": "convert",
+    "type": "continue",
     "choices": null,
     "passage": "월례 회의에서 이달의 우수 사원이 발표되었다. 호명된 대리는 앞으로 나가 상을 받았다.",
     "order_no": 6,
@@ -3821,7 +3821,7 @@
     "difficulty": 1,
     "source_key": "cc-praise-callout",
     "source_tag": "original",
-    "instruction": "서담의 겉과 속을 한 장면에 담으시오. 서담은 공을 팀에 돌리고 칭찬 앞에서 사양부터 하는 대리다. 그러나 속으로는 그 칭찬을 오래 좋아한다. 아래 장면을 다시 써서, 사양하는 겉과 좋아하는 속이 둘 다 행동으로 보이게 하시오.",
+    "instruction": "서담의 겉과 속을 한 장면에 담으시오. 서담은 칭찬을 받으면 손부터 내젓는 조용한 대리다. 하지만 싫어서가 아니다 — 그 칭찬을 누구보다 오래 마음에 담아 두는 사람이다. 원문을 읽고 다음에 올 장면을, 사양하는 겉과 좋아하는 속이 둘 다 행동으로 보이게 작성하시오.",
     "scoring_mode": "auto",
     "scoring_config": {
       "maxChars": 100,
@@ -3838,14 +3838,11 @@
         "기쁘다",
         "뿌듯하다"
       ],
-      "requireAny": [
-        "서담"
-      ],
       "forbidPassageCopy": true
     }
   },
   {
-    "type": "convert",
+    "type": "continue",
     "choices": null,
     "passage": "레이드 중에 부상자가 나왔다는 무전이 들어왔다. 에이스는 예정된 인터뷰 장소로 이동하는 중이었다.",
     "order_no": 7,
@@ -3855,7 +3852,7 @@
     "difficulty": 1,
     "source_key": "cc-ace-siren",
     "source_tag": "original",
-    "instruction": "도현의 겉과 속을 한 장면에 담으시오. 도현은 누구에게나 같은 온도로 친절한 S급 헌터다. 무전 속 부상자는 그가 마음의 울타리 안에 둔 몇 안 되는 사람이다. 아래 장면을 다시 써서, 흐트러지지 않는 겉과 일정을 처음 미루는 속이 둘 다 행동으로 보이게 하시오.",
+    "instruction": "도현의 겉과 속을 한 장면에 담으시오. 도현은 누구에게나 똑같이 친절해 보이지만, 쉽게 곁을 주지 않는 S급 헌터다. 그가 진짜 마음을 준 사람은 몇 없고, 그 몇 사람 앞에서만 목석 같은 행동도 무너진다. 무전 속 부상자가 바로 그중 하나다. 원문을 읽고 다음에 올 장면을 친절한 겉과 무너지는 속이 둘 다 행동으로 보이게 작성하시오.",
     "scoring_mode": "auto",
     "scoring_config": {
       "maxChars": 100,
@@ -3871,14 +3868,11 @@
         "불안",
         "초조"
       ],
-      "requireAny": [
-        "도현"
-      ],
       "forbidPassageCopy": true
     }
   },
   {
-    "type": "convert",
+    "type": "continue",
     "choices": null,
     "passage": "밤길 호위 순번을 정하는 자리였다. 가장 험한 새벽 구간은 아무도 맡으려 하지 않았다.",
     "order_no": 8,
@@ -3888,7 +3882,7 @@
     "difficulty": 1,
     "source_key": "cc-night-shift",
     "source_tag": "original",
-    "instruction": "유겸의 겉과 속을 한 장면에 담으시오. 유겸은 씀씀이 크고 낙천적인 부잣집 출신 신참 호위다. 그러나 실력을 의심받으면 웃는 얼굴로 제일 험한 일에 손을 든다. 아래 장면을 다시 써서, 웃는 겉과 이 악무는 속이 둘 다 행동으로 보이게 하시오.",
+    "instruction": "유겸의 겉과 속을 한 장면에 담으시오. 유겸은 부잣집에서 나와 제 힘을 시험하러 온 신참 호위다. 도련님 소리가 제일 싫어서, 실력을 의심받으면 웃는 얼굴로 제일 험한 일을 자원한다. 원문을 읽고 다음에 올 장면을, 웃는 겉과 이를 무는 속이 둘 다 행동으로 보이게 작성하시오.",
     "scoring_mode": "auto",
     "scoring_config": {
       "maxChars": 100,
@@ -3904,14 +3898,11 @@
         "자존심",
         "증명하다"
       ],
-      "requireAny": [
-        "유겸"
-      ],
       "forbidPassageCopy": true
     }
   },
   {
-    "type": "convert",
+    "type": "continue",
     "choices": null,
     "passage": "고물상이 유품 값을 반으로 후려쳤다. 견습들은 물건을 다시 싸서 돌아갈 채비를 했다.",
     "order_no": 9,
@@ -3921,7 +3912,7 @@
     "difficulty": 1,
     "source_key": "cc-junk-dealer",
     "source_tag": "original",
-    "instruction": "셀라의 겉과 속을 한 장면에 담으시오. 셀라는 모든 것에 값부터 매기는 실용주의 견습이다. 그러나 값을 매기는 것이 그녀가 물건과 사람을 지키는 방식이다. 아래 장면을 다시 써서, 차가운 겉과 지키려는 속이 둘 다 행동으로 보이게 하시오.",
+    "instruction": "셀라의 겉과 속을 한 장면에 담으시오. 셀라는 뭐든 값부터 매기는 냉정한 견습이다. 하지만 그 계산은 욕심이 아니라 지키는 방식이다 — 제값을 받아야 물건도 사람도 함부로 다뤄지지 않는다고 믿는다. 원문을 읽고 다음에 올 장면을, 차가운 겉과 지키려는 속이 둘 다 행동으로 보이게 작성하시오.",
     "scoring_mode": "auto",
     "scoring_config": {
       "maxChars": 100,
@@ -3935,14 +3926,11 @@
         "소중하다",
         "다정하다"
       ],
-      "requireAny": [
-        "셀라"
-      ],
       "forbidPassageCopy": true
     }
   },
   {
-    "type": "convert",
+    "type": "continue",
     "choices": null,
     "passage": "게이트 공략이 끝나고 취재진이 몰려들었다. 헌터들이 카메라 앞으로 모여들었다.",
     "order_no": 10,
@@ -3952,7 +3940,7 @@
     "difficulty": 2,
     "source_key": "cc-flash-crowd",
     "source_tag": "original",
-    "instruction": "군중과 한시우를 갈라 세우시오. 한시우는 재능 대신 훈련량으로 버티는 B급 헌터다. 아래 장면에서 모두가 같은 곳을 향한다. 다시 써서, 다른 사람들과 한시우가 서로 다른 방향으로 움직이게 하시오.",
+    "instruction": "군중과 한시우를 갈라 세우시오. 한시우는 재능 대신 훈련량으로 버티는 B급 헌터다. 카메라보다 다음 훈련이 급한 사람이다. 원문을 읽고 다음에 올 장면을, 모두가 몰려가는 쪽과 한시우가 가는 쪽이 갈라지게 작성하시오.",
     "scoring_mode": "auto",
     "scoring_config": {
       "maxChars": 100,

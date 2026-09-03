@@ -11,7 +11,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import path from 'node:path'
 import { combine, countChars, countLetters, countOccurrences, countSentences, deriveFillParts, fillMarkerMismatch, findForbidden, mergeForbidChecks, mergeRepeatChecks, gradeLocal, pendingMorphChecks, summarizeConfig } from './index'
 import { sqlStr, countRawNewlinesInStrings } from '../seed-sql'
-import { nextProblemKey, nextStageId, stageProgress } from '../train-nav'
+import { cycleNextProblemKey, nextProblemKey, nextStageId, stageProgress } from '../train-nav'
 import type { Answer, Check, CheckStatus, MorphResult, Problem, ProblemType, ScoringConfig, ScoringMode } from './types'
 import { buildMarks } from '../../components/train/marks'
 import { CONVERT_SEEDS } from './fixtures/convert-seeds'
@@ -3939,10 +3939,18 @@ console.log('\n[구성 11 lack: 5문항 + 모범답안 대조]')
 // 문항을 갈았다.
 //   활성: cc-first-pay(페어 대비 · requireAll 유지) + 신규 5
 //         — 갭 4(cc-praise-callout·cc-ace-siren·cc-night-shift·cc-junk-dealer,
-//           forbidLabel '속마음을 직접 말하는 표현' · requireAny 1명 · difficulty 1)
+//           forbidLabel '속마음을 직접 말하는 표현' · difficulty 1)
 //         + 군중 1(cc-flash-crowd, forbid 없음 · requireAny · difficulty 2)
 //   비활성: cc-report-credit · cc-street-night · cc-raid-reward · cc-relic-box
 //           (deactivate.json · 제출 이력 보존)
+//
+// 세션 32 후기 3: 박 님 견본 규격 4조 반영 — ① 겉·속 인물 소개 ② type
+// convert → continue(원문을 읽고 다음에 올 장면을 작성 — 대체가 아니라
+// 이어쓰기, 채점 경로는 그대로) ③ 답안은 지시문 정보만으로 자립(함축·원장
+// 내부 언어 금지) ④ 이름 강제는 과제 본질일 때만 — 갭 4건은 requireAny 를
+// 걷었다(검사가 자수·동사·금지어·원문복사 4개로 준다, 두 칸 화면은 forbidWords
+// 가 있어 그대로 유지). CROWD(requireAny)·first-pay(requireAll)는 갈라 세우기·
+// 대비가 과제 본질이라 이름 요구를 그대로 둔다.
 console.log('\n[구성 12 contrast_char: 재설계 · 활성 6 + 비활성 4]')
 {
   interface CcProblem {
@@ -3991,8 +3999,10 @@ console.log('\n[구성 12 contrast_char: 재설계 · 활성 6 + 비활성 4]')
 
   // ── 활성 6건 ──
   t('활성 contrast_char 6문항 (first-pay + 신규 5)', cc.length === 6, `실제=${cc.length}`)
-  t('활성 전부 convert · auto · choices null', cc.every(
-    (d) => d.type === 'convert' && d.scoring_mode === 'auto' && d.choices === null))
+  // 세션 32 후기 3: convert → continue (박 님 견본 규격 — 대체가 아니라 이어쓰기)
+  t('활성 전부 continue · auto · choices null', cc.every(
+    (d) => d.type === 'continue' && d.scoring_mode === 'auto' && d.choices === null),
+    JSON.stringify(cc.map((d) => `${d.source_key}:${d.type}`)))
   t('활성 order_no: first-pay 3 · 신규 6~10',
     JSON.stringify([...cc.map((d) => d.order_no)].sort((a, b) => a - b)) === '[3,6,7,8,9,10]',
     JSON.stringify(cc.map((d) => `${d.source_key}:${d.order_no}`)))
@@ -4010,16 +4020,16 @@ console.log('\n[구성 12 contrast_char: 재설계 · 활성 6 + 비활성 4]')
       Array.isArray(c.requireAll) && (c.requireAll as string[]).length === 2 &&
         fp.difficulty === 1 && c.forbidWords === undefined && c.requireAny === undefined)
   }
-  // 갭 4건: forbidLabel 동일 문구 · requireAny 1명 · difficulty 1
+  // 갭 4건: forbidLabel 동일 문구 · difficulty 1 · requireAny·requireAll 부재
+  // (세션 32 후기 3 — 이름 강제는 과제 본질일 때만. 검사는 자수·동사·금지어·원문복사 4개로 준다)
   for (const key of GAP) {
     const d = cc.find((x) => x.source_key === key)!
     const c = d.scoring_config
-    t(`'${key}': forbidLabel '속마음을 직접 말하는 표현' · requireAny 1명 · forbidWords ≥2 · forbidDisplay ≥2 · difficulty 1 · requireAll 없음`,
+    t(`'${key}': forbidLabel '속마음을 직접 말하는 표현' · forbidWords ≥2 · forbidDisplay ≥2 · difficulty 1 · requireAny·requireAll 부재`,
       c.forbidLabel === '속마음을 직접 말하는 표현' &&
-        Array.isArray(c.requireAny) && (c.requireAny as string[]).length >= 1 &&
         Array.isArray(c.forbidWords) && (c.forbidWords as string[]).length >= 2 &&
         Array.isArray(c.forbidDisplay) && (c.forbidDisplay as string[]).length >= 2 &&
-        d.difficulty === 1 && c.requireAll === undefined,
+        d.difficulty === 1 && c.requireAll === undefined && c.requireAny === undefined,
       JSON.stringify(c))
   }
   // 군중 1건: difficulty 2 · forbid 없음 · requireAny
@@ -4036,31 +4046,38 @@ console.log('\n[구성 12 contrast_char: 재설계 · 활성 6 + 비활성 4]')
   t('갭 4건의 forbidLabel 이 전부 같은 문구',
     new Set(GAP.map((k) => cc.find((x) => x.source_key === k)!.scoring_config.forbidLabel)).size === 1)
 
-  // ── 원문 불변식: 이름 미포함 · forbidWords 미적중 · 원문 그대로 → 요구 검사 fail ──
+  // ── 원문 불변식: 이름 미포함 · forbidWords 미적중 · 원문 그대로 → fail ──
+  // 세션 32 후기 3: 갭 4건은 requireAny 가 없다 — names 가 빈 배열이면 이름·reqKey
+  // 단언은 건너뛰고, forbidPassageCopy 하나로도 원문 그대로 제출을 막는다는 것만 문다.
   for (const d of cc) {
     const c = d.scoring_config
     const names = ((c.requireAll ?? c.requireAny ?? []) as string[])
     const fw = (c.forbidWords as string[]) ?? []
-    t(`불변식: '${d.source_key}' 원문에 주인공 이름이 없다`,
-      names.every((n) => !(d.passage ?? '').includes(n)), d.passage ?? '')
+    if (names.length > 0) {
+      t(`불변식: '${d.source_key}' 원문에 주인공 이름이 없다`,
+        names.every((n) => !(d.passage ?? '').includes(n)), d.passage ?? '')
+    }
     if (fw.length > 0) {
       t(`불변식: '${d.source_key}' 원문에 forbidWords 가 없다 (무난 장면)`,
         findForbidden(d.passage ?? '', fw).length === 0, d.passage ?? '')
     }
-    const res = combine(
-      { id: d.source_key, type: 'convert', scoring_mode: 'auto', scoring_config: c },
-      { text: d.passage ?? '' }, undefined, null)
-    const reqKey = c.requireAll ? 'requireAll' : 'requireAny'
-    t(`불변식: '${d.source_key}' 원문 그대로 제출은 ${reqKey} fail`,
-      res.checks.find((x) => x.key === reqKey)?.status === 'fail')
-    // 뚫기 물기 — 어제의 뚫기(원문 + 이름 전부)는 이름 검사는 통과하고 passageCopy 로 걸린다.
-    const bypass = (d.passage ?? '') + ' ' + names.join(' ')
+    const reqKey = c.requireAll ? 'requireAll' : c.requireAny ? 'requireAny' : null
+    if (reqKey) {
+      const res = combine(
+        { id: d.source_key, type: 'continue', scoring_mode: 'auto', scoring_config: c },
+        { text: d.passage ?? '' }, undefined, null)
+      t(`불변식: '${d.source_key}' 원문 그대로 제출은 ${reqKey} fail`,
+        res.checks.find((x) => x.key === reqKey)?.status === 'fail')
+    }
+    // 뚫기 물기 — 원문 + 이름(있으면) 은 passageCopy 로 걸린다. 갭 4건은 이름 검사
+    // 자체가 없어도(names=[]) 성립한다 — forbidPassageCopy 가 원문 그대로를 그 자체로 막는다.
+    const bypass = (d.passage ?? '') + (names.length > 0 ? ' ' + names.join(' ') : '')
     const bp = gradeLocal(
-      { id: d.source_key, type: 'convert', scoring_mode: 'auto', scoring_config: c },
+      { id: d.source_key, type: 'continue', scoring_mode: 'auto', scoring_config: c },
       { text: bypass }, undefined, d.passage ?? '')
-    t(`뚫기 물기: '${d.source_key}' 원문+이름 → passageCopy fail`,
+    t(`뚫기 물기: '${d.source_key}' 원문(+이름) → passageCopy fail`,
       bp.find((x) => x.key === 'passageCopy')?.status === 'fail' &&
-        bp.find((x) => x.key === reqKey)?.status === 'pass', JSON.stringify(bp))
+        (!reqKey || bp.find((x) => x.key === reqKey)?.status === 'pass'), JSON.stringify(bp))
   }
 
   // ── 새 지문은 sc- 어느 choices 에도 없다(신작) ──
@@ -4078,13 +4095,13 @@ console.log('\n[구성 12 contrast_char: 재설계 · 활성 6 + 비활성 4]')
     const ords = refs.filter((r) => r.source_key === d.source_key).map((r) => r.ord).sort()
     t(`'${d.source_key}': 가·나 두 세트`, JSON.stringify(ords) === '[1,2]', JSON.stringify(ords))
   }
-  // 실측 자수(공백만 제외) — 세션 32 후기 2 로 활성 6건 전부 100자 시연형 교체
+  // 실측 자수(공백만 제외) — 세션 32 후기 3 박 님 견본 규격 반영으로 12행 재교체
   const LEN: Record<string, [number, number]> = {
-    'cc-praise-callout': [98, 87],
-    'cc-ace-siren': [88, 96],
-    'cc-night-shift': [89, 83],
-    'cc-junk-dealer': [92, 89],
-    'cc-flash-crowd': [88, 90],
+    'cc-praise-callout': [95, 80],
+    'cc-ace-siren': [75, 98],
+    'cc-night-shift': [84, 82],
+    'cc-junk-dealer': [82, 84],
+    'cc-flash-crowd': [84, 81],
     'cc-first-pay': [96, 86],
   }
   for (const r of refs) {
@@ -4099,15 +4116,17 @@ console.log('\n[구성 12 contrast_char: 재설계 · 활성 6 + 비활성 4]')
     t(`'${r.source_key}' ord${r.ord}: 원문을 통짜로 품지 않는다 (passageCopy)`,
       !strip(r.content).includes(strip(passageOf.get(r.source_key)!)),
       `"${r.content}"`)
-    t(`'${r.source_key}' ord${r.ord}: 요구 이름을 포함`,
-      cfg.requireAll
-        ? names.every((nm) => r.content.includes(nm))
-        : names.some((nm) => r.content.includes(nm)),
-      JSON.stringify(names))
+    if (names.length > 0) {
+      t(`'${r.source_key}' ord${r.ord}: 요구 이름을 포함`,
+        cfg.requireAll
+          ? names.every((nm) => r.content.includes(nm))
+          : names.some((nm) => r.content.includes(nm)),
+        JSON.stringify(names))
+    }
     const hits = findForbidden(r.content, (cfg.forbidWords as string[] | undefined) ?? [])
     t(`'${r.source_key}' ord${r.ord}: forbidWords 적중 0`, hits.length === 0, JSON.stringify(hits))
     const res = combine(
-      { id: r.source_key, type: 'convert', scoring_mode: 'auto', scoring_config: cfg },
+      { id: r.source_key, type: 'continue', scoring_mode: 'auto', scoring_config: cfg },
       { text: r.content }, undefined, null, passageOf.get(r.source_key)!)
     for (const key of ['requireAll', 'requireAny', 'forbidWords', 'maxChars', 'passageCopy']) {
       const c = res.checks.find((x) => x.key === key)
@@ -4144,12 +4163,15 @@ console.log('\n[구성 12 contrast_char: 재설계 · 활성 6 + 비활성 4]')
       copied.length === 0, JSON.stringify(copied))
   }
 
-  // ── update-contrast-v3.sql ↔ 덤프 (세션 32 후기 2) ──
-  //  v1 없음. v2 = 대비형 cc- 4건 비활성. v3 = 활성 cc- 6건(instruction+cfg) +
-  //  lk- 5건(cfg) + 활성 cc- 모범답안 12행. 기존 행이라 이 파일이 DB 반영을 맡는다.
+  // ── update-contrast-v4.sql ↔ 덤프 (세션 32 후기 3) ──
+  //  v1 없음. v2 = 대비형 cc- 4건 비활성. v3 = 활성 cc- 6건(instruction+cfg 100자화) +
+  //  lk- 5건(forbidPassageCopy) + 활성 cc- 모범답안 12행(100자 시연형). v4 = 박 님 견본
+  //  규격 반영 — 활성 cc- 6건(type+instruction+cfg, convert→continue·갭 4 requireAny 삭제)
+  //  + 활성 cc- 모범답안 12행. lk- 는 이번 라운드에 안 건드린다(v3 그대로).
+  //  기존 행이라 이 파일이 DB 반영을 맡는다.
   {
     const sql = readFileSync(
-      path.join(__dirname, '..', '..', 'seed', 'update-contrast-v3.sql'), 'utf8')
+      path.join(__dirname, '..', '..', 'seed', 'update-contrast-v4.sql'), 'utf8')
     const canon = (o: unknown): unknown =>
       Array.isArray(o)
         ? o.map(canon)
@@ -4159,51 +4181,45 @@ console.log('\n[구성 12 contrast_char: 재설계 · 활성 6 + 비활성 4]')
     const cj = (o: unknown) => JSON.stringify(canon(o))
 
     const ccUpd = [...sql.matchAll(
-      /update problems set\n\s*instruction = '((?:[^']|'')*)',\n\s*scoring_config = '(.+?)'::jsonb\n\s*where source_key = '([^']*)';/g
+      /update problems set\n\s*type = '([^']*)',\n\s*instruction = '((?:[^']|'')*)',\n\s*scoring_config = '(.+?)'::jsonb\n\s*where source_key = '([^']*)';/g
     )].map((m) => ({
-      instruction: m[1].replace(/''/g, "'"),
-      cfg: JSON.parse(m[2]) as Record<string, unknown>,
-      source_key: m[3],
+      type: m[1],
+      instruction: m[2].replace(/''/g, "'"),
+      cfg: JSON.parse(m[3]) as Record<string, unknown>,
+      source_key: m[4],
     }))
-    const lkUpd = [...sql.matchAll(
-      /update problems set\n\s*scoring_config = '(.+?)'::jsonb\n\s*where source_key = '([^']*)';/g
-    )].map((m) => ({ cfg: JSON.parse(m[1]) as Record<string, unknown>, source_key: m[2] }))
     const refUpd = [...sql.matchAll(
       /update reference_answers set content =\n\s*'((?:[^']|'')*)'\n\s*where problem_id = \(select id from problems where source_key = '([^']*)'\)\n\s*and ord = (\d+) and blank_key = '';/g
     )].map((m) => ({ content: m[1].replace(/''/g, "'"), source_key: m[2], ord: Number(m[3]) }))
 
-    t('v3 SQL: 활성 cc- 6행 (instruction+cfg)', ccUpd.length === 6, `실제=${ccUpd.length}`)
-    t('v3 SQL: lk- 5행 (cfg)', lkUpd.length === 5, `실제=${lkUpd.length}`)
-    t('v3 SQL: 활성 cc- 모범답안 12행', refUpd.length === 12, `실제=${refUpd.length}`)
+    t('v4 SQL: 활성 cc- 6행 (type+instruction+cfg)', ccUpd.length === 6, `실제=${ccUpd.length}`)
+    t('v4 SQL: 활성 cc- 모범답안 12행', refUpd.length === 12, `실제=${refUpd.length}`)
 
     for (const d of cc) {
       const row = ccUpd.find((r) => r.source_key === d.source_key)
-      t(`v3 SQL '${d.source_key}' instruction·scoring_config 가 덤프와 같다`,
-        !!row && row.instruction === d.instruction && cj(row.cfg) === cj(d.scoring_config),
-        `SQL cfg=${JSON.stringify(row?.cfg)}`)
-    }
-    for (const d of allProblems.filter((x) => x.skill_key === 'lack')) {
-      const row = lkUpd.find((r) => r.source_key === d.source_key)
-      t(`v3 SQL '${d.source_key}' scoring_config 가 덤프와 같다 (forbidPassageCopy 추가)`,
-        !!row && cj(row.cfg) === cj(d.scoring_config), `SQL cfg=${JSON.stringify(row?.cfg)}`)
+      t(`v4 SQL '${d.source_key}' type·instruction·scoring_config 가 덤프와 같다`,
+        !!row && row.type === d.type && row.instruction === d.instruction &&
+          cj(row.cfg) === cj(d.scoring_config),
+        `SQL type=${row?.type} cfg=${JSON.stringify(row?.cfg)}`)
     }
     for (const r of refs) {
       const row = refUpd.find((x) => x.source_key === r.source_key && x.ord === r.ord)
-      t(`v3 SQL '${r.source_key}' ord${r.ord} content 가 덤프와 글자까지 같다`,
+      t(`v4 SQL '${r.source_key}' ord${r.ord} content 가 덤프와 글자까지 같다`,
         !!row && row.content === r.content, `SQL=${JSON.stringify(row?.content)}`)
     }
   }
 
   // ── 형태소(서버 있을 때만): 모범답안 동사 ≥ 3 (minVerbs 3) ──
-  // 세션 32 후기 2 100자 시연형 실측 — 순서: praise·ace·night·junk·flash·first-pay
-  //   가 10·7·10·8·5·10 / 나 8·7·7·9·9·10
-  pushRefMorphCheck('구성 12', refs, 'convert', cfgOf)
+  // 세션 32 후기 3 박 님 견본 규격 재교체 실측 — 순서: praise·ace·night·junk·flash·first-pay
+  //   가 10·7·8·7·5·10 / 나 8·9·7·8·9·10
+  // (도현 정정 합본 v2: ace 가 자수 71→75·동사 6→7 / 나 자수 96→98·동사 9 불변)
+  pushRefMorphCheck('구성 12', refs, 'continue', cfgOf)
 
   // ── 요구 검사 물기 (형태소 불필요) ──
   {
     const fp = cc.find((x) => x.source_key === 'cc-first-pay')! // requireAll ['조평','유겸']
     const run = (text: string) => combine(
-      { id: fp.source_key, type: 'convert', scoring_mode: 'auto', scoring_config: fp.scoring_config },
+      { id: fp.source_key, type: 'continue', scoring_mode: 'auto', scoring_config: fp.scoring_config },
       { text }, undefined, emptyMorph({ verbs: ['하', '되'] }))
       .checks.find((c) => c.key === 'requireAll')!
     t("물기: '조평'만 있고 '유겸' 없는 답안 → requireAll fail · detail 에 빠진 이름",
@@ -4211,7 +4227,7 @@ console.log('\n[구성 12 contrast_char: 재설계 · 활성 6 + 비활성 4]')
         run('조평은 삯을 전대에 꿰맸다.').detail === '없음: 유겸')
     const gap = cc.find((x) => x.source_key === 'cc-ace-siren')!
     const gr = combine(
-      { id: gap.source_key, type: 'convert', scoring_mode: 'auto', scoring_config: gap.scoring_config },
+      { id: gap.source_key, type: 'continue', scoring_mode: 'auto', scoring_config: gap.scoring_config },
       { text: '도현은 인터뷰 내내 불안한 표정을 감추지 못했다.' }, undefined,
       emptyMorph({ verbs: ['하', '못하'] }))
     t("물기: 갭 문항에 '불안' 을 직접 쓰면 forbidWords fail",
@@ -4225,10 +4241,18 @@ console.log('\n[구성 12 contrast_char: 재설계 · 활성 6 + 비활성 4]')
     [...charMd.matchAll(/^##\s+([^\s—]+)\s+—/gm)].map((m) => m[1]))
   t('원장에 인물 헤더 10명 이상', charHeaders.size >= 10, JSON.stringify([...charHeaders]))
   // 활성 lack·contrast_char 문항의 대표 이름이 원장 헤더에 실재한다.
+  // 세션 32 후기 3: 갭 4건은 requireAny 가 없다 — scoring_config 에 이름이 없으므로
+  // instruction 의 "○○의 겉과 속을 한 장면에" 머리말에서 이름을 뽑는다.
   const nameSkills = new Set(['lack', 'contrast_char'])
   for (const d of allProblems.filter((p) => nameSkills.has(p.skill_key) && !deadSet.has(p.source_key))) {
     const c = d.scoring_config
-    const canon = (c.requireAll as string[] | undefined) ?? [((c.requireAny as string[]) ?? [])[0]]
+    const canon = (c.requireAll as string[] | undefined)
+      ?? (c.requireAny as string[] | undefined)?.slice(0, 1)
+      ?? (() => {
+        const m = /^(\S+?)의 겉과 속을 한 장면에/.exec(d.instruction)
+        return m ? [m[1]] : []
+      })()
+    t(`왕복 규칙: '${d.source_key}' 에서 대표 이름을 뽑을 수 있다`, canon.length > 0, d.instruction)
     for (const nm of canon) {
       t(`왕복 규칙: '${d.source_key}' 의 인물 '${nm}' 이 characters.md 에 있다`,
         charHeaders.has(nm), JSON.stringify([...charHeaders]))
@@ -4762,6 +4786,40 @@ console.log('\n[학습 루프: 다음 문항 계산]')
     return list[i + 1]?.source_key ?? null // 'ar-b' — 통과 여부를 안 봄
   })()
   t('물기: 건너뛰기를 빼면 통과한 ar-b 로 보낸다 (지금은 ar-c)', skipLeaks === 'ar-b' && nextProblemKey(P, 'ar-a', new Set(['i-b'])) === 'ar-c')
+}
+
+// ── 학습 루프: 단계 완료 후 훑어보기 (세션 32 후기 3 · 박 님 발견) ────────
+//
+// 박 님 실사용: 단계를 전부 통과한 문항 화면에 '다음 단계 →'만 뜨고 단계 내
+// 다른 문항으로 가는 길이 없었다. cycleNextProblemKey 는 통과 여부와 무관하게
+// 목록 순서상 다음(마지막이면 첫 문항으로 순회)을 준다 — nextProblemKey 와
+// 같은 ordered() 정렬을 그대로 쓴다(새 정렬·상태 없음).
+console.log('\n[학습 루프: 단계 완료 후 훑어보기]')
+{
+  const P = [
+    { id: 'i-c', source_key: 'ar-c', difficulty: 1 },
+    { id: 'i-a', source_key: 'ar-a', difficulty: 1 },
+    { id: 'i-b', source_key: 'ar-b', difficulty: 1 },
+    { id: 'i-e', source_key: 'ar-e', difficulty: 2 },
+    { id: 'i-d', source_key: 'ar-d', difficulty: 2 },
+  ]
+  // 정렬 결과: ar-a, ar-b, ar-c (난1) · ar-d, ar-e (난2)
+
+  t('중간 문항 → 순서상 다음', cycleNextProblemKey(P, 'ar-b') === 'ar-c')
+  t('난이도 경계를 넘는다 (ar-c → ar-d)', cycleNextProblemKey(P, 'ar-c') === 'ar-d')
+  t('마지막 문항 → 첫 문항으로 순회 (ar-e → ar-a)', cycleNextProblemKey(P, 'ar-e') === 'ar-a')
+  t('목록에 없는 key → null (방어)', cycleNextProblemKey(P, 'ar-z') === null)
+  t('빈 목록 → null', cycleNextProblemKey([], 'ar-a') === null)
+  t('문항 하나뿐 → 자기 자신', cycleNextProblemKey([P[0]], 'ar-c') === 'ar-c')
+
+  // 물기: 순회(마지막 → 첫 문항)를 지우면(뒤가 없을 때 null) 이 시험이 샌다
+  const wrapLeaks = (() => {
+    const list = [...P].sort((a, b) => a.difficulty - b.difficulty || a.source_key.localeCompare(b.source_key))
+    const i = list.findIndex((p) => p.source_key === 'ar-e')
+    return list[i + 1]?.source_key ?? null // 순회 없는 버전은 null
+  })()
+  t('물기: 순회를 빼면 마지막 문항 다음이 null (지금은 ar-a)',
+    wrapLeaks === null && cycleNextProblemKey(P, 'ar-e') === 'ar-a')
 }
 
 console.log('\n[학습 루프: 다음 단계 계산]')

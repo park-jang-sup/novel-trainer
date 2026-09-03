@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 32 후기 2 · 커밋 `2559a4b` 위
+마지막 갱신: 세션 32 후기 3 · 커밋 `a17fa96` 위
 
 ---
 
@@ -118,6 +118,88 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
                         박 님이 직접 오판을 관찰해 판정 권한 부여를 결정. 여기 쌓이는 답안·
                         판정 기록이 원칙 4 재개 조건의 수집처다.
                         전제: 구성 빈 단계 4개가 먼저 찬다
+```
+
+### 끝난 것 — 세션 32 후기 3 (구성 12 최종 확정 · 박 님 견본 규격)
+
+```
+박 님이 직접 수정한 도현 견본이 기준 — 구성 12 활성 6문항 전면 재작성
+
+경위  박 님이 도현(cc-ace-siren) 문항을 직접 고쳐 견본으로 냈다. 원인은 원장
+      내부 언어 유출 — 옛 지시문·모범답안이 characters.md 의 함축된 표현을
+      그대로 썼다("무너지지 않는 겉" 류). 학습자는 원장을 안 본다. 답안은
+      지시문 정보만으로 자립해야 한다.
+
+박 님 견본 규격 4조 — 이후 남는 구성 단계 초안(구성 13 likability · info_gap ·
+cliffhanger_adv · first_hook)의 기본 결이다
+  ① 인물 설명은 겉·속의 관계까지 지시문 안에서 푼다("친절해 보이지만
+     오히려…") — 원장 축약어 그대로 베끼지 않는다
+  ② 과제는 "원문을 읽고 다음에 올 장면을 작성" — 대체가 아니라 이어쓰기.
+     type 을 convert → continue 로 전환(채점 경로는 완전히 같다 — default
+     분기가 type 을 안 본다)
+  ③ 모범답안은 지시문 정보만으로 읽고 바로 이해된다 — 함축·원장 내부 언어 금지
+  ④ 이름 강제(requireAny·requireAll)는 그게 과제 본질일 때만 건다 — 겉·속을
+     한 인물 안에서 보이는 갭 문항(4건)은 이름 강제가 필요 없다. 갈라 세우기
+     (cc-flash-crowd)·대비(cc-first-pay)처럼 "누구와 누구"가 과제 자체인
+     문항만 유지한다
+
+seed/dump/problems.json + seed/update-contrast-v4.sql  활성 cc- 6건
+  공통  type convert → continue. 나머지 config(maxChars 100·minVerbs 3·
+        forbidPassageCopy true) 불변
+  갭 4건(cc-praise-callout·cc-ace-siren·cc-night-shift·cc-junk-dealer)
+        requireAny 삭제 — 검사가 자수·동사·금지어(forbidWords)·원문복사 4개로
+        준다. 두 칸 화면은 forbidWords 가 있어 그대로 유지
+  cc-flash-crowd  requireAny ["한시우","시우"] 유지(갈라 세우기가 본질)
+  cc-first-pay    requireAll ["조평","유겸"] 유지(대비가 본질)
+  instruction 6건 전면 교체 — 박 님 문안 그대로(글자 하나 안 바꿈)
+
+seed/dump/answers.json  12행 교체(박 님 확정판, first-pay 2행은 기존과 동일)
+  실측 자수 가 95·71·84·82·84·96 / 나 80·96·82·84·81·86(순서: praise·ace·
+  night·junk·flash·first-pay) · 동사 가 10·6·8·7·5·10 / 나 8·9·7·8·9·10 ·
+  forbid 0 · 원문 통짜 미포함
+
+docs/characters.md  도현 겉·속 문구를 박 님 판과 정합(왕복 규칙) —
+  "친절해 보이지만 오히려 아무도 곁을 주지 못한다" · "목석 같은 행동도
+  무너진다"로 손질
+
+verify.ts [구성 12]  전면 갱신
+  type continue 단언(6건) · 갭 4건 requireAny·requireAll 부재 단언 ·
+  flash-crowd requireAny · first-pay requireAll 유지 단언 · 실측 자수·동사
+  갱신 · 원문 불변식 — names가 빈 배열(갭 4건)이면 이름·reqKey 단언은
+  건너뛰고 forbidPassageCopy 하나로 원문 그대로 제출을 막는다는 것만 문다 ·
+  뚫기 물기는 이름 검사 유무와 무관하게 성립(원문(+이름) → passageCopy
+  fail — 주석으로 명시) · 왕복 규칙 이름 추출을 requireAll/requireAny 부재
+  시 instruction 의 "○○의 겉과 속을 한 장면에" 머리말에서 뽑도록 확장 ·
+  update-contrast-v4.sql ↔ 덤프 대조(type 필드 포함)
+★ DB 절차(박 님)  update-contrast-v3.sql(이미 실행됨) → update-contrast-v4.sql →
+  seed_data.sql → seed_check.sql → 브라우저 '입체 캐릭터':
+  ① 지시문에서 인물이 판별되는지 — "그래서 뭐라는지"가 이제 없는지
+  ② 조건 요약에서 이름 요구가 갭 4건에서 사라졌는지
+  ③ 모범답안이 읽고 바로 이해되는지 — 이번 판정 기준
+
+정정 합본 v2 — 도현 문항 3곳 + 완료 후 이동 링크 (박 님 지시, 같은 커밋)
+  도현 문장 정정  cc-ace-siren instruction "오히려 아무도 곁을 주지 못하는"
+    → "쉽게 곁을 주지 않는"(뒤의 "마음을 준 사람은 몇 없고"와 모순이었다).
+    가 "몸은 이미 차 쪽으로 돌아 있었다" → "차가 있는 방향으로 가고 있었다".
+    나 "엘리베이터만 타던 사람이" → "엘리베이터만 고집하던 사람이".
+    닿는 곳: problems.json·answers.json·update-contrast-v4.sql·characters.md
+    (도현 겉 문구도 같은 구절로) · verify.ts LEN 표(ace 71→75·96→98)
+    실측 자수 가 75·동사 7(형태소 서버 확인) / 나 98·동사 9(불변)
+  완료 후 이동 링크(학습 동선 문제, 표시 손질 아님)  단계를 전부 통과한
+    문항 화면에 '다음 단계 →'만 뜨고 단계 내 다른 문항으로 가는 길이
+    없었다(박 님 발견). lib/train-nav.ts 에 cycleNextProblemKey 신설 —
+    nextProblemKey 와 같은 ordered() 정렬 재사용, 통과 여부 무관하게 순서상
+    다음(마지막이면 첫 문항으로 순회). 새 상태 관리 없음. TrainClient.tsx
+    단계 완료 분기에 '다음 문항 →'(cycleKey)를 '다음 단계 →' 위에 추가
+    표시. page.tsx 데이터 전달 불필요(loop.stageProblems 로 충분)
+  verify.ts  [학습 루프: 단계 완료 후 훑어보기] 신설 — 중간·경계·마지막
+    순회·방어(없는 key·빈 목록)·문항 하나뿐 + 물기(순회 로직을 빼면
+    마지막 다음이 null 이 되는 것과 대조)
+  검증  tsc 0 · test:scoring 4012/0(형태소 서버 켜짐) · check:numbers 0 ·
+        gen:seed · next build 통과 · 물기: cc-ace-siren instruction 만 옛
+        문구로 되돌려 v4 SQL 대조·seed_data 대조 2건 fail 확인 후 복원
+★ DB(박 님) 추가 확인  ④ 완료된 단계의 문항에서 "다음 문항"과 "다음 단계"가
+  둘 다 뜨는지
 ```
 
 ### 끝난 것 — 세션 32 후기 2 (구성 12 전면 재구성 · 원문 복사 차단)

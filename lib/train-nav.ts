@@ -88,3 +88,20 @@ export function nextProblemKey(
   }
   return null
 }
+
+/**
+ * 단계를 전부 통과한 뒤 훑어보기용 — 통과 여부와 무관하게 목록 순서상
+ * 다음 문항의 source_key. 마지막이면 첫 문항으로 돈다(순회). 문항이 하나뿐이면
+ * 자기 자신. 지금 문항이 목록에 없으면 null(방어). nextProblemKey 와 같은
+ * ordered() 정렬을 재사용한다 — 목록·'다음 →' 이 어긋나지 않게.
+ */
+export function cycleNextProblemKey(
+  problems: NavProblem[],
+  currentSourceKey: string
+): string | null {
+  const list = ordered(problems)
+  if (list.length === 0) return null
+  const i = list.findIndex((p) => p.source_key === currentSourceKey)
+  if (i === -1) return null
+  return list[(i + 1) % list.length].source_key
+}

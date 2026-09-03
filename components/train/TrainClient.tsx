@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { countChars, countSentences, mergeForbidChecks, mergeRepeatChecks, gradeLocal, pendingMorphChecks } from '@/lib/scoring'
-import { nextProblemKey, stageProgress, type NavProblem } from '@/lib/train-nav'
+import { cycleNextProblemKey, nextProblemKey, stageProgress, type NavProblem } from '@/lib/train-nav'
 import type { Check, CheckStatus, CountInput, ProblemType, ScoringConfig } from '@/lib/scoring/types'
 import RuleGauge from './RuleGauge'
 import CheckRow from './CheckRow'
@@ -192,6 +192,11 @@ export default function TrainClient({
     [loop.stageProblems, livePassed]
   )
   const { passed: passedInStageNow, total: stageTotal, skipped } = progress
+  // 단계 전체 완료 뒤 훑어보기용 — 통과 여부 무관, 순서상 다음(마지막이면 첫 문항).
+  const cycleKey = useMemo(
+    () => cycleNextProblemKey(loop.stageProblems, loop.currentSourceKey),
+    [loop.stageProblems, loop.currentSourceKey]
+  )
 
   // 제출 전 기준 목록. gradeLocal('', cfg) + pendingMorphChecks(cfg)가 유일한
   // 출처다 — cfg를 사람 말로 옮기는 표를 따로 짜지 않는다. 답안이 빈 문자열
@@ -678,6 +683,14 @@ export default function TrainClient({
                 <p style={{ color: 'var(--pass)', fontWeight: 700 }}>
                   단계 완료 {passedInStageNow}/{stageTotal}
                 </p>
+                {cycleKey && (
+                  <Link
+                    href={`/train/${loop.stageId}/${cycleKey}`}
+                    style={{ color: 'var(--ink)', display: 'block' }}
+                  >
+                    다음 문항 →
+                  </Link>
+                )}
                 {loop.nextStageId ? (
                   <Link href={`/train/${loop.nextStageId}`} style={{ color: 'var(--ink)' }}>
                     다음 단계 →
