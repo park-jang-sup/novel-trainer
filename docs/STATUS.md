@@ -4,16 +4,16 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 34 정정 v2 · 커밋 `2b9d16d` 위
+마지막 갱신: 세션 35 · 커밋 `cbf8a83` 위
 
 ---
 
 ## 앱이 지금 할 수 있는 것
 
 ```
-단계 26 · 문항 133(비활성 13건 포함 — action_turn 8 + 구성 12 재설계로 밀려난 cc- 4 +
-ig-ball-envelope 1, 활성 128 유지) · 화면이 붙은 유형 17단계분 (문장 1~11,
-구성 11·12·13·14·15·17·19·20, 도입 1·2·3)
+단계 26 · 문항 138(비활성 13건 포함 — action_turn 8 + 구성 12 재설계로 밀려난 cc- 4 +
+ig-ball-envelope 1, 활성 133) · 화면이 붙은 유형 18단계분 (문장 1~11,
+구성 11·12·13·14·15·16·17·19·20, 도입 1·2·3)
 문항 화면 스케일  제목 text-3xl · 원문 상자·입력(Editor·FillBody) text-lg(1.125rem) p-5 · Editor rows 7/16 ·
                 컨테이너 max-w-7xl(한 칸 max-w-3xl) · 두 칸 grid [minmax(0,1.4fr) minmax(22rem,1fr)] 왼쪽 우선
 가르침 층       코치 캐릭터 먹물이 ✒️ 말풍선(CoachBubble) — 단계 목록: 제목·요약 아래 coach_intro ·
@@ -27,7 +27,7 @@ ig-ball-envelope 1, 활성 128 유지) · 화면이 붙은 유형 17단계분 (�
 ★ 모범답안 있는 문항: 10단계 fill 8 (①②) + 문장 1·2·3·4단계 (reduce_adverb 8 · emotion_action 6 ·
   trim_padding 8 · reduce_repeat 8) + 도입 2·3 각 5 + 구성 11 lack 5 + 구성 12 contrast_char
   활성 6(cc-first-pay + 신규 5, 옛 대비형 4는 비활성) + 구성 13 likability 4 +
-  구성 15 info_gap 5, 가·나 blank_key '' ·
+  구성 15 info_gap 5 + 구성 16 cliffhanger_adv 5, 가·나 blank_key '' ·
   도입 1 start_choose 5 는 reference 를 선택지별 해설로 씀(가·나 아님)
 없는 것       도입 4 start_episode(보류 — AI 심사 전) · streak·XP·복습·하트·진도 저장 테이블(안 만든다 — submissions 로만 센다)
 ★ 10단계는 새 skill_key `action_reason`(fill 8). 옛 `action_turn`(convert 8)은 is_active=false — 화면에 '준비 중'
@@ -139,16 +139,82 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 ## 다음 — 순서대로. 하나가 verify 에서 물리기 전에 다음을 안 한다
 
 ```
-1  구성 16 cliffhanger_adv  구성 15 info_gap 로 세 번째 규격 5조 단계 끝(세션 34). 이어서 남은
-                        구성 빈 단계(cliffhanger_adv 16 · first_hook 18) 단계당 4~6. 기존
-                        유형만.
-                        도입 4 start_episode 는 아래 미결(AI 심사 전이라 보류)
+1  구성 18 first_hook    구성 16 cliffhanger_adv 로 마지막 남은 구성 빈 단계 끝(세션 35).
+                        단계당 4~6, 기존 유형만. 규격 7조 전부 적용.
+                        도입 4 start_episode 는 아래 미결(AI 심사 전이라 보류) ·
+                        문장 11 cliffhanger 빈 단계 처리도 아래 열린 관찰(박 님 결정 대기)
 2  보스 문항(가칭)      전 단계를 마친 뒤, 배운 규칙 전부를 걸고 짧은 소설 한 편을 쓰는
                         졸업 문항. 도입 4 start_episode 자리의 확장. 두 층: ① 규칙+자기점검이
                         통과 판정 ② AI 는 섀도 모드 — 판정·코멘트를 보여주되 통과에 안 쓴다.
                         박 님이 직접 오판을 관찰해 판정 권한 부여를 결정. 여기 쌓이는 답안·
                         판정 기록이 원칙 4 재개 조건의 수집처다.
                         전제: 구성 빈 단계 4개가 먼저 찬다
+```
+
+### 끝난 것 — 세션 35 (구성 16 cliffhanger_adv '절단신공 심화' 신설 · 규격 6 전면 적용)
+
+```
+★ 구성 13·15 닫힘: DB 절차(update-info-gap-v2.sql → seed_data.sql → seed_check.sql)
+  실행 · 박 님 확인 완료(세션 34·35) — 이전 두 항목의 "보고 대기"는 이걸로 닫힌다.
+
+발견  문장 11 'cliffhanger'(절단신공)이 빈 단계(문항 0)였다 — STATUS 는 "문장
+  1~11 화면 붙음"으로만 적고 빈 단계 목록(구성 16·18)엔 안 넣어 놓쳤다. 박 님
+  결정: 구성 16을 자립형으로 만든다 — IN-05(신호 깔고 끊기)를 한 단계에서
+  가르치고 IN-04 6패턴은 재료로만 쓴다. 문장 11을 채울지 16으로 흡수할지는
+  별도 결정 — 아래 열린 관찰에 등재, 이번 커밋에서 문장 11 stages 행은 안 건드림.
+
+경위  설계안 승인 → 견본 1건(ca-open-door) 확인 → 나머지 4건 일괄 확정. 박 님
+  반려 경위 셋: ① 손전등을 신호로 쓴 초안 삭제 ② 리안 문항 소품을 지팡이에서
+  수정구로 교체 ③ 객잔 배경이 오두막 → (빈 오두막은 누군가 쓴다 · 발자국은
+  암살자에게 허접하다 · 함정 방에 핏자국을 남기지 않는다는 지적으로) 객잔으로
+  회귀. walk-home 도 초안(택시를 잡아 줬다가 중간에 보냄)이 "싸가지없어
+  보인다"는 지적으로 반려 — 확정판은 애초에 잡지 않음.
+
+신규 5문항  ca-gate-dinner(convert·forbidPassageCopy 없음 — 원문 자체에 forbid
+  어휘 '그때였다'가 있어 통째 제출이 이미 막힌다) · ca-open-door(continue, 견본) ·
+  ca-inn-endroom(continue) · ca-crystal-exam(convert·억지6+'몰랐') ·
+  ca-walk-home(continue). forbidLabel 5건 전부 동일('서술자가 미리 말해 주거나
+  억지로 끊는 표현'). maxChars 120(규격 6 여유분, 박 님 결정 — 대사/속마음
+  한 줄이 들어갈 자리). 이름 강제(requireAll·requireAny) 없는 첫 구성 단계.
+  전부 신규 행 — update SQL 없이 seed_data.sql insert 로 들어간다.
+stages.json  cliffhanger_adv coach_intro·coach_line·self_checks 2줄 채움
+  (title '절단신공 심화'·summary '끊기 전에 신호를 깐다' 유지).
+docs/characters.md  리안 '상징' 층 신설("마력 측정 수정구가 리안에게만 다르게
+  반응한다") + 등장에 ca-crystal-exam. 신규 간이 4명(민재·정우·소하·예진+태오).
+
+verify.ts [구성 16 cliffhanger_adv]  유형 continue 3/convert 2 · forbidLabel
+  5건 동일 대조 · forbidWords 크기 대조(crystal-exam 만 7개, 나머지 6개) ·
+  '줄은' 부재(15 전례) · 원문 불변식(결함 2건 gate-dinner·crystal-exam ·
+  무난 3건 open-door·inn-endroom·walk-home) · [규격 6 불변식] 모범 10건 전부에
+  대사(") 또는 속마음 조각(종결형 '~다.'가 아닌 문장)이 있는지 — '첫 문장'
+  으로 좁히면 중간 문장에 오는 속마음(gate-dinner·crystal-exam)을 놓쳐서
+  '문장 전체'로 느슨하게 잡았고, 10건 전부 이 휴리스틱으로 걸렸다(주석으로
+  낮출 필요 없이 실제 단언으로 세웠다) · 모범 10건 pass + 나쁜 표본 6건 fail
+  (5건 즉시 · minVerbs 1건은 morph 서버 있을 때만) + 점검 1건 pass('…의
+  것이었다') · 단계 간 베낌 가드 73문장(기존 63 + 활성 info_gap 10, ig-ball-
+  envelope 는 action_turn 폐기 관례로 미포함) · stages coach·self_checks 대조
+  왕복 규칙: nameSkills 에 cliffhanger_adv 추가 · 이름 추출 정규식(m4)을
+  "^[^.]*\." 로 첫 문장에 앵커 — 앵커가 없으면 나중 문장의 무관한 명사에
+  우연히 걸린다(ca-walk-home 에서 '원문'이 인물로 오탐된 것을 실측으로 확인) ·
+  "○○과 △△는" 두 인물 형(m5) 신설 — ca-walk-home(예진+태오) 전용
+  [불변식: forbidWords 자기 목록] cliffhanger_adv 무난 3건 예외 추가
+  [DEICTIC 누출 감시] 말뭉치 전수 스캔에 corpusReviewed 신설(첫 사례) —
+  ca-inn-endroom 지시문의 "몸이 먼저 위험을"이 '저 위'와 부분 문자열로
+  겹친다(먼저의 '저' + 공백 + 위험의 '위'). 실제 조망 지시가 아니고
+  cliffhanger_adv 는 DEICTIC 을 안 쓰니 채점엔 영향 없음 — 확정 문안이라
+  글자를 못 바꿔 스캔에서 뺐다(DEICTIC_REVIEWED_COLLISIONS 와 같은 성격의
+  말뭉치판 triage 기록)
+  [forbidLabel 표시] 43건(38+5) · [가르침 층] COACH_SKILLS 17→18 ·
+  [자기점검] withSelfChecks +cliffhanger_adv
+seed_verify.sql  불변식 2 에 cliffhanger_adv 무난 3건 source_key 예외 추가
+검증  tsc 0 · next typegen · test:scoring 4700/0(형태소 서버 켜짐) ·
+      check:numbers 0 · gen:seed(문항 133→138·모범답안 189→199) · next build
+      통과 · 물기 3건: 이름 추출 정규식 앵커 제거 → ca-walk-home '원문' 오탐
+      재현 / DEICTIC corpusReviewed 비움 → 말뭉치 검사 fail 재현 / 원칙 10
+      예외 목록에서 ca-open-door 를 빼 자기 forbidWords 불변식 fail 확인 —
+      셋 다 복원
+★ DB 절차(박 님)  seed_data.sql(멱등) → seed_check.sql → 브라우저 '절단신공
+  심화' 5문항 눈검사.
 ```
 
 ### 끝난 것 — 세션 34 정정 v2 (ig-ball-envelope 폐기 · ig-friend-text 신설 · 규격 6·7 등재)
@@ -1036,6 +1102,13 @@ verify 왕복 규칙의 characters.md 대조가 부분 문자열 포함으로 �
                               우연히 포함되면 실제로는 다른 사람인데 원장에
                               있다고 오통과할 여지가 생겼다. 지금은 인물 수가
                               적어 충돌이 없다 — 인물이 늘면 다시 볼 것
+문장 11 cliffhanger(절단신공) 이 빈 단계다(세션 35 발견)  문항 0. STATUS 는
+                              "문장 1~11 화면 붙음"으로만 적고 빈 단계 목록엔
+                              없어 여태 놓쳤다. 구성 16 cliffhanger_adv 는 이미
+                              자립형(IN-05 전부 가르침·IN-04 는 재료)으로
+                              확정했다 — 문장 11을 채울지, 아니면 16으로
+                              완전히 흡수할지는 박 님 결정 대기. 결정 전까지
+                              문장 11 stages 행은 건드리지 않는다
 ```
 
 ## 상태 확인

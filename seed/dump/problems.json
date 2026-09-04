@@ -4360,5 +4360,186 @@
       ],
       "forbidPassageCopy": true
     }
+  },
+  {
+    "type": "convert",
+    "choices": null,
+    "passage": "민재는 팀원들과 저녁을 먹고 있었다. 오늘 레이드는 무사히 끝났고 다들 웃고 있었다. 그때였다. 식당 천장이 갈라지며 게이트가 열렸다.",
+    "order_no": 1,
+    "tone_tag": "planned",
+    "genre_tag": "fantasy",
+    "skill_key": "cliffhanger_adv",
+    "difficulty": 1,
+    "source_key": "ca-gate-dinner",
+    "source_tag": "original",
+    "instruction": "아래 회차 끝을 고쳐 쓰시오. 민재는 레이드를 마치고 팀원들과 저녁을 먹는 헌터다. 원문은 신호 없이 '그때였다'로 덜컥 끊어서 독자가 놀라는 게 아니라 어리둥절해진다. 마지막 줄(게이트가 열렸다)은 그대로 두고, 그 앞에 '온다'는 신호 한 줄을 심어 다시 쓰시오. 민재의 속마음이나 대사 한 줄이 들리게 하시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 120,
+      "minVerbs": 3,
+      "forbidLabel": "서술자가 미리 말해 주거나 억지로 끊는 표현",
+      "forbidWords": [
+        "훗날",
+        "될 줄",
+        "과연",
+        "그때였다",
+        "다음 화",
+        "운명"
+      ],
+      "forbidDisplay": [
+        "훗날",
+        "될 줄은",
+        "과연",
+        "그때였다",
+        "다음 화",
+        "운명"
+      ]
+    }
+  },
+  {
+    "type": "continue",
+    "choices": null,
+    "passage": "정우는 야근을 마치고 자정이 넘어 집에 왔다. 현관 비밀번호를 누르려다 손을 멈췄다. 문이 손가락 하나만큼 열려 있었다. 아침에 잠근 걸 확인하고 나간 문이었다.",
+    "order_no": 2,
+    "tone_tag": "planned",
+    "genre_tag": "modern",
+    "skill_key": "cliffhanger_adv",
+    "difficulty": 1,
+    "source_key": "ca-open-door",
+    "source_tag": "original",
+    "instruction": "원문이 깔아 둔 신호를 받아 회차를 끊으시오. 정우는 혼자 사는 회사원으로, 겁이 많지 않아 이상한 일도 일단 제 눈으로 확인하는 사람이다. 원문은 '열려 있어선 안 되는 문'이라는 신호를 이미 깔았다. 원문을 읽고 다음에 올 장면을, 정우의 속마음이나 대사 한 줄이 들리게 하고, 그 신호가 커지다가 마지막 줄에서 끊기게 작성하시오. 서술자가 앞일을 말해 주거나 '그때였다'로 덜컥 끊지 마시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 120,
+      "minVerbs": 3,
+      "forbidLabel": "서술자가 미리 말해 주거나 억지로 끊는 표현",
+      "forbidWords": [
+        "훗날",
+        "될 줄",
+        "과연",
+        "그때였다",
+        "다음 화",
+        "운명"
+      ],
+      "forbidDisplay": [
+        "훗날",
+        "될 줄은",
+        "과연",
+        "그때였다",
+        "다음 화",
+        "운명"
+      ],
+      "forbidPassageCopy": true
+    }
+  },
+  {
+    "type": "continue",
+    "choices": null,
+    "passage": "사흘을 쫓긴 소하는 관도 끝 객잔에 들었다. 손님은 소하뿐인데 주인은 이층 끝방 열쇠를 내밀며 가장 조용한 방이라고 했다. 소하는 방문을 걸고 검을 머리맡에 세웠다. 사흘 만에 처음 눕는 침상이었다.",
+    "order_no": 3,
+    "tone_tag": "planned",
+    "genre_tag": "martial",
+    "skill_key": "cliffhanger_adv",
+    "difficulty": 2,
+    "source_key": "ca-inn-endroom",
+    "source_tag": "original",
+    "instruction": "안전한 줄 알았던 장면을 누군가의 존재로 끊으시오. 소하는 사흘을 쫓긴 여자 검객으로, 지쳤어도 몸이 먼저 위험을 알아채는 사람이다. 원문은 '손님이 하나뿐인데 굳이 끝방을 권하는 주인'이라는 신호를 이미 깔았다. 원문을 읽고 다음에 올 장면을, 소하의 속마음이나 대사 한 줄이 들리게 하고, 그 신호가 살기나 냄새로 커지다가 마지막 줄에서 끊기게 작성하시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 120,
+      "minVerbs": 3,
+      "forbidLabel": "서술자가 미리 말해 주거나 억지로 끊는 표현",
+      "forbidWords": [
+        "훗날",
+        "될 줄",
+        "과연",
+        "그때였다",
+        "다음 화",
+        "운명"
+      ],
+      "forbidDisplay": [
+        "훗날",
+        "될 줄은",
+        "과연",
+        "그때였다",
+        "다음 화",
+        "운명"
+      ],
+      "forbidPassageCopy": true
+    }
+  },
+  {
+    "type": "convert",
+    "choices": null,
+    "passage": "리안은 마력 측정 수정구 앞에 섰다. 그것이 마탑을 뒤집을 시험이 될 줄은 그때의 리안은 몰랐다. 시험관이 손을 올리라고 했다. 훗날 사람들은 이날을 리안의 첫날이라 불렀다.",
+    "order_no": 4,
+    "tone_tag": "planned",
+    "genre_tag": "fantasy",
+    "skill_key": "cliffhanger_adv",
+    "difficulty": 2,
+    "source_key": "ca-crystal-exam",
+    "source_tag": "original",
+    "instruction": "아래 회차 끝을 고쳐 쓰시오. 리안은 스승을 잃고 홀로 마탑 시험을 보러 온 견습생이다. 원문은 서술자가 '될 줄은 몰랐다'·'훗날'로 앞일을 미리 말해 버려 독자가 스스로 예감할 자리가 없다. 서술자의 예언 문장을 지우고, 그 자리에 수정구의 빛에서 드러나는 신호 하나를 심어 마지막 줄에서 끊기게 다시 쓰시오. 리안의 속마음이나 대사 한 줄이 들리게 하시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 120,
+      "minVerbs": 3,
+      "forbidLabel": "서술자가 미리 말해 주거나 억지로 끊는 표현",
+      "forbidWords": [
+        "훗날",
+        "될 줄",
+        "과연",
+        "그때였다",
+        "다음 화",
+        "운명",
+        "몰랐"
+      ],
+      "forbidDisplay": [
+        "훗날",
+        "될 줄은",
+        "과연",
+        "그때였다",
+        "다음 화",
+        "운명",
+        "몰랐다"
+      ],
+      "forbidPassageCopy": true
+    }
+  },
+  {
+    "type": "continue",
+    "choices": null,
+    "passage": "야근을 마친 열한 시, 회사 앞이었다. 늘 예진의 택시부터 잡아 주던 태오가 오늘은 잡지 않고 말했다. \"좀 걷자.\" 예진의 집까지는 걸어서 사십 분이었다.",
+    "order_no": 5,
+    "tone_tag": "planned",
+    "genre_tag": "romance",
+    "skill_key": "cliffhanger_adv",
+    "difficulty": 2,
+    "source_key": "ca-walk-home",
+    "source_tag": "original",
+    "instruction": "관계가 달라질 것을 암시하며 끊으시오. 예진과 태오는 야근이 잦은 같은 팀 동기로, 서로를 편한 동료라고만 말해 온 사이다. 원문은 '늘 잡아 주던 택시를 오늘은 잡지 않았다'는 신호를 이미 깔았다. 원문을 읽고 다음에 올 장면을, 예진의 속마음이나 대사 한 줄이 들리게 하고, 고백이나 스킨십 없이 그 신호가 커지다가 마지막 줄에서 끊기게 작성하시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 120,
+      "minVerbs": 3,
+      "forbidLabel": "서술자가 미리 말해 주거나 억지로 끊는 표현",
+      "forbidWords": [
+        "훗날",
+        "될 줄",
+        "과연",
+        "그때였다",
+        "다음 화",
+        "운명"
+      ],
+      "forbidDisplay": [
+        "훗날",
+        "될 줄은",
+        "과연",
+        "그때였다",
+        "다음 화",
+        "운명"
+      ],
+      "forbidPassageCopy": true
+    }
   }
 ]

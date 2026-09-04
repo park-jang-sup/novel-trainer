@@ -785,15 +785,18 @@ console.log('\n[오탐 감시: 감각 묘사 좋은 답안]')
 //   ig-friend-text 는 원문이 아직 헛짚기 전 장면이라 forbid 어휘가 없다 ·
 //   ig-gate-wait 는 결함 자체가 forbid 어휘가 아니라 '정보 0' — 이 불변식으로는
 //   못 잡는 유형이라 같이 뺀다).
+//   구성 16 cliffhanger_adv 무난 원문 3건(세션 35 — ca-open-door·ca-inn-endroom·
+//   ca-walk-home 는 신호만 깔린 무난한 장면이라 forbid 어휘가 없다).
 //   이 단계들의 원문은 결함이 없는 무난한 장면이라 자기 forbidWords 를 일부러
 //   안 담는다 — 결핍/속마음/평가어는 학습자가 얹는다. 각 단계 블록이 '원문에
-//   forbidWords 없음'을 따로 문다. likability·info_gap 은 skill 전체가 아니라
-//   이 source_key 들만 예외다 — lk2-deal-credit·lk2-night-shift-bill·
-//   ig-cafe-scar 는 결함 원문(능력 과시·불행한 태도·몰랐/훗날/용의자 노출)이라
-//   계속 자기 forbidWords 에 걸려야 한다.
+//   forbidWords 없음'을 따로 문다. likability·info_gap·cliffhanger_adv 는 skill
+//   전체가 아니라 이 source_key 들만 예외다 — lk2-deal-credit·lk2-night-shift-bill·
+//   ig-cafe-scar·ca-gate-dinner·ca-crystal-exam 은 결함 원문(능력 과시·불행한
+//   태도·몰랐/훗날/용의자 노출·그때였다/될 줄은 몰랐다)이라 계속 자기
+//   forbidWords 에 걸려야 한다.
 //   ★ 비활성 문항은 이 불변식 대상에서 뺀다(deactivate.json) — 폐기된 설계에
 //   더는 이 검사를 강제하지 않는다(세션 34 정정 v2, ig-ball-envelope 로 첫 실증).
-console.log('\n[불변식: forbidWords 있는 덤프 문항이 자기 목록에 걸림 (lack·contrast_char·likability·info_gap 무난 문항 · 비활성 문항 제외)]')
+console.log('\n[불변식: forbidWords 있는 덤프 문항이 자기 목록에 걸림 (lack·contrast_char·likability·info_gap·cliffhanger_adv 무난 문항 · 비활성 문항 제외)]')
 {
   interface DumpProblem {
     passage: string | null
@@ -814,6 +817,7 @@ console.log('\n[불변식: forbidWords 있는 덤프 문항이 자기 목록에 
   const plainKeys = new Set([
     'lk2-broken-sword', 'lk2-night-raid',
     'ig-left-cup', 'ig-umbrella-walnut', 'ig-friend-text', 'ig-gate-wait',
+    'ca-open-door', 'ca-inn-endroom', 'ca-walk-home',
   ])
   const skipped: string[] = []
   for (const dp of dumpProblems) {
@@ -4291,7 +4295,7 @@ console.log('\n[구성 12 contrast_char: 재설계 · 활성 6 + 비활성 4]')
   // friend-text, 정정 v2 로 ball-envelope 대신). cafe-scar 는 "아래 장면을 고쳐
   // 쓰시오. 박형사는…"이라 기존 m3(는)로 이미 잡힌다. umbrella-walnut 은
   // requireAll 이 있어 정규식 자체가 안 돈다.
-  const nameSkills = new Set(['lack', 'contrast_char', 'likability', 'info_gap'])
+  const nameSkills = new Set(['lack', 'contrast_char', 'likability', 'info_gap', 'cliffhanger_adv'])
   for (const d of allProblems.filter((p) => nameSkills.has(p.skill_key) && !deadSet.has(p.source_key))) {
     const c = d.scoring_config
     const canon = (c.requireAll as string[] | undefined)
@@ -4303,8 +4307,15 @@ console.log('\n[구성 12 contrast_char: 재설계 · 활성 6 + 비활성 4]')
         if (m2) return [m2[1]]
         const m3 = /^아래 장면을 고쳐 쓰시오\. (\S+?)(?:의 능력은|는)/.exec(d.instruction)
         if (m3) return [m3[1]]
-        const m4 = /\.\s+(\S+?)(?:은|는)\s/.exec(d.instruction)
+        // ★ ^[^.]* 로 첫 문장 안에 앵커한다 — 앵커가 없으면 나중 문장의
+        // "원문은…" 같은 무관한 명사에 우연히 걸린다(세션 35 실증 —
+        // ca-walk-home 에서 '원문'이 인물로 오검출됐다).
+        const m4 = /^[^.]*\.\s+(\S+?)(?:은|는)\s/.exec(d.instruction)
         if (m4) return [m4[1]]
+        // 세션 35: cliffhanger_adv 의 ca-walk-home 처럼 "○○과 △△는" 두 인물
+        // 형은 m4 가 못 잡는다("과" 뒤에 공백이 있어 \S+ 토큰이 끊긴다).
+        const m5 = /^[^.]*\.\s+(\S+?)(?:와|과)\s+(\S+?)(?:은|는)\s/.exec(d.instruction)
+        if (m5) return [m5[1], m5[2]]
         return []
       })()
     t(`왕복 규칙: '${d.source_key}' 에서 대표 이름을 뽑을 수 있다`, canon.length > 0, d.instruction)
@@ -4981,6 +4992,293 @@ console.log('\n[구성 15 info_gap: 신설 5문항]')
       igStage.self_checks.every((s) => s.length > 0), JSON.stringify(igStage.self_checks))
 }
 
+// ── 구성 16 cliffhanger_adv(절단신공 심화): 신설 5문항 (세션 35) ──────────
+//
+// 규격 6(대사·속마음 한 줄)이 5문항 전부에 적용된 첫 단계 — maxChars 120(규격
+// 6 여유분, 박 님 결정). 신호 없이 '그때였다'·'훗날'·'될 줄은 몰랐다' 류로
+// 서술자가 미리 말해 버리거나 억지로 끊으면 안 된다(forbidLabel 5건 공통).
+// ca-gate-dinner 만 forbidPassageCopy 가 없다 — 원문 자체에 forbid 어휘
+// '그때였다'가 있어 통째 제출이 이미 막힌다(2-1 사유). 5문항 전부 신규 행 —
+// update SQL 없음, seed_data.sql insert 로 들어간다.
+console.log('\n[구성 16 cliffhanger_adv: 신설 5문항]')
+{
+  interface CaProblem {
+    source_key: string
+    skill_key: string
+    type: string
+    choices: string[] | null
+    passage: string | null
+    instruction: string
+    difficulty: number
+    scoring_mode: string
+    scoring_config: ScoringConfig
+  }
+  const seedDir = path.join(__dirname, '..', '..', 'seed', 'dump')
+  const readDump = <T,>(f: string): T =>
+    JSON.parse(readFileSync(path.join(seedDir, f), 'utf8').replace(/^﻿/, '')) as T
+
+  const allProblems = readDump<CaProblem[]>('problems.json')
+  const ca = allProblems.filter((d) => d.skill_key === 'cliffhanger_adv')
+  const caKeys = new Set(ca.map((d) => d.source_key))
+  const answersDump = readDump<{ reference?: RefRow[] }>('answers.json')
+  const refs = (answersDump.reference ?? []).filter((r) => caKeys.has(r.source_key))
+  const cfgOf = new Map(ca.map((d) => [d.source_key, d.scoring_config]))
+  const typeOf = new Map(ca.map((d) => [d.source_key, d.type]))
+  const passageOf = new Map(ca.map((d) => [d.source_key, d.passage ?? '']))
+
+  t('활성 cliffhanger_adv 5문항', ca.length === 5, `실제=${ca.length}`)
+  t('유형 continue 3(open-door·inn-endroom·walk-home) · convert 2(gate-dinner·crystal-exam)',
+    ca.filter((d) => d.type === 'continue').length === 3 &&
+      ca.filter((d) => d.type === 'convert').length === 2,
+    JSON.stringify(ca.map((d) => `${d.source_key}:${d.type}`)))
+  t('5건 전부 auto · choices null · maxChars 120 · minVerbs 3', ca.every(
+    (d) => d.scoring_mode === 'auto' && d.choices === null &&
+      d.scoring_config.maxChars === 120 && d.scoring_config.minVerbs === 3))
+  t('5건 전부 forbidLabel 동일: 서술자가 미리 말해 주거나 억지로 끊는 표현',
+    ca.every((d) => d.scoring_config.forbidLabel === '서술자가 미리 말해 주거나 억지로 끊는 표현'))
+  t('5건 전부 requireAll·requireAny 없음(이름 강제 없는 단계)',
+    ca.every((d) => d.scoring_config.requireAll === undefined && d.scoring_config.requireAny === undefined))
+
+  t('forbidPassageCopy 4건(gate-dinner 제외)',
+    ca.filter((d) => d.scoring_config.forbidPassageCopy === true).length === 4 &&
+      cfgOf.get('ca-gate-dinner')!.forbidPassageCopy === undefined,
+    JSON.stringify(ca.map((d) => `${d.source_key}:${d.scoring_config.forbidPassageCopy}`)))
+
+  // crystal-exam 만 '몰랐' 추가(억지6 + 1) — 나머지 4건은 억지6 그대로
+  {
+    const ce = ca.find((d) => d.source_key === 'ca-crystal-exam')!
+    const fw = ce.scoring_config.forbidWords as string[]
+    t("'ca-crystal-exam': forbidWords 가 억지6 + '몰랐'",
+      fw.includes('몰랐') && fw.length === 7, JSON.stringify(fw))
+    for (const key of ca.filter((d) => d.source_key !== 'ca-crystal-exam')) {
+      const fw2 = key.scoring_config.forbidWords as string[]
+      t(`'${key.source_key}': forbidWords 가 억지6 그대로(6개, '몰랐' 없음)`,
+        fw2.length === 6 && !fw2.includes('몰랐'), JSON.stringify(fw2))
+    }
+  }
+  // '줄은'(15 전례 — 밧줄은 오검출) 은 forbidWords·forbidDisplay 어디에도 없다
+  for (const d of ca) {
+    const fw = (d.scoring_config.forbidWords as string[]) ?? []
+    const fd = (d.scoring_config.forbidDisplay as string[]) ?? []
+    t(`'${d.source_key}': forbidWords·forbidDisplay 에 '줄은' 없음`,
+      !fw.includes('줄은') && !fd.includes('줄은'))
+  }
+
+  // ── 원문 불변식: 결함 원문은 gate-dinner('그때였다')·crystal-exam('될 줄은
+  //    몰랐다'·'훗날') 둘뿐. 나머지 3건(open-door·inn-endroom·walk-home)은
+  //    아직 신호만 깔린 무난한 장면이라 forbid 어휘가 없다.
+  const plainCa = new Set(['ca-open-door', 'ca-inn-endroom', 'ca-walk-home'])
+  for (const d of ca) {
+    const fw = (d.scoring_config.forbidWords as string[]) ?? []
+    const hits = findForbidden(d.passage ?? '', fw)
+    if (plainCa.has(d.source_key)) {
+      t(`불변식: '${d.source_key}' (무난 원문) 이 자기 forbidWords 에 안 걸린다`,
+        hits.length === 0, JSON.stringify(hits))
+    } else {
+      t(`불변식: '${d.source_key}' (결함 원문) 이 자기 forbidWords 에 걸린다`,
+        hits.length > 0, JSON.stringify(hits))
+    }
+  }
+  // 원문 그대로 제출 → passageCopy fail (forbidPassageCopy 가 있는 4건만 —
+  // gate-dinner 는 forbid 어휘 자체가 원문에 있어 이 검사가 따로 없다)
+  for (const d of ca) {
+    if (!d.scoring_config.forbidPassageCopy) continue
+    const bp = gradeLocal(
+      { id: d.source_key, type: d.type as ProblemType, scoring_mode: 'auto', scoring_config: d.scoring_config },
+      { text: d.passage ?? '' }, undefined, d.passage ?? '')
+    t(`불변식: '${d.source_key}' 원문 그대로 제출은 passageCopy fail`,
+      bp.find((c) => c.key === 'passageCopy')?.status === 'fail', JSON.stringify(bp))
+  }
+
+  // ── 모범답안 10행 (활성 5 × 가·나) ──
+  t('활성 모범답안 10행', refs.length === 10, `실제=${refs.length}`)
+  t('모범답안 전부 blank_key 빈 문자열', refs.every((r) => r.blank_key === ''))
+  for (const d of ca) {
+    const ords = refs.filter((r) => r.source_key === d.source_key).map((r) => r.ord).sort()
+    t(`'${d.source_key}': 가·나 두 세트`, JSON.stringify(ords) === '[1,2]', JSON.stringify(ords))
+  }
+  // 실측(kiwipiepy 실호출) 자수(공백 제외) — 순서: gate-dinner·open-door·inn-endroom·crystal-exam·walk-home
+  const LEN: Record<string, [number, number]> = {
+    'ca-gate-dinner': [87, 88],
+    'ca-open-door': [55, 62],
+    'ca-inn-endroom': [77, 75],
+    'ca-crystal-exam': [86, 78],
+    'ca-walk-home': [87, 89],
+  }
+  for (const r of refs) {
+    const cfg = cfgOf.get(r.source_key)!
+    const n = countChars(r.content)
+    t(`'${r.source_key}' ord${r.ord}: 비어 있지 않다`, r.content.trim().length > 0)
+    t(`'${r.source_key}' ord${r.ord}: 자수 ${n} == 실측 ${LEN[r.source_key][r.ord - 1]}`,
+      n === LEN[r.source_key][r.ord - 1], `"${r.content}"`)
+    t(`'${r.source_key}' ord${r.ord}: 자수 ≤ 120`, n <= 120)
+    const strip = (s: string) => s.replace(/\s/g, '')
+    t(`'${r.source_key}' ord${r.ord}: 원문을 통짜로 품지 않는다`,
+      !strip(r.content).includes(strip(passageOf.get(r.source_key)!)), `"${r.content}"`)
+    const hits = findForbidden(r.content, (cfg.forbidWords as string[] | undefined) ?? [])
+    t(`'${r.source_key}' ord${r.ord}: forbidWords 적중 0`, hits.length === 0, JSON.stringify(hits))
+    const res = combine(
+      { id: r.source_key, type: typeOf.get(r.source_key) as ProblemType, scoring_mode: 'auto', scoring_config: cfg },
+      { text: r.content }, undefined, null, passageOf.get(r.source_key)!)
+    for (const key of ['forbidWords', 'maxChars', 'passageCopy']) {
+      const c = res.checks.find((x) => x.key === key)
+      t(`'${r.source_key}' ord${r.ord}: combine 의 ${key} 검사가 pass`,
+        !c || c.status === 'pass', JSON.stringify(c))
+    }
+  }
+
+  // ── [규격 6 불변식] 모범 10건 전부에 대사(") 또는 속마음 조각(서술 종결형
+  //    '~다.' 가 아닌 문장 하나)이 있다. '첫 문장'으로 좁히면 gate-dinner·
+  //    crystal-exam 처럼 속마음이 중간 문장에 오는 경우를 놓친다 — 문장
+  //    전체에서 찾는 쪽으로 느슨하게 잡는다(세션 35, 못 잡으면 이 자리를
+  //    주석으로 낮춘다는 전제였는데 10건 전부 이 휴리스틱으로 걸렸다).
+  for (const r of refs) {
+    const hasFragment = /[^다]\.(?=\s|$)/.test(r.content) || r.content.includes('"')
+    t(`[규격 6] '${r.source_key}' ord${r.ord}: 대사 또는 속마음 조각이 있다`,
+      hasFragment, r.content)
+  }
+
+  // ── 나쁜 표본 6건 — 박 님 기대값대로 fail (형태소 불필요 5건은 즉시,
+  //    minVerbs 1건은 서버 있을 때만 aiChainChecks 로 문다) ──
+  {
+    const gd = ca.find((d) => d.source_key === 'ca-gate-dinner')!
+    const od = ca.find((d) => d.source_key === 'ca-open-door')!
+    const ie = ca.find((d) => d.source_key === 'ca-inn-endroom')!
+    const ce = ca.find((d) => d.source_key === 'ca-crystal-exam')!
+    const runLocal = (d: CaProblem, text: string) => gradeLocal(
+      { id: d.source_key, type: d.type as ProblemType, scoring_mode: 'auto', scoring_config: d.scoring_config },
+      { text }, undefined, d.passage ?? '')
+
+    // 1. gate-dinner — 원문 통째 → forbidWords 1('그때였다')
+    {
+      const text = gd.passage ?? ''
+      const checks = runLocal(gd, text)
+      t("나쁜 표본: gate-dinner 원문 통째 → forbidWords fail(1건, '그때였다')",
+        checks.find((c) => c.key === 'forbidWords')?.status === 'fail' &&
+          findForbidden(text, gd.scoring_config.forbidWords as string[]).length === 1,
+        JSON.stringify(checks.find((c) => c.key === 'forbidWords')))
+    }
+    // 2. open-door — 억지 신호어 나열 → forbidWords 3
+    {
+      const text = '정우는 문을 밀었다. 그것이 그가 이 집에서 보는 마지막 밤이 될 줄은 몰랐다. 그때였다. 과연 안에는 누가 있을까.'
+      const checks = runLocal(od, text)
+      t('나쁜 표본: open-door 억지 신호어 나열 → forbidWords fail(3건)',
+        checks.find((c) => c.key === 'forbidWords')?.status === 'fail' &&
+          findForbidden(text, od.scoring_config.forbidWords as string[]).length === 3,
+        JSON.stringify(checks.find((c) => c.key === 'forbidWords')))
+    }
+    // 3. open-door — 원문 통째 + 한 문장 → passageCopy fail
+    {
+      const text = `${od.passage} 정우는 들어갔다.`
+      const checks = runLocal(od, text)
+      t('나쁜 표본: open-door 원문 통째+한 문장 → passageCopy fail',
+        checks.find((c) => c.key === 'passageCopy')?.status === 'fail', JSON.stringify(checks))
+    }
+    // 5. crystal-exam — 원문 통째 → forbidWords 3 + passageCopy
+    {
+      const text = ce.passage ?? ''
+      const checks = runLocal(ce, text)
+      t('나쁜 표본: crystal-exam 원문 통째 → forbidWords(3)·passageCopy 전부 fail',
+        checks.find((c) => c.key === 'forbidWords')?.status === 'fail' &&
+          findForbidden(text, ce.scoring_config.forbidWords as string[]).length === 3 &&
+          checks.find((c) => c.key === 'passageCopy')?.status === 'fail',
+        JSON.stringify(checks))
+    }
+    // 6. inn-endroom — 원문 통째 + 한 문장 → passageCopy fail
+    {
+      const text = `${ie.passage} 소하는 잠들었다.`
+      const checks = runLocal(ie, text)
+      t('나쁜 표본: inn-endroom 원문 통째+한 문장 → passageCopy fail',
+        checks.find((c) => c.key === 'passageCopy')?.status === 'fail', JSON.stringify(checks))
+    }
+    // 점검(pass 기대): '…의 것이었다' 구문은 forbid 에 안 걸린다
+    {
+      const text = '신발장 앞에 놓인 운동화는 정우의 것이었다.'
+      t("점검: '…의 것이었다' 구문이 forbid 에 안 걸림(pass)",
+        findForbidden(text, od.scoring_config.forbidWords as string[]).length === 0, text)
+    }
+
+    // 4 — minVerbs 는 형태소 서버가 있어야 잰다. 없으면 건너뛴다.
+    aiChainChecks.push((async () => {
+      const t4 = '운동화는 정우의 것이었다. 그는 운명처럼 문을 열었다. 안은 조용했다.'
+      const m4 = await morphAnalyze(t4)
+      if (!m4) {
+        morphSkipped += 1
+        console.log('  – 형태소 서버 없음: 구성 16 cliffhanger_adv minVerbs 물기 1건 건너뜀')
+        return
+      }
+      t('나쁜 표본: open-door 운명처럼+동사 1개 → forbidWords(운명)·minVerbs 전부 fail',
+        m4.verbs.length === 1 &&
+          combine({ id: od.source_key, type: 'continue', scoring_mode: 'auto', scoring_config: od.scoring_config },
+            { text: t4 }, undefined, m4).checks.find((c) => c.key === 'minVerbs')?.status === 'fail',
+        JSON.stringify(m4.verbs))
+    })())
+  }
+
+  // ── 단계 간 베낌 가드: 대조원 73문장 = 도입1 정답5 + 도입2·3 모범20 + lack
+  //    모범10 + 비활성cc-8 + 활성cc-12 + 활성likability8 + 활성info_gap10.
+  //    cliffhanger_adv 는 info_gap 다음 단계라 활성 info_gap 답안도 이제
+  //    '이전 문장'이다. ig-ball-envelope(비활성)는 안 넣는다(action_turn 폐기
+  //    관례 — 세션 34 정정 v2).
+  const priorSentences: string[] = []
+  {
+    const scAnsIdx = new Map(
+      (readDump<{ answers?: { source_key: string; answer: { kind: string; index?: number } }[] }>('answers.json').answers ?? [])
+        .filter((a) => a.answer.kind === 'choice')
+        .map((a) => [a.source_key, a.answer.index!]))
+    for (const p of allProblems.filter((x) => x.skill_key === 'start_choose')) {
+      const idx = scAnsIdx.get(p.source_key)
+      if (idx != null && p.choices) priorSentences.push(p.choices[idx].replace(/\.$/, ''))
+    }
+    const deactivate = readDump<{ source_keys: string[] }>('deactivate.json')
+    const deadKeys = new Set(deactivate.source_keys)
+    const deadCc = new Set(deactivate.source_keys.filter((k) => k.startsWith('cc-')))
+    const activeCc = new Set(
+      allProblems.filter((p) => p.skill_key === 'contrast_char' && !deadCc.has(p.source_key)).map((p) => p.source_key))
+    const activeIg = new Set(
+      allProblems.filter((p) => p.skill_key === 'info_gap' && !deadKeys.has(p.source_key)).map((p) => p.source_key))
+    for (const r of answersDump.reference ?? []) {
+      if (r.source_key.startsWith('sw-') || r.source_key.startsWith('se-') ||
+        r.source_key.startsWith('lk-') || r.source_key.startsWith('lk2-') ||
+        deadCc.has(r.source_key) || activeCc.has(r.source_key) || activeIg.has(r.source_key)) {
+        priorSentences.push(r.content.replace(/\.$/, ''))
+      }
+    }
+  }
+  t('단계 간 베낌 가드: 대조원 73문장 (기존 63 + 활성 info_gap 모범 10)',
+    priorSentences.length === 73, `실제=${priorSentences.length}`)
+  for (const r of refs) {
+    const copied = priorSentences.filter((s) => r.content.includes(s))
+    t(`단계 간 베낌 가드: '${r.source_key}' ord${r.ord} 이 앞 단계 문장을 안 베꼈다`,
+      copied.length === 0, JSON.stringify(copied))
+  }
+
+  // ── 형태소(서버 있을 때만): 모범답안 동사 ≥ 3 (minVerbs 3) ──
+  // 세션 35 실측 — 순서: gate-dinner·open-door·inn-endroom·crystal-exam·walk-home
+  //   가 8·7·8·8·10 / 나 9·5·9·9·7
+  pushRefMorphCheck('구성 16', refs, 'continue', cfgOf)
+
+  // ── 숫자 반복 표현("두 번"·"세 번" 류) 부재 가드(세션 32 후기 4 규격) ──
+  for (const r of refs) {
+    t(`'${r.source_key}' ord${r.ord}: 숫자 반복 표현("N 번" 류) 없음`,
+      !/(한|두|세|네|다섯|여섯|일곱|여덟|아홉|열)\s*번/.test(r.content), r.content)
+  }
+
+  // ── stages: cliffhanger_adv 코치·자기점검 (신설 문구) ──
+  const stagesDump4 = readDump<{ skill_key: string; title: string; summary: string; coach_intro: string; coach_line: string; self_checks: string[] }[]>('stages.json')
+  const caStage = stagesDump4.find((s) => s.skill_key === 'cliffhanger_adv')!
+  t("stages cliffhanger_adv title '절단신공 심화' 유지", caStage.title === '절단신공 심화')
+  t("stages cliffhanger_adv summary '끊기 전에 신호를 깐다' 유지",
+    caStage.summary === '끊기 전에 신호를 깐다')
+  t('stages cliffhanger_adv coach_intro·coach_line 이 비어 있지 않다',
+    caStage.coach_intro.length > 0 && caStage.coach_line.length > 0)
+  t("stages cliffhanger_adv coach_line '신호 먼저, 절단은 그다음!'",
+    caStage.coach_line === '신호 먼저, 절단은 그다음!')
+  t('stages cliffhanger_adv 의 self_checks 2건',
+    Array.isArray(caStage.self_checks) && caStage.self_checks.length === 2 &&
+      caStage.self_checks.every((s) => s.length > 0), JSON.stringify(caStage.self_checks))
+}
+
 // ── '쓰지 않을 말' 표시: forbidLabel/forbidDisplay ↔ 채점 (세션 22) ──────
 //
 // scoring_config 에 표시 전용 필드 둘을 더했다. 채점(forbidWords·forbidLemmas)은
@@ -5032,16 +5330,17 @@ console.log('\n[쓰지 않을 말 표시: forbidLabel/forbidDisplay ↔ 채점]'
   // info_gap 은 6 — 비활성 ig-ball-envelope 도 forbidLabel 을 그대로 갖고 있다
   // (비활성 대비형 cc- 4건과 달리 폐기 전 설계라 필드를 안 지웠다). 이 카운트는
   // 활성 여부를 안 보고 덤프 전수를 센다.
-  t('덤프에 forbidLabel 을 채운 문항 38', withDisplay.length === 38, `실제=${withDisplay.length}`)
+  t('덤프에 forbidLabel 을 채운 문항 43', withDisplay.length === 43, `실제=${withDisplay.length}`)
   t(
-    '전부 emotion_action 6 + sensory 8 + start_write 5 + lack 5 + contrast_char 4 + likability 4 + info_gap 6',
+    '전부 emotion_action 6 + sensory 8 + start_write 5 + lack 5 + contrast_char 4 + likability 4 + info_gap 6 + cliffhanger_adv 5',
     withDisplay.filter((d) => d.skill_key === 'emotion_action').length === 6 &&
       withDisplay.filter((d) => d.skill_key === 'sensory').length === 8 &&
       withDisplay.filter((d) => d.skill_key === 'start_write').length === 5 &&
       withDisplay.filter((d) => d.skill_key === 'lack').length === 5 &&
       withDisplay.filter((d) => d.skill_key === 'contrast_char').length === 4 &&
       withDisplay.filter((d) => d.skill_key === 'likability').length === 4 &&
-      withDisplay.filter((d) => d.skill_key === 'info_gap').length === 6
+      withDisplay.filter((d) => d.skill_key === 'info_gap').length === 6 &&
+      withDisplay.filter((d) => d.skill_key === 'cliffhanger_adv').length === 5
   )
 
   for (const d of withDisplay) {
@@ -5136,7 +5435,7 @@ console.log('\n[쓰지 않을 말 표시: forbidLabel/forbidDisplay ↔ 채점]'
     )].map((m) => ({ cfg: JSON.parse(m[1]) as Record<string, unknown>, source_key: m[2] }))
     t('update SQL 에 14행이 있다', rows.length === 14, `실제=${rows.length}`)
     const canon = (o: unknown) => JSON.stringify(o, Object.keys(o as object).sort())
-    for (const d of withDisplay.filter((x) => !['start_write', 'lack', 'contrast_char', 'likability', 'info_gap'].includes(x.skill_key))) {
+    for (const d of withDisplay.filter((x) => !['start_write', 'lack', 'contrast_char', 'likability', 'info_gap', 'cliffhanger_adv'].includes(x.skill_key))) {
       const row = rows.find((r) => r.source_key === d.source_key)
       t(`update SQL '${d.source_key}' 의 scoring_config 가 덤프와 같다`,
         !!row && canon(row.cfg) === canon(d.scoring_config),
@@ -5286,9 +5585,17 @@ console.log('\n[자기점검 self_checks: 시드 ↔ 화면]')
         "'몰랐다'고 서술자가 말해 줬어? 지워도 독자가 알아채면 된 거야.",
       ])
   )
+  t(
+    'cliffhanger_adv 자기점검 두 줄 (세션 35)',
+    JSON.stringify(scOf('cliffhanger_adv')) ===
+      JSON.stringify([
+        "마지막 줄 앞 서너 줄에 '온다'는 신호가 있어? 없으면 절단이 아니라 사고야.",
+        '마지막 줄을 가려도 독자가 다음을 궁금해해? 신호가 제대로면 그래.',
+      ])
+  )
   const withSelfChecks = [
     'reduce_adverb', 'emotion_action', 'trim_padding', 'reduce_repeat', 'action_reason',
-    'start_write', 'start_extend', 'lack', 'contrast_char', 'likability', 'info_gap',
+    'start_write', 'start_extend', 'lack', 'contrast_char', 'likability', 'info_gap', 'cliffhanger_adv',
   ]
   t(
     '나머지 단계는 빈 배열(자기점검 칸이 안 뜬다)',
@@ -5335,18 +5642,19 @@ console.log('\n[가르침 층: 코치 말풍선 · 조건 요약 · 게이지]')
   t('모든 단계에 coach_intro·coach_line 문자열', stagesDump.every(
     (s) => typeof s.coach_intro === 'string' && typeof s.coach_line === 'string'))
   // 문장 트랙 10단계 + 도입 1·2·3(세션 28~30) + 구성 11 lack·12 contrast_char·
-  // 13 likability·15 info_gap(세션 31~34) = 17단계에 코치가 있다.
+  // 13 likability·15 info_gap·16 cliffhanger_adv(세션 31~35) = 18단계에 코치가 있다.
   const COACH_SKILLS = new Set([
     'reduce_adverb', 'emotion_action', 'trim_padding', 'reduce_repeat', 'adverb_exception',
     'sensory', 'rhythm', 'dialogue_ratio', 'pov_lock', 'action_reason',
     'start_choose', 'start_write', 'start_extend', 'lack', 'contrast_char', 'likability', 'info_gap',
+    'cliffhanger_adv',
   ])
   const withCoach = stagesDump.filter((s) => (s.coach_intro as string).length > 0)
-  t('coach_intro 는 문장 10 + 도입 1·2·3 + 구성 11·12·13·15 에만 있다',
-    withCoach.length === 17 && withCoach.every((s) => COACH_SKILLS.has(s.skill_key)),
+  t('coach_intro 는 문장 10 + 도입 1·2·3 + 구성 11·12·13·15·16 에만 있다',
+    withCoach.length === 18 && withCoach.every((s) => COACH_SKILLS.has(s.skill_key)),
     JSON.stringify(withCoach.map((s) => `${s.skill_key}:${s.track}`)))
-  t('coach_line 도 같은 17단계에만',
-    stagesDump.filter((s) => (s.coach_line as string).length > 0).length === 17 &&
+  t('coach_line 도 같은 18단계에만',
+    stagesDump.filter((s) => (s.coach_line as string).length > 0).length === 18 &&
       stagesDump.every((s) => (s.coach_intro as string).length > 0 === ((s.coach_line as string).length > 0)))
   t('그 밖의 단계는 coach_intro·coach_line 이 빈 문자열',
     stagesDump.filter((s) => !COACH_SKILLS.has(s.skill_key)).every(
@@ -5696,9 +6004,17 @@ console.log('\n[9단계 pov_lock: DEICTIC 누출 감시]')
   // 말뭉치 전수 — 덤프 지문·지시문 + 좋은 답안 64건
   interface DeicticProbeDump {
     skill_key: string
+    source_key: string
     passage: string | null
     instruction: string
   }
+  // 검토를 마친 말뭉치 충돌(위 DEICTIC_REVIEWED_COLLISIONS 와 같은 성격 —
+  // 검사를 끄는 장치가 아니라 triage 기록). 세션 35: ca-inn-endroom 지시문의
+  // "몸이 먼저 위험을"이 '저 위'와 부분 문자열로 겹친다("먼저"의 '저' +
+  // 공백 + "위험"의 '위'). 실제 조망 지시가 아니고, cliffhanger_adv 는
+  // DEICTIC 을 forbidWords 로 안 쓰니 채점에 영향 없다 — 확정 문안이라
+  // 글자를 못 바꾼다(박 님 문안 고정).
+  const corpusReviewed = new Set(['ca-inn-endroom'])
   const corpus: string[] = []
   const dumpRaw = readFileSync(
     path.join(__dirname, '..', '..', 'seed', 'dump', 'problems.json'), 'utf8')
@@ -5706,6 +6022,7 @@ console.log('\n[9단계 pov_lock: DEICTIC 누출 감시]')
     // 9단계 자신의 지문·지시문은 뺀다 — 조망 지시어가 들어 있는 것이 지문의
     // 요건이다. 여기서 재는 것은 '조망이 아닌 글이 걸리는가'다.
     if (dp.skill_key === 'pov_lock') continue
+    if (corpusReviewed.has(dp.source_key)) continue
     if (dp.passage) corpus.push(dp.passage)
     if (dp.instruction) corpus.push(dp.instruction)
   }

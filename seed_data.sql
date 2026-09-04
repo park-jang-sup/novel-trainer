@@ -305,8 +305,8 @@ on conflict (skill_key) do update set
 insert into stages
   (track, order_no, title, skill_key, summary, is_free, self_checks, intro, coach_intro, coach_line)
 values ('structure', 16, '절단신공 심화', 'cliffhanger_adv',
-        '끊기 전에 신호를 깐다', false, array[]::text[], '',
-        '', '')
+        '끊기 전에 신호를 깐다', false, array['마지막 줄 앞 서너 줄에 ''온다''는 신호가 있어? 없으면 절단이 아니라 사고야.', '마지막 줄을 가려도 독자가 다음을 궁금해해? 신호가 제대로면 그래.']::text[], '',
+        '절단은 마지막 줄이 아니라 그 앞에서 결정돼. 장난치다 갑자기 때리면 독자는 놀라는 게 아니라 어리둥절해. ''온다, 큰 거 온다'' 하고 신호를 먼저 깔고, 그다음에 끊어. 신호가 있으면 짧은 마지막 줄도 세게 박히고, 신호가 없으면 아무리 자극적으로 끝내도 ''이게 뭐야''가 돼.', '신호 먼저, 절단은 그다음!')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
@@ -447,6 +447,18 @@ on conflict (skill_key) do update set
   coach_line = excluded.coach_line;
 
 -- ── 문항 ────────────────────────────────────────────────────────────
+
+-- ca-gate-dinner (order_no 1, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'cliffhanger_adv'),
+  'convert', 'auto', '아래 회차 끝을 고쳐 쓰시오. 민재는 레이드를 마치고 팀원들과 저녁을 먹는 헌터다. 원문은 신호 없이 ''그때였다''로 덜컥 끊어서 독자가 놀라는 게 아니라 어리둥절해진다. 마지막 줄(게이트가 열렸다)은 그대로 두고, 그 앞에 ''온다''는 신호 한 줄을 심어 다시 쓰시오. 민재의 속마음이나 대사 한 줄이 들리게 하시오.',
+  '민재는 팀원들과 저녁을 먹고 있었다. 오늘 레이드는 무사히 끝났고 다들 웃고 있었다. 그때였다. 식당 천장이 갈라지며 게이트가 열렸다.', null, '{"maxChars":120,"minVerbs":3,"forbidLabel":"서술자가 미리 말해 주거나 억지로 끊는 표현","forbidWords":["훗날","될 줄","과연","그때였다","다음 화","운명"],"forbidDisplay":["훗날","될 줄은","과연","그때였다","다음 화","운명"]}'::jsonb,
+  'original', 'fantasy', 'planned',
+  1, 'ca-gate-dinner'
+where not exists (select 1 from problems p where p.source_key = 'ca-gate-dinner');
 
 -- cc-report-credit (order_no 1, difficulty 1)
 insert into problems
@@ -675,6 +687,18 @@ select
   'folktale', 'fantasy', 'impulsive',
   3, 'rm-goblin-club'
 where not exists (select 1 from problems p where p.source_key = 'rm-goblin-club');
+
+-- ca-open-door (order_no 2, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'cliffhanger_adv'),
+  'continue', 'auto', '원문이 깔아 둔 신호를 받아 회차를 끊으시오. 정우는 혼자 사는 회사원으로, 겁이 많지 않아 이상한 일도 일단 제 눈으로 확인하는 사람이다. 원문은 ''열려 있어선 안 되는 문''이라는 신호를 이미 깔았다. 원문을 읽고 다음에 올 장면을, 정우의 속마음이나 대사 한 줄이 들리게 하고, 그 신호가 커지다가 마지막 줄에서 끊기게 작성하시오. 서술자가 앞일을 말해 주거나 ''그때였다''로 덜컥 끊지 마시오.',
+  '정우는 야근을 마치고 자정이 넘어 집에 왔다. 현관 비밀번호를 누르려다 손을 멈췄다. 문이 손가락 하나만큼 열려 있었다. 아침에 잠근 걸 확인하고 나간 문이었다.', null, '{"maxChars":120,"minVerbs":3,"forbidLabel":"서술자가 미리 말해 주거나 억지로 끊는 표현","forbidWords":["훗날","될 줄","과연","그때였다","다음 화","운명"],"forbidDisplay":["훗날","될 줄은","과연","그때였다","다음 화","운명"],"forbidPassageCopy":true}'::jsonb,
+  'original', 'modern', 'planned',
+  1, 'ca-open-door'
+where not exists (select 1 from problems p where p.source_key = 'ca-open-door');
 
 -- cc-street-night (order_no 2, difficulty 1)
 insert into problems
@@ -916,6 +940,18 @@ select
   1, 'tp-simcheong-rail'
 where not exists (select 1 from problems p where p.source_key = 'tp-simcheong-rail');
 
+-- ca-inn-endroom (order_no 3, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'cliffhanger_adv'),
+  'continue', 'auto', '안전한 줄 알았던 장면을 누군가의 존재로 끊으시오. 소하는 사흘을 쫓긴 여자 검객으로, 지쳤어도 몸이 먼저 위험을 알아채는 사람이다. 원문은 ''손님이 하나뿐인데 굳이 끝방을 권하는 주인''이라는 신호를 이미 깔았다. 원문을 읽고 다음에 올 장면을, 소하의 속마음이나 대사 한 줄이 들리게 하고, 그 신호가 살기나 냄새로 커지다가 마지막 줄에서 끊기게 작성하시오.',
+  '사흘을 쫓긴 소하는 관도 끝 객잔에 들었다. 손님은 소하뿐인데 주인은 이층 끝방 열쇠를 내밀며 가장 조용한 방이라고 했다. 소하는 방문을 걸고 검을 머리맡에 세웠다. 사흘 만에 처음 눕는 침상이었다.', null, '{"maxChars":120,"minVerbs":3,"forbidLabel":"서술자가 미리 말해 주거나 억지로 끊는 표현","forbidWords":["훗날","될 줄","과연","그때였다","다음 화","운명"],"forbidDisplay":["훗날","될 줄은","과연","그때였다","다음 화","운명"],"forbidPassageCopy":true}'::jsonb,
+  'original', 'martial', 'planned',
+  2, 'ca-inn-endroom'
+where not exists (select 1 from problems p where p.source_key = 'ca-inn-endroom');
+
 -- ig-umbrella-walnut (order_no 3, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
@@ -1071,6 +1107,18 @@ select
   'original', 'fantasy', 'planned',
   1, 'sw-scaffold-morning'
 where not exists (select 1 from problems p where p.source_key = 'sw-scaffold-morning');
+
+-- ca-crystal-exam (order_no 4, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'cliffhanger_adv'),
+  'convert', 'auto', '아래 회차 끝을 고쳐 쓰시오. 리안은 스승을 잃고 홀로 마탑 시험을 보러 온 견습생이다. 원문은 서술자가 ''될 줄은 몰랐다''·''훗날''로 앞일을 미리 말해 버려 독자가 스스로 예감할 자리가 없다. 서술자의 예언 문장을 지우고, 그 자리에 수정구의 빛에서 드러나는 신호 하나를 심어 마지막 줄에서 끊기게 다시 쓰시오. 리안의 속마음이나 대사 한 줄이 들리게 하시오.',
+  '리안은 마력 측정 수정구 앞에 섰다. 그것이 마탑을 뒤집을 시험이 될 줄은 그때의 리안은 몰랐다. 시험관이 손을 올리라고 했다. 훗날 사람들은 이날을 리안의 첫날이라 불렀다.', null, '{"maxChars":120,"minVerbs":3,"forbidLabel":"서술자가 미리 말해 주거나 억지로 끊는 표현","forbidWords":["훗날","될 줄","과연","그때였다","다음 화","운명","몰랐"],"forbidDisplay":["훗날","될 줄은","과연","그때였다","다음 화","운명","몰랐다"],"forbidPassageCopy":true}'::jsonb,
+  'original', 'fantasy', 'planned',
+  2, 'ca-crystal-exam'
+where not exists (select 1 from problems p where p.source_key = 'ca-crystal-exam');
 
 -- ig-cafe-scar (order_no 4, difficulty 2)
 insert into problems
@@ -1251,6 +1299,18 @@ select
   'folktale', 'fantasy', 'planned',
   2, 'ae-kongjwi-jar'
 where not exists (select 1 from problems p where p.source_key = 'ae-kongjwi-jar');
+
+-- ca-walk-home (order_no 5, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'cliffhanger_adv'),
+  'continue', 'auto', '관계가 달라질 것을 암시하며 끊으시오. 예진과 태오는 야근이 잦은 같은 팀 동기로, 서로를 편한 동료라고만 말해 온 사이다. 원문은 ''늘 잡아 주던 택시를 오늘은 잡지 않았다''는 신호를 이미 깔았다. 원문을 읽고 다음에 올 장면을, 예진의 속마음이나 대사 한 줄이 들리게 하고, 고백이나 스킨십 없이 그 신호가 커지다가 마지막 줄에서 끊기게 작성하시오.',
+  '야근을 마친 열한 시, 회사 앞이었다. 늘 예진의 택시부터 잡아 주던 태오가 오늘은 잡지 않고 말했다. "좀 걷자." 예진의 집까지는 걸어서 사십 분이었다.', null, '{"maxChars":120,"minVerbs":3,"forbidLabel":"서술자가 미리 말해 주거나 억지로 끊는 표현","forbidWords":["훗날","될 줄","과연","그때였다","다음 화","운명"],"forbidDisplay":["훗날","될 줄은","과연","그때였다","다음 화","운명"],"forbidPassageCopy":true}'::jsonb,
+  'original', 'romance', 'planned',
+  2, 'ca-walk-home'
+where not exists (select 1 from problems p where p.source_key = 'ca-walk-home');
 
 -- ig-ball-envelope (order_no 5, difficulty 2)
 insert into problems
@@ -2250,6 +2310,20 @@ where p.source_key = 'dragon-king-anger'
 -- 화면에 보여줄 것이다(재설계안 11-2 4번). RLS 는 seed_schema.sql 이
 -- 건다: 그 문항에 제출 기록이 있는 학습자만 읽는다.
 
+-- ca-gate-dinner ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '민재는 팀원들과 저녁을 먹고 있었다. 오늘 레이드는 무사히 끝났고 다들 웃었다. 탁자 위 물컵에 잔물결이 일었다. 지하철도 안 다니는 골목인데. 민재가 컵을 보는 사이 식당 천장이 갈라지며 게이트가 열렸다.'
+from problems p
+where p.source_key = 'ca-gate-dinner'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ca-gate-dinner ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '민재는 팀원들과 저녁을 먹고 있었다. 협회 알림이 한꺼번에 울리자 다들 휴대폰을 뒤집어 놓고 웃었다. "오늘은 좀 쉬자." 뒤집힌 휴대폰들이 탁자 위에서 계속 떨렸고, 식당 천장이 갈라지며 게이트가 열렸다.'
+from problems p
+where p.source_key = 'ca-gate-dinner'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- cc-report-credit ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '발표가 끝나기 무섭게 김하준은 부장 쪽으로 걸어갔다. 서담은 밤새운 막내의 어깨를 먼저 두드렸다.'
@@ -2586,6 +2660,20 @@ from problems p
 where p.source_key = 'rm-goblin-club'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- ca-open-door ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '잘못 닫았나. 정우는 문을 밀지 않고 틈에 귀를 댔다. 안에서 물 흐르는 소리가 났다. 아침에 샤워는 하지 않았다. 소리가 뚝 그쳤다.'
+from problems p
+where p.source_key = 'ca-open-door'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ca-open-door ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '정우는 문을 마저 밀었다. 신발장 앞에 제 것이 아닌 운동화가 가지런히 놓여 있었다. "누구 있어요?" 대답 대신 안방 쪽에서 의자 끄는 소리가 났다.'
+from problems p
+where p.source_key = 'ca-open-door'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- cc-street-night ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '윤소민은 헤어지자마자 잘 들어갔냐고 문자를 보냈다. 하늘은 휴대폰을 끄고 이어폰을 꽂았다.'
@@ -2866,6 +2954,20 @@ from problems p
 where p.source_key = 'tp-simcheong-rail'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- ca-inn-endroom ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '이제 좀 자자. 소하는 눈을 감았다가 그대로 멈췄다. 미세한 살기가 천장 쪽에서 내려오고 있었다. 소하는 숨을 고르는 척하며 머리맡 검자루를 잡았다. 천장 널 하나가 소리 없이 들렸다.'
+from problems p
+where p.source_key = 'ca-inn-endroom'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ca-inn-endroom ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '"조용한 방 맞네." 소하는 신발을 벗다가 손을 멈췄다. 방 안에 미약한 피비린내가 풍겨 왔다. 소하는 벗던 신발을 도로 신고 검을 집어 들었다. 복도의 발소리가 문 앞에서 멈췄다.'
+from problems p
+where p.source_key = 'ca-inn-endroom'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- ig-umbrella-walnut ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '이튿날 소민은 호두과자 봉지를 들고 나갔다가 하늘을 보고 가방에 밀어 넣었다. 하늘은 소민 가방에서 삐져나온 우산 손잡이를 보고 잘 챙겼네, 하고만 했다. 소민은 이거 누가 넣었는지도 모른다고 웃었다. 하늘은 그래, 하고 먼저 걸었다.'
@@ -3048,6 +3150,20 @@ from problems p
 where p.source_key = 'sw-scaffold-morning'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- ca-crystal-exam ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '리안은 마력 측정 수정구 앞에 섰다. 앞 사람들의 수정구는 손을 얹자마자 손바닥만 한 빛을 냈다. 나는 반이나 나올까. 리안이 손을 얹자 빛 대신 수정구 안쪽이 검게 가라앉았고, 시험관이 의자에서 일어섰다.'
+from problems p
+where p.source_key = 'ca-crystal-exam'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ca-crystal-exam ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '리안은 마력 측정 수정구에 손을 얹었다. 빛은 희미하게 켜졌다가 깜빡이며 커지기 시작했다. "손 떼지 마." 시험관이 낮게 말했고, 빛이 시험장 천장까지 닿았을 때 수정구에 금이 갔다.'
+from problems p
+where p.source_key = 'ca-crystal-exam'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- ig-cafe-scar ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '박형사는 수배 전단을 접어 주머니에 넣고 카페에 들어섰다. 구석 자리 남자가 신문을 올려 얼굴을 가리자 왼손 등의 긴 흉터가 신문 위로 드러났다. 박형사는 그 옆을 지나 창가에 앉았다. 주머니 속 전단에는 왼손 흉터가 크게 그려져 있었다.'
@@ -3200,6 +3316,20 @@ insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 2, '', '몸을 일으키던 이재하는 돌 천장에 머리를 박았다. 침대가 제 방 것보다 두 뼘은 높았다.'
 from problems p
 where p.source_key = 'sw-boss-wake'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ca-walk-home ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '걷자니, 사십 분을. 예진은 묻지 않고 걸음을 맞췄다. 태오는 평소보다 반 걸음 안쪽으로 붙어 걸었고, 신호등마다 먼저 멈춰 예진을 기다렸다. 집 앞에 닿았을 때 그는 들어가라는 말 대신 예진의 이름을 불렀다.'
+from problems p
+where p.source_key = 'ca-walk-home'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ca-walk-home ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '"무슨 일 있어?" "아니." 태오는 예진의 가방을 받아 반대쪽 어깨에 멨다. 사십 분 동안 그는 회사 얘기를 한마디도 꺼내지 않았다. 집 앞 골목에서 예진이 먼저 손을 흔들자 태오는 흔들지 않고 그 자리에 서 있었다.'
+from problems p
+where p.source_key = 'ca-walk-home'
 on conflict (problem_id, ord, blank_key) do nothing;
 
 -- ig-ball-envelope ord 1 
