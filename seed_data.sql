@@ -337,8 +337,8 @@ on conflict (skill_key) do update set
 insert into stages
   (track, order_no, title, skill_key, summary, is_free, self_checks, intro, coach_intro, coach_line)
 values ('structure', 18, '1화 훅', 'first_hook',
-        '다섯 줄 안에 세 요소를 넣는다', false, array[]::text[], '',
-        '', '')
+        '다섯 줄 안에 세 요소를 넣는다', false, array['다섯 줄에서 이 이야기가 어디로 가는지 한 단어로 말할 수 있어? (복수·성장·귀환·연애)', '주인공이 뭘 하는지 있어? 당하기만 하면 매력도 방식도 없는 거야.']::text[], '',
+        '휴대폰 첫 화면은 다섯 줄이야. 거기서 독자는 결정해 — 더 볼지, 나갈지. 세계 설명은 나중에 해도 돼. 다섯 줄 안에 약속 세 개만 해. 이 이야기가 어디로 가는지, 왜 하필 이 사람인지, 이 사람이 어떻게 헤쳐 갈지. 셋 다 넣기 어렵다는 건 알아. 그래서 연습하는 거야.', '다섯 줄, 약속 세 개!')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
@@ -471,6 +471,18 @@ select
   'original', 'modern', 'planned',
   1, 'cc-report-credit'
 where not exists (select 1 from problems p where p.source_key = 'cc-report-credit');
+
+-- fh-villainess-mirror (order_no 1, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'first_hook'),
+  'convert', 'auto', '아래 다섯 줄을 고쳐 쓰시오. 카리엘은 원작에서 삼 년 뒤 처형당하는 악녀의 몸에 들어온 사람으로, 겁을 먹기보다 남은 시간을 계산하는 성격이다. 원문은 세계와 가문부터 설명해서 다섯 줄이 끝나도록 카리엘이 아무것도 하지 않는다. 같은 정보(공작가와 왕실의 대립·악녀의 악명·처형·빙의)를 카리엘의 행동에 실어 다섯 줄로 다시 쓰시오. 이 이야기가 어디로 가는지, 왜 이 사람인지, 어떻게 헤쳐 갈지가 그 다섯 줄에 들어가야 하고, 카리엘의 속마음이나 대사 한 줄이 들리게 하시오.',
+  '제국력 412년, 아르덴 왕국의 공작가는 오래전부터 왕실과 대립해 왔다. 공작가의 외동딸 카리엘은 사교계에서 악녀로 불렸다. 왕실은 그 악명을 빌미로 공작가를 칠 기회를 노리고 있었다. 그녀는 원작 소설에서 삼 년 뒤 반역죄로 처형당한다. 그리고 지금, 그 몸에 다른 영혼이 들어와 있었다.', null, '{"maxChars":180,"minVerbs":4,"requireAny":["카리엘"],"forbidLabel":"세계부터 설명하는 표현","forbidWords":["제국력","이 세계","옛날 옛적","프롤로그","오래전부터"],"forbidDisplay":["제국력","이 세계는","옛날 옛적","프롤로그","오래전부터"]}'::jsonb,
+  'original', 'romance', 'planned',
+  1, 'fh-villainess-mirror'
+where not exists (select 1 from problems p where p.source_key = 'fh-villainess-mirror');
 
 -- ig-gate-wait (order_no 1, difficulty 1)
 insert into problems
@@ -712,6 +724,18 @@ select
   1, 'cc-street-night'
 where not exists (select 1 from problems p where p.source_key = 'cc-street-night');
 
+-- fh-release-ball (order_no 2, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'first_hook'),
+  'convert', 'auto', '아래 다섯 줄을 고쳐 쓰시오. 서준혁은 열 시즌을 던진 팀에서 방출된 투수로, 다른 팀에서라도 던질 생각인 사람이다. 원문은 이야기가 어디로 가는지(재기)는 보이지만 준혁이 당하기만 해서 왜 이 사람을 따라가야 하는지가 없다. 방향은 그대로 두고, 준혁이 무엇을 하는 사람인지 보이는 행동 하나를 넣어 다섯 줄로 다시 쓰시오. 준혁의 속마음이나 대사 한 줄이 들리게 하시오.',
+  '서준혁은 구단 사무실에서 방출 통보를 받았다. 열 시즌을 던진 팀이었다. 단장은 미안하다는 말도 없이 서류를 내밀었다. 준혁은 사인을 하고 나왔다. 독립리그에서라도 한 시즌은 더 던질 생각이었다.', null, '{"maxChars":180,"minVerbs":4,"requireAny":["서준혁","준혁"],"forbidLabel":"인물을 평가하는 말","forbidWords":["착하","착한","따뜻","다정","친절","배려","좋은 사람","마음씨","인심","불쌍"],"forbidDisplay":["착하다","따뜻하다","다정하다","친절하다","배려하다","불쌍하다"]}'::jsonb,
+  'original', 'modern', 'planned',
+  1, 'fh-release-ball'
+where not exists (select 1 from problems p where p.source_key = 'fh-release-ball');
+
 -- heungbu-joy (order_no 2, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
@@ -952,6 +976,18 @@ select
   2, 'ca-inn-endroom'
 where not exists (select 1 from problems p where p.source_key = 'ca-inn-endroom');
 
+-- fh-burnt-manor (order_no 3, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'first_hook'),
+  'convert', 'auto', '아래 다섯 줄을 고쳐 쓰시오. 진운은 하룻밤에 사문이 몰살당하고 혼자 살아남은 소년이다. 원문은 어디로 가는지(복수)와 왜 이 사람인지(혼자 남아 검을 주웠다)는 있지만, 마지막 두 줄이 다짐뿐이라 어떻게 헤쳐 갈지가 없다. 앞 세 줄은 두고, 마지막 두 줄을 진운이 무엇부터 할지 보이는 행동으로 바꿔 다섯 줄로 다시 쓰시오. 진운의 속마음이나 대사 한 줄이 들리게 하시오.',
+  '진운은 불탄 장원 앞에 섰다. 사문 백여 명이 하룻밤에 죽었고, 심부름으로 산을 내려갔던 진운 혼자 살아남았다. 그는 아버지의 부러진 검을 주워 들었다. 반드시 갚아 줄 것이다. 언젠가는, 어떻게든.', null, '{"maxChars":180,"minVerbs":4,"requireAny":["진운"],"forbidLabel":"방법 없이 다짐만 하는 말","forbidWords":["어떻게든","반드시","언젠가","기필코"],"forbidDisplay":["어떻게든","반드시","언젠가","기필코"],"forbidPassageCopy":true}'::jsonb,
+  'original', 'martial', 'planned',
+  2, 'fh-burnt-manor'
+where not exists (select 1 from problems p where p.source_key = 'fh-burnt-manor');
+
 -- ig-umbrella-walnut (order_no 3, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
@@ -1119,6 +1155,18 @@ select
   'original', 'fantasy', 'planned',
   2, 'ca-crystal-exam'
 where not exists (select 1 from problems p where p.source_key = 'ca-crystal-exam');
+
+-- fh-regress-date (order_no 4, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'first_hook'),
+  'continue', 'auto', '두 줄 뒤에 세 줄을 이어 다섯 줄을 완성하시오. 강도윤은 최약체로 죽었다가 십 년 전으로 돌아온 헌터로, 후회보다 계산이 먼저인 사람이다. 원문 두 줄은 도윤이 깨어난 것까지만 보여 준다. 이어지는 세 줄 안에 이 이야기가 어디로 가는지, 왜 이 사람인지, 어떻게 헤쳐 갈지가 들어가게 작성하시오. 도윤의 속마음이나 대사 한 줄이 들리게 하시오.',
+  '강도윤은 눈을 떴다. 머리맡 휴대폰에 뜬 날짜가 십 년 전 그날이었다.', null, '{"maxChars":150,"minVerbs":3,"requireAny":["강도윤","도윤"],"forbidLabel":"세계부터 설명하는 표현","forbidWords":["제국력","이 세계","옛날 옛적","프롤로그","오래전부터"],"forbidDisplay":["제국력","이 세계는","옛날 옛적","프롤로그","오래전부터"],"forbidPassageCopy":true}'::jsonb,
+  'original', 'fantasy', 'planned',
+  2, 'fh-regress-date'
+where not exists (select 1 from problems p where p.source_key = 'fh-regress-date');
 
 -- ig-cafe-scar (order_no 4, difficulty 2)
 insert into problems
@@ -1311,6 +1359,18 @@ select
   'original', 'romance', 'planned',
   2, 'ca-walk-home'
 where not exists (select 1 from problems p where p.source_key = 'ca-walk-home');
+
+-- fh-broken-engagement (order_no 5, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'first_hook'),
+  'convert', 'auto', '아래 다섯 줄을 고쳐 쓰시오. 하은수는 결혼식 한 달 전에 파혼당한 회사원이고, 파혼 다음 날 첫 출근한 회사의 대표가 전 약혼자의 형이다. 원문은 아침 일과만 나열해서 어디로 가는지도, 왜 이 사람인지도, 어떻게 헤쳐 갈지도 없다. 이 설정으로 그 셋이 다 들어가는 다섯 줄을 새로 쓰시오. 은수의 속마음이나 대사 한 줄이 들리게 하시오.',
+  '하은수는 아침 일곱 시에 일어났다. 세수를 하고 커피를 내렸다. 회사에 갈 준비를 했다. 휴대폰을 확인했다. 오늘은 월요일이었다.', null, '{"maxChars":180,"minVerbs":4,"requireAny":["하은수","은수"],"forbidLabel":"세계부터 설명하는 표현","forbidWords":["제국력","이 세계","옛날 옛적","프롤로그","오래전부터"],"forbidDisplay":["제국력","이 세계는","옛날 옛적","프롤로그","오래전부터"],"forbidPassageCopy":true}'::jsonb,
+  'original', 'romance', 'planned',
+  2, 'fh-broken-engagement'
+where not exists (select 1 from problems p where p.source_key = 'fh-broken-engagement');
 
 -- ig-ball-envelope (order_no 5, difficulty 2)
 insert into problems
@@ -2338,6 +2398,20 @@ from problems p
 where p.source_key = 'cc-report-credit'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- fh-villainess-mirror ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '거울 속 얼굴이 카리엘이었다. 원작에서 삼 년 뒤 처형당하는 공작가의 악녀, 그 몸에 어젯밤 눈을 뜬 것이 지금의 카리엘이었다. 삼 년이면 충분하지. 카리엘은 하녀가 내민 붉은 드레스를 물리고 흰 드레스를 달라고 했다. 오늘 왕실 연회에서 악녀의 대본 첫 줄부터 찢을 참이었다.'
+from problems p
+where p.source_key = 'fh-villainess-mirror'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- fh-villainess-mirror ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '"아가씨, 오늘 왕실 연회도 안 가시죠?" 카리엘은 하녀의 말에 고개를 저었다. 어젯밤까지 이 몸의 주인이던 악녀는 연회를 피하다 삼 년 뒤 처형당했다고 원작은 적고 있었다. 오늘 카리엘은 왕실과 대립해 온 공작가의 딸로서 연회 맨 앞줄에 서기로 했다. 처형대로 가는 길을 바꾸려면 왕실 앞에 먼저 얼굴을 내밀어야 했다.'
+from problems p
+where p.source_key = 'fh-villainess-mirror'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- ig-gate-wait ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '영주는 평민 견습 기사 따위를 들이면 영지의 웃음거리가 된다며 문지기에게 열지 말라고 일렀다. 에린은 사흘째 성문 앞에서 청원서를 품에 넣은 채 문을 두드렸다. 문지기는 오늘도 안 된다고만 했다. 에린은 계단에 앉아 해가 지기를 기다렸다.'
@@ -2688,6 +2762,20 @@ from problems p
 where p.source_key = 'cc-street-night'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- fh-release-ball ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '서준혁은 사인을 하고 사무실을 나왔다. 주차장 대신 훈련장으로 내려가니 올해 온 신인 왼손 투수가 혼자 공을 던지고 있었다. "그립 그렇게 잡으면 팔꿈치 나가." 준혁은 신인의 손을 펴 제 체인지업 그립을 쥐여 주고 한참을 같이 던졌다. 훈련장을 나오며 그는 독립리그 사무국 번호를 눌렀다.'
+from problems p
+where p.source_key = 'fh-release-ball'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- fh-release-ball ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '서준혁은 사인을 하고 나와 텅 빈 관중석 맨 윗줄에 앉았다. 열 시즌을 던진 마운드가 손바닥만 하게 보였다. 첫 승 날 저기서 모자를 벗어 던졌던 게 어제 같았다. 준혁은 휴대폰을 꺼내 오늘 등판하는 후배에게 "마운드 네 거다, 즐겨라" 하고 보냈다. 그리고 독립리그 사무국 번호를 찾았다.'
+from problems p
+where p.source_key = 'fh-release-ball'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- heungbu-joy ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '흥부는 금은보화를 한 움큼 쥐었다가 놓쳤다. 손이 자꾸 벌어졌다.'
@@ -2968,6 +3056,20 @@ from problems p
 where p.source_key = 'ca-inn-endroom'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- fh-burnt-manor ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '진운은 불탄 장원 앞에 섰다. 사문 백여 명이 하룻밤에 죽었고, 심부름으로 산을 내려갔던 진운 혼자 살아남았다. 대문에 박힌 화살 깃에 검은 연꽃 문양이 찍혀 있었다. 흑련교. 요즘 문파마다 시비를 건다던 아버지의 말이 떠올랐지만, 백 명이 못 막은 걸 혼자 정면으로 갈 수는 없었다. 진운은 폐허에서 사흘을 지내며 지나는 상인들에게서 정보를 모았고, 흑련교가 제자를 받는다는 말에 부러진 검을 지고 남쪽 성도로 향했다.'
+from problems p
+where p.source_key = 'fh-burnt-manor'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- fh-burnt-manor ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '진운은 불탄 장원 앞에 섰다. 사문 백여 명이 하룻밤에 죽었고, 심부름으로 산을 내려갔던 진운 혼자 살아남았다. 대문에 박힌 화살 깃의 검은 연꽃 문양을 그는 알고 있었다. 손이 떨릴 만큼 화가 치밀었지만, 지금 쫓아가 봐야 제 검으로는 그들 하나도 베지 못한다. 어떻게 갚아야 하나 궁리하다 아버지가 늘 말하던 화산의 검객이 떠올랐고, 진운은 아버지의 부러진 검을 천에 싸 등에 지고 서쪽으로 향했다.'
+from problems p
+where p.source_key = 'fh-burnt-manor'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- ig-umbrella-walnut ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '이튿날 소민은 호두과자 봉지를 들고 나갔다가 하늘을 보고 가방에 밀어 넣었다. 하늘은 소민 가방에서 삐져나온 우산 손잡이를 보고 잘 챙겼네, 하고만 했다. 소민은 이거 누가 넣었는지도 모른다고 웃었다. 하늘은 그래, 하고 먼저 걸었다.'
@@ -3164,6 +3266,20 @@ from problems p
 where p.source_key = 'ca-crystal-exam'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- fh-regress-date ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '손을 펴 보았다. 굳은살도 흉터도 없는 스물다섯의 손이었다. 다시 왔구나. 도윤은 고시원 벽의 헌터 협회 모집 공고를 뜯어, 뒷면에 던전 하나의 이름과 열리는 날짜를 적었다. 전생엔 너무 늦게 찾았지만 그 뒤로 도윤을 완전히 다른 헌터로 만든 곳이었고, 이번엔 남보다 먼저 들어갈 생각이었다.'
+from problems p
+where p.source_key = 'fh-regress-date'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- fh-regress-date ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '"이번엔 안 죽어." 도윤은 스물다섯의 두 손을 쥐었다 폈다. 최약체로 죽던 기억이 손금처럼 남아 있었다. 그는 헌터 시험 원서에 이름을 적고, 그 밑에 시험일 전에 먼저 가 볼 곳을 적었다. 십 년 뒤 최강자가 각성했다는 폐광 던전이었다.'
+from problems p
+where p.source_key = 'fh-regress-date'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- ig-cafe-scar ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '박형사는 수배 전단을 접어 주머니에 넣고 카페에 들어섰다. 구석 자리 남자가 신문을 올려 얼굴을 가리자 왼손 등의 긴 흉터가 신문 위로 드러났다. 박형사는 그 옆을 지나 창가에 앉았다. 주머니 속 전단에는 왼손 흉터가 크게 그려져 있었다.'
@@ -3330,6 +3446,20 @@ insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 2, '', '"무슨 일 있어?" "아니." 태오는 예진의 가방을 받아 반대쪽 어깨에 멨다. 사십 분 동안 그는 회사 얘기를 한마디도 꺼내지 않았다. 집 앞 골목에서 예진이 먼저 손을 흔들자 태오는 흔들지 않고 그 자리에 서 있었다.'
 from problems p
 where p.source_key = 'ca-walk-home'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- fh-broken-engagement ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '어제 파혼당했다고 오늘 결근할 수는 없어서, 하은수는 퉁퉁 부은 눈에 얼음을 대고 첫 출근 셔츠를 다렸다. 가는 길에 결혼식장 취소 전화를 걸다가 목이 메어 끊고, 회사 앞에서 다시 걸어 끝냈다. 대표실 문패의 성을 보고 은수는 걸음을 멈췄다. 전 약혼자의 형이 문을 열고 나와 "하은수 씨죠?" 하고 물었다.'
+from problems p
+where p.source_key = 'fh-broken-engagement'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- fh-broken-engagement ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '파혼 문자를 받은 새벽, 하은수는 결혼식장에 취소 전화를 걸고 출근 준비를 했다. 손이 떨려 화장을 지웠다 다시 했다. 첫 출근한 회사 대표실 앞에서 그녀는 문패의 성을 보고 숨을 삼켰다. 문을 열고 나온 대표는 은수를 알아본 듯 잠시 멈췄다가, 동생 일은 죄송하게 됐다고 먼저 말했다. 은수는 괜찮다는 말 대신, 오늘부터 잘 부탁드린다고 했다.'
+from problems p
+where p.source_key = 'fh-broken-engagement'
 on conflict (problem_id, ord, blank_key) do nothing;
 
 -- ig-ball-envelope ord 1 

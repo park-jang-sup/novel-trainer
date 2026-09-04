@@ -4,16 +4,16 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 35 · 커밋 `cbf8a83` 위
+마지막 갱신: 세션 36 · 커밋 `4fc28a0` 위
 
 ---
 
 ## 앱이 지금 할 수 있는 것
 
 ```
-단계 26 · 문항 138(비활성 13건 포함 — action_turn 8 + 구성 12 재설계로 밀려난 cc- 4 +
-ig-ball-envelope 1, 활성 133) · 화면이 붙은 유형 18단계분 (문장 1~11,
-구성 11·12·13·14·15·16·17·19·20, 도입 1·2·3)
+단계 26 · 문항 143(비활성 13건 포함 — action_turn 8 + 구성 12 재설계로 밀려난 cc- 4 +
+ig-ball-envelope 1, 활성 138) · 화면이 붙은 유형 19단계분 (문장 1~11,
+구성 11·12·13·14·15·16·17·18·19·20, 도입 1·2·3)
 문항 화면 스케일  제목 text-3xl · 원문 상자·입력(Editor·FillBody) text-lg(1.125rem) p-5 · Editor rows 7/16 ·
                 컨테이너 max-w-7xl(한 칸 max-w-3xl) · 두 칸 grid [minmax(0,1.4fr) minmax(22rem,1fr)] 왼쪽 우선
 가르침 층       코치 캐릭터 먹물이 ✒️ 말풍선(CoachBubble) — 단계 목록: 제목·요약 아래 coach_intro ·
@@ -27,8 +27,9 @@ ig-ball-envelope 1, 활성 133) · 화면이 붙은 유형 18단계분 (문장 1
 ★ 모범답안 있는 문항: 10단계 fill 8 (①②) + 문장 1·2·3·4단계 (reduce_adverb 8 · emotion_action 6 ·
   trim_padding 8 · reduce_repeat 8) + 도입 2·3 각 5 + 구성 11 lack 5 + 구성 12 contrast_char
   활성 6(cc-first-pay + 신규 5, 옛 대비형 4는 비활성) + 구성 13 likability 4 +
-  구성 15 info_gap 5 + 구성 16 cliffhanger_adv 5, 가·나 blank_key '' ·
-  도입 1 start_choose 5 는 reference 를 선택지별 해설로 씀(가·나 아님)
+  구성 15 info_gap 5 + 구성 16 cliffhanger_adv 5 + 구성 18 first_hook 5,
+  가·나 blank_key '' · 도입 1 start_choose 5 는 reference 를 선택지별 해설로
+  씀(가·나 아님)
 없는 것       도입 4 start_episode(보류 — AI 심사 전) · streak·XP·복습·하트·진도 저장 테이블(안 만든다 — submissions 로만 센다)
 ★ 10단계는 새 skill_key `action_reason`(fill 8). 옛 `action_turn`(convert 8)은 is_active=false — 화면에 '준비 중'
 ```
@@ -139,16 +140,83 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 ## 다음 — 순서대로. 하나가 verify 에서 물리기 전에 다음을 안 한다
 
 ```
-1  구성 18 first_hook    구성 16 cliffhanger_adv 로 마지막 남은 구성 빈 단계 끝(세션 35).
-                        단계당 4~6, 기존 유형만. 규격 7조 전부 적용.
-                        도입 4 start_episode 는 아래 미결(AI 심사 전이라 보류) ·
-                        문장 11 cliffhanger 빈 단계 처리도 아래 열린 관찰(박 님 결정 대기)
-2  보스 문항(가칭)      전 단계를 마친 뒤, 배운 규칙 전부를 걸고 짧은 소설 한 편을 쓰는
+1  보스 문항(가칭)      구성 빈 단계 4개(13·15·16·18) 완료(세션 36) — 전제 충족.
+                        전 단계를 마친 뒤, 배운 규칙 전부를 걸고 짧은 소설 한 편을 쓰는
                         졸업 문항. 도입 4 start_episode 자리의 확장. 두 층: ① 규칙+자기점검이
                         통과 판정 ② AI 는 섀도 모드 — 판정·코멘트를 보여주되 통과에 안 쓴다.
                         박 님이 직접 오판을 관찰해 판정 권한 부여를 결정. 여기 쌓이는 답안·
                         판정 기록이 원칙 4 재개 조건의 수집처다.
-                        전제: 구성 빈 단계 4개가 먼저 찬다
+                        설정 카드형 '다섯 줄 쓰기'(18 설계안 5번, write 유형 없어 보류됐던 것)는
+                        이 보스 문항에서 다룬다.
+                        도입 4 start_episode·문장 11 cliffhanger 빈 단계는 아래 열린
+                        관찰(박 님 결정 대기, 안 건드림)
+```
+
+### 끝난 것 — 세션 36 (구성 18 first_hook '1화 훅' 신설 · 구성 빈 단계 4개 완료)
+
+```
+★ 구성 빈 단계 4개 완료 — 구성 13 likability · 15 info_gap · 16 cliffhanger_adv ·
+  18 first_hook(세션 33~36). 구성 16 은 DB 반영·브라우저 눈검사 박 님 확인
+  완료(세션 35). 구성 13·15 는 이미 지난 세션에 닫힘 확인된 것으로 기록돼 있다.
+
+원칙 갱신
+  ★ 원칙 5 강화(박 님): 문제 먼저, 인물은 문제에 맞춰 추가 — 원장에서
+    출발하지 않는다. 원장은 규칙·체계가 잡힌 뒤 활용하는 자리다. 이번 5문항의
+    이름(카리엘·서준혁·진운·강도윤·하은수)은 도입 간이와 같지만 상황이
+    먼저였다 — 간이 5명 승격은 하지 않는다(열린 항목).
+  ★ 규격 7 보강: 결함 원문도 결함 하나만 — 가르치려는 결함 외의 군더더기
+    (역할 없는 세계 정보)는 넣지 않는다. 학습자는 원문의 나머지를 정상으로 배운다.
+
+발견  도입 4 start_episode(1화 축약)도 문항 0이다 — 문장 11 cliffhanger 와
+  같은 유형의 빈 단계. 이번엔 안 건드리고 열린 관찰에 등재만 한다.
+  이 저장소에 'write' 유형은 없다(도입 2도 convert). 설계안의 5번 "설정
+  카드만 주고 쓰기"는 기존 유형 원칙으로 종합 convert(3요소 0 원문)로 바꿨다
+  — 설정 카드형은 보스 문항 몫으로 미룬다.
+
+경위  견본 fh-villainess-mirror(세 왕국 군더더기 원문 → 규격 7 보강 계기) 확인
+  → 나머지 4건 일괄 확정. 박 님 반려 경위 넷:
+  ① 준혁이 공을 두고 감·약점을 문자로 전송 → 신인에게 그립 알려주기·덕담으로
+  ② 진운 문항의 문양 위치·왼손 검객 설정 → 화살 깃·아버지 회상·정보 수집으로
+  ③ 도윤 문항의 물 얼룩·던전 순서·주소 단서 → 휴대폰 날짜·흐린 기연으로
+  ④ 은수 문항의 울 시간 몰아쓰기·눈매 묘사 → 부은 눈·목 멤·대표가 먼저 알아보고
+    멈추는 반응으로
+
+신규 5문항  fh-villainess-mirror(convert, 견본·forbidPassageCopy 없음 — 원문
+  어휘 자체가 forbid) · fh-release-ball(convert·결함 '매력 0') ·
+  fh-burnt-manor(convert·다짐어 결함) · fh-regress-date(continue·세 줄 이어쓰기·
+  maxChars 150) · fh-broken-engagement(convert·결함 '3요소 0'). requireAny 가
+  5건 전부에 있다 — 이 저장소에서 이름 강제가 100% 적용된 첫 구성 단계
+  (카메라를 반드시 주인공에게 붙인다). forbidLabel 세 갈래(세계5 3건·평가어
+  1건·다짐어 1건). 전부 신규 행 — update SQL 없이 seed_data.sql insert.
+stages.json  first_hook coach_intro·coach_line·self_checks 2줄 채움
+  (title '1화 훅'·summary '다섯 줄 안에 세 요소를 넣는다' 유지).
+docs/characters.md  "문제 먼저, 인물은 문제에 맞춰" 를 원칙 줄에 추가. 도입
+  트랙 간이 절에 5명 재사용 사실만 각주로 남기고 승격은 안 함.
+
+verify.ts [구성 18 first_hook]  유형 convert 4/continue 1 · maxChars·minVerbs
+  문항별(150/3 vs 180/4) · requireAny 5건 전수·requireAll 부재 대조 · forbidLabel
+  세 갈래 대조 · '년 전'·'줄은' 부재 검사(4번 "십 년 전" 오검출 회피) · 원문
+  불변식(어휘형 결함 2건 villainess-mirror·burnt-manor · 무난·비어휘형 결함
+  3건 regress-date·release-ball·broken-engagement) · [규격 6 불변식] 16 것
+  재사용 — 10건 중 8건은 잡히고 2건(burnt-manor 나·broken-engagement 나)은
+  속마음이 자유간접화법("그는 알고 있었다"·"궁리하다")으로 들어가 있어 문장
+  종결형이 그대로 '~다.'다. 16 설계 때 정한 대로 "못 잡으면 주석으로만" —
+  이 2건은 사람이 읽고 확인한 예외로 남기고 단언은 나머지 8건에만 건다 ·
+  모범 10건 pass + 나쁜 표본 5건 fail + 점검 1건 pass("십 년 전")
+  왕복 규칙: nameSkills 에 first_hook 추가 — requireAny 가 5건 다 있어 새
+  정규식 없이 canon 이 그대로 뽑는다
+  [불변식: forbidWords 자기 목록] first_hook 무난·비어휘형 결함 3건 예외 추가
+  [forbidLabel 표시] 48건(43+5) · [가르침 층] COACH_SKILLS 18→19 ·
+  [자기점검] withSelfChecks +first_hook · 단계 간 베낌 가드 83문장(기존 73 +
+  활성 cliffhanger_adv 10)
+seed_verify.sql  불변식 2 에 first_hook 무난·비어휘형 결함 3건 source_key 예외
+검증  tsc 0 · next typegen · test:scoring 4946/0(형태소 서버 켜짐) ·
+      check:numbers 0 · gen:seed(문항 138→143·모범답안 199→209) · next build
+      통과 · 물기 3건: [규격 6] styleReviewed 비움 → 2건 재현 fail 확인 /
+      원칙 10 예외에서 fh-release-ball·fh-broken-engagement 를 빼 자기
+      forbidWords 불변식 fail 확인 — 둘 다 복원
+★ DB 절차(박 님)  seed_data.sql(멱등) → seed_check.sql → 브라우저 '1화 훅'
+  5문항(requireAny 칩 5건 · 3번 다짐어 칩) 눈검사.
 ```
 
 ### 끝난 것 — 세션 35 (구성 16 cliffhanger_adv '절단신공 심화' 신설 · 규격 6 전면 적용)
@@ -1109,6 +1177,17 @@ verify 왕복 규칙의 characters.md 대조가 부분 문자열 포함으로 �
                               확정했다 — 문장 11을 채울지, 아니면 16으로
                               완전히 흡수할지는 박 님 결정 대기. 결정 전까지
                               문장 11 stages 행은 건드리지 않는다
+도입 4 start_episode 도 빈 단계다(세션 36 발견)  문항 0 — 문장 11 과 같은
+                              유형의 미결. 구성 18 first_hook 설계 때 함께
+                              발견했으나 이번엔 안 건드렸다. 보스 문항 설계
+                              때(다음 1) 이 자리와의 관계도 같이 볼 것
+                              (STATUS '보스 문항' 항목이 "start_episode 자리의
+                              확장"이라고 이미 적어 뒀다)
+도입 트랙 간이 5명이 두 번째로 재사용됨(세션 36)  카리엘·서준혁·진운·강도윤·
+                              하은수가 구성 18 first_hook 에 다시 쓰였다(첫
+                              등장은 도입 1~3). 원칙 5(문제 먼저)에 따라 이번에도
+                              승격은 안 했다 — 같은 인물이 세 번째 재사용되는
+                              날 승격 기준을 박 님과 다시 볼 것
 ```
 
 ## 상태 확인
