@@ -2461,9 +2461,11 @@ console.log('\n[10단계 action_reason: fill 시드 대조]')
   for (const r of refs) if (theInstr.includes(r.content)) leaks.push(`${r.source_key} ord${r.ord}: 모범답안`)
   t('지시문이 여덟 지문의 재료를 안 쓴다', leaks.length === 0, JSON.stringify(leaks))
 
-  // gen-seed 가 seed_data.sql 에 fixedLines 를 주입했다
+  // gen-seed 가 seed_data.sql 에 fixedLines 를 주입했다. 이 정규식은 seed_data.sql
+  // 전체를 훑어 fill 유형 전부(action_reason 8 + 도입 4 start_episode 4, 세션
+  // 39)를 센다 — action_reason 만의 카운트가 아니다.
   const seedSql = readFileSync(path.join(__dirname, '..', '..', 'seed_data.sql'), 'utf8')
-  t('seed_data.sql 에 fill 8건의 fixedLines 가 주입됐다', (seedSql.match(/"fixedLines":\[/g) ?? []).length === 8, `${(seedSql.match(/"fixedLines":\[/g) ?? []).length}`)
+  t('seed_data.sql 에 fill 12건(action_reason 8 + start_episode 4)의 fixedLines 가 주입됐다', (seedSql.match(/"fixedLines":\[/g) ?? []).length === 12, `${(seedSql.match(/"fixedLines":\[/g) ?? []).length}`)
   // 비활성으로 내려가는 것 — deactivate.json 이 단일 출처. 빠뜨리면 화면에
   // 유령이 남는다. 지금은 세 묶음이다:
   //   옛 action_turn 8건 (재설계안 11-4·세션 18)
@@ -4315,11 +4317,21 @@ console.log('\n[구성 12 contrast_char: 재설계 · 활성 6 + 비활성 4]')
   // friend-text, 정정 v2 로 ball-envelope 대신). cafe-scar 는 "아래 장면을 고쳐
   // 쓰시오. 박형사는…"이라 기존 m3(는)로 이미 잡힌다. umbrella-walnut 은
   // requireAll 이 있어 정규식 자체가 안 돈다.
-  const nameSkills = new Set(['lack', 'contrast_char', 'likability', 'info_gap', 'cliffhanger_adv', 'first_hook', 'action_turn', 'cliffhanger'])
+  const nameSkills = new Set(['lack', 'contrast_char', 'likability', 'info_gap', 'cliffhanger_adv', 'first_hook', 'action_turn', 'cliffhanger', 'start_episode'])
+  // 도입 4(start_episode)는 4문항 instruction 이 전부 동일한 fill 지시문이라
+  // 인물 이름이 instruction 에 없다 — 이름은 passage 의 [설정] 줄에만 있고
+  // 카드마다 문장 구조가 달라 정규식 하나로 못 뽑는다. 수동 매핑(박 님 승인).
+  const START_EPISODE_NAMES: Record<string, string> = {
+    'ep-regress-card': '강도윤',
+    'ep-villainess-card': '카리엘',
+    'ep-engagement-card': '하은수',
+    'ep-manor-card': '진운',
+  }
   for (const d of allProblems.filter((p) => nameSkills.has(p.skill_key) && !deadSet.has(p.source_key))) {
     const c = d.scoring_config
     const canon = (c.requireAll as string[] | undefined)
       ?? (c.requireAny as string[] | undefined)?.slice(0, 1)
+      ?? (d.skill_key === 'start_episode' ? [START_EPISODE_NAMES[d.source_key]] : undefined)
       ?? (() => {
         const m1 = /^(\S+?)의 겉과 속을 한 장면에/.exec(d.instruction)
         if (m1) return [m1[1]]
@@ -6126,6 +6138,230 @@ console.log('\n[문장 11 cliffhanger: 신설 5문항]')
       cfStage.self_checks.every((s) => s.length > 0), JSON.stringify(cfStage.self_checks))
 }
 
+// ── 도입 4 start_episode(1화 축약): 신설 4문항 · fill 두 번째 신설 (세션 39) ──
+//
+// 로드맵 정정(박 님 결정 (a)): 도입 4는 AI 없이 규칙만으로 되는 fill 4칸으로
+// 자립한다 — 세션 32·36 의 "보스가 도입 4 흡수" 안은 폐기, 긴 글+AI 섀도는
+// 별도 슬롯인 보스로 간다. blanks·forbidCopyOfFixedLines·칸별 모범답안
+// (ord×blank_key) 형식은 action_reason(ar-) 관례 그대로 — fill 유형 두 번째
+// 신설. ★ source_key 접두 'se-'는 이미 도입 3 start_extend 가 쓰고 있어
+// (단계 간 베낌 가드가 'se-' 로 그 5문항만 스캔한다) 충돌을 피해 'ep-'를 쓴다.
+console.log('\n[도입 4 start_episode: 신설 4문항 · fill 두 번째]')
+{
+  interface EpBlank {
+    key: string
+    label: string
+    minSentences?: number
+    maxSentences?: number
+    minChars?: number
+    maxChars?: number
+  }
+  interface EpProblem {
+    source_key: string
+    skill_key: string
+    type: string
+    passage: string | null
+    instruction: string
+    order_no: number
+    scoring_mode: string
+    scoring_config: {
+      blanks?: EpBlank[]
+      forbidLabel?: string
+      forbidWords?: string[]
+      forbidDisplay?: string[]
+      forbidCopyOfFixedLines?: boolean
+      fixedLines?: unknown
+    }
+  }
+  interface EpRef {
+    source_key: string
+    ord: number
+    blank_key: string
+    content: string
+  }
+  const seedDir = path.join(__dirname, '..', '..', 'seed', 'dump')
+  const readDump = <T,>(f: string): T =>
+    JSON.parse(readFileSync(path.join(seedDir, f), 'utf8').replace(/^﻿/, '')) as T
+
+  const allProblems = readDump<EpProblem[]>('problems.json')
+  const ep = allProblems.filter((d) => d.skill_key === 'start_episode')
+  const epKeys = new Set(ep.map((d) => d.source_key))
+  const answersDump = readDump<{ reference?: EpRef[] }>('answers.json')
+  const refs = (answersDump.reference ?? []).filter((r) => epKeys.has(r.source_key))
+
+  t('덤프에 start_episode 4문항', ep.length === 4, `실제=${ep.length}`)
+  t('전부 fill 유형', ep.every((d) => d.type === 'fill'))
+  t('전부 auto · difficulty 1 · choices null', ep.every(
+    (d) => d.scoring_mode === 'auto' && (d as unknown as { difficulty: number }).difficulty === 1 &&
+      (d as unknown as { choices: null }).choices === null))
+  t("source_key 전부 'ep-' 접두(도입 3 start_extend 의 'se-' 와 충돌 회피)",
+    ep.every((d) => d.source_key.startsWith('ep-')), JSON.stringify(ep.map((d) => d.source_key)))
+
+  // 지시문·라벨·칸 4개(①②③④) 균일 — 4문항이 같은 스캐폴딩을 쓴다
+  const instrs = new Set(ep.map((d) => d.instruction))
+  t('지시문이 한 종이다(카드만 다르다)', instrs.size === 1, `실제=${instrs.size}`)
+  const KEYS = ['①', '②', '③', '④']
+  const MAXCHARS: Record<string, number> = { '①': 50, '②': 60, '③': 50, '④': 30 }
+  for (const d of ep) {
+    const cfg = d.scoring_config
+    const blanks = cfg.blanks ?? []
+    t(`'${d.source_key}': 칸 4개 순서 ①②③④`, JSON.stringify(blanks.map((b) => b.key)) === JSON.stringify(KEYS),
+      JSON.stringify(blanks.map((b) => b.key)))
+    for (const b of blanks) {
+      t(`'${d.source_key}/${b.key}': maxChars ${MAXCHARS[b.key]}`, b.maxChars === MAXCHARS[b.key], `${b.maxChars}`)
+      t(`'${d.source_key}/${b.key}': minSentences 1`, b.minSentences === 1)
+    }
+    const b4 = blanks.find((b) => b.key === '④')!
+    t(`'${d.source_key}/④': minChars 4(첫마디는 짧을수록 좋다)`, b4.minChars === 4)
+    t(`'${d.source_key}/④': maxSentences 2`, b4.maxSentences === 2)
+    for (const k of ['①', '②', '③']) {
+      const b = blanks.find((x) => x.key === k)!
+      t(`'${d.source_key}/${k}': maxSentences 1`, b.maxSentences === 1)
+      t(`'${d.source_key}/${k}': minChars 미지정(fill 기본 8자 그대로)`, b.minChars === undefined)
+    }
+
+    // fixedLines 를 JSON 에 손으로 안 적었다 — gen-seed 가 passage 에서 만든다
+    t(`'${d.source_key}': fixedLines 를 JSON 에 안 적었다`, cfg.fixedLines === undefined)
+    // 빈칸 ↔ 지문 표식이 순서까지 같다
+    const mismatch = fillMarkerMismatch(d.passage ?? '', KEYS)
+    t(`'${d.source_key}': 빈칸 ↔ 지문 표식 일치`, mismatch === null, mismatch ?? '')
+    // 고정 줄 4개, 힌트([설정])는 안 섞인다
+    const { fixedLines } = deriveFillParts(d.passage ?? '')
+    t(`'${d.source_key}': 고정 줄 4개`, fixedLines.length === 4, JSON.stringify(fixedLines))
+    t(`'${d.source_key}': 고정 줄에 [설정] 힌트가 안 섞였다`, fixedLines.every((l) => !l.startsWith('[')))
+    // 라벨 고정 줄 4개가 전부 동일 문구([불변식])
+    t(`'${d.source_key}': 라벨 고정 줄이 공통 틀 그대로`,
+      JSON.stringify(fixedLines) === JSON.stringify([
+        '이 이야기의 재미는 —', '주인공은 —', '1화는 이 장면에서 시작한다 —', '주인공의 첫마디 —',
+      ]), JSON.stringify(fixedLines))
+
+    t(`'${d.source_key}': forbidLabel`, cfg.forbidLabel === '재미를 말로 대신하거나 세계부터 설명하는 표현')
+    t(`'${d.source_key}': forbidWords 7개`, JSON.stringify(cfg.forbidWords) ===
+      JSON.stringify(['재밌', '재미있', '흥미진진', '제국력', '이 세계', '프롤로그', '[설정]']))
+    t(`'${d.source_key}': forbidCopyOfFixedLines true`, cfg.forbidCopyOfFixedLines === true)
+
+    // 원문(passage) 불변식: [설정] 힌트 마커 자체가 forbidWords 목록에 있어
+    // 자기 목록 불변식(공유 invariant)이 별도 예외 없이 자연히 통과한다
+    // (action_reason 의 '[상황]' 선례와 같은 이유) — 그 밖의 재미 관련
+    // forbidWords 는 카드 문구에 안 섞인다.
+    const hits = findForbidden(d.passage ?? '', (cfg.forbidWords as string[]) ?? [])
+    t(`'${d.source_key}': passage 가 forbidWords 중 '[설정]' 하나에만 걸린다(다른 재미 어휘는 안 섞임)`,
+      JSON.stringify(hits) === JSON.stringify(['[설정]']), JSON.stringify(hits))
+  }
+
+  // ── 모범답안 32행(카드당 ord 2 × 칸 4) ──
+  t('활성 모범답안 32행', refs.length === 32, `실제=${refs.length}`)
+  for (const d of ep) {
+    const ords = [...new Set(refs.filter((r) => r.source_key === d.source_key).map((r) => r.ord))].sort()
+    t(`'${d.source_key}': 가·나 두 세트`, JSON.stringify(ords) === '[1,2]', JSON.stringify(ords))
+    for (const o of ords) {
+      const keys = refs.filter((r) => r.source_key === d.source_key && r.ord === o).map((r) => r.blank_key).sort()
+      t(`'${d.source_key}' ord${o}: 칸 4개 다 채움`, JSON.stringify(keys) === JSON.stringify(KEYS), JSON.stringify(keys))
+    }
+  }
+  for (const r of refs) {
+    const d = ep.find((x) => x.source_key === r.source_key)!
+    const b = (d.scoring_config.blanks ?? []).find((x) => x.key === r.blank_key)!
+    const letters = countLetters(r.content)
+    const s = countSentences(r.content)
+    const minChars = b.minChars ?? 8
+    t(`모범답안 '${r.source_key}' ord${r.ord} ${r.blank_key} 이 제 빈칸 규칙을 지킨다`,
+      s >= (b.minSentences ?? 1) && s <= (b.maxSentences ?? 99) &&
+        letters <= (b.maxChars ?? 9999) && letters >= minChars,
+      `${s}문장 ${letters}자 / ${b.minSentences}~${b.maxSentences}문장 ${minChars}~${b.maxChars}자: "${r.content}"`)
+    const fixed = new Set(deriveFillParts(d.passage ?? '').fixedLines)
+    t(`모범답안 '${r.source_key}' ord${r.ord} ${r.blank_key} 이 고정 줄을 안 베낀다`,
+      r.content.split('\n').map((l) => l.trim()).every((l) => !fixed.has(l)))
+    const hits = findForbidden(r.content, (d.scoring_config.forbidWords as string[]) ?? [])
+    t(`모범답안 '${r.source_key}' ord${r.ord} ${r.blank_key}: forbidWords 적중 0`,
+      hits.length === 0, JSON.stringify(hits))
+  }
+  // engagement 가 ①의 "재미"는 forbidWords 의 '재밌'·'재미있'에 안 걸린다(박 님 명시)
+  {
+    const eg1 = refs.find((r) => r.source_key === 'ep-engagement-card' && r.ord === 1 && r.blank_key === '①')!
+    t("'ep-engagement-card' ord1 ①의 '재미'가 forbidWords 에 안 걸린다(명시 확인)",
+      eg1.content.includes('재미') && findForbidden(eg1.content, ['재밌', '재미있']).length === 0)
+  }
+
+  // ── combine 으로 실제 채점 경로까지 확인(모범답안 32행 전부) ──
+  for (const d of ep) {
+    for (const o of [1, 2]) {
+      const blanks: Record<string, string> = {}
+      for (const r of refs.filter((x) => x.source_key === d.source_key && x.ord === o)) {
+        blanks[r.blank_key] = r.content
+      }
+      const { fixedLines } = deriveFillParts(d.passage ?? '')
+      const res = combine(
+        { id: d.source_key, type: 'fill', scoring_mode: 'auto', scoring_config: { ...d.scoring_config, fixedLines } },
+        { blanks }, undefined, null,
+      )
+      t(`combine: '${d.source_key}' ord${o} 모범답안이 전부 pass`,
+        res.checks.every((c) => c.status === 'pass'), JSON.stringify(res.checks.filter((c) => c.status !== 'pass')))
+    }
+  }
+
+  // ── 나쁜 표본 2건 fail(박 님 기대값대로 · 형태소 불필요, 즉시) ──
+  {
+    const rc = ep.find((d) => d.source_key === 'ep-regress-card')!
+    const { fixedLines } = deriveFillParts(rc.passage ?? '')
+    const cfgWithFixed = { ...rc.scoring_config, fixedLines }
+    const runLocal = (blanks: Record<string, string>) => gradeLocal(
+      { id: rc.source_key, type: 'fill', scoring_mode: 'auto', scoring_config: cfgWithFixed },
+      { blanks })
+
+    {
+      const blanks = { '①': '회귀물이라 재밌다.', '②': '주인공은 —', '③': '이 세계는 헌터가 있는 세계다.', '④': '강해진다' }
+      const checks = runLocal(blanks)
+      t('나쁜 표본1: ②:minChars fail(4/8) + forbidWords fail(2건)',
+        checks.find((c) => c.key === 'fill:②:minChars')?.status === 'fail' &&
+          checks.find((c) => c.key === 'forbidWords')?.status === 'fail' &&
+          (checks.find((c) => c.key === 'forbidWords') as { evidence?: string[] })?.evidence?.length === 2,
+        JSON.stringify(checks.filter((c) => c.status === 'fail')))
+    }
+    {
+      const blanks = { '①': '', '②': '착한 사람이다.', '③': '고시원.', '④': '"음."' }
+      const checks = runLocal(blanks)
+      t('나쁜 표본2: ①채움 fail·②minChars 6/8 fail·③minChars 3/8 fail·④minChars 1/4 fail',
+        checks.find((c) => c.key === 'fill:①:filled')?.status === 'fail' &&
+          checks.find((c) => c.key === 'fill:②:minChars')?.status === 'fail' &&
+          checks.find((c) => c.key === 'fill:③:minChars')?.status === 'fail' &&
+          checks.find((c) => c.key === 'fill:④:minChars')?.status === 'fail',
+        JSON.stringify(checks.filter((c) => c.status === 'fail')))
+    }
+  }
+
+  // ── 화면 배선: start_episode 원문 상자 라벨 '설정 카드' (세션 39) ──
+  const root = path.join(__dirname, '..', '..')
+  const tcSrc = readFileSync(path.join(root, 'components', 'train', 'TrainClient.tsx'), 'utf8')
+  t("TrainClient: start_episode 면 passageLabel 이 '설정 카드'",
+    /problem\.skill_key === 'start_episode'\s*\n?\s*\?\s*'설정 카드'/.test(tcSrc))
+
+  // ── stages: start_episode 코치·자기점검 (신설 문구) ──
+  const stagesDump8 = readDump<{ skill_key: string; title: string; summary: string; coach_intro: string; coach_line: string; self_checks: string[] }[]>('stages.json')
+  const epStage = stagesDump8.find((s) => s.skill_key === 'start_episode')!
+  t("stages start_episode title '1화 축약' 유지", epStage.title === '1화 축약')
+  t("stages start_episode summary '1화의 요소를 손에 쥔다' 유지",
+    epStage.summary === '1화의 요소를 손에 쥔다')
+  t('stages start_episode coach_intro·coach_line 이 비어 있지 않다',
+    epStage.coach_intro.length > 0 && epStage.coach_line.length > 0)
+  t("stages start_episode coach_line '재미, 사람, 자리, 첫마디 — 네 줄이면 1화가 선다!'",
+    epStage.coach_line === '재미, 사람, 자리, 첫마디 — 네 줄이면 1화가 선다!')
+  t('stages start_episode 의 self_checks 2건',
+    Array.isArray(epStage.self_checks) && epStage.self_checks.length === 2 &&
+      epStage.self_checks.every((s) => s.length > 0), JSON.stringify(epStage.self_checks))
+
+  // ── 규격 6 불변식 제외 대상 — 이 블록엔 그 검사가 아예 없다(④ 자체가
+  //    대사라 별도 대사·속마음 조각 검사가 불필요, 박 님 결정) ──
+
+  // ── 물기: fillMarkerMismatch·deriveFillParts 가 실제로 잡는다(action_reason
+  //    선례 재사용 확인 — 이 블록 전용 새 로직은 없다. KEYS·MAXCHARS 오타를
+  //    아래 두 검사로 잡는다) ──
+  t('물기: 표식 하나가 빠진 지문은 불일치로 잡힌다(도입4 4칸 기준)',
+    fillMarkerMismatch('[설정] x\n\n첫 줄\n①\n둘째 줄\n②\n셋째 줄\n③\n넷째 줄', KEYS) !== null)
+  t('물기: 맞는 지문(4칸)은 통과한다',
+    fillMarkerMismatch('[설정] x\n\n첫 줄\n①\n둘째 줄\n②\n셋째 줄\n③\n넷째 줄\n④', KEYS) === null)
+}
+
 // ── '쓰지 않을 말' 표시: forbidLabel/forbidDisplay ↔ 채점 (세션 22) ──────
 //
 // scoring_config 에 표시 전용 필드 둘을 더했다. 채점(forbidWords·forbidLemmas)은
@@ -6177,9 +6413,9 @@ console.log('\n[쓰지 않을 말 표시: forbidLabel/forbidDisplay ↔ 채점]'
   // info_gap 은 6 — 비활성 ig-ball-envelope 도 forbidLabel 을 그대로 갖고 있다
   // (비활성 대비형 cc- 4건과 달리 폐기 전 설계라 필드를 안 지웠다). 이 카운트는
   // 활성 여부를 안 보고 덤프 전수를 센다.
-  t('덤프에 forbidLabel 을 채운 문항 58', withDisplay.length === 58, `실제=${withDisplay.length}`)
+  t('덤프에 forbidLabel 을 채운 문항 62', withDisplay.length === 62, `실제=${withDisplay.length}`)
   t(
-    '전부 emotion_action 6 + sensory 8 + start_write 5 + lack 5 + contrast_char 4 + likability 4 + info_gap 6 + cliffhanger_adv 5 + first_hook 5 + action_turn 5 + cliffhanger 5',
+    '전부 emotion_action 6 + sensory 8 + start_write 5 + lack 5 + contrast_char 4 + likability 4 + info_gap 6 + cliffhanger_adv 5 + first_hook 5 + action_turn 5 + cliffhanger 5 + start_episode 4',
     withDisplay.filter((d) => d.skill_key === 'emotion_action').length === 6 &&
       withDisplay.filter((d) => d.skill_key === 'sensory').length === 8 &&
       withDisplay.filter((d) => d.skill_key === 'start_write').length === 5 &&
@@ -6190,7 +6426,8 @@ console.log('\n[쓰지 않을 말 표시: forbidLabel/forbidDisplay ↔ 채점]'
       withDisplay.filter((d) => d.skill_key === 'cliffhanger_adv').length === 5 &&
       withDisplay.filter((d) => d.skill_key === 'first_hook').length === 5 &&
       withDisplay.filter((d) => d.skill_key === 'action_turn').length === 5 &&
-      withDisplay.filter((d) => d.skill_key === 'cliffhanger').length === 5
+      withDisplay.filter((d) => d.skill_key === 'cliffhanger').length === 5 &&
+      withDisplay.filter((d) => d.skill_key === 'start_episode').length === 4
   )
 
   for (const d of withDisplay) {
@@ -6285,7 +6522,7 @@ console.log('\n[쓰지 않을 말 표시: forbidLabel/forbidDisplay ↔ 채점]'
     )].map((m) => ({ cfg: JSON.parse(m[1]) as Record<string, unknown>, source_key: m[2] }))
     t('update SQL 에 14행이 있다', rows.length === 14, `실제=${rows.length}`)
     const canon = (o: unknown) => JSON.stringify(o, Object.keys(o as object).sort())
-    for (const d of withDisplay.filter((x) => !['start_write', 'lack', 'contrast_char', 'likability', 'info_gap', 'cliffhanger_adv', 'first_hook', 'action_turn', 'cliffhanger'].includes(x.skill_key))) {
+    for (const d of withDisplay.filter((x) => !['start_write', 'lack', 'contrast_char', 'likability', 'info_gap', 'cliffhanger_adv', 'first_hook', 'action_turn', 'cliffhanger', 'start_episode'].includes(x.skill_key))) {
       const row = rows.find((r) => r.source_key === d.source_key)
       t(`update SQL '${d.source_key}' 의 scoring_config 가 덤프와 같다`,
         !!row && canon(row.cfg) === canon(d.scoring_config),
@@ -6467,10 +6704,18 @@ console.log('\n[자기점검 self_checks: 시드 ↔ 화면]')
         '이 절단이 어느 패턴인지 한 단어로 말할 수 있어? 못 하면 그냥 끝난 거야.',
       ])
   )
+  t(
+    'start_episode 자기점검 두 줄 (세션 39)',
+    JSON.stringify(scOf('start_episode')) ===
+      JSON.stringify([
+        '①을 읽은 친구가 "그거 볼래" 하고 말할 만해? 장르 이름만 적었으면 아직이야.',
+        '④ 첫마디가 ②의 사람이 할 말이야? 아무나 할 말이면 다시.',
+      ])
+  )
   const withSelfChecks = [
     'reduce_adverb', 'emotion_action', 'trim_padding', 'reduce_repeat', 'action_reason',
     'start_write', 'start_extend', 'lack', 'contrast_char', 'likability', 'info_gap', 'cliffhanger_adv',
-    'first_hook', 'action_turn', 'cliffhanger',
+    'first_hook', 'action_turn', 'cliffhanger', 'start_episode',
   ]
   t(
     '나머지 단계는 빈 배열(자기점검 칸이 안 뜬다)',
@@ -6523,14 +6768,14 @@ console.log('\n[가르침 층: 코치 말풍선 · 조건 요약 · 게이지]')
     'reduce_adverb', 'emotion_action', 'trim_padding', 'reduce_repeat', 'adverb_exception',
     'sensory', 'rhythm', 'dialogue_ratio', 'pov_lock', 'action_reason',
     'start_choose', 'start_write', 'start_extend', 'lack', 'contrast_char', 'likability', 'info_gap',
-    'cliffhanger_adv', 'first_hook', 'action_turn', 'cliffhanger',
+    'cliffhanger_adv', 'first_hook', 'action_turn', 'cliffhanger', 'start_episode',
   ])
   const withCoach = stagesDump.filter((s) => (s.coach_intro as string).length > 0)
-  t('coach_intro 는 문장 1~10·12 + 도입 1·2·3 + 구성 11·12·13·15·16·18 에만 있다',
-    withCoach.length === 21 && withCoach.every((s) => COACH_SKILLS.has(s.skill_key)),
+  t('coach_intro 는 문장 1~10·12 + 도입 1·2·3·4 + 구성 11·12·13·15·16·18 에만 있다',
+    withCoach.length === 22 && withCoach.every((s) => COACH_SKILLS.has(s.skill_key)),
     JSON.stringify(withCoach.map((s) => `${s.skill_key}:${s.track}`)))
-  t('coach_line 도 같은 21단계에만',
-    stagesDump.filter((s) => (s.coach_line as string).length > 0).length === 21 &&
+  t('coach_line 도 같은 22단계에만',
+    stagesDump.filter((s) => (s.coach_line as string).length > 0).length === 22 &&
       stagesDump.every((s) => (s.coach_intro as string).length > 0 === ((s.coach_line as string).length > 0)))
   t('그 밖의 단계는 coach_intro·coach_line 이 빈 문자열',
     stagesDump.filter((s) => !COACH_SKILLS.has(s.skill_key)).every(

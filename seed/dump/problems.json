@@ -5147,5 +5147,265 @@
       ],
       "forbidPassageCopy": true
     }
+  },
+  {
+    "type": "fill",
+    "choices": null,
+    "passage": "[설정] 최약체로 죽고 십 년 전으로 돌아온 헌터 강도윤. 이번엔 남보다 먼저 강해진다.\n\n이 이야기의 재미는 —\n①\n주인공은 —\n②\n1화는 이 장면에서 시작한다 —\n③\n주인공의 첫마디 —\n④",
+    "order_no": 1,
+    "tone_tag": "planned",
+    "genre_tag": "fantasy",
+    "skill_key": "start_episode",
+    "difficulty": 1,
+    "source_key": "ep-regress-card",
+    "source_tag": "original",
+    "instruction": "설정 카드를 읽고 1화를 네 줄로 쥐시오. 아직 소설을 쓰는 게 아니다 — 쓰기 전에 작가 손에 있어야 할 메모 네 줄이다. ① 이 이야기를 독자가 왜 볼지 한 가지, ② 주인공이 어떤 사람인지(겉과 속이 어떻게 붙는지) 한 줄, ③ 1화가 시작되는 장면(장소·시각·하는 일) 한 줄, ④ 주인공의 첫마디 한 줄. 라벨 줄을 그대로 옮겨 적지 말고, '재밌다'는 말로 재미를 대신하지 마시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "blanks": [
+        {
+          "key": "①",
+          "label": "이 이야기를 왜 볼까 — 독자가 기대할 한 가지",
+          "minSentences": 1,
+          "maxSentences": 1,
+          "maxChars": 50
+        },
+        {
+          "key": "②",
+          "label": "주인공은 어떤 사람인가 — 겉과 속이 어떻게 붙는지",
+          "minSentences": 1,
+          "maxSentences": 1,
+          "maxChars": 60
+        },
+        {
+          "key": "③",
+          "label": "1화는 어느 장면에서 시작하나 — 장소·시각·하는 일",
+          "minSentences": 1,
+          "maxSentences": 1,
+          "maxChars": 50
+        },
+        {
+          "key": "④",
+          "label": "주인공의 첫 대사 한 줄 (큰따옴표 안에)",
+          "minSentences": 1,
+          "maxSentences": 2,
+          "maxChars": 30,
+          "minChars": 4
+        }
+      ],
+      "forbidLabel": "재미를 말로 대신하거나 세계부터 설명하는 표현",
+      "forbidWords": [
+        "재밌",
+        "재미있",
+        "흥미진진",
+        "제국력",
+        "이 세계",
+        "프롤로그",
+        "[설정]"
+      ],
+      "forbidDisplay": [
+        "재밌다",
+        "흥미진진",
+        "제국력",
+        "이 세계는",
+        "프롤로그"
+      ],
+      "forbidCopyOfFixedLines": true
+    }
+  },
+  {
+    "type": "fill",
+    "choices": null,
+    "passage": "[설정] 원작에서 삼 년 뒤 처형당하는 악녀 카리엘의 몸에 들어온 사람. 처형을 피한다.\n\n이 이야기의 재미는 —\n①\n주인공은 —\n②\n1화는 이 장면에서 시작한다 —\n③\n주인공의 첫마디 —\n④",
+    "order_no": 2,
+    "tone_tag": "planned",
+    "genre_tag": "romance",
+    "skill_key": "start_episode",
+    "difficulty": 1,
+    "source_key": "ep-villainess-card",
+    "source_tag": "original",
+    "instruction": "설정 카드를 읽고 1화를 네 줄로 쥐시오. 아직 소설을 쓰는 게 아니다 — 쓰기 전에 작가 손에 있어야 할 메모 네 줄이다. ① 이 이야기를 독자가 왜 볼지 한 가지, ② 주인공이 어떤 사람인지(겉과 속이 어떻게 붙는지) 한 줄, ③ 1화가 시작되는 장면(장소·시각·하는 일) 한 줄, ④ 주인공의 첫마디 한 줄. 라벨 줄을 그대로 옮겨 적지 말고, '재밌다'는 말로 재미를 대신하지 마시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "blanks": [
+        {
+          "key": "①",
+          "label": "이 이야기를 왜 볼까 — 독자가 기대할 한 가지",
+          "minSentences": 1,
+          "maxSentences": 1,
+          "maxChars": 50
+        },
+        {
+          "key": "②",
+          "label": "주인공은 어떤 사람인가 — 겉과 속이 어떻게 붙는지",
+          "minSentences": 1,
+          "maxSentences": 1,
+          "maxChars": 60
+        },
+        {
+          "key": "③",
+          "label": "1화는 어느 장면에서 시작하나 — 장소·시각·하는 일",
+          "minSentences": 1,
+          "maxSentences": 1,
+          "maxChars": 50
+        },
+        {
+          "key": "④",
+          "label": "주인공의 첫 대사 한 줄 (큰따옴표 안에)",
+          "minSentences": 1,
+          "maxSentences": 2,
+          "maxChars": 30,
+          "minChars": 4
+        }
+      ],
+      "forbidLabel": "재미를 말로 대신하거나 세계부터 설명하는 표현",
+      "forbidWords": [
+        "재밌",
+        "재미있",
+        "흥미진진",
+        "제국력",
+        "이 세계",
+        "프롤로그",
+        "[설정]"
+      ],
+      "forbidDisplay": [
+        "재밌다",
+        "흥미진진",
+        "제국력",
+        "이 세계는",
+        "프롤로그"
+      ],
+      "forbidCopyOfFixedLines": true
+    }
+  },
+  {
+    "type": "fill",
+    "choices": null,
+    "passage": "[설정] 결혼식 한 달 전에 파혼당한 회사원 하은수. 다음 날 첫 출근한 회사의 대표가 전 약혼자의 형이다.\n\n이 이야기의 재미는 —\n①\n주인공은 —\n②\n1화는 이 장면에서 시작한다 —\n③\n주인공의 첫마디 —\n④",
+    "order_no": 3,
+    "tone_tag": "planned",
+    "genre_tag": "romance",
+    "skill_key": "start_episode",
+    "difficulty": 1,
+    "source_key": "ep-engagement-card",
+    "source_tag": "original",
+    "instruction": "설정 카드를 읽고 1화를 네 줄로 쥐시오. 아직 소설을 쓰는 게 아니다 — 쓰기 전에 작가 손에 있어야 할 메모 네 줄이다. ① 이 이야기를 독자가 왜 볼지 한 가지, ② 주인공이 어떤 사람인지(겉과 속이 어떻게 붙는지) 한 줄, ③ 1화가 시작되는 장면(장소·시각·하는 일) 한 줄, ④ 주인공의 첫마디 한 줄. 라벨 줄을 그대로 옮겨 적지 말고, '재밌다'는 말로 재미를 대신하지 마시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "blanks": [
+        {
+          "key": "①",
+          "label": "이 이야기를 왜 볼까 — 독자가 기대할 한 가지",
+          "minSentences": 1,
+          "maxSentences": 1,
+          "maxChars": 50
+        },
+        {
+          "key": "②",
+          "label": "주인공은 어떤 사람인가 — 겉과 속이 어떻게 붙는지",
+          "minSentences": 1,
+          "maxSentences": 1,
+          "maxChars": 60
+        },
+        {
+          "key": "③",
+          "label": "1화는 어느 장면에서 시작하나 — 장소·시각·하는 일",
+          "minSentences": 1,
+          "maxSentences": 1,
+          "maxChars": 50
+        },
+        {
+          "key": "④",
+          "label": "주인공의 첫 대사 한 줄 (큰따옴표 안에)",
+          "minSentences": 1,
+          "maxSentences": 2,
+          "maxChars": 30,
+          "minChars": 4
+        }
+      ],
+      "forbidLabel": "재미를 말로 대신하거나 세계부터 설명하는 표현",
+      "forbidWords": [
+        "재밌",
+        "재미있",
+        "흥미진진",
+        "제국력",
+        "이 세계",
+        "프롤로그",
+        "[설정]"
+      ],
+      "forbidDisplay": [
+        "재밌다",
+        "흥미진진",
+        "제국력",
+        "이 세계는",
+        "프롤로그"
+      ],
+      "forbidCopyOfFixedLines": true
+    }
+  },
+  {
+    "type": "fill",
+    "choices": null,
+    "passage": "[설정] 하룻밤에 사문이 몰살당하고 혼자 살아남은 소년 진운. 힘을 길러 갚는다.\n\n이 이야기의 재미는 —\n①\n주인공은 —\n②\n1화는 이 장면에서 시작한다 —\n③\n주인공의 첫마디 —\n④",
+    "order_no": 4,
+    "tone_tag": "planned",
+    "genre_tag": "martial",
+    "skill_key": "start_episode",
+    "difficulty": 1,
+    "source_key": "ep-manor-card",
+    "source_tag": "original",
+    "instruction": "설정 카드를 읽고 1화를 네 줄로 쥐시오. 아직 소설을 쓰는 게 아니다 — 쓰기 전에 작가 손에 있어야 할 메모 네 줄이다. ① 이 이야기를 독자가 왜 볼지 한 가지, ② 주인공이 어떤 사람인지(겉과 속이 어떻게 붙는지) 한 줄, ③ 1화가 시작되는 장면(장소·시각·하는 일) 한 줄, ④ 주인공의 첫마디 한 줄. 라벨 줄을 그대로 옮겨 적지 말고, '재밌다'는 말로 재미를 대신하지 마시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "blanks": [
+        {
+          "key": "①",
+          "label": "이 이야기를 왜 볼까 — 독자가 기대할 한 가지",
+          "minSentences": 1,
+          "maxSentences": 1,
+          "maxChars": 50
+        },
+        {
+          "key": "②",
+          "label": "주인공은 어떤 사람인가 — 겉과 속이 어떻게 붙는지",
+          "minSentences": 1,
+          "maxSentences": 1,
+          "maxChars": 60
+        },
+        {
+          "key": "③",
+          "label": "1화는 어느 장면에서 시작하나 — 장소·시각·하는 일",
+          "minSentences": 1,
+          "maxSentences": 1,
+          "maxChars": 50
+        },
+        {
+          "key": "④",
+          "label": "주인공의 첫 대사 한 줄 (큰따옴표 안에)",
+          "minSentences": 1,
+          "maxSentences": 2,
+          "maxChars": 30,
+          "minChars": 4
+        }
+      ],
+      "forbidLabel": "재미를 말로 대신하거나 세계부터 설명하는 표현",
+      "forbidWords": [
+        "재밌",
+        "재미있",
+        "흥미진진",
+        "제국력",
+        "이 세계",
+        "프롤로그",
+        "[설정]"
+      ],
+      "forbidDisplay": [
+        "재밌다",
+        "흥미진진",
+        "제국력",
+        "이 세계는",
+        "프롤로그"
+      ],
+      "forbidCopyOfFixedLines": true
+    }
   }
 ]

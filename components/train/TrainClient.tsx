@@ -258,9 +258,11 @@ export default function TrainClient({
   const passageLabel =
     problem.skill_key === 'start_write'
       ? '잘못된 첫 문장'
-      : problem.type === 'coinage' || problem.type === 'count'
-        ? '힌트'
-        : '원문'
+      : problem.skill_key === 'start_episode'
+        ? '설정 카드'
+        : problem.type === 'coinage' || problem.type === 'count'
+          ? '힌트'
+          : '원문'
 
   const canSubmit = (() => {
     if (submitting) return false

@@ -433,8 +433,8 @@ on conflict (skill_key) do update set
 insert into stages
   (track, order_no, title, skill_key, summary, is_free, self_checks, intro, coach_intro, coach_line)
 values ('start', 4, '1화 축약', 'start_episode',
-        '1화의 요소를 손에 쥔다', true, array[]::text[], '',
-        '', '')
+        '1화의 요소를 손에 쥔다', true, array['①을 읽은 친구가 "그거 볼래" 하고 말할 만해? 장르 이름만 적었으면 아직이야.', '④ 첫마디가 ②의 사람이 할 말이야? 아무나 할 말이면 다시.']::text[], '',
+        '1화를 쓰기 전에 네 줄만 적어. 이 이야기가 왜 재밌는지 한 줄, 주인공이 어떤 사람인지 한 줄, 1화가 어디서 시작하는지 한 줄, 주인공의 첫마디 한 줄. 이 네 줄이 손에 없으면 다섯 줄 훅도 못 써. 설명이 아니라 메모야 — 짧게, 구체적으로.', '재미, 사람, 자리, 첫마디 — 네 줄이면 1화가 선다!')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
@@ -495,6 +495,18 @@ select
   'original', 'fantasy', 'planned',
   1, 'cf-return-crisis'
 where not exists (select 1 from problems p where p.source_key = 'cf-return-crisis');
+
+-- ep-regress-card (order_no 1, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'start_episode'),
+  'fill', 'auto', '설정 카드를 읽고 1화를 네 줄로 쥐시오. 아직 소설을 쓰는 게 아니다 — 쓰기 전에 작가 손에 있어야 할 메모 네 줄이다. ① 이 이야기를 독자가 왜 볼지 한 가지, ② 주인공이 어떤 사람인지(겉과 속이 어떻게 붙는지) 한 줄, ③ 1화가 시작되는 장면(장소·시각·하는 일) 한 줄, ④ 주인공의 첫마디 한 줄. 라벨 줄을 그대로 옮겨 적지 말고, ''재밌다''는 말로 재미를 대신하지 마시오.',
+  E'[설정] 최약체로 죽고 십 년 전으로 돌아온 헌터 강도윤. 이번엔 남보다 먼저 강해진다.\n\n이 이야기의 재미는 —\n①\n주인공은 —\n②\n1화는 이 장면에서 시작한다 —\n③\n주인공의 첫마디 —\n④', null, '{"blanks":[{"key":"①","label":"이 이야기를 왜 볼까 — 독자가 기대할 한 가지","minSentences":1,"maxSentences":1,"maxChars":50},{"key":"②","label":"주인공은 어떤 사람인가 — 겉과 속이 어떻게 붙는지","minSentences":1,"maxSentences":1,"maxChars":60},{"key":"③","label":"1화는 어느 장면에서 시작하나 — 장소·시각·하는 일","minSentences":1,"maxSentences":1,"maxChars":50},{"key":"④","label":"주인공의 첫 대사 한 줄 (큰따옴표 안에)","minSentences":1,"maxSentences":2,"maxChars":30,"minChars":4}],"forbidLabel":"재미를 말로 대신하거나 세계부터 설명하는 표현","forbidWords":["재밌","재미있","흥미진진","제국력","이 세계","프롤로그","[설정]"],"forbidDisplay":["재밌다","흥미진진","제국력","이 세계는","프롤로그"],"forbidCopyOfFixedLines":true,"fixedLines":["이 이야기의 재미는 —","주인공은 —","1화는 이 장면에서 시작한다 —","주인공의 첫마디 —"]}'::jsonb,
+  'original', 'fantasy', 'planned',
+  1, 'ep-regress-card'
+where not exists (select 1 from problems p where p.source_key = 'ep-regress-card');
 
 -- fh-villainess-mirror (order_no 1, difficulty 1)
 insert into problems
@@ -772,6 +784,18 @@ select
   1, 'cf-return-newcomer'
 where not exists (select 1 from problems p where p.source_key = 'cf-return-newcomer');
 
+-- ep-villainess-card (order_no 2, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'start_episode'),
+  'fill', 'auto', '설정 카드를 읽고 1화를 네 줄로 쥐시오. 아직 소설을 쓰는 게 아니다 — 쓰기 전에 작가 손에 있어야 할 메모 네 줄이다. ① 이 이야기를 독자가 왜 볼지 한 가지, ② 주인공이 어떤 사람인지(겉과 속이 어떻게 붙는지) 한 줄, ③ 1화가 시작되는 장면(장소·시각·하는 일) 한 줄, ④ 주인공의 첫마디 한 줄. 라벨 줄을 그대로 옮겨 적지 말고, ''재밌다''는 말로 재미를 대신하지 마시오.',
+  E'[설정] 원작에서 삼 년 뒤 처형당하는 악녀 카리엘의 몸에 들어온 사람. 처형을 피한다.\n\n이 이야기의 재미는 —\n①\n주인공은 —\n②\n1화는 이 장면에서 시작한다 —\n③\n주인공의 첫마디 —\n④', null, '{"blanks":[{"key":"①","label":"이 이야기를 왜 볼까 — 독자가 기대할 한 가지","minSentences":1,"maxSentences":1,"maxChars":50},{"key":"②","label":"주인공은 어떤 사람인가 — 겉과 속이 어떻게 붙는지","minSentences":1,"maxSentences":1,"maxChars":60},{"key":"③","label":"1화는 어느 장면에서 시작하나 — 장소·시각·하는 일","minSentences":1,"maxSentences":1,"maxChars":50},{"key":"④","label":"주인공의 첫 대사 한 줄 (큰따옴표 안에)","minSentences":1,"maxSentences":2,"maxChars":30,"minChars":4}],"forbidLabel":"재미를 말로 대신하거나 세계부터 설명하는 표현","forbidWords":["재밌","재미있","흥미진진","제국력","이 세계","프롤로그","[설정]"],"forbidDisplay":["재밌다","흥미진진","제국력","이 세계는","프롤로그"],"forbidCopyOfFixedLines":true,"fixedLines":["이 이야기의 재미는 —","주인공은 —","1화는 이 장면에서 시작한다 —","주인공의 첫마디 —"]}'::jsonb,
+  'original', 'romance', 'planned',
+  1, 'ep-villainess-card'
+where not exists (select 1 from problems p where p.source_key = 'ep-villainess-card');
+
 -- fh-release-ball (order_no 2, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
@@ -939,6 +963,18 @@ select
   'original', 'fantasy', 'planned',
   1, 'cf-return-reversal'
 where not exists (select 1 from problems p where p.source_key = 'cf-return-reversal');
+
+-- ep-engagement-card (order_no 3, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'start_episode'),
+  'fill', 'auto', '설정 카드를 읽고 1화를 네 줄로 쥐시오. 아직 소설을 쓰는 게 아니다 — 쓰기 전에 작가 손에 있어야 할 메모 네 줄이다. ① 이 이야기를 독자가 왜 볼지 한 가지, ② 주인공이 어떤 사람인지(겉과 속이 어떻게 붙는지) 한 줄, ③ 1화가 시작되는 장면(장소·시각·하는 일) 한 줄, ④ 주인공의 첫마디 한 줄. 라벨 줄을 그대로 옮겨 적지 말고, ''재밌다''는 말로 재미를 대신하지 마시오.',
+  E'[설정] 결혼식 한 달 전에 파혼당한 회사원 하은수. 다음 날 첫 출근한 회사의 대표가 전 약혼자의 형이다.\n\n이 이야기의 재미는 —\n①\n주인공은 —\n②\n1화는 이 장면에서 시작한다 —\n③\n주인공의 첫마디 —\n④', null, '{"blanks":[{"key":"①","label":"이 이야기를 왜 볼까 — 독자가 기대할 한 가지","minSentences":1,"maxSentences":1,"maxChars":50},{"key":"②","label":"주인공은 어떤 사람인가 — 겉과 속이 어떻게 붙는지","minSentences":1,"maxSentences":1,"maxChars":60},{"key":"③","label":"1화는 어느 장면에서 시작하나 — 장소·시각·하는 일","minSentences":1,"maxSentences":1,"maxChars":50},{"key":"④","label":"주인공의 첫 대사 한 줄 (큰따옴표 안에)","minSentences":1,"maxSentences":2,"maxChars":30,"minChars":4}],"forbidLabel":"재미를 말로 대신하거나 세계부터 설명하는 표현","forbidWords":["재밌","재미있","흥미진진","제국력","이 세계","프롤로그","[설정]"],"forbidDisplay":["재밌다","흥미진진","제국력","이 세계는","프롤로그"],"forbidCopyOfFixedLines":true,"fixedLines":["이 이야기의 재미는 —","주인공은 —","1화는 이 장면에서 시작한다 —","주인공의 첫마디 —"]}'::jsonb,
+  'original', 'romance', 'planned',
+  1, 'ep-engagement-card'
+where not exists (select 1 from problems p where p.source_key = 'ep-engagement-card');
 
 -- lk-guard-dawn (order_no 3, difficulty 1)
 insert into problems
@@ -1155,6 +1191,18 @@ select
   'original', 'romance', 'planned',
   1, 'cf-doorstep-glance'
 where not exists (select 1 from problems p where p.source_key = 'cf-doorstep-glance');
+
+-- ep-manor-card (order_no 4, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'start_episode'),
+  'fill', 'auto', '설정 카드를 읽고 1화를 네 줄로 쥐시오. 아직 소설을 쓰는 게 아니다 — 쓰기 전에 작가 손에 있어야 할 메모 네 줄이다. ① 이 이야기를 독자가 왜 볼지 한 가지, ② 주인공이 어떤 사람인지(겉과 속이 어떻게 붙는지) 한 줄, ③ 1화가 시작되는 장면(장소·시각·하는 일) 한 줄, ④ 주인공의 첫마디 한 줄. 라벨 줄을 그대로 옮겨 적지 말고, ''재밌다''는 말로 재미를 대신하지 마시오.',
+  E'[설정] 하룻밤에 사문이 몰살당하고 혼자 살아남은 소년 진운. 힘을 길러 갚는다.\n\n이 이야기의 재미는 —\n①\n주인공은 —\n②\n1화는 이 장면에서 시작한다 —\n③\n주인공의 첫마디 —\n④', null, '{"blanks":[{"key":"①","label":"이 이야기를 왜 볼까 — 독자가 기대할 한 가지","minSentences":1,"maxSentences":1,"maxChars":50},{"key":"②","label":"주인공은 어떤 사람인가 — 겉과 속이 어떻게 붙는지","minSentences":1,"maxSentences":1,"maxChars":60},{"key":"③","label":"1화는 어느 장면에서 시작하나 — 장소·시각·하는 일","minSentences":1,"maxSentences":1,"maxChars":50},{"key":"④","label":"주인공의 첫 대사 한 줄 (큰따옴표 안에)","minSentences":1,"maxSentences":2,"maxChars":30,"minChars":4}],"forbidLabel":"재미를 말로 대신하거나 세계부터 설명하는 표현","forbidWords":["재밌","재미있","흥미진진","제국력","이 세계","프롤로그","[설정]"],"forbidDisplay":["재밌다","흥미진진","제국력","이 세계는","프롤로그"],"forbidCopyOfFixedLines":true,"fixedLines":["이 이야기의 재미는 —","주인공은 —","1화는 이 장면에서 시작한다 —","주인공의 첫마디 —"]}'::jsonb,
+  'original', 'martial', 'planned',
+  1, 'ep-manor-card'
+where not exists (select 1 from problems p where p.source_key = 'ep-manor-card');
 
 -- lk-board-rank (order_no 4, difficulty 1)
 insert into problems
@@ -2546,6 +2594,62 @@ from problems p
 where p.source_key = 'cf-return-crisis'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- ep-regress-card ord 1 ①
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '①', '죽기 직전까지 외운 십 년치 던전 정보를 들고 남보다 먼저 줍는다.'
+from problems p
+where p.source_key = 'ep-regress-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-regress-card ord 1 ②
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '②', '말수 적은 만년 F급이지만 속으론 던전 하나하나를 순서까지 외우는 사람이다.'
+from problems p
+where p.source_key = 'ep-regress-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-regress-card ord 1 ③
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '③', '십 년 전 고시원 새벽, 헌터 협회 모집 공고를 뜯는 장면.'
+from problems p
+where p.source_key = 'ep-regress-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-regress-card ord 1 ④
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '④', '"이번엔 내가 먼저 간다."'
+from problems p
+where p.source_key = 'ep-regress-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-regress-card ord 2 ①
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '①', '다 아는 미래를 들고 가장 약한 몸으로 다시 시작하는 역전.'
+from problems p
+where p.source_key = 'ep-regress-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-regress-card ord 2 ②
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '②', '겁 많아 보이는 신입인데 속으론 이미 죽어 본 사람이라 안 흔들린다.'
+from problems p
+where p.source_key = 'ep-regress-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-regress-card ord 2 ③
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '③', '각성 시험장 대기실, 번호표를 쥐고 앉은 아침.'
+from problems p
+where p.source_key = 'ep-regress-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-regress-card ord 2 ④
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '④', '"번호 안 바꿔도 됩니다. 이대로 가죠."'
+from problems p
+where p.source_key = 'ep-regress-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- fh-villainess-mirror ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '거울 속 얼굴이 카리엘이었다. 원작에서 삼 년 뒤 처형당하는 공작가의 악녀, 그 몸에 어젯밤 눈을 뜬 것이 지금의 카리엘이었다. 삼 년이면 충분하지. 카리엘은 하녀가 내민 붉은 드레스를 물리고 흰 드레스를 달라고 했다. 오늘 왕실 연회에서 악녀의 대본 첫 줄부터 찢을 참이었다.'
@@ -2938,6 +3042,62 @@ from problems p
 where p.source_key = 'cf-return-newcomer'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- ep-villainess-card ord 1 ①
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '①', '처형 날짜를 아는 사람이 악녀의 악명을 거꾸로 무기로 쓴다.'
+from problems p
+where p.source_key = 'ep-villainess-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-villainess-card ord 1 ②
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '②', '사교계가 아는 오만한 악녀지만, 속은 남은 날을 세며 계산하는 사람이다.'
+from problems p
+where p.source_key = 'ep-villainess-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-villainess-card ord 1 ③
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '③', '빙의 첫날 아침, 하녀가 붉은 드레스를 내미는 침실.'
+from problems p
+where p.source_key = 'ep-villainess-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-villainess-card ord 1 ④
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '④', '"오늘은 흰 걸로 줘."'
+from problems p
+where p.source_key = 'ep-villainess-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-villainess-card ord 2 ①
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '①', '악녀를 죽이려는 사람들 앞에 악녀가 먼저 웃으며 나타나는 통쾌함.'
+from problems p
+where p.source_key = 'ep-villainess-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-villainess-card ord 2 ②
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '②', '겉으론 원작 그대로 차가운데, 속으론 처형대까지의 길을 매일 다시 그린다.'
+from problems p
+where p.source_key = 'ep-villainess-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-villainess-card ord 2 ③
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '③', '처형당하는 꿈에서 깨어난 새벽, 거울 앞.'
+from problems p
+where p.source_key = 'ep-villainess-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-villainess-card ord 2 ④
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '④', '"삼 년이면 충분해."'
+from problems p
+where p.source_key = 'ep-villainess-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- fh-release-ball ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '서준혁은 사인을 하고 사무실을 나왔다. 주차장 대신 훈련장으로 내려가니 올해 온 신인 왼손 투수가 혼자 공을 던지고 있었다. "그립 그렇게 잡으면 팔꿈치 나가." 준혁은 신인의 손을 펴 제 체인지업 그립을 쥐여 주고 한참을 같이 던졌다. 훈련장을 나오며 그는 독립리그 사무국 번호를 눌렀다.'
@@ -3132,6 +3292,62 @@ insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 2, '', '도윤은 주머니에서 던전 핵을 꺼냈다. 협회에 반납해야 할 그것을, 그는 창밖으로 던졌다.'
 from problems p
 where p.source_key = 'cf-return-reversal'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-engagement-card ord 1 ①
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '①', '차인 여자가 도망치지 않고 그 집안 회사 한복판에서 버티는 걸 보는 재미.'
+from problems p
+where p.source_key = 'ep-engagement-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-engagement-card ord 1 ②
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '②', '무너진 티를 안 내려고 일부터 잡는 사람이라, 겉은 멀쩡하고 속은 매일 흔들린다.'
+from problems p
+where p.source_key = 'ep-engagement-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-engagement-card ord 1 ③
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '③', '파혼 다음 날 아침, 첫 출근 셔츠를 다리는 자취방.'
+from problems p
+where p.source_key = 'ep-engagement-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-engagement-card ord 1 ④
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '④', '"오늘부터 잘 부탁드립니다."'
+from problems p
+where p.source_key = 'ep-engagement-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-engagement-card ord 2 ①
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '①', '동생이 버린 여자를 형이 매일 마주 봐야 하는 어색함이 관계로 바뀌는 과정.'
+from problems p
+where p.source_key = 'ep-engagement-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-engagement-card ord 2 ②
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '②', '상처를 받으면 더 예의 바르게 구는 사람이라, 겉의 깍듯함이 속의 울음을 덮는다.'
+from problems p
+where p.source_key = 'ep-engagement-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-engagement-card ord 2 ③
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '③', '대표실 문패 앞에 멈춰 선 첫 출근 아침.'
+from problems p
+where p.source_key = 'ep-engagement-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-engagement-card ord 2 ④
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '④', '"사과는 안 받겠습니다. 계약서부터 주세요."'
+from problems p
+where p.source_key = 'ep-engagement-card'
 on conflict (problem_id, ord, blank_key) do nothing;
 
 -- lk-guard-dawn ord 1 
@@ -3384,6 +3600,62 @@ insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 2, '', '계단을 오르던 예린이 멈춰 돌아봤다. 지호는 아직 그 자리에 있었다. 둘 다 아무 말도 하지 않았다.'
 from problems p
 where p.source_key = 'cf-doorstep-glance'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-manor-card ord 1 ①
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '①', '혼자 남은 약한 소년이 원수의 문파 안에서부터 갚아 나가는 잠입 복수.'
+from problems p
+where p.source_key = 'ep-manor-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-manor-card ord 1 ②
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '②', '말이 없어 순해 보이지만, 속으론 죽은 백 명의 이름을 밤마다 세는 사람이다.'
+from problems p
+where p.source_key = 'ep-manor-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-manor-card ord 1 ③
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '③', '불탄 장원 대문 앞, 화살 깃의 문양을 보는 새벽.'
+from problems p
+where p.source_key = 'ep-manor-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-manor-card ord 1 ④
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '④', '"백 명이 못 막은 걸 지금 나 혼자는 못 한다."'
+from problems p
+where p.source_key = 'ep-manor-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-manor-card ord 2 ①
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '①', '복수보다 먼저 살아남고 강해져야 하는 소년의 긴 수련이 언젠가 한 방으로 터진다.'
+from problems p
+where p.source_key = 'ep-manor-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-manor-card ord 2 ②
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '②', '겁이 많아 뒤에 서던 아이인데, 혼자 남은 뒤로는 물러설 자리가 없어 앞에 선다.'
+from problems p
+where p.source_key = 'ep-manor-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-manor-card ord 2 ③
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '③', '아버지의 부러진 검을 천에 싸는 폐허의 저녁.'
+from problems p
+where p.source_key = 'ep-manor-card'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- ep-manor-card ord 2 ④
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '④', '"화산으로 간다."'
+from problems p
+where p.source_key = 'ep-manor-card'
 on conflict (problem_id, ord, blank_key) do nothing;
 
 -- lk-board-rank ord 1 

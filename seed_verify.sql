@@ -85,6 +85,10 @@ begin
   --       문장 11 cliffhanger 5건 전부(세션 38 — 마지막 줄만 다루는 절단
   --       패턴이라 원문 자체엔 결함이 없다. 전부 type continue 라 이미 안
   --       걸리지만 명시로도 뺀다).
+  --       도입 4 start_episode 4건 전부(세션 39 — fill 유형이라 애초에 이
+  --       필터(p.type = 'convert')를 안 탄다. 실은 카드 문구에 forbidWords
+  --       중 '[설정]' 힌트 마커가 그대로 있어 걸려도 통과했을 것(action_reason
+  --       의 '[상황]' 선례와 같은 이유) — type 이 다르다는 걸 명시로도 남긴다).
   --       ★ is_active 필터: 비활성 문항(ig-ball-envelope 등)은 이 검사 대상 밖 —
   --       폐기된 설계에 더는 강제하지 않는다(세션 34 정정 v2).
   select string_agg(p.source_key, ', ') into v_bad
@@ -99,7 +103,8 @@ begin
        'fh-regress-date', 'fh-release-ball', 'fh-broken-engagement',
        'bt-spear-range', 'bt-orc-axe', 'bt-low-guard',
        'cf-return-crisis', 'cf-return-newcomer', 'cf-return-reversal',
-       'cf-doorstep-glance', 'cf-gym-glow')
+       'cf-doorstep-glance', 'cf-gym-glow',
+       'ep-regress-card', 'ep-villainess-card', 'ep-engagement-card', 'ep-manor-card')
      and (p.scoring_config ? 'forbidWords' or p.scoring_config ? 'forbidLemmas')
      and not (
        exists (
