@@ -4,16 +4,16 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 36 · 커밋 `4fc28a0` 위
+마지막 갱신: 세션 37 · 커밋 `0f804ee` 위
 
 ---
 
 ## 앱이 지금 할 수 있는 것
 
 ```
-단계 26 · 문항 143(비활성 13건 포함 — action_turn 8 + 구성 12 재설계로 밀려난 cc- 4 +
-ig-ball-envelope 1, 활성 138) · 화면이 붙은 유형 19단계분 (문장 1~11,
-구성 11·12·13·14·15·16·17·18·19·20, 도입 1·2·3)
+단계 26 · 문항 148(비활성 13건 포함 — action_turn(at-) 8 + 구성 12 재설계로
+밀려난 cc- 4 + ig-ball-envelope 1, 활성 143) · 화면이 붙은 유형 20단계분
+(문장 1~10·12, 구성 11·12·13·14·15·16·17·18·19·20, 도입 1·2·3)
 문항 화면 스케일  제목 text-3xl · 원문 상자·입력(Editor·FillBody) text-lg(1.125rem) p-5 · Editor rows 7/16 ·
                 컨테이너 max-w-7xl(한 칸 max-w-3xl) · 두 칸 grid [minmax(0,1.4fr) minmax(22rem,1fr)] 왼쪽 우선
 가르침 층       코치 캐릭터 먹물이 ✒️ 말풍선(CoachBubble) — 단계 목록: 제목·요약 아래 coach_intro ·
@@ -27,11 +27,12 @@ ig-ball-envelope 1, 활성 138) · 화면이 붙은 유형 19단계분 (문장 1
 ★ 모범답안 있는 문항: 10단계 fill 8 (①②) + 문장 1·2·3·4단계 (reduce_adverb 8 · emotion_action 6 ·
   trim_padding 8 · reduce_repeat 8) + 도입 2·3 각 5 + 구성 11 lack 5 + 구성 12 contrast_char
   활성 6(cc-first-pay + 신규 5, 옛 대비형 4는 비활성) + 구성 13 likability 4 +
-  구성 15 info_gap 5 + 구성 16 cliffhanger_adv 5 + 구성 18 first_hook 5,
-  가·나 blank_key '' · 도입 1 start_choose 5 는 reference 를 선택지별 해설로
-  씀(가·나 아님)
+  구성 15 info_gap 5 + 구성 16 cliffhanger_adv 5 + 구성 18 first_hook 5 +
+  문장 12 action_turn 5(재개, 옛 at- 8은 비활성), 가·나 blank_key '' ·
+  도입 1 start_choose 5 는 reference 를 선택지별 해설로 씀(가·나 아님)
 없는 것       도입 4 start_episode(보류 — AI 심사 전) · streak·XP·복습·하트·진도 저장 테이블(안 만든다 — submissions 로만 센다)
-★ 10단계는 새 skill_key `action_reason`(fill 8). 옛 `action_turn`(convert 8)은 is_active=false — 화면에 '준비 중'
+★ 10단계는 새 skill_key `action_reason`(fill 8). 문장 12 `action_turn`(전투 서사화) 은
+  새 bt- 5건 활성(세션 37 재개), 옛 at- 8건은 is_active=false 유지 — 화면의 '준비 중'은 풀렸다
 ```
 
 ## 닫힌 것
@@ -142,16 +143,85 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 ## 다음 — 순서대로. 하나가 verify 에서 물리기 전에 다음을 안 한다
 
 ```
-1  보스 문항(가칭)      구성 빈 단계 4개(13·15·16·18) 완료(세션 36) — 전제 충족.
+1  문장 11 cliffhanger  절단신공 기초 — 마지막 남은 문장 트랙 빈 단계(세션 37 순서 결정:
+   (절단신공 기초)      12 → 11 → 보스). 12 cliffhanger_adv 와 겹치는 설계라 12 의 결과를
+                        먼저 보고 기초/심화 결을 가른다. 단계당 4~6.
+2  보스 문항(가칭)      구성 빈 단계 4개(13·15·16·18) + 문장 12 완료(세션 36·37) — 준비 충실.
                         전 단계를 마친 뒤, 배운 규칙 전부를 걸고 짧은 소설 한 편을 쓰는
                         졸업 문항. 도입 4 start_episode 자리의 확장. 두 층: ① 규칙+자기점검이
                         통과 판정 ② AI 는 섀도 모드 — 판정·코멘트를 보여주되 통과에 안 쓴다.
                         박 님이 직접 오판을 관찰해 판정 권한 부여를 결정. 여기 쌓이는 답안·
                         판정 기록이 원칙 4 재개 조건의 수집처다.
                         설정 카드형 '다섯 줄 쓰기'(18 설계안 5번, write 유형 없어 보류됐던 것)는
-                        이 보스 문항에서 다룬다.
-                        도입 4 start_episode·문장 11 cliffhanger 빈 단계는 아래 열린
-                        관찰(박 님 결정 대기, 안 건드림)
+                        이 보스 문항에서 다룬다. 도입 4 start_episode 흡수도 여기서.
+                        전제: 문장 11 이 먼저 찬다
+```
+
+### 끝난 것 — 세션 37 (문장 12 action_turn '전투 서사화' 재개 · 빈 단계 3개 발견)
+
+```
+발견  빈 단계가 3개였다 — 문장 11 cliffhanger(절단신공 기초, 세션 35 발견) ·
+  문장 12 action_turn(전투 서사화, 이번 세션 발견) · 도입 4 start_episode
+  (세션 36 발견). 순서를 12 → 11 → 보스로 잡았다 — 문장 12 는 문장 트랙
+  안이라 도구(requireAll·forbidLabel)가 이미 다 있어 제일 빨리 채울 수
+  있었고, 11 은 12(cliffhanger_adv 의 기초 버전)와 겹치는 설계라 12 뒤에
+  다시 보는 게 낫고, 보스는 도입 4 를 흡수하는 자리라 마지막이다.
+
+참고 자료  04_전투씬_작법_종합정리(턴제·의도·카드게임식) + 박 님이 준 기성
+  작품 3편(무협·현대 격투·판타지) 화면 캡처 45장 — 구조만 참조, 문안 인용
+  0건. 04 의 "의성어 과용" 진단은 이번 설계에서 절대 금지가 아니라 자리
+  문제로 읽었다 — 의성어 단독 줄 + 다음 줄에 무슨 일인지 서술이면 정상,
+  forbid 하지 않는다(실제 작품 45장 관행과 04 진단 사이의 차이). 04 의
+  "전투는 중요하지 않다"는 coach 문구에 옮기지 않았다.
+
+경위  견본 bt-spear-range 는 초안("서린이 창을 흘렸는데 창이 팔뚝을 끼워
+  다치는" 구도)이 박 님 반려로 "동작 하나에 원인 하나"로 단순화됐다. 박 님
+  주의: "동작 하나에 원인·결과 하나"는 절대 명제가 아니라 설득력 기준이다
+  — 필요하면 더 복잡한 동작도 쓸 수 있다.
+
+신규 5문항  bt-alley-hook(convert·결함 '강력했다') · bt-spear-range
+  (continue, 견본) · bt-orc-axe(continue) · bt-fireball-shield(convert·
+  느낌 말 나열 결함) · bt-low-guard(continue). requireAll 두 이름 · forbid
+  PassageCopy 5건 전부. forbidWords 는 어간 '강력'(활용형 '강력한' 아님) —
+  1번 원문 "강력했다"를 잡기 위해 실측으로 정했다.
+stages.json  action_turn coach_intro·coach_line·self_checks 2줄 채움
+  (title '전투 서사화' 유지, summary 갱신).
+docs/characters.md  '문장 12 인물(간이)' 5쌍 신설(전원 신규, 원장 출발 아님).
+
+verify.ts [문장 12 action_turn]  옛 [10단계 action_turn] 블록(오탐 감시·
+  덤프 대조 등)은 손대지 않고 새 블록을 별도로 뒀다. ★ 옛 블록의 덤프 필터
+  두 곳이 skill_key 만 보고 있어 실측으로 깨지는 걸 확인 — source_key 접두
+  'at-' 로 좁혀 고쳤다(안 그러면 "action_turn 8문항" 카운트가 13이 되고,
+  "지시문 두 종" 검사가 신규 5건의 새 지시문까지 섞여 깨진다. deactivate.json
+  전수 대조도 활성 bt- 를 비활성 목록에 잘못 넣을 뻔했다). 새 블록: 유형
+  continue 3/convert 2 · requireAll 대조 · forbidPassageCopy 5건 · forbidWords
+  '강력' 어간 검사 · 원문 불변식(결함 2건 alley-hook·fireball-shield · 무난
+  3건 spear-range·orc-axe·low-guard) · [규격 6 불변식] 16·18 전례 재사용 —
+  10건 중 3건(orc-axe 나·fireball-shield 나·low-guard 나)은 속마음이 짧고
+  급한 문장 리듬(전투의 순간성)으로 들어가 있어 종결형이 '~다.'다. "못
+  잡으면 주석으로만" 전례대로 사람이 확인한 예외로 남기고 단언은 나머지
+  7건에만 건다 · 모범 10건 pass + 나쁜 표본 5건 fail(형태소 필요 1건은 morph
+  서버 있을 때만) + 점검 1건 pass(의성어 단독 줄) · 단계 간 베낌 가드
+  93문장(기존 83 + 활성 first_hook 10) · stages coach·self_checks 대조
+  왕복 규칙: nameSkills 에 action_turn 추가 — requireAll 이 5건 다 있어 새
+  정규식 없이 canon 이 그대로 뽑는다
+  [불변식: forbidWords 자기 목록] action_turn(bt-) 무난 3건 예외 추가
+  [forbidLabel 표시] 53건(48+5) · [가르침 층] COACH_SKILLS 19→20 ·
+  [자기점검] withSelfChecks +action_turn
+seed_verify.sql  불변식 2 에 action_turn(bt-) 무난 3건 source_key 예외 추가
+검증  tsc 0 · next typegen · test:scoring 5217/0(형태소 서버 켜짐) ·
+      check:numbers 0 · gen:seed(문항 143→148·모범답안 209→219) · next build
+      통과 · 물기 5건: 옛 [10단계 action_turn] 덤프 필터 두 곳에서 'at-'
+      접두 제거 → 카운트·지시문·비활성 목록 대조 fail 재현(각각) / 원칙 10
+      예외에서 bt-orc-axe·bt-low-guard 를 빼 자기 forbidWords 불변식 fail /
+      [규격 6] styleReviewedBt 비움 → 3건 재현 fail — 전부 확인 후 복원
+★ 화면 '준비 중' 확인  app/page.tsx 의 분기가 skill_key 하드코딩이 아니라
+  count===0(동적, RLS 와 같은 is_active 가드) 인 것을 코드로 확인 —
+  bt- 5건이 활성이 되면 count 가 5 로 바뀌어 자동으로 '준비 중'이 풀린다.
+  코드 수정은 필요 없었다.
+★ DB 절차(박 님)  seed_data.sql → seed_check.sql → 브라우저 '전투 서사화' —
+  '준비 중'이 사라지고 5문항이 뜨는지 · requireAll 칩에 두 이름 · 옛 at-
+  문항이 안 보이는지.
 ```
 
 ### 끝난 것 — 세션 36 (구성 18 first_hook '1화 훅' 신설 · 구성 빈 단계 4개 완료)
@@ -1180,13 +1250,15 @@ verify 왕복 규칙의 characters.md 대조가 부분 문자열 포함으로 �
                               "문장 1~11 화면 붙음"으로만 적고 빈 단계 목록엔
                               없어 여태 놓쳤다. 구성 16 cliffhanger_adv 는 이미
                               자립형(IN-05 전부 가르침·IN-04 는 재료)으로
-                              확정했다 — 문장 11을 채울지, 아니면 16으로
-                              완전히 흡수할지는 박 님 결정 대기. 결정 전까지
-                              문장 11 stages 행은 건드리지 않는다
+                              확정했다. ★ 순서 확정(세션 37) — 다음 1 로 채운다
+                              (완전 흡수 아님). 12 재개로 문장/구성 결이 실제로
+                              갈린다는 게 실증돼 — 기초(11) / 심화(12→16) 로
+                              나누는 쪽에 무게가 실렸다. 정확한 기초·심화 경계는
+                              착수 시 다시 본다
 도입 4 start_episode 도 빈 단계다(세션 36 발견)  문항 0 — 문장 11 과 같은
                               유형의 미결. 구성 18 first_hook 설계 때 함께
                               발견했으나 이번엔 안 건드렸다. 보스 문항 설계
-                              때(다음 1) 이 자리와의 관계도 같이 볼 것
+                              때(다음 2) 이 자리와의 관계도 같이 볼 것
                               (STATUS '보스 문항' 항목이 "start_episode 자리의
                               확장"이라고 이미 적어 뒀다)
 도입 트랙 간이 5명이 두 번째로 재사용됨(세션 36)  카리엘·서준혁·진운·강도윤·

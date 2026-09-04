@@ -19,7 +19,7 @@
 --
 -- expect는 CTE가 아니라 임시 테이블이다. CTE는 그것이 붙은 statement
 -- 하나에만 유효해서, 검사 넷을 한 do 블록 안에서 나눠 적으려면 매번
--- 143행짜리 values를 다시 적어야 한다. 임시 테이블로 한 번만 채운다.
+-- 148행짜리 values를 다시 적어야 한다. 임시 테이블로 한 번만 채운다.
 --
 -- 마지막 문장이 select인 것은 의도다. Supabase 편집기가 NOTICE를
 -- 안 띄워서, raise notice로 끝내면 "통과"와 "파일이 잘려 안 돌았다"가
@@ -46,6 +46,7 @@ create temporary table expect (
 );
 
 insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) values
+  ('bt-alley-hook', '82a618b0d72b5abb469d33b6315d0928', 232, '4e5750fe31454b810ed8a9b85e23cbdb', 87, '{"maxChars":200,"minVerbs":4,"requireAll":["주원","강태"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","그때였다","과연"],"forbidPassageCopy":true}'::jsonb),
   ('ca-gate-dinner', '650f34b45f8771b2d95272ba90bc8adf', 176, '6c8ad487ca7f97e53685a200f5c1c966', 75, '{"maxChars":120,"minVerbs":3,"forbidLabel":"서술자가 미리 말해 주거나 억지로 끊는 표현","forbidWords":["훗날","될 줄","과연","그때였다","다음 화","운명"],"forbidDisplay":["훗날","될 줄은","과연","그때였다","다음 화","운명"]}'::jsonb),
   ('cc-report-credit', '6fb8a461655328aa3d9179bd6b953735', 123, 'de38611eebf908e329853f1801444b33', 41, '{"maxChars":60,"minVerbs":2,"requireAll":["김하준","서담"]}'::jsonb),
   ('fh-villainess-mirror', '7dbaa0b472b5f45fdc908278b3584efb', 269, '86f75d01b77b90e12ee8738228f8d65c', 162, '{"maxChars":200,"minVerbs":4,"requireAny":["카리엘"],"forbidLabel":"세계부터 설명하는 표현","forbidWords":["제국력","이 세계","옛날 옛적","프롤로그","오래전부터"],"forbidDisplay":["제국력","이 세계는","옛날 옛적","프롤로그","오래전부터"]}'::jsonb),
@@ -67,6 +68,7 @@ insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) v
   ('sc-boss-mirror', '74acc9ac9de70b9925542a1d938bb9a9', 71, null, null, '{}'::jsonb),
   ('sc-villainess-chains', '6af165c8036e50698cedfed900aaa13b', 68, null, null, '{}'::jsonb),
   ('rm-goblin-club', '4af82dadf8273d39e9012e06a7199f05', 94, 'e5fe17def733f583bd84b79d9d7a7ab3', 65, '{"maxChars":42,"minVerbs":3,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":2}'::jsonb),
+  ('bt-spear-range', 'b0ced2c3c7f3106cce076bd8d1577a8f', 237, '05f646a0dfe80feaa2030191babac2c2', 95, '{"maxChars":200,"minVerbs":4,"requireAll":["서린","무영"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","그때였다","과연"],"forbidPassageCopy":true}'::jsonb),
   ('ca-open-door', '47af579900faca5d994ef1f0e2619af5', 222, '051102e4bbc3b01ebb07c1c7e2f6d2d8', 90, '{"maxChars":120,"minVerbs":3,"forbidLabel":"서술자가 미리 말해 주거나 억지로 끊는 표현","forbidWords":["훗날","될 줄","과연","그때였다","다음 화","운명"],"forbidDisplay":["훗날","될 줄은","과연","그때였다","다음 화","운명"],"forbidPassageCopy":true}'::jsonb),
   ('cc-street-night', '17f220cf6e32c147e09c8a33fc1b646b', 109, 'b3f5a5ae8305051c09b7229a52f3fcb9', 45, '{"maxChars":60,"minVerbs":2,"requireAll":["윤소민","하늘"]}'::jsonb),
   ('fh-release-ball', '674449cf68da94d1a0b6797a47618d24', 209, 'cb03f35067995306f839be136bfa5052', 109, '{"maxChars":200,"minVerbs":4,"requireAny":["서준혁","준혁"],"forbidLabel":"인물을 평가하는 말","forbidWords":["착하","착한","따뜻","다정","친절","배려","좋은 사람","마음씨","인심","불쌍"],"forbidDisplay":["착하다","따뜻하다","다정하다","친절하다","배려하다","불쌍하다"]}'::jsonb),
@@ -89,6 +91,7 @@ insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) v
   ('tp-axe-water', '96f5ca0e7a0e469b0bee177a53855ad9', 135, '26b338bc7f1b667978b981a81341d2b3', 91, '{"maxChars":42,"minVerbs":3,"maxRepeat":2}'::jsonb),
   ('tp-heungbu-yard', '5f48dd91543f08bb1eb0b7ffe45088ec', 136, '42c60aefd16e062afbf4fe2bc5eb6404', 87, '{"maxChars":41,"minVerbs":3,"maxRepeat":2}'::jsonb),
   ('tp-simcheong-rail', '9cf7af2b087e33e8952659cb583e7f17', 113, '2c68ea80cc8fc425c70af016b9600864', 81, '{"maxChars":39,"minVerbs":3,"maxRepeat":2}'::jsonb),
+  ('bt-orc-axe', '10a93331c6b702ef4dfbb179bbf025ec', 225, 'e7a31e275c5a1f72e3d41f08285b35a8', 89, '{"maxChars":200,"minVerbs":4,"requireAll":["진서","유나"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","그때였다","과연"],"forbidPassageCopy":true}'::jsonb),
   ('ca-inn-endroom', '7e5d0beaa856619b5006550a9977d84b', 201, '999134f3c2888e64f248260ae39e943e', 111, '{"maxChars":120,"minVerbs":3,"forbidLabel":"서술자가 미리 말해 주거나 억지로 끊는 표현","forbidWords":["훗날","될 줄","과연","그때였다","다음 화","운명"],"forbidDisplay":["훗날","될 줄은","과연","그때였다","다음 화","운명"],"forbidPassageCopy":true}'::jsonb),
   ('fh-burnt-manor', 'be54fcd78412713e6f8e37b891c45e45', 210, '71961912600c6a47dc5dacc01419b791', 111, '{"maxChars":200,"minVerbs":4,"requireAny":["진운"],"forbidLabel":"방법 없이 다짐만 하는 말","forbidWords":["어떻게든","반드시","언젠가","기필코"],"forbidDisplay":["어떻게든","반드시","언젠가","기필코"],"forbidPassageCopy":true}'::jsonb),
   ('ig-umbrella-walnut', 'bdb493f241457289f0a4dbab826858b8', 245, '4a1fc003445a0f4fcf080a0aedc5d3f7', 128, '{"maxChars":100,"minVerbs":3,"requireAll":["소민","하늘"],"forbidLabel":"서술자가 사실을 말해 주거나 풀어 주는 표현","forbidWords":["몰랐","알지 못","모르고 있","눈치채지 못","알 리 없","훗날","사실은","고백","털어놓","알고 보니","오해였"],"forbidDisplay":["몰랐다","알지 못했다","훗날","사실은","고백하다","털어놓다","알고 보니"],"forbidPassageCopy":true}'::jsonb),
@@ -104,6 +107,7 @@ insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) v
   ('rp-simcheong-sea', '1923f3bd3896a41facdc89d04e9c0444', 23, 'fbe337b4cc6f3edfef43b536177937f8', 111, '{"maxChars":86,"minVerbs":3,"maxRepeat":2,"repeatTargets":[{"word":"바다","max":2},{"word":"심청","max":2}]}'::jsonb),
   ('se-rose-heir', '3a5d3b3a8092147d90a891b00a203db5', 118, 'c9dede8a5a73e739720395c77955203c', 37, '{"maxChars":60,"minVerbs":1,"requireAny":["에스텔"]}'::jsonb),
   ('sw-scaffold-morning', '34c777a65f63f0db452221a1c8aa8de4', 142, '4bd9b21f6ebf2f91ea43ea830bc1a069', 36, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","긴장","형언","기류","아우라","기색","낌새","기미"],"forbidLemmas":["오라/NNG"],"forbidDisplay":["기운","느낌","분위기","긴장감","형언하다","기류","오라","아우라","기색","낌새","기미"],"requireAny":["카리엘"]}'::jsonb),
+  ('bt-fireball-shield', '915dd680a3ecccf8829e7182e59b8af7', 205, '639aec3e583aa2ba83962ec40e927410', 79, '{"maxChars":200,"minVerbs":4,"requireAll":["리온","카엘"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","고통","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","고통","그때였다","과연"],"forbidPassageCopy":true}'::jsonb),
   ('ca-crystal-exam', '8841c65367fa5a03e6d2eb21edf2d883', 202, 'bd465206cc5783af806e0e2a6dd1e86b', 97, '{"maxChars":120,"minVerbs":3,"forbidLabel":"서술자가 미리 말해 주거나 억지로 끊는 표현","forbidWords":["훗날","될 줄","과연","그때였다","다음 화","운명","몰랐"],"forbidDisplay":["훗날","될 줄은","과연","그때였다","다음 화","운명","몰랐다"],"forbidPassageCopy":true}'::jsonb),
   ('fh-regress-date', '0b9f841e8231de9bc6223d7c069ed98f', 194, 'ed99074bffad7ecd86551a4c773a10b5', 39, '{"maxChars":200,"minVerbs":3,"requireAny":["강도윤","도윤"],"forbidLabel":"세계부터 설명하는 표현","forbidWords":["제국력","이 세계","옛날 옛적","프롤로그","오래전부터"],"forbidDisplay":["제국력","이 세계는","옛날 옛적","프롤로그","오래전부터"],"forbidPassageCopy":true}'::jsonb),
   ('ig-cafe-scar', '817ab3d845586e52a90a6348897d603c', 189, 'a1f24a96c0e97b063380e33d3d032db0', 106, '{"maxChars":100,"minVerbs":3,"forbidLabel":"서술자가 사실을 말해 주는 표현","forbidWords":["몰랐","알지 못","모르고 있","눈치채지 못","알 리 없","훗날","용의자"],"forbidDisplay":["몰랐다","알지 못했다","눈치채지 못했다","훗날","용의자"],"forbidPassageCopy":true}'::jsonb),
@@ -121,6 +125,7 @@ insert into expect (source_key, instr_md5, instr_len, pass_md5, pass_len, cfg) v
   ('sw-boss-wake', '3a4863b41b3091052b4f462d2636a4fc', 145, '714fe9eef4385a917bebded82aecd0bb', 32, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","기류","아우라","기색","낌새","기미"],"forbidLemmas":["오라/NNG"],"forbidDisplay":["기운","느낌","분위기","기류","오라","아우라","기색","낌새","기미"],"requireAny":["이재하","재하"]}'::jsonb),
   ('ae-axe-drop', 'f5b8d17c8e33f178f65d364d801ec11b', 84, null, null, '{}'::jsonb),
   ('ae-kongjwi-jar', 'a890bd3fe800ba68d3baed1c1b5b98eb', 41, null, null, '{}'::jsonb),
+  ('bt-low-guard', '7c4e628eb9d9affb72a58695b76d8a2e', 217, '2a6716828d9dd2cfd5e238faef7142a7', 75, '{"maxChars":200,"minVerbs":4,"requireAll":["정후","백리진"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","그때였다","과연"],"forbidPassageCopy":true}'::jsonb),
   ('ca-walk-home', '33e279826b38f52ef644ea7bec5cf5f3', 197, 'cb5b5f7d152c22e58b88bdd7cff767e8', 87, '{"maxChars":120,"minVerbs":3,"forbidLabel":"서술자가 미리 말해 주거나 억지로 끊는 표현","forbidWords":["훗날","될 줄","과연","그때였다","다음 화","운명"],"forbidDisplay":["훗날","될 줄은","과연","그때였다","다음 화","운명"],"forbidPassageCopy":true}'::jsonb),
   ('fh-broken-engagement', '7bd89cfbe2947182c7f2d440f44da594', 190, '4243c21d57e02aedf386bc4b1d88cf01', 72, '{"maxChars":200,"minVerbs":4,"requireAny":["하은수","은수"],"forbidLabel":"세계부터 설명하는 표현","forbidWords":["제국력","이 세계","옛날 옛적","프롤로그","오래전부터"],"forbidDisplay":["제국력","이 세계는","옛날 옛적","프롤로그","오래전부터"],"forbidPassageCopy":true}'::jsonb),
   ('ig-ball-envelope', 'a410c3ae4343a4f213f9abf4a722a893', 206, '0bc69ed925985008b0dc828477a80675', 123, '{"maxChars":100,"minVerbs":3,"forbidLabel":"서술자가 사실을 말해 주거나 풀어 주는 표현","forbidWords":["몰랐","알지 못","모르고 있","눈치채지 못","알 리 없","훗날","사실은","고백","털어놓","알고 보니","오해였","해명"],"forbidDisplay":["몰랐다","알지 못했다","훗날","사실은","고백하다","털어놓다","알고 보니","해명하다"],"forbidPassageCopy":true}'::jsonb),

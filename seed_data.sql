@@ -209,8 +209,8 @@ on conflict (skill_key) do update set
 insert into stages
   (track, order_no, title, skill_key, summary, is_free, self_checks, intro, coach_intro, coach_line)
 values ('sentence', 12, '전투 서사화', 'action_turn',
-        '빌드업을 쌓고 마지막 한 줄로 승부를 가른다', true, array[]::text[], '',
-        '', '')
+        '한 수마다 읽고, 재고, 고른다 — 휘두르는 동작이 아니라 왜 그 수인지가 전투다', true, array['이 턴에서 주인공이 상대의 뭘 읽었어? 안 읽고 휘둘렀으면 동작 나열이야.', '고른 수에 대가가 있어? 공짜 수면 긴장이 없어. 결과는 감정이 아니라 몸으로 보였어?']::text[], '',
+        '웹소설 전투는 턴제야. 내가 한 수, 상대가 한 수. 그래서 동작만 나열하면 ''휘둘렀다, 막았다, 콰앙''이 되고 독자는 졸아. 턴마다 세 가지를 넣어 — 상대 수를 읽고, 내 선택지를 재고, 하나를 고른다. 고른 수엔 대가가 있어야 하고, 결과는 몸으로 보여 줘. 의성어는 써도 돼, 단 한 줄 혼자 두고 바로 다음 줄에 무슨 일인지 써.', '읽고, 재고, 골라라 — 동작은 그다음!')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
@@ -447,6 +447,18 @@ on conflict (skill_key) do update set
   coach_line = excluded.coach_line;
 
 -- ── 문항 ────────────────────────────────────────────────────────────
+
+-- bt-alley-hook (order_no 1, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'action_turn'),
+  'convert', 'auto', '아래 전투를 고쳐 쓰시오. 주원은 복싱을 배운 대학생이고 강태는 골목에서 시비를 건 덩치다. 원문은 휘두르고 막고 의성어만 반복해서 누가 왜 그 수를 두는지 없다. 주원이 강태의 주먹에서 무엇을 읽고, 무엇을 재고, 어떤 수를 고르는지가 순서대로 보이게 다시 쓰시오. 고른 수의 결과와 대가는 몸으로 보이고, 주원의 속마음이나 대사 한 줄이 들리게 하시오. 의성어는 써도 되지만 그것만으로 한 수를 대신하지 마시오.',
+  '강태가 주먹을 휘둘렀다. 퍽! 주원이 막았다. 강태가 다시 휘둘렀다. 퍽! 퍽! 주원이 뒤로 물러났다. 강태의 주먹은 강력했다. 주원은 다시 앞으로 나갔다.', null, '{"maxChars":200,"minVerbs":4,"requireAll":["주원","강태"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","그때였다","과연"],"forbidPassageCopy":true}'::jsonb,
+  'original', 'modern', 'planned',
+  1, 'bt-alley-hook'
+where not exists (select 1 from problems p where p.source_key = 'bt-alley-hook');
 
 -- ca-gate-dinner (order_no 1, difficulty 1)
 insert into problems
@@ -699,6 +711,18 @@ select
   'folktale', 'fantasy', 'impulsive',
   3, 'rm-goblin-club'
 where not exists (select 1 from problems p where p.source_key = 'rm-goblin-club');
+
+-- bt-spear-range (order_no 2, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'action_turn'),
+  'continue', 'auto', '원문이 깔아 둔 상대 기술의 원리를 읽고 한 턴을 이어 쓰시오. 백서린은 검을 쓰는 여검객이고 곽무영은 창을 쓴다. 원문은 ''창은 거리 싸움''이라는 원리를 이미 보여 줬다. 원문을 읽고 다음 한 수를, 서린이 그 원리를 읽고 → 선택지를 재고 → 하나를 고르는 순서가 보이게 쓰되, 고른 수의 대가와 결과가 몸이나 사물로 드러나게 작성하시오. 서린의 속마음이나 대사 한 줄이 들리게 하고, 두 사람 이름이 다 나오게 하시오.',
+  '곽무영의 창은 세 걸음 거리를 지켰다. 백서린이 들어가면 창끝이 찌르고, 물러서면 창대가 따라와 후렸다. 세 합 만에 서린의 왼팔 소매가 갈라졌다. 창은 거리 싸움이었다.', null, '{"maxChars":200,"minVerbs":4,"requireAll":["서린","무영"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","그때였다","과연"],"forbidPassageCopy":true}'::jsonb,
+  'original', 'martial', 'planned',
+  1, 'bt-spear-range'
+where not exists (select 1 from problems p where p.source_key = 'bt-spear-range');
 
 -- ca-open-door (order_no 2, difficulty 1)
 insert into problems
@@ -964,6 +988,18 @@ select
   1, 'tp-simcheong-rail'
 where not exists (select 1 from problems p where p.source_key = 'tp-simcheong-rail');
 
+-- bt-orc-axe (order_no 3, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'action_turn'),
+  'continue', 'auto', '원문이 놓은 두 선택지 중 하나를 골라 한 턴을 이어 쓰시오. 진서는 방패를 든 탱커 헌터고 유나는 오늘 처음 던전에 들어온 신입이다. 원문은 피하면 유나가 다치고 막으면 방패가 부서지는 갈림길까지 왔다. 진서가 무엇을 고르는지, 그 대가가 몸이나 장비로 어떻게 드러나는지, 그 선택이 다음 수를 어떻게 만드는지 쓰시오. 진서의 속마음이나 대사 한 줄이 들리게 하고, 두 사람 이름이 다 나오게 하시오.',
+  '오크의 도끼가 머리 위로 올라갔다. 피하면 뒤에 선 신입 유나가 도끼를 받는다. 막으면 진서의 방패가 두 동강 난다. 둘 중 하나를 반 호흡 안에 골라야 했다.', null, '{"maxChars":200,"minVerbs":4,"requireAll":["진서","유나"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","그때였다","과연"],"forbidPassageCopy":true}'::jsonb,
+  'original', 'fantasy', 'planned',
+  2, 'bt-orc-axe'
+where not exists (select 1 from problems p where p.source_key = 'bt-orc-axe');
+
 -- ca-inn-endroom (order_no 3, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
@@ -1143,6 +1179,18 @@ select
   'original', 'fantasy', 'planned',
   1, 'sw-scaffold-morning'
 where not exists (select 1 from problems p where p.source_key = 'sw-scaffold-morning');
+
+-- bt-fireball-shield (order_no 4, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'action_turn'),
+  'convert', 'auto', '아래 전투를 고쳐 쓰시오. 리온은 방패와 검을 쓰는 기사고 카엘은 화염구를 쓰는 마법사다. 원문은 충격·고통·압도적 같은 느낌 말로 결과를 대신해서 독자 눈에 아무것도 안 보인다. 첫 문장은 두고, 결과를 방패·장갑·발뒤꿈치처럼 몸과 사물로 바꾸고, 리온이 카엘에게서 읽어 낸 것 하나로 다음 수를 고르게 다시 쓰시오. 리온의 속마음이나 대사 한 줄이 들리게 하시오.',
+  '화염구가 방패에 부딪쳤다. 끔찍한 충격이었다. 리온은 엄청난 고통을 느꼈다. 상대 마법사 카엘의 힘은 압도적이었다. 리온은 두려웠지만 버텼다.', null, '{"maxChars":200,"minVerbs":4,"requireAll":["리온","카엘"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","고통","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","고통","그때였다","과연"],"forbidPassageCopy":true}'::jsonb,
+  'original', 'fantasy', 'planned',
+  2, 'bt-fireball-shield'
+where not exists (select 1 from problems p where p.source_key = 'bt-fireball-shield');
 
 -- ca-crystal-exam (order_no 4, difficulty 2)
 insert into problems
@@ -1347,6 +1395,18 @@ select
   'folktale', 'fantasy', 'planned',
   2, 'ae-kongjwi-jar'
 where not exists (select 1 from problems p where p.source_key = 'ae-kongjwi-jar');
+
+-- bt-low-guard (order_no 5, difficulty 2)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'action_turn'),
+  'continue', 'auto', '상대 쪽에서 한 턴을 쓰시오. 정후는 젊은 검객이고 백리진은 서른 해를 싸워 온 노고수다. 원문은 정후의 수(하단 자세)까지 보여 줬다. 이번 턴은 백리진의 머릿속이다 — 그가 그 자세에서 무엇을 읽고, 옛 기억으로 무엇을 재고, 어떤 수를 고르는지, 그 수가 맞았는지 틀렸는지가 몸으로 드러나게 쓰시오. 백리진의 속마음이나 대사 한 줄이 들리게 하고, 두 사람 이름이 다 나오게 하시오.',
+  '정후는 검을 낮게 늘어뜨리고 걸어 들어왔다. 상단도 중단도 아닌 하단이었다. 노고수 백리진은 그 자세를 서른 해 전에 본 적이 있었다.', null, '{"maxChars":200,"minVerbs":4,"requireAll":["정후","백리진"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","그때였다","과연"],"forbidPassageCopy":true}'::jsonb,
+  'original', 'martial', 'planned',
+  2, 'bt-low-guard'
+where not exists (select 1 from problems p where p.source_key = 'bt-low-guard');
 
 -- ca-walk-home (order_no 5, difficulty 2)
 insert into problems
@@ -2370,6 +2430,20 @@ where p.source_key = 'dragon-king-anger'
 -- 화면에 보여줄 것이다(재설계안 11-2 4번). RLS 는 seed_schema.sql 이
 -- 건다: 그 문항에 제출 기록이 있는 학습자만 읽는다.
 
+-- bt-alley-hook ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '강태의 주먹은 오른손만 나왔다. 왼손은 늘 얼굴 옆에서 놀고 있었다. 피할 게 아니라 나오게 만들어야지. 주원은 가드를 살짝 열어 오른손을 불러냈고, 그 주먹이 뻗어 나온 순간 안쪽으로 파고들며 턱 밑을 올려 쳤다. 강태의 고개가 뒤로 꺾였다. 주원의 왼 뺨도 주먹 끝에 긁혀 부어오르고 있었다.'
+from problems p
+where p.source_key = 'bt-alley-hook'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- bt-alley-hook ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '강태는 주먹을 크게 돌려 왔다. 크게 돌리는 주먹은 느리다, 대신 맞으면 끝이다. "다시 와 봐." 주원은 다음 훅에 맞춰 상체를 숙였고, 머리 위로 주먹이 지나가는 바람을 느끼며 강태의 명치에 짧게 주먹을 꽂았다. 강태가 허리를 접고 무릎을 꿇었다. 주원의 오른손 뼈마디가 화끈거렸다.'
+from problems p
+where p.source_key = 'bt-alley-hook'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- ca-gate-dinner ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '민재는 팀원들과 저녁을 먹고 있었다. 오늘 레이드는 무사히 끝났고 다들 웃었다. 탁자 위 물컵에 잔물결이 일었다. 지하철도 안 다니는 골목인데. 민재가 컵을 보는 사이 식당 천장이 갈라지며 게이트가 열렸다.'
@@ -2734,6 +2808,20 @@ from problems p
 where p.source_key = 'rm-goblin-club'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- bt-spear-range ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '거리를 잃으면 창은 막대기다. 서린은 다음 찌르기를 피하지 않고 몸을 왼쪽으로 반 뼘 틀어 창끝을 옆구리 바깥으로 흘려보냈다. 창날이 옆구리를 긋고 지나갔지만, 그 한 걸음으로 창대 안쪽까지 들어섰다. "잡았다." 무영이 창을 거둘 틈도 없이 서린의 검이 그 목덜미 앞에서 멈췄다. 왼쪽 옷자락이 피로 젖어 늘어졌다.'
+from problems p
+where p.source_key = 'bt-spear-range'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- bt-spear-range ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '찌르기는 곧고, 후리기는 둥글다. 서린은 물러서는 척 반걸음 빼서 창대를 불러냈고, 창이 둥글게 돌아올 때 그 원 안쪽으로 몸을 던졌다. 창대가 등을 스치며 옷이 찢겼다. 무영이 창을 거둘 틈도 없이 서린의 검이 그의 손등을 그었고, 창이 바닥에 떨어졌다. "창은 여기까지요."'
+from problems p
+where p.source_key = 'bt-spear-range'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- ca-open-door ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '잘못 닫았나. 정우는 문을 밀지 않고 틈에 귀를 댔다. 안에서 물 흐르는 소리가 났다. 아침에 샤워는 하지 않았다. 소리가 뚝 그쳤다.'
@@ -3042,6 +3130,20 @@ from problems p
 where p.source_key = 'tp-simcheong-rail'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- bt-orc-axe ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '방패는 다시 사면 되지만 유나는 아니다. 진서는 방패를 비스듬히 세워 도끼날이 정면이 아니라 미끄러지게 받았다. 방패가 반으로 갈라지며 왼팔이 어깨까지 저릿했지만, 도끼는 진서의 발치에 박혔다. "지금이야!" 도끼를 뽑느라 굳은 오크의 목에 유나의 단검이 들어갔다.'
+from problems p
+where p.source_key = 'bt-orc-axe'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- bt-orc-axe ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '진서는 피하지 않고 유나의 멱살을 뒤로 잡아 던졌다. 유나가 굴러 나간 자리로 도끼가 떨어졌고, 날 끝이 진서의 오른쪽 종아리를 훑었다. 다리가 접혔다. 접힌 무릎 높이에서 진서는 오크의 발목 힘줄을 검으로 끊었다. 오크가 무너지며 진서 옆에 쓰러졌다. 종아리의 피가 신발 안으로 흘러들었다.'
+from problems p
+where p.source_key = 'bt-orc-axe'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- ca-inn-endroom ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '이제 좀 자자. 소하는 눈을 감았다가 그대로 멈췄다. 미세한 살기가 천장 쪽에서 내려오고 있었다. 소하는 숨을 고르는 척하며 머리맡 검자루를 잡았다. 천장 널 하나가 소리 없이 들렸다.'
@@ -3252,6 +3354,20 @@ from problems p
 where p.source_key = 'sw-scaffold-morning'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- bt-fireball-shield ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '화염구가 방패에 부딪쳤다. 방패 가죽이 그을리며 오그라들었고, 리온의 왼손 장갑이 손등에 눌어붙었다. 카엘은 같은 자리에서 다음 화염구를 빚고 있었다. 저 자리에서 안 움직이는군. 리온은 방패를 버리고 연기 속으로 낮게 달렸다. 다음 화염구가 리온의 등 뒤 벽을 때렸을 때, 리온의 검은 이미 카엘의 지팡이를 두 동강 내고 있었다.'
+from problems p
+where p.source_key = 'bt-fireball-shield'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- bt-fireball-shield ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '화염구가 방패에 부딪쳤다. 방패를 쥔 왼팔이 어깨까지 뒤로 밀리고, 리온의 발뒤꿈치가 돌바닥에 두 뼘 긁혔다. 눈썹이 탔다. 카엘이 다음 주문을 외는 입 모양이 아까와 같았다. 같은 주문이면 같은 궤도다. 리온은 방패를 비스듬히 기울여 화염구를 왼쪽으로 흘리고, 불길이 벽에 터지는 사이 거리를 절반으로 줄였다.'
+from problems p
+where p.source_key = 'bt-fireball-shield'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- ca-crystal-exam ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '리안은 마력 측정 수정구 앞에 섰다. 앞 사람들의 수정구는 손을 얹자마자 손바닥만 한 빛을 냈다. 나는 반이나 나올까. 리안이 손을 얹자 빛 대신 수정구 안쪽이 검게 가라앉았고, 시험관이 의자에서 일어섰다.'
@@ -3432,6 +3548,20 @@ insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 2, '', '몸을 일으키던 이재하는 돌 천장에 머리를 박았다. 침대가 제 방 것보다 두 뼘은 높았다.'
 from problems p
 where p.source_key = 'sw-boss-wake'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- bt-low-guard ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '하단은 올려 베기다. 백리진은 그 검이 올라오기 전에 거리를 죽이기로 하고 한 걸음 안으로 들어섰다. 서른 해 전 그 검객도 이렇게 잡았었다. 그런데 정후의 검은 올라오지 않았다. 낮게 깔린 채 백리진의 무릎을 옆으로 그었고, 노인의 왼 다리가 접혔다. "하단은 올려 베는 게 아니오. 낮은 게 하단이지."'
+from problems p
+where p.source_key = 'bt-low-guard'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- bt-low-guard ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '백리진은 들어가지 않았다. 하단 검은 상대가 들어와 주기를 기다리는 검이다. 서른 해 전엔 그걸 몰라 허벅지를 내줬었다. 그는 반 걸음 물러서며 검끝으로 땅을 툭 쳐 모래를 튀겼다. 정후의 눈이 그 모래를 따라간 순간, 백리진의 검이 정후의 검을 위에서 눌렀다. 정후가 검을 빼려 했지만 늦었다.'
+from problems p
+where p.source_key = 'bt-low-guard'
 on conflict (problem_id, ord, blank_key) do nothing;
 
 -- ca-walk-home ord 1 

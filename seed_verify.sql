@@ -77,6 +77,11 @@ begin
   --       없으면 걸린다 — 결함이 '매력 0'·'3요소 0'이라 forbid 어휘형이 아니다).
   --       fh-villainess-mirror·fh-burnt-manor 는 원문에 '제국력'·'오래전부터'·
   --       '반드시'·'언젠가'·'어떻게든'이 있어 계속 걸려야 한다.
+  --       문장 12 action_turn 무난 원문 3건(세션 37 재개 — bt-spear-range·
+  --       bt-orc-axe·bt-low-guard, 셋 다 type continue 라 이미 안 걸리지만
+  --       명시로도 뺀다). bt-alley-hook·bt-fireball-shield 는 원문에
+  --       '강력했다'·느낌 말 나열이 있어 계속 걸려야 한다. 옛 at- 8건은
+  --       is_active=false 라 위 필터에서 이미 빠진다.
   --       ★ is_active 필터: 비활성 문항(ig-ball-envelope 등)은 이 검사 대상 밖 —
   --       폐기된 설계에 더는 강제하지 않는다(세션 34 정정 v2).
   select string_agg(p.source_key, ', ') into v_bad
@@ -88,7 +93,8 @@ begin
      and p.source_key not in ('lk2-broken-sword', 'lk2-night-raid',
        'ig-left-cup', 'ig-umbrella-walnut', 'ig-friend-text', 'ig-gate-wait',
        'ca-open-door', 'ca-inn-endroom', 'ca-walk-home',
-       'fh-regress-date', 'fh-release-ball', 'fh-broken-engagement')
+       'fh-regress-date', 'fh-release-ball', 'fh-broken-engagement',
+       'bt-spear-range', 'bt-orc-axe', 'bt-low-guard')
      and (p.scoring_config ? 'forbidWords' or p.scoring_config ? 'forbidLemmas')
      and not (
        exists (
