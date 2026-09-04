@@ -4,15 +4,16 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 34 · 커밋 `b2c4437` 위
+마지막 갱신: 세션 34 정정 v2 · 커밋 `2b9d16d` 위
 
 ---
 
 ## 앱이 지금 할 수 있는 것
 
 ```
-단계 26 · 문항 132(비활성 12건 포함 — action_turn 8 + 구성 12 재설계로 밀려난 cc- 4,
-활성 123→128) · 화면이 붙은 유형 17단계분 (문장 1~11, 구성 11·12·13·14·15·17·19·20, 도입 1·2·3)
+단계 26 · 문항 133(비활성 13건 포함 — action_turn 8 + 구성 12 재설계로 밀려난 cc- 4 +
+ig-ball-envelope 1, 활성 128 유지) · 화면이 붙은 유형 17단계분 (문장 1~11,
+구성 11·12·13·14·15·17·19·20, 도입 1·2·3)
 문항 화면 스케일  제목 text-3xl · 원문 상자·입력(Editor·FillBody) text-lg(1.125rem) p-5 · Editor rows 7/16 ·
                 컨테이너 max-w-7xl(한 칸 max-w-3xl) · 두 칸 grid [minmax(0,1.4fr) minmax(22rem,1fr)] 왼쪽 우선
 가르침 층       코치 캐릭터 먹물이 ✒️ 말풍선(CoachBubble) — 단계 목록: 제목·요약 아래 coach_intro ·
@@ -105,6 +106,28 @@ AI 는 피드백이지 심판이 아니다     위 재개 조건 전까지
                               넘겨 판정(config 아님). 적용: lack 5 + contrast_char 활성 6 = 11.
                               ★ remove 계열(원문 일부 유지가 정상)엔 쓰지 마라 — opt-in 전용
 fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀 때 뺀다
+구성 문항 설계 규격 7조(세션 32 후기 3 · 4 · 34)  이후 구성 단계 초안의 공통 결 —
+                              여기 하나로 모은다(각 조 출처는 해당 세션의 '끝난 것' 참고).
+                              ① 인물 설명은 겉·속의 관계까지 지시문 안에서 푼다
+                              ② 과제는 이어쓰기가 원칙(type continue) — 대체(convert)는 능력
+                                서술을 줄이거나 서술자의 사실 서술을 지우는 등 뚜렷한 이유가
+                                있을 때만
+                              ③ 모범답안은 지시문 정보만으로 자립한다 — 함축·원장 내부 언어 금지
+                              ④ 이름 강제(requireAny·requireAll)는 그게 과제 본질일 때만 건다
+                              ⑤ 숫자 반복 표현("두 번"·"세 번" 류)은 전역 금지
+                              ⑥ 모범답안에 대사 또는 속마음 한 줄은 들리게 한다 — 행동 시연(④)은
+                                유지, 서술자 설명 금지(정보 비대칭 계열)와 안 부딪힌다("그는
+                                몰랐다"는 서술자가 말하는 것, "잘못 봤겠지"는 인물이 말하는 것
+                              ⑦ 원문 상황은 그 장르 독자가 이미 아는 흔한 구도에서 가져온다 —
+                                클리셰가 신뢰의 근거다. 장치(격차·손해·대비)를 보여 주려고
+                                상황을 짓지 않는다. 오해는 눈앞의 목격이 아니라 간접 증거
+                                (전언·물건·SNS)에서 생긴다 — 대다수가 할 행동으로 간다.
+                                자가 점검: "이 상황을 설명 없이 한 줄로 말해도 독자가 바로
+                                믿는가" · "마지막 문장이 요약인가, 그림인가". 근거: 문항은
+                                학습자에게 교본이다 — 억지 상황은 '이렇게 꾸며도 된다'를
+                                가르친다(박 님, 세션 34 — ig-ball-envelope 반려가 계기)
+                              적용: ⑥·⑦은 ig-friend-text 부터. 구성 11·12·13·15 나머지는
+                              전 단계 완성 후 전수 재점검 때 소급(미결 '구성 12 잔여 불만' 참고)
 ```
 
 ## 하는 중
@@ -128,6 +151,68 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
                         전제: 구성 빈 단계 4개가 먼저 찬다
 ```
 
+### 끝난 것 — 세션 34 정정 v2 (ig-ball-envelope 폐기 · ig-friend-text 신설 · 규격 6·7 등재)
+
+```
+★ 구성 13·15: 저장소 쪽은 닫혔다. DB 반영·브라우저 눈검사 결과는 여전히 박 님
+  보고 대기 — 명시 확인 없음. 꾸며 적지 않고 그대로 남긴다.
+
+ig-ball-envelope 폐기  손등 키스는 유럽 궁정 예법에서 신사가 숙녀에게 하는
+  정중한 인사라 이레나가 반응할 이유가 없었고(박 님 지적 · 조사로 확인),
+  오빠의 청혼 편지 심부름도 장치(오해 유발)를 위해 지은 억지 구도였다.
+  후속 초안(테라스 봉투 · 카페 유리창 목격 · 직접 보낸 사진)도 "눈앞에서 보고
+  돌아서는 사람은 드물다 · 오해는 간접 증거(전언·물건·SNS)에서 생긴다"는 지적으로
+  반려 — 규격 7조(아래)의 계기가 됐다. is_active=false 로 내림, 모범답안 2행 유지
+  (행 삭제 금지 — 10단계 action_turn·구성 12 대비형 선례).
+
+ig-friend-text 신설  친구의 목격 문자 + 인스타 태그 / 차 안 향수 — 오해가 간접
+  증거에서 생기는 흔한 구도. 가·나 문안은 박 님이 문장 단위로 확정. 원문·나
+  답안에 큰따옴표 대사가 처음 들어갔다(JSON/SQL 이스케이프 확인 완료).
+  scoring_config 는 ball-envelope 와 동일(forbidLabel·forbidWords·forbidDisplay·
+  forbidPassageCopy 그대로 승계) — order_no 5 재사용.
+
+박 님 재점검  13 likability(4문항)·15 info_gap 의 나머지 9문항 상황을 규격 7조
+  기준으로 다시 봤다 — "크게 문제 없음". ig-ball-envelope 만 반려 대상이었다.
+
+규격 등재 — 6·7조 추가('정한 것'의 '구성 문항 설계 규격 7조'에 통합 등재)
+  ⑥ 모범답안에 대사 또는 속마음 한 줄은 들리게 — 행동 시연(④) 유지, 서술자
+    설명 금지와 안 부딪힌다("그는 몰랐다"=서술자, "잘못 봤겠지"=인물). 적용은
+    friend-text 부터, 나머지는 전 단계 완성 후 전수 재점검 때 소급
+  ⑦ 원문 상황은 그 장르 독자가 이미 아는 흔한 구도에서 가져온다 — 클리셰가
+    신뢰의 근거. 오해는 눈앞의 목격이 아니라 간접 증거(전언·물건·SNS)에서.
+    근거: 문항은 학습자에게 교본이다 — 억지 상황은 '이렇게 꾸며도 된다'를 가르친다
+
+seed/dump/{problems,answers,deactivate}.json  ig-ball-envelope → deactivate.json
+  추가(문항 133·비활성 13). ig-friend-text 신규 행(order_no 5) + 모범답안 2행.
+seed/update-info-gap-v2.sql (신규)  기존 행 폐기는 update, 신규 행은 insert —
+  update problems set is_active=false(ball-envelope) + insert(friend-text 문항 +
+  모범답안 2행, on conflict do nothing). seed_data.sql 도 같은 델타를 통째로
+  재발행한다(멱등) — 이 파일이 박 님이 먼저 돌리는 델타다.
+docs/characters.md  '구성 15 인물(간이)'의 이레나·카시안에 "(폐기 —
+  ig-ball-envelope 비활성, 세션 34)" 표기(삭제 안 함). 서윤·지훈·지아 간이 추가.
+
+verify.ts [구성 15 info_gap]  활성 5(friend-text 로 교체) · 비활성 1(ball-envelope,
+  기존 모범답안 2행 잔존 확인) 단언 추가 · forbidLabel·LEN·나쁜 표본(2건:
+  forbidWords 3 + passageCopy·maxChars)·형태소 실측 전부 friend-text 로 교체 ·
+  [불변식: forbidWords 자기 목록] 예외를 ball-envelope→friend-text 로 바꾸고,
+  이 검사 자체에 비활성 문항 스킵(deadKeys)을 신설 — 폐기된 설계에 더는 이
+  불변식을 강제하지 않는다(이후 폐기되는 문항들도 이 스킵을 그대로 탄다) ·
+  deactivate.json 전수 단언에 ig-ball-envelope 추가(9→13이 아니라 12→13) ·
+  forbidLabel 총계 32→38(활성 5 + 비활성 1 ball-envelope 도 필드가 남아 있어
+  카운트에 잡힌다 — 대비형 cc- 4건과 달리 폐기 시 필드를 안 지웠다)
+seed_verify.sql  불변식 2 의 source_key 예외를 ball-envelope→friend-text 로
+  교체 + p.is_active is not false 필터 신설(TS 쪽과 대칭 — 비활성 문항은 DB
+  쪽 이 불변식에서도 빠진다)
+검증  tsc 0 · next typegen · test:scoring 4470/0(형태소 서버 켜짐) ·
+      check:numbers 0 · gen:seed(문항 132→133·모범답안 187→189·비활성 12→13) ·
+      next build 통과 · 물기: deactivate.json 에서 ig-ball-envelope 를 빼고
+      재실행 → 활성 카운트·유형 분포·forbidPassageCopy·forbidLabel·모범답안
+      행수·자기 forbidWords 불변식 등 8개 단언이 정확히 fail 하는 것을 확인 후 복원
+★ DB 절차(박 님)  seed/update-info-gap-v2.sql → seed_check.sql → 브라우저
+  '정보 비대칭' 5번이 friend-text 로 뜨고 ball-envelope 가 빠졌는지 · 원문
+  상자에서 큰따옴표(인스타 문자 인용)가 안 깨지는지 눈검사.
+```
+
 ### 끝난 것 — 세션 34 (구성 15 info_gap '정보 비대칭' 신설 · 규격 5조 세 번째 적용)
 
 ```
@@ -139,7 +224,7 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
       진행(박 님). 5번(ig-ball-envelope, 오해 유예)은 3번(ig-umbrella-walnut,
       헛짚기)과 "해소의 유예"라는 한 줄로 구별돼 별개 문항으로 유지됐다 —
       겹치는 설계처럼 보였지만 하나로 합치지 않았다. ig-gate-wait 는 "숨은
-      선의"(영주가 실은 빵을 굽거나 열병을 앓아 문을 못 열었다) 초안이 박 님
+      선의"(영주가 실은 빵을 내려보내거나 열병을 앓아 문을 못 열었다) 초안이 박 님
       반려("당위가 조잡하고 빵의 의미가 없다") → 영주가 실제 악역인 이유
       (평민 견습을 들이면 웃음거리 / 전령의 기를 꺾으려는 의도)로 교체됐다.
       forbidWords 목록에서 '줄은'은 "밧줄은"에 오검출돼 뺐고, '독'은 문자열이면
@@ -148,7 +233,7 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 
 신규 5문항  ig-gate-wait(convert·forbidPassageCopy 없음 — 원문 유지가 정답
   형태) · ig-left-cup(continue·forbidLemmas 독/NNG, 견본) · ig-umbrella-walnut
-  (continue·requireAll 소민·하늘) · ig-cafe-scar(convert·유일한 결함 원문) ·
+  (continue·requireAll 소민·하늘) · ig-cafe-scar(convert·forbid 어휘형 결함 원문은 이것뿐) ·
   ig-ball-envelope(continue). forbidLabel 두 갈래 — 3건 '서술자가 사실을 말해
   주는 표현' / 2건(umbrella·ball) '…말해 주거나 풀어 주는 표현'(오해까지 다룸).
   전부 신규 행 — update SQL 없이 seed_data.sql insert 로 들어간다.
@@ -944,6 +1029,13 @@ combo-report 감시(세션 16 7-1)  ·  503 로그  ·  UTC 하루 경계  ·  3
                               짚기 어려움 — 전 단계 완성 후 전수 재점검 때 다시
                               본다. 규격 5조 이후의 문항들과 비교하면 정체가
                               드러날 수 있다
+verify 왕복 규칙의 characters.md 대조가 부분 문자열 포함으로 넓어짐(세션 34)
+                              완전 일치 대신 charHeaders.has(nm) || 부분 문자열
+                              포함으로 판정 — '소민'(윤소민 애칭)을 잡으려던
+                              것인데, 짧은 이름이 다른 헤더·간이 인물 이름에
+                              우연히 포함되면 실제로는 다른 사람인데 원장에
+                              있다고 오통과할 여지가 생겼다. 지금은 인물 수가
+                              적어 충돌이 없다 — 인물이 늘면 다시 볼 것
 ```
 
 ## 상태 확인

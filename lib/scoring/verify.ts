@@ -781,8 +781,8 @@ console.log('\n[오탐 감시: 감각 묘사 좋은 답안]')
 //
 // ★ 예외: 구성 11 lack(세션 31) · 구성 12 contrast_char 갭 문항(세션 32 후기) ·
 //   구성 13 likability 무난 원문 2건(세션 33 — lk2-broken-sword·lk2-night-raid) ·
-//   구성 15 info_gap 무난 원문 4건(세션 34 — ig-left-cup·ig-umbrella-walnut·
-//   ig-ball-envelope 는 원문이 아직 헛짚기 전 장면이라 forbid 어휘가 없다 ·
+//   구성 15 info_gap 무난 원문 3건(세션 34 정정 v2 — ig-left-cup·ig-umbrella-walnut·
+//   ig-friend-text 는 원문이 아직 헛짚기 전 장면이라 forbid 어휘가 없다 ·
 //   ig-gate-wait 는 결함 자체가 forbid 어휘가 아니라 '정보 0' — 이 불변식으로는
 //   못 잡는 유형이라 같이 뺀다).
 //   이 단계들의 원문은 결함이 없는 무난한 장면이라 자기 forbidWords 를 일부러
@@ -791,7 +791,9 @@ console.log('\n[오탐 감시: 감각 묘사 좋은 답안]')
 //   이 source_key 들만 예외다 — lk2-deal-credit·lk2-night-shift-bill·
 //   ig-cafe-scar 는 결함 원문(능력 과시·불행한 태도·몰랐/훗날/용의자 노출)이라
 //   계속 자기 forbidWords 에 걸려야 한다.
-console.log('\n[불변식: forbidWords 있는 덤프 문항이 자기 목록에 걸림 (lack·contrast_char·likability·info_gap 무난 문항 제외)]')
+//   ★ 비활성 문항은 이 불변식 대상에서 뺀다(deactivate.json) — 폐기된 설계에
+//   더는 이 검사를 강제하지 않는다(세션 34 정정 v2, ig-ball-envelope 로 첫 실증).
+console.log('\n[불변식: forbidWords 있는 덤프 문항이 자기 목록에 걸림 (lack·contrast_char·likability·info_gap 무난 문항 · 비활성 문항 제외)]')
 {
   interface DumpProblem {
     passage: string | null
@@ -804,13 +806,18 @@ console.log('\n[불변식: forbidWords 있는 덤프 문항이 자기 목록에 
   // Node는 BOM을 자동으로 벗기지 않는다. scripts/gen-seed.ts의 readJson과 같은 처리.
   const raw = readFileSync(dumpPath, 'utf8').replace(/^\uFEFF/, '')
   const dumpProblems: DumpProblem[] = JSON.parse(raw)
+  const deadKeys = new Set(
+    (JSON.parse(readFileSync(path.join(__dirname, '..', '..', 'seed', 'dump', 'deactivate.json'), 'utf8')
+      .replace(/^\uFEFF/, '')) as { source_keys: string[] }).source_keys
+  )
 
   const plainKeys = new Set([
     'lk2-broken-sword', 'lk2-night-raid',
-    'ig-left-cup', 'ig-umbrella-walnut', 'ig-ball-envelope', 'ig-gate-wait',
+    'ig-left-cup', 'ig-umbrella-walnut', 'ig-friend-text', 'ig-gate-wait',
   ])
   const skipped: string[] = []
   for (const dp of dumpProblems) {
+    if (deadKeys.has(dp.source_key)) continue // 비활성 — 이 검사 대상 밖
     if (dp.skill_key === 'lack' || dp.skill_key === 'contrast_char') continue // 무난한 장면이 원문
     if (plainKeys.has(dp.source_key)) continue // 무난한 장면이 원문 (likability·info_gap 은 source_key 단위)
     const forbidWords = dp.scoring_config?.forbidWords
@@ -2438,14 +2445,16 @@ console.log('\n[10단계 action_reason: fill 시드 대조]')
   const seedSql = readFileSync(path.join(__dirname, '..', '..', 'seed_data.sql'), 'utf8')
   t('seed_data.sql 에 fill 8건의 fixedLines 가 주입됐다', (seedSql.match(/"fixedLines":\[/g) ?? []).length === 8, `${(seedSql.match(/"fixedLines":\[/g) ?? []).length}`)
   // 비활성으로 내려가는 것 — deactivate.json 이 단일 출처. 빠뜨리면 화면에
-  // 유령이 남는다. 지금은 두 묶음이다:
+  // 유령이 남는다. 지금은 세 묶음이다:
   //   옛 action_turn 8건 (재설계안 11-4·세션 18)
   //   구성 12 재설계로 밀려난 대비형 cc- 4건 (세션 32 후기 — '입체 캐릭터'로 교체)
+  //   ig-ball-envelope 1건 (세션 34 정정 v2 — ig-friend-text 로 교체)
   const atKeys = allProblems.filter((d) => d.skill_key === 'action_turn').map((d) => d.source_key)
   const deadCcKeys = ['cc-report-credit', 'cc-street-night', 'cc-raid-reward', 'cc-relic-box']
-  t('deactivate.json = action_turn 8 + 대비형 cc- 4 (정확히)',
+  const deadIgKeys = ['ig-ball-envelope']
+  t('deactivate.json = action_turn 8 + 대비형 cc- 4 + ig-ball-envelope 1 (정확히)',
     JSON.stringify([...deactivate.source_keys].sort()) ===
-      JSON.stringify([...atKeys, ...deadCcKeys].sort()),
+      JSON.stringify([...atKeys, ...deadCcKeys, ...deadIgKeys].sort()),
     `deactivate=${JSON.stringify([...deactivate.source_keys].sort())}`)
   t('비활성 대비형 cc- 4건이 덤프에 여전히 존재한다 (행 삭제 금지 — 제출 이력 보존)',
     deadCcKeys.every((k) => allProblems.some((d) => d.source_key === k)))
@@ -4279,8 +4288,9 @@ console.log('\n[구성 12 contrast_char: 재설계 · 활성 6 + 비활성 4]')
   // 싶게 만드시오." · "아래 장면을 고쳐 쓰시오. ○○의 능력은…" · "…○○는 …" 세 머리말.
   // 세션 34: info_gap 도 이름 없는 문항이 있다 — 앞 세 머리말이 못 잡으면 지시문의
   // '둘째 문장' 머리(첫 마침표 뒤 "○○는/은 …")에서 뽑는다(gate-wait·left-cup·
-  // ball-envelope). cafe-scar 는 "아래 장면을 고쳐 쓰시오. 박형사는…"이라 기존
-  // m3(는)로 이미 잡힌다. umbrella-walnut 은 requireAll 이 있어 정규식 자체가 안 돈다.
+  // friend-text, 정정 v2 로 ball-envelope 대신). cafe-scar 는 "아래 장면을 고쳐
+  // 쓰시오. 박형사는…"이라 기존 m3(는)로 이미 잡힌다. umbrella-walnut 은
+  // requireAll 이 있어 정규식 자체가 안 돈다.
   const nameSkills = new Set(['lack', 'contrast_char', 'likability', 'info_gap'])
   for (const d of allProblems.filter((p) => nameSkills.has(p.skill_key) && !deadSet.has(p.source_key))) {
     const c = d.scoring_config
@@ -4615,14 +4625,18 @@ console.log('\n[구성 13 likability: 신설 4문항]')
       lkStage.self_checks.every((s) => s.length > 0), JSON.stringify(lkStage.self_checks))
 }
 
-// ── 구성 15 info_gap(정보 비대칭): 신설 5문항 (세션 34) ──────────────────
+// ── 구성 15 info_gap(정보 비대칭): 신설 5문항 (세션 34) · 정정 v2 (세션 34) ──
 //
 // 독자에게 사실 하나를 먼저 쥐여 주고 인물은 헛짚게 — 서술자가 '몰랐다'·'훗날'로
 // 사실을 직접 말해 버리면 안 된다(forbidLabel '서술자가 사실을 말해 주는 표현').
-// ig-umbrella-walnut·ig-ball-envelope 는 오해까지 다뤄 라벨이 다르다('…풀어
+// ig-umbrella-walnut·ig-friend-text 는 오해까지 다뤄 라벨이 다르다('…풀어
 // 주는 표현'까지). ig-gate-wait 만 forbidPassageCopy 가 없다 — 원문 앞에 사실
-// 한 문장을 보태는 것이 정답 형태라 원문 유지가 가능하다(박 님 결정). 5문항
-// 전부 신규 행 — update SQL 없음, seed_data.sql insert 로 들어간다.
+// 한 문장을 보태는 것이 정답 형태라 원문 유지가 가능하다(박 님 결정).
+// ★ 정정 v2: ig-ball-envelope(손등 키스 — 예법상 반응할 이유가 없고, 오빠
+//   심부름 구도도 억지)를 반려하고 ig-friend-text(친구 목격 문자 + 인스타
+//   태그/차 안 향수 — 간접 증거로 오해가 생기는 흔한 구도)로 교체했다. 원칙 7
+//   대로 seed/update-info-gap-v2.sql 이 ball-envelope 를 is_active=false 로
+//   내리고 friend-text 를 insert 한다. 답안 2행은 삭제하지 않는다.
 console.log('\n[구성 15 info_gap: 신설 5문항]')
 {
   interface IgProblem {
@@ -4641,7 +4655,11 @@ console.log('\n[구성 15 info_gap: 신설 5문항]')
     JSON.parse(readFileSync(path.join(seedDir, f), 'utf8').replace(/^﻿/, '')) as T
 
   const allProblems = readDump<IgProblem[]>('problems.json')
-  const ig = allProblems.filter((d) => d.skill_key === 'info_gap')
+  const deactivate = readDump<{ source_keys: string[] }>('deactivate.json')
+  const deadSet = new Set(deactivate.source_keys)
+  const igAll = allProblems.filter((d) => d.skill_key === 'info_gap')
+  const ig = igAll.filter((d) => !deadSet.has(d.source_key)) // 활성만
+  const inactive = igAll.filter((d) => deadSet.has(d.source_key))
   const igKeys = new Set(ig.map((d) => d.source_key))
   const answersDump = readDump<{ reference?: RefRow[] }>('answers.json')
   const refs = (answersDump.reference ?? []).filter((r) => igKeys.has(r.source_key))
@@ -4649,8 +4667,14 @@ console.log('\n[구성 15 info_gap: 신설 5문항]')
   const typeOf = new Map(ig.map((d) => [d.source_key, d.type]))
   const passageOf = new Map(ig.map((d) => [d.source_key, d.passage ?? '']))
 
+  t('비활성 info_gap 1건 (deactivate.json — ig-ball-envelope)',
+    inactive.length === 1 && inactive[0].source_key === 'ig-ball-envelope',
+    JSON.stringify(inactive.map((d) => d.source_key)))
+  t('비활성 ig-ball-envelope 의 기존 모범답안 2행이 answers.json 에 남아 있다',
+    (answersDump.reference ?? []).filter((r) => r.source_key === 'ig-ball-envelope').length === 2)
+
   t('활성 info_gap 5문항', ig.length === 5, `실제=${ig.length}`)
-  t('유형 continue 3(left-cup·umbrella-walnut·ball-envelope) · convert 2(gate-wait·cafe-scar)',
+  t('유형 continue 3(left-cup·umbrella-walnut·friend-text) · convert 2(gate-wait·cafe-scar)',
     ig.filter((d) => d.type === 'continue').length === 3 &&
       ig.filter((d) => d.type === 'convert').length === 2,
     JSON.stringify(ig.map((d) => `${d.source_key}:${d.type}`)))
@@ -4686,7 +4710,7 @@ console.log('\n[구성 15 info_gap: 신설 5문항]')
   // forbidLabel 두 갈래: 3건 '…말해 주는 표현' vs 2건 '…말해 주거나 풀어 주는 표현'
   {
     const plain = new Set(['ig-gate-wait', 'ig-left-cup', 'ig-cafe-scar'])
-    const resolve = new Set(['ig-umbrella-walnut', 'ig-ball-envelope'])
+    const resolve = new Set(['ig-umbrella-walnut', 'ig-friend-text'])
     for (const d of ig) {
       const want = plain.has(d.source_key)
         ? '서술자가 사실을 말해 주는 표현'
@@ -4705,7 +4729,7 @@ console.log('\n[구성 15 info_gap: 신설 5문항]')
 
   // ── 원문 불변식: 결함 원문은 ig-cafe-scar 하나뿐(몰랐·훗날·용의자가 이미 있다).
   //    나머지 4건은 forbidWords 가 원문에 없다 — left-cup·umbrella-walnut·
-  //    ball-envelope 는 아직 헛짚기 전 무난한 장면이고, gate-wait 는 결함이
+  //    friend-text 는 아직 헛짚기 전 무난한 장면이고, gate-wait 는 결함이
   //    '정보 0'이라 애초에 forbid 어휘로 잡을 결함이 아니다.
   for (const d of ig) {
     const fw = (d.scoring_config.forbidWords as string[]) ?? []
@@ -4736,13 +4760,13 @@ console.log('\n[구성 15 info_gap: 신설 5문항]')
     const ords = refs.filter((r) => r.source_key === d.source_key).map((r) => r.ord).sort()
     t(`'${d.source_key}': 가·나 두 세트`, JSON.stringify(ords) === '[1,2]', JSON.stringify(ords))
   }
-  // 실측(kiwipiepy 실호출) 자수(공백 제외) — 순서: gate-wait·left-cup·umbrella-walnut·cafe-scar·ball-envelope
+  // 실측(kiwipiepy 실호출) 자수(공백 제외) — 순서: gate-wait·left-cup·umbrella-walnut·cafe-scar·friend-text
   const LEN: Record<string, [number, number]> = {
     'ig-gate-wait': [100, 100],
     'ig-left-cup': [85, 100],
     'ig-umbrella-walnut': [99, 94],
     'ig-cafe-scar': [98, 100],
-    'ig-ball-envelope': [100, 99],
+    'ig-friend-text': [76, 82],
   }
   for (const r of refs) {
     const cfg = cfgOf.get(r.source_key)!
@@ -4773,14 +4797,14 @@ console.log('\n[구성 15 info_gap: 신설 5문항]')
     }
   }
 
-  // ── 나쁜 표본 7건 — 박 님 기대값대로 fail (형태소 불필요 6건은 즉시,
+  // ── 나쁜 표본 8건 — 박 님 기대값대로 fail (형태소 불필요 7건은 즉시,
   //    forbidLemmas 1건은 서버 있을 때만 aiChainChecks 로 문다) ──
   {
     const gw = ig.find((d) => d.source_key === 'ig-gate-wait')!
     const lc = ig.find((d) => d.source_key === 'ig-left-cup')!
     const uw = ig.find((d) => d.source_key === 'ig-umbrella-walnut')!
     const cs = ig.find((d) => d.source_key === 'ig-cafe-scar')!
-    const be = ig.find((d) => d.source_key === 'ig-ball-envelope')!
+    const ft = ig.find((d) => d.source_key === 'ig-friend-text')!
     const runLocal = (d: IgProblem, text: string) => gradeLocal(
       { id: d.source_key, type: d.type as ProblemType, scoring_mode: 'auto', scoring_config: d.scoring_config },
       { text }, undefined, d.passage ?? '')
@@ -4829,14 +4853,24 @@ console.log('\n[구성 15 info_gap: 신설 5문항]')
           checks.find((c) => c.key === 'passageCopy')?.status === 'fail',
         JSON.stringify(checks))
     }
-    // 7. ball-envelope — 오해를 직접 풀어 줌 → forbidWords 3
+    // 7. friend-text — 오해를 직접 풀어 줌 → forbidWords 3
     {
-      const text = '카시안이 따라 나와 사실은 오빠 심부름이었다고 해명했다. 이레나는 오해였다며 웃었다. 둘은 안으로 들어갔다.'
-      const checks = runLocal(be, text)
-      t('나쁜 표본: ball-envelope 오해 직접 풀기 → forbidWords fail(3건)',
+      const text = '서윤이 묻자 지훈은 사실은 여동생이라고 해명했다. 서윤은 오해였다며 웃었다. 둘은 통화를 끝냈다.'
+      const checks = runLocal(ft, text)
+      t('나쁜 표본: friend-text 오해 직접 풀기 → forbidWords fail(3건)',
         checks.find((c) => c.key === 'forbidWords')?.status === 'fail' &&
-          findForbidden(text, be.scoring_config.forbidWords as string[]).length === 3,
+          findForbidden(text, ft.scoring_config.forbidWords as string[]).length === 3,
         JSON.stringify(checks.find((c) => c.key === 'forbidWords')))
+    }
+    // 8. friend-text — 원문 통째 + 한 문장 → passageCopy fail + maxChars 초과
+    {
+      const text = `${ft.passage} 서윤은 울었다.`
+      const checks = runLocal(ft, text)
+      t('나쁜 표본: friend-text 원문 통째+한 문장 → passageCopy·maxChars 전부 fail',
+        checks.find((c) => c.key === 'passageCopy')?.status === 'fail' &&
+          checks.find((c) => c.key === 'maxChars')?.status === 'fail' &&
+          countChars(text) === 122,
+        JSON.stringify(checks))
     }
 
     // 3·A·B — forbidLemmas(독/NNG) 는 형태소 서버가 있어야 잰다. 없으면 건너뛴다.
@@ -4922,8 +4956,8 @@ console.log('\n[구성 15 info_gap: 신설 5문항]')
 
   // ── 형태소(서버 있을 때만): 모범답안 동사 ≥ 3 (minVerbs 3) — left-cup 은
   //    forbidLemmas(독/NNG) 도 이 경로로 같이 잡힌다(gradeMorph 가 둘 다 본다).
-  // 세션 34 실측 — 순서: gate-wait·left-cup·umbrella-walnut·cafe-scar·ball-envelope
-  //   가 11·10·14·9·13 / 나 12·11·11·10·12
+  // 세션 34 실측(정정 v2 반영) — 순서: gate-wait·left-cup·umbrella-walnut·cafe-scar·friend-text
+  //   가 11·10·14·9·10 / 나 12·11·11·10·8
   pushRefMorphCheck('구성 15', refs, 'continue', cfgOf)
 
   // ── 숫자 반복 표현("두 번"·"세 번" 류) 부재 가드(세션 32 후기 4 규격) ──
@@ -4995,16 +5029,19 @@ console.log('\n[쓰지 않을 말 표시: forbidLabel/forbidDisplay ↔ 채점]'
   const withDisplay = readDump<FwProblem[]>('problems.json').filter(
     (d) => d.scoring_config.forbidLabel !== undefined
   )
-  t('덤프에 forbidLabel 을 채운 문항 37', withDisplay.length === 37, `실제=${withDisplay.length}`)
+  // info_gap 은 6 — 비활성 ig-ball-envelope 도 forbidLabel 을 그대로 갖고 있다
+  // (비활성 대비형 cc- 4건과 달리 폐기 전 설계라 필드를 안 지웠다). 이 카운트는
+  // 활성 여부를 안 보고 덤프 전수를 센다.
+  t('덤프에 forbidLabel 을 채운 문항 38', withDisplay.length === 38, `실제=${withDisplay.length}`)
   t(
-    '전부 emotion_action 6 + sensory 8 + start_write 5 + lack 5 + contrast_char 4 + likability 4 + info_gap 5',
+    '전부 emotion_action 6 + sensory 8 + start_write 5 + lack 5 + contrast_char 4 + likability 4 + info_gap 6',
     withDisplay.filter((d) => d.skill_key === 'emotion_action').length === 6 &&
       withDisplay.filter((d) => d.skill_key === 'sensory').length === 8 &&
       withDisplay.filter((d) => d.skill_key === 'start_write').length === 5 &&
       withDisplay.filter((d) => d.skill_key === 'lack').length === 5 &&
       withDisplay.filter((d) => d.skill_key === 'contrast_char').length === 4 &&
       withDisplay.filter((d) => d.skill_key === 'likability').length === 4 &&
-      withDisplay.filter((d) => d.skill_key === 'info_gap').length === 5
+      withDisplay.filter((d) => d.skill_key === 'info_gap').length === 6
   )
 
   for (const d of withDisplay) {

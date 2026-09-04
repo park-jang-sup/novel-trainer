@@ -61,19 +61,22 @@ begin
   --       이름이 있으므로 forbidPassageCopy 가 그 역할을 한다. likability 는
   --       skill 전체가 아니라 이 2건만 예외다 — lk2-deal-credit·
   --       lk2-night-shift-bill 은 결함 원문이라 계속 걸려야 한다.
-  --       구성 15 info_gap 무난 원문 3건(세션 34 — ig-left-cup·ig-umbrella-walnut·
-  --       ig-ball-envelope, 셋 다 type continue라 이미 안 걸리지만 명시로도
-  --       뺀다) + ig-gate-wait 1건(type convert — 이건 진짜로 이 필터를 뚫고
-  --       들어와 예외가 없으면 걸린다. 결함이 forbid 어휘가 아니라 '정보 0'
-  --       이라 이 불변식으로는 못 잡는 유형이라 뺀다). ig-cafe-scar 는 원문에
-  --       몰랐·훗날·용의자가 있어 계속 걸려야 한다.
+  --       구성 15 info_gap 무난 원문 3건(세션 34 정정 v2 — ig-left-cup·
+  --       ig-umbrella-walnut·ig-friend-text, 셋 다 type continue라 이미 안
+  --       걸리지만 명시로도 뺀다) + ig-gate-wait 1건(type convert — 이건 진짜로
+  --       이 필터를 뚫고 들어와 예외가 없으면 걸린다. 결함이 forbid 어휘가
+  --       아니라 '정보 0'이라 이 불변식으로는 못 잡는 유형이라 뺀다).
+  --       ig-cafe-scar 는 원문에 몰랐·훗날·용의자가 있어 계속 걸려야 한다.
+  --       ★ is_active 필터: 비활성 문항(ig-ball-envelope 등)은 이 검사 대상 밖 —
+  --       폐기된 설계에 더는 강제하지 않는다(세션 34 정정 v2).
   select string_agg(p.source_key, ', ') into v_bad
     from problems p
     join stages s on s.id = p.stage_id
    where p.type = 'convert'
+     and p.is_active is not false
      and s.skill_key not in ('lack', 'contrast_char')
      and p.source_key not in ('lk2-broken-sword', 'lk2-night-raid',
-       'ig-left-cup', 'ig-umbrella-walnut', 'ig-ball-envelope', 'ig-gate-wait')
+       'ig-left-cup', 'ig-umbrella-walnut', 'ig-friend-text', 'ig-gate-wait')
      and (p.scoring_config ? 'forbidWords' or p.scoring_config ? 'forbidLemmas')
      and not (
        exists (

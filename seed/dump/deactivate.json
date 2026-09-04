@@ -1,5 +1,5 @@
 {
-  "note": "옛 action_turn convert 8건(재설계안 11-4·세션 18. 재료·픽스처는 11-5 픽스처 갈아엎기 때 삭제) + 구성 12 재설계로 밀려난 대비형 cc- 4건(세션 32 후기 — '입체 캐릭터'로 교체. cc-first-pay 는 활성 유지). 제출 이력 보존, 행 삭제 안 함.",
+  "note": "옛 action_turn convert 8건(재설계안 11-4·세션 18. 재료·픽스처는 11-5 픽스처 갈아엎기 때 삭제) + 구성 12 재설계로 밀려난 대비형 cc- 4건(세션 32 후기 — '입체 캐릭터'로 교체. cc-first-pay 는 활성 유지) + ig-ball-envelope(세션 34 정정 v2 — 손등 키스 예법 오류·억지 구도로 반려, ig-friend-text 로 교체). 제출 이력 보존, 행 삭제 안 함.",
   "source_keys": [
     "at-left-feint",
     "at-left-draw",
@@ -12,6 +12,7 @@
     "cc-report-credit",
     "cc-street-night",
     "cc-raid-reward",
-    "cc-relic-box"
+    "cc-relic-box",
+    "ig-ball-envelope"
   ]
 }
