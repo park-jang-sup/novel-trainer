@@ -5292,6 +5292,9 @@ console.log('\n[구성 16 cliffhanger_adv: 신설 5문항]')
 // 카메라를 반드시 주인공에게 붙인다. 규격 6(대사·속마음) 적용, 규격 7 보강
 // (결함 원문도 결함 하나만 — 군더더기 세계 정보를 안 넣는다). 5문항 전부 신규
 // 행 — update SQL 없음, seed_data.sql insert 로 들어간다.
+// ★ 정정 v2(세션 36): maxChars 를 5건 전부 200으로 올렸다(원래 180/150) —
+// 다섯 줄 문항은 답안 여유가 필요하다는 박 님 실사용 판단.
+// seed/update-first-hook-v2.sql 이 기존 행 델타를 맡는다.
 console.log('\n[구성 18 first_hook: 신설 5문항]')
 {
   interface FhProblem {
@@ -5330,13 +5333,16 @@ console.log('\n[구성 18 first_hook: 신설 5문항]')
   t('5건 전부 requireAll 없음(이름 강제는 requireAny 로 통일)',
     fh.every((d) => d.scoring_config.requireAll === undefined))
 
-  // maxChars·minVerbs: regress-date 만 150/3(세 줄 이어쓰기), 나머지 4건은 180/4(다섯 줄)
+  // maxChars: 세션 36 정정 v2 로 5건 전부 200(박 님 — 다섯 줄 문항은 답안
+  // 여유가 필요하다). minVerbs 는 안 바뀜 — regress-date 만 3(세 줄 이어쓰기),
+  // 나머지 4건은 4(다섯 줄).
+  t('5건 전부 maxChars 200(정정 v2)', fh.every((d) => d.scoring_config.maxChars === 200),
+    JSON.stringify(fh.map((d) => `${d.source_key}:${d.scoring_config.maxChars}`)))
   {
     const rd = fh.find((d) => d.source_key === 'fh-regress-date')!
-    t("'fh-regress-date': maxChars 150 · minVerbs 3", rd.scoring_config.maxChars === 150 && rd.scoring_config.minVerbs === 3)
+    t("'fh-regress-date': minVerbs 3", rd.scoring_config.minVerbs === 3)
     for (const d of fh.filter((x) => x.source_key !== 'fh-regress-date')) {
-      t(`'${d.source_key}': maxChars 180 · minVerbs 4`,
-        d.scoring_config.maxChars === 180 && d.scoring_config.minVerbs === 4)
+      t(`'${d.source_key}': minVerbs 4`, d.scoring_config.minVerbs === 4)
     }
   }
   t('forbidPassageCopy 3건(burnt-manor·regress-date·broken-engagement) · villainess-mirror·release-ball 은 없음',
