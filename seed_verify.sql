@@ -82,6 +82,9 @@ begin
   --       명시로도 뺀다). bt-alley-hook·bt-fireball-shield 는 원문에
   --       '강력했다'·느낌 말 나열이 있어 계속 걸려야 한다. 옛 at- 8건은
   --       is_active=false 라 위 필터에서 이미 빠진다.
+  --       문장 11 cliffhanger 5건 전부(세션 38 — 마지막 줄만 다루는 절단
+  --       패턴이라 원문 자체엔 결함이 없다. 전부 type continue 라 이미 안
+  --       걸리지만 명시로도 뺀다).
   --       ★ is_active 필터: 비활성 문항(ig-ball-envelope 등)은 이 검사 대상 밖 —
   --       폐기된 설계에 더는 강제하지 않는다(세션 34 정정 v2).
   select string_agg(p.source_key, ', ') into v_bad
@@ -94,7 +97,9 @@ begin
        'ig-left-cup', 'ig-umbrella-walnut', 'ig-friend-text', 'ig-gate-wait',
        'ca-open-door', 'ca-inn-endroom', 'ca-walk-home',
        'fh-regress-date', 'fh-release-ball', 'fh-broken-engagement',
-       'bt-spear-range', 'bt-orc-axe', 'bt-low-guard')
+       'bt-spear-range', 'bt-orc-axe', 'bt-low-guard',
+       'cf-return-crisis', 'cf-return-newcomer', 'cf-return-reversal',
+       'cf-doorstep-glance', 'cf-gym-glow')
      and (p.scoring_config ? 'forbidWords' or p.scoring_config ? 'forbidLemmas')
      and not (
        exists (

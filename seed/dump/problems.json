@@ -4963,5 +4963,189 @@
       ],
       "forbidPassageCopy": true
     }
+  },
+  {
+    "type": "continue",
+    "choices": null,
+    "passage": "던전을 닫고 나온 도윤은 협회 차 뒷자리에 올랐다. 팀원들은 타자마자 잠들었다. 창밖으로 도시 불빛이 천천히 지나갔다.",
+    "order_no": 1,
+    "tone_tag": "planned",
+    "genre_tag": "fantasy",
+    "skill_key": "cliffhanger",
+    "difficulty": 1,
+    "source_key": "cf-return-crisis",
+    "source_tag": "original",
+    "instruction": "아래 장면의 마지막 줄을 '위기'로 끊으시오. 도윤은 던전을 닫고 돌아가는 헌터다. 원문은 아무 일 없이 끝나 독자가 다음 화를 누를 이유가 없다. 원문 뒤에 한두 문장을 이어, 앞으로 무슨 일이 터질 것 같은 위기로 회차를 끝내시오. 서술자가 '그때였다'·'과연'으로 억지로 끊지 마시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 80,
+      "minVerbs": 1,
+      "forbidLabel": "서술자가 미리 말해 주거나 억지로 끊는 표현",
+      "forbidWords": [
+        "훗날",
+        "될 줄",
+        "과연",
+        "그때였다",
+        "다음 화",
+        "운명"
+      ],
+      "forbidDisplay": [
+        "훗날",
+        "될 줄은",
+        "과연",
+        "그때였다",
+        "다음 화",
+        "운명"
+      ],
+      "forbidPassageCopy": true
+    }
+  },
+  {
+    "type": "continue",
+    "choices": null,
+    "passage": "던전을 닫고 나온 도윤은 협회 차 뒷자리에 올랐다. 팀원들은 타자마자 잠들었다. 창밖으로 도시 불빛이 천천히 지나갔다.",
+    "order_no": 2,
+    "tone_tag": "planned",
+    "genre_tag": "fantasy",
+    "skill_key": "cliffhanger",
+    "difficulty": 1,
+    "source_key": "cf-return-newcomer",
+    "source_tag": "original",
+    "instruction": "아래 장면의 마지막 줄을 '새 인물이나 사건의 등장'으로 끊으시오. 도윤은 던전을 닫고 돌아가는 헌터다. 던전은 끝났지만 회차는 끝나면 안 된다 — 원문 뒤에 한두 문장을 이어, 해결된 줄 알았더니 다른 사람이나 다른 일이 나타나는 것으로 끝내시오. 서술자가 '그때였다'로 억지로 끊지 마시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 80,
+      "minVerbs": 1,
+      "forbidLabel": "서술자가 미리 말해 주거나 억지로 끊는 표현",
+      "forbidWords": [
+        "훗날",
+        "될 줄",
+        "과연",
+        "그때였다",
+        "다음 화",
+        "운명"
+      ],
+      "forbidDisplay": [
+        "훗날",
+        "될 줄은",
+        "과연",
+        "그때였다",
+        "다음 화",
+        "운명"
+      ],
+      "forbidPassageCopy": true
+    }
+  },
+  {
+    "type": "continue",
+    "choices": null,
+    "passage": "던전을 닫고 나온 도윤은 협회 차 뒷자리에 올랐다. 팀원들은 타자마자 잠들었다. 창밖으로 도시 불빛이 천천히 지나갔다.",
+    "order_no": 3,
+    "tone_tag": "planned",
+    "genre_tag": "fantasy",
+    "skill_key": "cliffhanger",
+    "difficulty": 1,
+    "source_key": "cf-return-reversal",
+    "source_tag": "original",
+    "instruction": "아래 장면의 마지막 줄을 '반전 행동'으로 끊으시오. 도윤은 던전을 닫고 돌아가는 헌터다. 원문 뒤에 한두 문장을 이어, 독자가 예상하지 못한 행동을 도윤이 하는 것으로 끝내시오 — 왜 그러는지는 설명하지 말고 행동만 보이시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 80,
+      "minVerbs": 1,
+      "forbidLabel": "서술자가 미리 말해 주거나 억지로 끊는 표현",
+      "forbidWords": [
+        "훗날",
+        "될 줄",
+        "과연",
+        "그때였다",
+        "다음 화",
+        "운명"
+      ],
+      "forbidDisplay": [
+        "훗날",
+        "될 줄은",
+        "과연",
+        "그때였다",
+        "다음 화",
+        "운명"
+      ],
+      "forbidPassageCopy": true
+    }
+  },
+  {
+    "type": "continue",
+    "choices": null,
+    "passage": "회식이 끝나고 지호는 예린을 집 앞까지 데려다주었다. 예린이 손을 흔들고 계단을 올라갔다. 골목엔 둘밖에 없었다.",
+    "order_no": 4,
+    "tone_tag": "planned",
+    "genre_tag": "romance",
+    "skill_key": "cliffhanger",
+    "difficulty": 1,
+    "source_key": "cf-doorstep-glance",
+    "source_tag": "original",
+    "instruction": "아래 장면의 마지막 줄을 '관계가 달라질 암시'로 끊으시오. 지호와 예린은 같은 팀 동료다. 원문 뒤에 한두 문장을 이어, 고백이나 스킨십 없이 두 사람 사이가 지금과 달라질 것 같은 행동 하나로 끝내시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 80,
+      "minVerbs": 1,
+      "forbidLabel": "서술자가 미리 말해 주거나 억지로 끊는 표현",
+      "forbidWords": [
+        "훗날",
+        "될 줄",
+        "과연",
+        "그때였다",
+        "다음 화",
+        "운명",
+        "고백",
+        "사랑"
+      ],
+      "forbidDisplay": [
+        "훗날",
+        "될 줄은",
+        "과연",
+        "그때였다",
+        "다음 화",
+        "운명",
+        "고백",
+        "사랑"
+      ],
+      "forbidPassageCopy": true
+    }
+  },
+  {
+    "type": "continue",
+    "choices": null,
+    "passage": "훈련장에 혼자 남은 시우는 마지막 세트를 마쳤다. 손바닥이 갈라져 피가 배어 있었다. 오늘도 등급은 그대로였다.",
+    "order_no": 5,
+    "tone_tag": "planned",
+    "genre_tag": "fantasy",
+    "skill_key": "cliffhanger",
+    "difficulty": 1,
+    "source_key": "cf-gym-glow",
+    "source_tag": "original",
+    "instruction": "아래 장면의 마지막 줄을 '기대감'으로 끊으시오. 시우는 등급이 오르지 않는 헌터다. 원문 뒤에 한두 문장을 이어, 앞으로 시우가 달라질 것 같은 조짐 하나가 보이는 것으로 끝내시오. 무엇인지 다 말하지 말고 조짐만 보이시오.",
+    "scoring_mode": "auto",
+    "scoring_config": {
+      "maxChars": 80,
+      "minVerbs": 1,
+      "forbidLabel": "서술자가 미리 말해 주거나 억지로 끊는 표현",
+      "forbidWords": [
+        "훗날",
+        "될 줄",
+        "과연",
+        "그때였다",
+        "다음 화",
+        "운명"
+      ],
+      "forbidDisplay": [
+        "훗날",
+        "될 줄은",
+        "과연",
+        "그때였다",
+        "다음 화",
+        "운명"
+      ],
+      "forbidPassageCopy": true
+    }
   }
 ]

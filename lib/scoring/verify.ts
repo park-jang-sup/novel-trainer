@@ -792,6 +792,8 @@ console.log('\n[오탐 감시: 감각 묘사 좋은 답안]')
 //   결함이 '3요소 0'이라 셋 다 forbid 어휘가 없다).
 //   문장 12 action_turn 무난 원문 3건(세션 37 — bt-spear-range·bt-orc-axe·
 //   bt-low-guard 는 신호만 깔린 무난한 장면이라 forbid 어휘가 없다).
+//   문장 11 cliffhanger 5건 전부(세션 38 — 마지막 줄만 다루는 절단 패턴이라
+//   원문 자체엔 결함이 없다. 5건 모두 무난 원문).
 //   이 단계들의 원문은 결함이 없는 무난한 장면이라 자기 forbidWords 를 일부러
 //   안 담는다 — 결핍/속마음/평가어는 학습자가 얹는다. 각 단계 블록이 '원문에
 //   forbidWords 없음'을 따로 문다. likability·info_gap·cliffhanger_adv·
@@ -801,9 +803,10 @@ console.log('\n[오탐 감시: 감각 묘사 좋은 답안]')
 //   bt-fireball-shield 는 결함 원문(능력 과시·불행한 태도·몰랐/훗날/용의자
 //   노출·그때였다/될 줄은 몰랐다·제국력/오래전부터·반드시/언젠가/어떻게든·
 //   강력했다/느낌 말 나열)이라 계속 자기 forbidWords 에 걸려야 한다.
+//   cliffhanger 는 skill 전체가 예외다(5건 다 무난 원문이라 결함 원문이 없다).
 //   ★ 비활성 문항은 이 불변식 대상에서 뺀다(deactivate.json) — 폐기된 설계에
 //   더는 이 검사를 강제하지 않는다(세션 34 정정 v2, ig-ball-envelope 로 첫 실증).
-console.log('\n[불변식: forbidWords 있는 덤프 문항이 자기 목록에 걸림 (lack·contrast_char·likability·info_gap·cliffhanger_adv·first_hook 무난 문항 · 비활성 문항 제외)]')
+console.log('\n[불변식: forbidWords 있는 덤프 문항이 자기 목록에 걸림 (lack·contrast_char·likability·info_gap·cliffhanger_adv·first_hook·cliffhanger 무난 문항 · 비활성 문항 제외)]')
 {
   interface DumpProblem {
     passage: string | null
@@ -827,6 +830,8 @@ console.log('\n[불변식: forbidWords 있는 덤프 문항이 자기 목록에 
     'ca-open-door', 'ca-inn-endroom', 'ca-walk-home',
     'fh-regress-date', 'fh-release-ball', 'fh-broken-engagement',
     'bt-spear-range', 'bt-orc-axe', 'bt-low-guard',
+    'cf-return-crisis', 'cf-return-newcomer', 'cf-return-reversal',
+    'cf-doorstep-glance', 'cf-gym-glow',
   ])
   const skipped: string[] = []
   for (const dp of dumpProblems) {
@@ -4310,7 +4315,7 @@ console.log('\n[구성 12 contrast_char: 재설계 · 활성 6 + 비활성 4]')
   // friend-text, 정정 v2 로 ball-envelope 대신). cafe-scar 는 "아래 장면을 고쳐
   // 쓰시오. 박형사는…"이라 기존 m3(는)로 이미 잡힌다. umbrella-walnut 은
   // requireAll 이 있어 정규식 자체가 안 돈다.
-  const nameSkills = new Set(['lack', 'contrast_char', 'likability', 'info_gap', 'cliffhanger_adv', 'first_hook', 'action_turn'])
+  const nameSkills = new Set(['lack', 'contrast_char', 'likability', 'info_gap', 'cliffhanger_adv', 'first_hook', 'action_turn', 'cliffhanger'])
   for (const d of allProblems.filter((p) => nameSkills.has(p.skill_key) && !deadSet.has(p.source_key))) {
     const c = d.scoring_config
     const canon = (c.requireAll as string[] | undefined)
@@ -5893,6 +5898,234 @@ console.log('\n[문장 12 action_turn: 재개 신규 5문항]')
       atStage.self_checks.every((s) => s.length > 0), JSON.stringify(atStage.self_checks))
 }
 
+// ── 문장 11 cliffhanger(절단신공): 신설 5문항 (세션 38 · 빈 단계 마지막) ──
+//
+// 마지막 한두 줄만 다룬다(신호 까는 건 구성 16 몫). 절단 5패턴 — 위기·새
+// 인물·사건·반전 행동·기대감·관계 암시. requireAll·requireAny 없음(첫
+// 단계) — 인물 지정보다 '패턴'이 과제다. maxChars 80(한두 문장), minVerbs
+// 1(짧은 절단은 동사 하나로도 된다). ★ 규격 6(대사·속마음)은 이 단계에서
+// 비강제다 — 한두 줄 절단에 매번 대사/속마음을 요구하면 패턴 자체(행동
+// 하나로 끝내는 반전 등)와 부딪힌다(박 님 결정) — 이 블록엔 [규격 6] 검사가
+// 없다. 원문 A(도윤 귀환 장면)는 1·2·3이 그대로 공유한다(문항설계서 4-05).
+// 5문항 전부 신규 행 — update SQL 없음.
+console.log('\n[문장 11 cliffhanger: 신설 5문항]')
+{
+  interface CfProblem {
+    source_key: string
+    skill_key: string
+    type: string
+    choices: string[] | null
+    passage: string | null
+    instruction: string
+    difficulty: number
+    scoring_mode: string
+    scoring_config: ScoringConfig
+  }
+  const seedDir = path.join(__dirname, '..', '..', 'seed', 'dump')
+  const readDump = <T,>(f: string): T =>
+    JSON.parse(readFileSync(path.join(seedDir, f), 'utf8').replace(/^﻿/, '')) as T
+
+  const allProblems = readDump<CfProblem[]>('problems.json')
+  const cf = allProblems.filter((d) => d.skill_key === 'cliffhanger')
+  const cfKeys = new Set(cf.map((d) => d.source_key))
+  const answersDump = readDump<{ reference?: RefRow[] }>('answers.json')
+  const refs = (answersDump.reference ?? []).filter((r) => cfKeys.has(r.source_key))
+  const cfgOf = new Map(cf.map((d) => [d.source_key, d.scoring_config]))
+  const passageOf = new Map(cf.map((d) => [d.source_key, d.passage ?? '']))
+
+  t('활성 cliffhanger 5문항', cf.length === 5, `실제=${cf.length}`)
+  t('5건 전부 type continue', cf.every((d) => d.type === 'continue'))
+  t('5건 전부 auto · choices null · difficulty 1 · maxChars 80 · minVerbs 1', cf.every(
+    (d) => d.scoring_mode === 'auto' && d.choices === null && d.difficulty === 1 &&
+      d.scoring_config.maxChars === 80 && d.scoring_config.minVerbs === 1))
+  t('5건 전부 forbidLabel 동일: 서술자가 미리 말해 주거나 억지로 끊는 표현',
+    cf.every((d) => d.scoring_config.forbidLabel === '서술자가 미리 말해 주거나 억지로 끊는 표현'))
+  t('5건 전부 forbidPassageCopy true', cf.every((d) => d.scoring_config.forbidPassageCopy === true))
+  t('5건 전부 requireAll·requireAny 없음(패턴이 과제지 이름 지정이 아니다)',
+    cf.every((d) => d.scoring_config.requireAll === undefined && d.scoring_config.requireAny === undefined))
+
+  // doorstep-glance 만 절단6 + '고백'·'사랑'(8개) — 나머지 4건은 절단6 그대로
+  {
+    const dg = cf.find((d) => d.source_key === 'cf-doorstep-glance')!
+    const fw = dg.scoring_config.forbidWords as string[]
+    t("'cf-doorstep-glance': forbidWords 가 절단6 + '고백'·'사랑'(8개)",
+      fw.includes('고백') && fw.includes('사랑') && fw.length === 8, JSON.stringify(fw))
+    for (const d of cf.filter((x) => x.source_key !== 'cf-doorstep-glance')) {
+      const fw2 = d.scoring_config.forbidWords as string[]
+      t(`'${d.source_key}': forbidWords 가 절단6 그대로(6개, '고백'·'사랑' 없음)`,
+        fw2.length === 6 && !fw2.includes('고백') && !fw2.includes('사랑'), JSON.stringify(fw2))
+    }
+  }
+
+  // ── 원문 A 공유: cf-return-crisis·cf-return-newcomer·cf-return-reversal
+  //    3건이 같은 문자열을 쓴다(문항설계서 4-05 "같은 본문에 절단 3종").
+  //    단계 간 베낌 가드는 '앞 단계' 문장만 보므로 같은 단계 안 공유는 원래
+  //    부딪힐 일이 없지만, 설계 의도를 명시로 문다 — 실수로 갈라지면 여기서 걸린다.
+  {
+    const a1 = passageOf.get('cf-return-crisis')
+    const a2 = passageOf.get('cf-return-newcomer')
+    const a3 = passageOf.get('cf-return-reversal')
+    t('원문 A: return-crisis·return-newcomer·return-reversal 3건이 글자까지 같다',
+      a1 === a2 && a2 === a3, JSON.stringify({ a1, a2, a3 }))
+    t('doorstep-glance·gym-glow 는 원문 A 와 다른, 서로도 다른 원문을 쓴다',
+      passageOf.get('cf-doorstep-glance') !== a1 && passageOf.get('cf-gym-glow') !== a1 &&
+        passageOf.get('cf-doorstep-glance') !== passageOf.get('cf-gym-glow'))
+  }
+
+  // ── 원문 불변식: 5건 전부 무난한 장면이라 forbid 어휘가 없다(절단 패턴은
+  //    학습자가 마지막 줄에 얹는 것이지 원문 자체의 결함이 아니다).
+  for (const d of cf) {
+    const fw = (d.scoring_config.forbidWords as string[]) ?? []
+    const hits = findForbidden(d.passage ?? '', fw)
+    t(`불변식: '${d.source_key}' (무난 원문) 이 자기 forbidWords 에 안 걸린다`,
+      hits.length === 0, JSON.stringify(hits))
+  }
+  // 원문 그대로 제출 → passageCopy fail (5건 전부 forbidPassageCopy 있음)
+  for (const d of cf) {
+    const bp = gradeLocal(
+      { id: d.source_key, type: 'continue', scoring_mode: 'auto', scoring_config: d.scoring_config },
+      { text: d.passage ?? '' }, undefined, d.passage ?? '')
+    t(`불변식: '${d.source_key}' 원문 그대로 제출은 passageCopy fail`,
+      bp.find((c) => c.key === 'passageCopy')?.status === 'fail', JSON.stringify(bp))
+  }
+
+  // ── 모범답안 10행 (활성 5 × 가·나) ──
+  t('활성 모범답안 10행', refs.length === 10, `실제=${refs.length}`)
+  t('모범답안 전부 blank_key 빈 문자열', refs.every((r) => r.blank_key === ''))
+  for (const d of cf) {
+    const ords = refs.filter((r) => r.source_key === d.source_key).map((r) => r.ord).sort()
+    t(`'${d.source_key}': 가·나 두 세트`, JSON.stringify(ords) === '[1,2]', JSON.stringify(ords))
+  }
+  // 실측 자수(공백 제외) — 순서: return-crisis·return-newcomer·return-reversal·doorstep-glance·gym-glow
+  const LEN: Record<string, [number, number]> = {
+    'cf-return-crisis': [46, 41],
+    'cf-return-newcomer': [41, 51],
+    'cf-return-reversal': [36, 38],
+    'cf-doorstep-glance': [46, 41],
+    'cf-gym-glow': [44, 39],
+  }
+  for (const r of refs) {
+    const cfg = cfgOf.get(r.source_key)!
+    const n = countChars(r.content)
+    t(`'${r.source_key}' ord${r.ord}: 비어 있지 않다`, r.content.trim().length > 0)
+    t(`'${r.source_key}' ord${r.ord}: 자수 ${n} == 실측 ${LEN[r.source_key][r.ord - 1]}`,
+      n === LEN[r.source_key][r.ord - 1], `"${r.content}"`)
+    t(`'${r.source_key}' ord${r.ord}: 자수 ≤ 80`, n <= 80)
+    const strip = (s: string) => s.replace(/\s/g, '')
+    t(`'${r.source_key}' ord${r.ord}: 원문을 통짜로 품지 않는다`,
+      !strip(r.content).includes(strip(passageOf.get(r.source_key)!)), `"${r.content}"`)
+    const hits = findForbidden(r.content, (cfg.forbidWords as string[] | undefined) ?? [])
+    t(`'${r.source_key}' ord${r.ord}: forbidWords 적중 0`, hits.length === 0, JSON.stringify(hits))
+    const res = combine(
+      { id: r.source_key, type: 'continue', scoring_mode: 'auto', scoring_config: cfg },
+      { text: r.content }, undefined, null, passageOf.get(r.source_key)!)
+    for (const key of ['forbidWords', 'maxChars', 'passageCopy']) {
+      const c = res.checks.find((x) => x.key === key)
+      t(`'${r.source_key}' ord${r.ord}: combine 의 ${key} 검사가 pass`,
+        !c || c.status === 'pass', JSON.stringify(c))
+    }
+  }
+
+  // ── 나쁜 표본 2건 + 점검 1건 — 박 님 기대값대로(형태소 불필요, 즉시) ──
+  {
+    const rc = cf.find((d) => d.source_key === 'cf-return-crisis')!
+    const runLocal = (text: string) => gradeLocal(
+      { id: rc.source_key, type: 'continue', scoring_mode: 'auto', scoring_config: rc.scoring_config },
+      { text }, undefined, rc.passage ?? '')
+
+    // 1. 억지 끊기 문구 나열 → forbidWords 2
+    {
+      const text = '그때였다. 과연 무슨 일이 벌어질 것인가.'
+      const checks = runLocal(text)
+      t('나쁜 표본: return-crisis 억지 끊기 문구 나열 → forbidWords fail(2건)',
+        checks.find((c) => c.key === 'forbidWords')?.status === 'fail' &&
+          findForbidden(text, rc.scoring_config.forbidWords as string[]).length === 2,
+        JSON.stringify(checks.find((c) => c.key === 'forbidWords')))
+    }
+    // 2. 원문 통째 + 한 문장 → passageCopy fail
+    {
+      const text = `${rc.passage} 도윤도 눈을 감았다.`
+      const checks = runLocal(text)
+      t('나쁜 표본: return-crisis 원문 통째+한 문장 → passageCopy fail',
+        checks.find((c) => c.key === 'passageCopy')?.status === 'fail', JSON.stringify(checks))
+    }
+    // 점검(pass 기대 — 규칙 한계): 절단이 안 된 밋밋한 문장도 규칙(forbidWords·
+    // minVerbs·maxChars·passageCopy)은 다 통과한다. '절단이 됐는가' 자체는
+    // 이 규칙들로 못 잰다 — 자기점검 1("다음 화를 누르고 싶어?")이 그 자리다.
+    {
+      const text = '도윤도 눈을 감았다.'
+      const checks = runLocal(text)
+      t("점검(규칙 한계): '도윤도 눈을 감았다.' 는 절단이 아니지만 규칙은 전부 pass",
+        checks.every((c) => c.status === 'pass'), JSON.stringify(checks))
+    }
+  }
+
+  // ── 단계 간 베낌 가드: 대조원 103문장 = 도입1 정답5 + 도입2·3 모범20 + lack
+  //    모범10 + 비활성cc-8 + 활성cc-12 + 활성likability8 + 활성info_gap10 +
+  //    활성cliffhanger_adv10 + 활성first_hook10 + 활성action_turn(bt-)10.
+  //    문장 11 은 세션 순서상 문장 12(action_turn 재개) 다음이라 활성 bt- 답안도
+  //    이제 '이전 문장'이다.
+  const priorSentences: string[] = []
+  {
+    const scAnsIdx = new Map(
+      (readDump<{ answers?: { source_key: string; answer: { kind: string; index?: number } }[] }>('answers.json').answers ?? [])
+        .filter((a) => a.answer.kind === 'choice')
+        .map((a) => [a.source_key, a.answer.index!]))
+    for (const p of allProblems.filter((x) => x.skill_key === 'start_choose')) {
+      const idx = scAnsIdx.get(p.source_key)
+      if (idx != null && p.choices) priorSentences.push(p.choices[idx].replace(/\.$/, ''))
+    }
+    const deactivate = readDump<{ source_keys: string[] }>('deactivate.json')
+    const deadKeys = new Set(deactivate.source_keys)
+    const deadCc = new Set(deactivate.source_keys.filter((k) => k.startsWith('cc-')))
+    const activeCc = new Set(
+      allProblems.filter((p) => p.skill_key === 'contrast_char' && !deadCc.has(p.source_key)).map((p) => p.source_key))
+    const activeIg = new Set(
+      allProblems.filter((p) => p.skill_key === 'info_gap' && !deadKeys.has(p.source_key)).map((p) => p.source_key))
+    const activeCa = new Set(
+      allProblems.filter((p) => p.skill_key === 'cliffhanger_adv' && !deadKeys.has(p.source_key)).map((p) => p.source_key))
+    const activeFh = new Set(
+      allProblems.filter((p) => p.skill_key === 'first_hook' && !deadKeys.has(p.source_key)).map((p) => p.source_key))
+    const activeBt = new Set(
+      allProblems.filter((p) => p.skill_key === 'action_turn' && p.source_key.startsWith('bt-') && !deadKeys.has(p.source_key)).map((p) => p.source_key))
+    for (const r of answersDump.reference ?? []) {
+      if (r.source_key.startsWith('sw-') || r.source_key.startsWith('se-') ||
+        r.source_key.startsWith('lk-') || r.source_key.startsWith('lk2-') ||
+        deadCc.has(r.source_key) || activeCc.has(r.source_key) || activeIg.has(r.source_key) ||
+        activeCa.has(r.source_key) || activeFh.has(r.source_key) || activeBt.has(r.source_key)) {
+        priorSentences.push(r.content.replace(/\.$/, ''))
+      }
+    }
+  }
+  t('단계 간 베낌 가드: 대조원 103문장 (기존 93 + 활성 action_turn(bt-) 모범 10)',
+    priorSentences.length === 103, `실제=${priorSentences.length}`)
+  for (const r of refs) {
+    const copied = priorSentences.filter((s) => r.content.includes(s))
+    t(`단계 간 베낌 가드: '${r.source_key}' ord${r.ord} 이 앞 단계 문장을 안 베꼈다`,
+      copied.length === 0, JSON.stringify(copied))
+  }
+
+  // ── 숫자 반복 표현("두 번"·"세 번" 류) 부재 가드(세션 32 후기 4 규격) ──
+  for (const r of refs) {
+    t(`'${r.source_key}' ord${r.ord}: 숫자 반복 표현("N 번" 류) 없음`,
+      !/(한|두|세|네|다섯|여섯|일곱|여덟|아홉|열)\s*번/.test(r.content), r.content)
+  }
+
+  // ── stages: cliffhanger 코치·self_checks (신설 문구) ──
+  const stagesDump7 = readDump<{ skill_key: string; title: string; summary: string; coach_intro: string; coach_line: string; self_checks: string[] }[]>('stages.json')
+  const cfStage = stagesDump7.find((s) => s.skill_key === 'cliffhanger')!
+  t("stages cliffhanger title '절단신공' 유지", cfStage.title === '절단신공')
+  t("stages cliffhanger summary '마지막 줄이 다음을 부르게 한다' 유지",
+    cfStage.summary === '마지막 줄이 다음을 부르게 한다')
+  t('stages cliffhanger coach_intro·coach_line 이 비어 있지 않다',
+    cfStage.coach_intro.length > 0 && cfStage.coach_line.length > 0)
+  t("stages cliffhanger coach_line '마지막 줄이 다음 화 버튼이다!'",
+    cfStage.coach_line === '마지막 줄이 다음 화 버튼이다!')
+  t('stages cliffhanger 의 self_checks 2건',
+    Array.isArray(cfStage.self_checks) && cfStage.self_checks.length === 2 &&
+      cfStage.self_checks.every((s) => s.length > 0), JSON.stringify(cfStage.self_checks))
+}
+
 // ── '쓰지 않을 말' 표시: forbidLabel/forbidDisplay ↔ 채점 (세션 22) ──────
 //
 // scoring_config 에 표시 전용 필드 둘을 더했다. 채점(forbidWords·forbidLemmas)은
@@ -5944,9 +6177,9 @@ console.log('\n[쓰지 않을 말 표시: forbidLabel/forbidDisplay ↔ 채점]'
   // info_gap 은 6 — 비활성 ig-ball-envelope 도 forbidLabel 을 그대로 갖고 있다
   // (비활성 대비형 cc- 4건과 달리 폐기 전 설계라 필드를 안 지웠다). 이 카운트는
   // 활성 여부를 안 보고 덤프 전수를 센다.
-  t('덤프에 forbidLabel 을 채운 문항 53', withDisplay.length === 53, `실제=${withDisplay.length}`)
+  t('덤프에 forbidLabel 을 채운 문항 58', withDisplay.length === 58, `실제=${withDisplay.length}`)
   t(
-    '전부 emotion_action 6 + sensory 8 + start_write 5 + lack 5 + contrast_char 4 + likability 4 + info_gap 6 + cliffhanger_adv 5 + first_hook 5 + action_turn 5',
+    '전부 emotion_action 6 + sensory 8 + start_write 5 + lack 5 + contrast_char 4 + likability 4 + info_gap 6 + cliffhanger_adv 5 + first_hook 5 + action_turn 5 + cliffhanger 5',
     withDisplay.filter((d) => d.skill_key === 'emotion_action').length === 6 &&
       withDisplay.filter((d) => d.skill_key === 'sensory').length === 8 &&
       withDisplay.filter((d) => d.skill_key === 'start_write').length === 5 &&
@@ -5956,7 +6189,8 @@ console.log('\n[쓰지 않을 말 표시: forbidLabel/forbidDisplay ↔ 채점]'
       withDisplay.filter((d) => d.skill_key === 'info_gap').length === 6 &&
       withDisplay.filter((d) => d.skill_key === 'cliffhanger_adv').length === 5 &&
       withDisplay.filter((d) => d.skill_key === 'first_hook').length === 5 &&
-      withDisplay.filter((d) => d.skill_key === 'action_turn').length === 5
+      withDisplay.filter((d) => d.skill_key === 'action_turn').length === 5 &&
+      withDisplay.filter((d) => d.skill_key === 'cliffhanger').length === 5
   )
 
   for (const d of withDisplay) {
@@ -6051,7 +6285,7 @@ console.log('\n[쓰지 않을 말 표시: forbidLabel/forbidDisplay ↔ 채점]'
     )].map((m) => ({ cfg: JSON.parse(m[1]) as Record<string, unknown>, source_key: m[2] }))
     t('update SQL 에 14행이 있다', rows.length === 14, `실제=${rows.length}`)
     const canon = (o: unknown) => JSON.stringify(o, Object.keys(o as object).sort())
-    for (const d of withDisplay.filter((x) => !['start_write', 'lack', 'contrast_char', 'likability', 'info_gap', 'cliffhanger_adv', 'first_hook', 'action_turn'].includes(x.skill_key))) {
+    for (const d of withDisplay.filter((x) => !['start_write', 'lack', 'contrast_char', 'likability', 'info_gap', 'cliffhanger_adv', 'first_hook', 'action_turn', 'cliffhanger'].includes(x.skill_key))) {
       const row = rows.find((r) => r.source_key === d.source_key)
       t(`update SQL '${d.source_key}' 의 scoring_config 가 덤프와 같다`,
         !!row && canon(row.cfg) === canon(d.scoring_config),
@@ -6225,10 +6459,18 @@ console.log('\n[자기점검 self_checks: 시드 ↔ 화면]')
         '고른 수에 대가가 있어? 공짜 수면 긴장이 없어. 결과는 감정이 아니라 몸으로 보였어?',
       ])
   )
+  t(
+    'cliffhanger 자기점검 두 줄 (세션 38)',
+    JSON.stringify(scOf('cliffhanger')) ===
+      JSON.stringify([
+        "마지막 줄을 읽고 독자가 '그래서?' 하고 다음 화를 누르고 싶어?",
+        '이 절단이 어느 패턴인지 한 단어로 말할 수 있어? 못 하면 그냥 끝난 거야.',
+      ])
+  )
   const withSelfChecks = [
     'reduce_adverb', 'emotion_action', 'trim_padding', 'reduce_repeat', 'action_reason',
     'start_write', 'start_extend', 'lack', 'contrast_char', 'likability', 'info_gap', 'cliffhanger_adv',
-    'first_hook', 'action_turn',
+    'first_hook', 'action_turn', 'cliffhanger',
   ]
   t(
     '나머지 단계는 빈 배열(자기점검 칸이 안 뜬다)',
@@ -6281,14 +6523,14 @@ console.log('\n[가르침 층: 코치 말풍선 · 조건 요약 · 게이지]')
     'reduce_adverb', 'emotion_action', 'trim_padding', 'reduce_repeat', 'adverb_exception',
     'sensory', 'rhythm', 'dialogue_ratio', 'pov_lock', 'action_reason',
     'start_choose', 'start_write', 'start_extend', 'lack', 'contrast_char', 'likability', 'info_gap',
-    'cliffhanger_adv', 'first_hook', 'action_turn',
+    'cliffhanger_adv', 'first_hook', 'action_turn', 'cliffhanger',
   ])
   const withCoach = stagesDump.filter((s) => (s.coach_intro as string).length > 0)
-  t('coach_intro 는 문장 10 + 도입 1·2·3 + 구성 11·12·13·15·16·18 + 문장 12 재개에만 있다',
-    withCoach.length === 20 && withCoach.every((s) => COACH_SKILLS.has(s.skill_key)),
+  t('coach_intro 는 문장 1~10·12 + 도입 1·2·3 + 구성 11·12·13·15·16·18 에만 있다',
+    withCoach.length === 21 && withCoach.every((s) => COACH_SKILLS.has(s.skill_key)),
     JSON.stringify(withCoach.map((s) => `${s.skill_key}:${s.track}`)))
-  t('coach_line 도 같은 20단계에만',
-    stagesDump.filter((s) => (s.coach_line as string).length > 0).length === 20 &&
+  t('coach_line 도 같은 21단계에만',
+    stagesDump.filter((s) => (s.coach_line as string).length > 0).length === 21 &&
       stagesDump.every((s) => (s.coach_intro as string).length > 0 === ((s.coach_line as string).length > 0)))
   t('그 밖의 단계는 coach_intro·coach_line 이 빈 문자열',
     stagesDump.filter((s) => !COACH_SKILLS.has(s.skill_key)).every(

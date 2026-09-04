@@ -193,8 +193,8 @@ on conflict (skill_key) do update set
 insert into stages
   (track, order_no, title, skill_key, summary, is_free, self_checks, intro, coach_intro, coach_line)
 values ('sentence', 11, '절단신공', 'cliffhanger',
-        '마지막 줄이 다음을 부르게 한다', true, array[]::text[], '',
-        '', '')
+        '마지막 줄이 다음을 부르게 한다', true, array['마지막 줄을 읽고 독자가 ''그래서?'' 하고 다음 화를 누르고 싶어?', '이 절단이 어느 패턴인지 한 단어로 말할 수 있어? 못 하면 그냥 끝난 거야.']::text[], '',
+        '절단신공은 마지막 줄을 ''다음 화'' 버튼으로 만드는 기술이야. 패턴이 있어 — 위기, 새 인물이나 사건, 반전, 기대감, 관계 암시. 같은 장면도 어느 패턴으로 끊느냐에 따라 다음 화가 달라져. 여기선 마지막 한두 줄에만 집중해. 그 앞에 신호를 까는 건 구성 16에서 배워.', '마지막 줄이 다음 화 버튼이다!')
 on conflict (skill_key) do update set
   track = excluded.track,
   order_no = excluded.order_no,
@@ -484,6 +484,18 @@ select
   1, 'cc-report-credit'
 where not exists (select 1 from problems p where p.source_key = 'cc-report-credit');
 
+-- cf-return-crisis (order_no 1, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'cliffhanger'),
+  'continue', 'auto', '아래 장면의 마지막 줄을 ''위기''로 끊으시오. 도윤은 던전을 닫고 돌아가는 헌터다. 원문은 아무 일 없이 끝나 독자가 다음 화를 누를 이유가 없다. 원문 뒤에 한두 문장을 이어, 앞으로 무슨 일이 터질 것 같은 위기로 회차를 끝내시오. 서술자가 ''그때였다''·''과연''으로 억지로 끊지 마시오.',
+  '던전을 닫고 나온 도윤은 협회 차 뒷자리에 올랐다. 팀원들은 타자마자 잠들었다. 창밖으로 도시 불빛이 천천히 지나갔다.', null, '{"maxChars":80,"minVerbs":1,"forbidLabel":"서술자가 미리 말해 주거나 억지로 끊는 표현","forbidWords":["훗날","될 줄","과연","그때였다","다음 화","운명"],"forbidDisplay":["훗날","될 줄은","과연","그때였다","다음 화","운명"],"forbidPassageCopy":true}'::jsonb,
+  'original', 'fantasy', 'planned',
+  1, 'cf-return-crisis'
+where not exists (select 1 from problems p where p.source_key = 'cf-return-crisis');
+
 -- fh-villainess-mirror (order_no 1, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
@@ -748,6 +760,18 @@ select
   1, 'cc-street-night'
 where not exists (select 1 from problems p where p.source_key = 'cc-street-night');
 
+-- cf-return-newcomer (order_no 2, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'cliffhanger'),
+  'continue', 'auto', '아래 장면의 마지막 줄을 ''새 인물이나 사건의 등장''으로 끊으시오. 도윤은 던전을 닫고 돌아가는 헌터다. 던전은 끝났지만 회차는 끝나면 안 된다 — 원문 뒤에 한두 문장을 이어, 해결된 줄 알았더니 다른 사람이나 다른 일이 나타나는 것으로 끝내시오. 서술자가 ''그때였다''로 억지로 끊지 마시오.',
+  '던전을 닫고 나온 도윤은 협회 차 뒷자리에 올랐다. 팀원들은 타자마자 잠들었다. 창밖으로 도시 불빛이 천천히 지나갔다.', null, '{"maxChars":80,"minVerbs":1,"forbidLabel":"서술자가 미리 말해 주거나 억지로 끊는 표현","forbidWords":["훗날","될 줄","과연","그때였다","다음 화","운명"],"forbidDisplay":["훗날","될 줄은","과연","그때였다","다음 화","운명"],"forbidPassageCopy":true}'::jsonb,
+  'original', 'fantasy', 'planned',
+  1, 'cf-return-newcomer'
+where not exists (select 1 from problems p where p.source_key = 'cf-return-newcomer');
+
 -- fh-release-ball (order_no 2, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
@@ -903,6 +927,18 @@ select
   'original', 'martial', 'planned',
   1, 'cc-first-pay'
 where not exists (select 1 from problems p where p.source_key = 'cc-first-pay');
+
+-- cf-return-reversal (order_no 3, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'cliffhanger'),
+  'continue', 'auto', '아래 장면의 마지막 줄을 ''반전 행동''으로 끊으시오. 도윤은 던전을 닫고 돌아가는 헌터다. 원문 뒤에 한두 문장을 이어, 독자가 예상하지 못한 행동을 도윤이 하는 것으로 끝내시오 — 왜 그러는지는 설명하지 말고 행동만 보이시오.',
+  '던전을 닫고 나온 도윤은 협회 차 뒷자리에 올랐다. 팀원들은 타자마자 잠들었다. 창밖으로 도시 불빛이 천천히 지나갔다.', null, '{"maxChars":80,"minVerbs":1,"forbidLabel":"서술자가 미리 말해 주거나 억지로 끊는 표현","forbidWords":["훗날","될 줄","과연","그때였다","다음 화","운명"],"forbidDisplay":["훗날","될 줄은","과연","그때였다","다음 화","운명"],"forbidPassageCopy":true}'::jsonb,
+  'original', 'fantasy', 'planned',
+  1, 'cf-return-reversal'
+where not exists (select 1 from problems p where p.source_key = 'cf-return-reversal');
 
 -- lk-guard-dawn (order_no 3, difficulty 1)
 insert into problems
@@ -1107,6 +1143,18 @@ select
   'original', 'modern', 'planned',
   1, 'cc-raid-reward'
 where not exists (select 1 from problems p where p.source_key = 'cc-raid-reward');
+
+-- cf-doorstep-glance (order_no 4, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'cliffhanger'),
+  'continue', 'auto', '아래 장면의 마지막 줄을 ''관계가 달라질 암시''로 끊으시오. 지호와 예린은 같은 팀 동료다. 원문 뒤에 한두 문장을 이어, 고백이나 스킨십 없이 두 사람 사이가 지금과 달라질 것 같은 행동 하나로 끝내시오.',
+  '회식이 끝나고 지호는 예린을 집 앞까지 데려다주었다. 예린이 손을 흔들고 계단을 올라갔다. 골목엔 둘밖에 없었다.', null, '{"maxChars":80,"minVerbs":1,"forbidLabel":"서술자가 미리 말해 주거나 억지로 끊는 표현","forbidWords":["훗날","될 줄","과연","그때였다","다음 화","운명","고백","사랑"],"forbidDisplay":["훗날","될 줄은","과연","그때였다","다음 화","운명","고백","사랑"],"forbidPassageCopy":true}'::jsonb,
+  'original', 'romance', 'planned',
+  1, 'cf-doorstep-glance'
+where not exists (select 1 from problems p where p.source_key = 'cf-doorstep-glance');
 
 -- lk-board-rank (order_no 4, difficulty 1)
 insert into problems
@@ -1335,6 +1383,18 @@ select
   'original', 'fantasy', 'planned',
   1, 'cc-relic-box'
 where not exists (select 1 from problems p where p.source_key = 'cc-relic-box');
+
+-- cf-gym-glow (order_no 5, difficulty 1)
+insert into problems
+  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
+   source_tag, genre_tag, tone_tag, difficulty, source_key)
+select
+  (select id from stages where skill_key = 'cliffhanger'),
+  'continue', 'auto', '아래 장면의 마지막 줄을 ''기대감''으로 끊으시오. 시우는 등급이 오르지 않는 헌터다. 원문 뒤에 한두 문장을 이어, 앞으로 시우가 달라질 것 같은 조짐 하나가 보이는 것으로 끝내시오. 무엇인지 다 말하지 말고 조짐만 보이시오.',
+  '훈련장에 혼자 남은 시우는 마지막 세트를 마쳤다. 손바닥이 갈라져 피가 배어 있었다. 오늘도 등급은 그대로였다.', null, '{"maxChars":80,"minVerbs":1,"forbidLabel":"서술자가 미리 말해 주거나 억지로 끊는 표현","forbidWords":["훗날","될 줄","과연","그때였다","다음 화","운명"],"forbidDisplay":["훗날","될 줄은","과연","그때였다","다음 화","운명"],"forbidPassageCopy":true}'::jsonb,
+  'original', 'fantasy', 'planned',
+  1, 'cf-gym-glow'
+where not exists (select 1 from problems p where p.source_key = 'cf-gym-glow');
 
 -- lk-tower-shelf (order_no 5, difficulty 1)
 insert into problems
@@ -2472,6 +2532,20 @@ from problems p
 where p.source_key = 'cc-report-credit'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- cf-return-crisis ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '휴대폰이 울렸다. 협회 긴급 경보였다. 시내 한복판에 등급조차 매겨지지 않은 게이트가 새로 열리고 있었다.'
+from problems p
+where p.source_key = 'cf-return-crisis'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- cf-return-crisis ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '차가 급정거했다. 앞 유리 너머, 도로 한복판에 아까 던전에서 죽인 것과 같은 그림자가 서 있었다.'
+from problems p
+where p.source_key = 'cf-return-crisis'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- fh-villainess-mirror ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '거울 속 얼굴이 카리엘이었다. 원작에서 삼 년 뒤 처형당하는 공작가의 악녀, 그 몸에 어젯밤 눈을 뜬 것이 지금의 카리엘이었다. 삼 년이면 충분하지. 카리엘은 하녀가 내민 붉은 드레스를 물리고 흰 드레스를 달라고 했다. 오늘 왕실 연회에서 악녀의 대본 첫 줄부터 찢을 참이었다.'
@@ -2850,6 +2924,20 @@ from problems p
 where p.source_key = 'cc-street-night'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- cf-return-newcomer ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '차가 신호에 멈췄다. 조수석 문이 열리고 누군가 탔다. 반년 전 던전에서 죽었다던 전 팀장이었다.'
+from problems p
+where p.source_key = 'cf-return-newcomer'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- cf-return-newcomer ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '협회 앞에 내리자 정장 차림의 남자가 기다리고 있었다. "강도윤 씨, 오늘 던전에서 뭘 주웠는지 말해 주셔야겠습니다."'
+from problems p
+where p.source_key = 'cf-return-newcomer'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- fh-release-ball ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '서준혁은 사인을 하고 사무실을 나왔다. 주차장 대신 훈련장으로 내려가니 올해 온 신인 왼손 투수가 혼자 공을 던지고 있었다. "그립 그렇게 잡으면 팔꿈치 나가." 준혁은 신인의 손을 펴 제 체인지업 그립을 쥐여 주고 한참을 같이 던졌다. 훈련장을 나오며 그는 독립리그 사무국 번호를 눌렀다.'
@@ -3030,6 +3118,20 @@ insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 2, '', '조평은 제 잔에는 가장 싼 술을 시켰다. 그러면서 신참들 상에는 고기 한 접시를 말없이 올려 보냈다. 그 값을 셈하려는 조평의 손을 유겸이 웃으며 눌렀다. 오늘은 갚는 날이라고, 여기부터는 제 몫이라고 했다.'
 from problems p
 where p.source_key = 'cc-first-pay'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- cf-return-reversal ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '도윤은 팀원들이 잠든 것을 확인하고, 협회 보고서 참여자 명단에서 제 이름을 지웠다.'
+from problems p
+where p.source_key = 'cf-return-reversal'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- cf-return-reversal ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '도윤은 주머니에서 던전 핵을 꺼냈다. 협회에 반납해야 할 그것을, 그는 창밖으로 던졌다.'
+from problems p
+where p.source_key = 'cf-return-reversal'
 on conflict (problem_id, ord, blank_key) do nothing;
 
 -- lk-guard-dawn ord 1 
@@ -3270,6 +3372,20 @@ from problems p
 where p.source_key = 'cc-raid-reward'
 on conflict (problem_id, ord, blank_key) do nothing;
 
+-- cf-doorstep-glance ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '지호는 차에 타지 않았다. 삼 층 창에 불이 켜질 때까지 그 자리에 서 있다가, 불이 켜지자 그제야 걸음을 돌렸다.'
+from problems p
+where p.source_key = 'cf-doorstep-glance'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- cf-doorstep-glance ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '계단을 오르던 예린이 멈춰 돌아봤다. 지호는 아직 그 자리에 있었다. 둘 다 아무 말도 하지 않았다.'
+from problems p
+where p.source_key = 'cf-doorstep-glance'
+on conflict (problem_id, ord, blank_key) do nothing;
+
 -- lk-board-rank ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 1, '', '한시우는 협회 게시판의 승급 명단을 끝까지 읽었다. 동기의 이름에서 손가락이 한 번 멈췄다.'
@@ -3506,6 +3622,20 @@ insert into reference_answers (problem_id, ord, blank_key, content)
 select p.id, 2, '', '리안은 상자를 여는 데 한참이 걸렸다. 셀라는 그사이 목록 양피지에 품목을 두 줄 적었다.'
 from problems p
 where p.source_key = 'cc-relic-box'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- cf-gym-glow ord 1 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 1, '', '갈라진 손바닥 위로 처음 보는 푸른 빛이 실처럼 흘렀다. 시우는 손을 쥐었다 폈다. 빛은 사라지지 않았다.'
+from problems p
+where p.source_key = 'cf-gym-glow'
+on conflict (problem_id, ord, blank_key) do nothing;
+
+-- cf-gym-glow ord 2 
+insert into reference_answers (problem_id, ord, blank_key, content)
+select p.id, 2, '', '휴대폰 측정 앱이 떨렸다. 반년째 멈춰 있던 마력 수치의 마지막 자리가, 하나 올라가 있었다.'
+from problems p
+where p.source_key = 'cf-gym-glow'
 on conflict (problem_id, ord, blank_key) do nothing;
 
 -- lk-tower-shelf ord 1 

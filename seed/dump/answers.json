@@ -1377,6 +1377,66 @@
       "ord": 2,
       "blank_key": "",
       "content": "백리진은 들어가지 않았다. 하단 검은 상대가 들어와 주기를 기다리는 검이다. 서른 해 전엔 그걸 몰라 허벅지를 내줬었다. 그는 반 걸음 물러서며 검끝으로 땅을 툭 쳐 모래를 튀겼다. 정후의 눈이 그 모래를 따라간 순간, 백리진의 검이 정후의 검을 위에서 눌렀다. 정후가 검을 빼려 했지만 늦었다."
+    },
+    {
+      "source_key": "cf-return-crisis",
+      "ord": 1,
+      "blank_key": "",
+      "content": "휴대폰이 울렸다. 협회 긴급 경보였다. 시내 한복판에 등급조차 매겨지지 않은 게이트가 새로 열리고 있었다."
+    },
+    {
+      "source_key": "cf-return-crisis",
+      "ord": 2,
+      "blank_key": "",
+      "content": "차가 급정거했다. 앞 유리 너머, 도로 한복판에 아까 던전에서 죽인 것과 같은 그림자가 서 있었다."
+    },
+    {
+      "source_key": "cf-return-newcomer",
+      "ord": 1,
+      "blank_key": "",
+      "content": "차가 신호에 멈췄다. 조수석 문이 열리고 누군가 탔다. 반년 전 던전에서 죽었다던 전 팀장이었다."
+    },
+    {
+      "source_key": "cf-return-newcomer",
+      "ord": 2,
+      "blank_key": "",
+      "content": "협회 앞에 내리자 정장 차림의 남자가 기다리고 있었다. \"강도윤 씨, 오늘 던전에서 뭘 주웠는지 말해 주셔야겠습니다.\""
+    },
+    {
+      "source_key": "cf-return-reversal",
+      "ord": 1,
+      "blank_key": "",
+      "content": "도윤은 팀원들이 잠든 것을 확인하고, 협회 보고서 참여자 명단에서 제 이름을 지웠다."
+    },
+    {
+      "source_key": "cf-return-reversal",
+      "ord": 2,
+      "blank_key": "",
+      "content": "도윤은 주머니에서 던전 핵을 꺼냈다. 협회에 반납해야 할 그것을, 그는 창밖으로 던졌다."
+    },
+    {
+      "source_key": "cf-doorstep-glance",
+      "ord": 1,
+      "blank_key": "",
+      "content": "지호는 차에 타지 않았다. 삼 층 창에 불이 켜질 때까지 그 자리에 서 있다가, 불이 켜지자 그제야 걸음을 돌렸다."
+    },
+    {
+      "source_key": "cf-doorstep-glance",
+      "ord": 2,
+      "blank_key": "",
+      "content": "계단을 오르던 예린이 멈춰 돌아봤다. 지호는 아직 그 자리에 있었다. 둘 다 아무 말도 하지 않았다."
+    },
+    {
+      "source_key": "cf-gym-glow",
+      "ord": 1,
+      "blank_key": "",
+      "content": "갈라진 손바닥 위로 처음 보는 푸른 빛이 실처럼 흘렀다. 시우는 손을 쥐었다 폈다. 빛은 사라지지 않았다."
+    },
+    {
+      "source_key": "cf-gym-glow",
+      "ord": 2,
+      "blank_key": "",
+      "content": "휴대폰 측정 앱이 떨렸다. 반년째 멈춰 있던 마력 수치의 마지막 자리가, 하나 올라가 있었다."
     }
   ]
 }
