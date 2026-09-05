@@ -2,7 +2,8 @@
   "meta": {
     "set": "B",
     "note": "bt- 모범(good, 세션 40·41)의 근거 문장 하나만 '틈이 났다'류 위치 제공으로 바꾼 통제 짝. good_answer 는 reference_answers ord1(가)과 같다 — 세션 41, 박 님 확정. no_beat_answer(세션 41 후속 2)는 bt- 문항 원문(passage) 그대로 — 상황 설명만 있고 아무도 수를 두지 않은 글이라 결정타 자체가 없다.",
-    "expected": { "good_answer": "buildup", "nak_answer": "none", "no_beat_answer": "no_beat" }
+    "expected": { "good_answer": "buildup", "nak_answer": "none", "no_beat_answer": "no_beat" },
+    "standoff_pending": "경계 건(세션 42) — 대치형 정당 답안(결정타 없이 끝나되 빌드업은 있음). 항목별 gold.standoff_answer 자리는 마련해 뒀다(scripts/support-golden.ts 가 있는 것만 싣는다) — 문안은 박 님 확정 후 채운다. 판정선(no_beat 로 볼지 별도 취급할지)도 미정 — 그래서 하네스 집계에서 good/nak/no_beat 와 따로 센다."
   },
   "items": [
     {

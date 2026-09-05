@@ -74,11 +74,15 @@ interface RefRow {
 interface Case {
   set: 'A' | 'B'
   itemId: string // ch10 item id 또는 bt- source_key(:ord)
-  kind: 'good' | 'nak' | 'no_beat'
+  // standoff(세션 42) — 대치형 정당 답안(결정타 없이 끝나되 빌드업은 있음).
+  // good/nak/no_beat 와 **따로 센다**(summarize) — 이 갈래는 no_beat 이
+  // 맞는지 아닌지가 아직 판정선 미정이라, 다른 셋의 집계에 섞으면 오탐·
+  // 미검출 수가 흐려진다.
+  kind: 'good' | 'nak' | 'no_beat' | 'standoff'
   text: string
-  // set B nak/no_beat 전용. bt-orc-axe·bt-low-guard 가 통제 짝으로 불완전하다는
-  // 표시(data/probe/set_b_nak.json 의 gold.note). 결과 출력에 함께 낸다 —
-  // 없으면 해석이 미검출·뒤집힘을 프롬프트 결함으로 잘못 읽는다.
+  // set B nak/no_beat/standoff 전용. bt-orc-axe·bt-low-guard 가 통제 짝으로
+  // 불완전하다는 표시(data/probe/set_b_nak.json 의 gold.note). 결과 출력에
+  // 함께 낸다 — 없으면 해석이 미검출·뒤집힘을 프롬프트 결함으로 잘못 읽는다.
   note?: string
 }
 
@@ -89,6 +93,9 @@ interface SetBNakItem {
     nak_answer: string
     // 세션 41 후속 2. bt- 문항 원문(passage) 그대로 — 결정타 자체가 없는 글.
     no_beat_answer: string
+    // 세션 42 — 자리만. 대치형 정당 답안(결정타 없이 끝나되 빌드업은 있음).
+    // 문안은 박 님 확정 후 채운다 — 있는 항목만 loadCases() 가 케이스로 싣는다.
+    standoff_answer?: string
     payoff_line: string
     beat_line: string
     note?: string
@@ -156,6 +163,16 @@ function loadCases(): Case[] {
     })
   }
 
+  // set B standoff(세션 42) — 자리만. 문안이 아직 없다(박 님 확정 후) — 있는
+  // 항목만 싣는다. 지금은 전부 없어 이 루프가 아무것도 안 싣는다.
+  for (const item of nakData.items) {
+    if (!item.gold.standoff_answer) continue
+    out.push({
+      set: 'B', itemId: item.id, kind: 'standoff', text: item.gold.standoff_answer,
+      note: item.gold.note?.trim() || undefined,
+    })
+  }
+
   return out
 }
 
@@ -197,7 +214,7 @@ async function preflightWrite(): Promise<boolean> {
 interface RunResult {
   set: 'A' | 'B'
   itemId: string
-  kind: 'good' | 'nak' | 'no_beat'
+  kind: 'good' | 'nak' | 'no_beat' | 'standoff'
   rep: number
   verdict: SupportVerdict | 'call_failed' | 'not_json' | 'bad_shape'
   fromCache: boolean
@@ -359,7 +376,10 @@ async function main() {
     const good = rows.filter((r) => r.kind === 'good')
     const nak = rows.filter((r) => r.kind === 'nak')
     const noBeat = rows.filter((r) => r.kind === 'no_beat')
-    const falsePos = good.filter((r) => r.verdict !== 'buildup').length // 오탐: good인데 buildup 아님
+    // standoff(세션 42) — good/nak/no_beat 와 따로 센다. 판정선이 아직 없어
+    // (박 님 확정 전) "미검출" 수는 안 낸다 — 건수만 보여서 사람이 직접 읽는다.
+    const standoff = rows.filter((r) => r.kind === 'standoff')
+    const falsePos = good.filter((r) => r.verdict !== 'buildup').length // 오탐: good인데 buildup 아님(no_beat 로 잘못 빠지는 것도 포함)
     const missed = nak.filter((r) => r.verdict === 'buildup').length // 미검출: nak인데 buildup
     // no_beat 미검출: 결정타가 없는 글인데 'no_beat' 가 아닌 다른 판정이 나온 것(세션 41 후속 2).
     const noBeatMissed = noBeat.filter((r) => r.verdict !== 'no_beat').length
@@ -382,6 +402,7 @@ async function main() {
 
     console.log(`\n[set ${set}] good ${good.length}건 오탐 ${falsePos} · nak ${nak.length}건 미검출 ${missed}` +
       (noBeat.length > 0 ? ` · no_beat ${noBeat.length}건 미검출 ${noBeatMissed}` : '') +
+      (standoff.length > 0 ? ` · standoff ${standoff.length}건(판정선 미정 — 건수만)` : '') +
       ` · beat/quote 불일치 ${mismatch} · 뒤집힘(항목) ${flips}/${byItem.size} · 비용 $${cost.toFixed(6)}`)
     // set B nak/no_beat 은 항목별 미검출·note 를 결과 옆에 낸다 — 비통제
     // 표시(B-03·B-05)가 없으면 미검출·뒤집힘을 프롬프트 결함으로 잘못 읽는다.
@@ -401,7 +422,7 @@ async function main() {
         console.log(`    no_beat '${itemId}': ${itemMissed}/${list.length}회 no_beat 아님(미검출)`)
       }
     }
-    return { set, good: good.length, falsePos, nak: nak.length, missed, noBeat: noBeat.length, noBeatMissed, mismatch, flips, itemCount: byItem.size, cost }
+    return { set, good: good.length, falsePos, nak: nak.length, missed, noBeat: noBeat.length, noBeatMissed, standoff: standoff.length, mismatch, flips, itemCount: byItem.size, cost }
   }
   const summaryA = summarize('A')
   const summaryB = summarize('B')

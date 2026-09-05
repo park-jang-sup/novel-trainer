@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 41 후속 2 · 커밋 `ef11995` 위
+마지막 갱신: 세션 42 · 커밋 `f8735f7` 위
 
 ★ 활성 144 (전체 157 − 비활성 13). 언어 관문 전수 불변식(verify.ts)이 이 수를
   출력·단언한다 — 문항 증감 때마다 이 줄과 불변식을 같이 갱신한다.
@@ -45,7 +45,9 @@
   '결정타 없음' 출구 추가) — 규칙 통과 뒤 "먹물이의 참고 의견" 카드로 뜨지만
   통과·진도엔 안 쓴다(섀도 모드). 언어 관문(language_gate)은 자유서술형
   (remove·convert·continue) 전체 활성 문항에 켜졌다. forbidPassageCopy 는
-  통째 복사 + 근사 복사(원문 문장 60% 이상 그대로) 둘 다 막는다(세션 41 후속 2).
+  세 갈래 OR 다 — 통째 복사 · 근사 복사(원문 문장 60% 이상 그대로, 세션 41
+  후속 2) · 글자 3-gram 겹침(임계 0.52, MAX_ECHO 절차로 실측, 세션 42) —
+  순서를 섞거나 문장 사이를 뭉개도 셋째 갈래가 잡는다.
 ★ 문장 11 `cliffhanger`(절단신공)은 신규 5문항 전부 활성(세션 38) — 화면의 '준비 중'이 풀렸다.
   문장 트랙(1~12) 은 이제 전부 문항이 있다.
 ★ 도입 4 `start_episode`(1화 축약)는 fill 유형 두 번째 신설(첫째는 action_reason)
@@ -167,24 +169,39 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 ## 다음 — 순서대로. 하나가 verify 에서 물리기 전에 다음을 안 한다
 
 ```
-1  박 님 — DB → 눈검사 → 하네스   seed/update-action-turn-v3.sql(모범답안 2건) →
+1  박 님 — DB → 눈검사 → 골든셋 실행   seed/update-action-turn-v3.sql(모범답안 2건) →
                         seed/update-first-hook-v3.sql(fh-burnt-manor passageCopyKeep) →
                         seed/update-action-turn-v4.sql(bt-fireball-shield passageCopyKeep) →
-                        seed_data.sql(멱등) → seed_check.sql. bt-orc-axe·bt-low-guard
-                        모범답안(가)이 새 문안인지 브라우저에서 눈검사(세션 41 수정분).
-                        이어서 bt- 5문항 중 하나를 통과시켜 "먹물이의 참고 의견" 카드가
-                        뜨는지·문구가 네 갈래(빌드업 있음·없음·순서 어긋남·결정타 없음,
-                        세션 41 후속 2 가 넷째를 더했다)로 맞는지·pending 이면 카드가
-                        안 뜨는지 눈검사. 원문 근사 복사(60%)는 "앞 N 줄만 정확히 남기고
-                        나머지를 그대로 낸" 답안으로 직접 시험해야 확인된다(화면엔 config
-                        값이 안 보인다).
+                        seed_data.sql(멱등) → seed_check.sql — 세션 42 는 config 를 안
+                        건드려 새로 돌릴 SQL이 없다(검사 로직만 바뀌었다). bt-orc-axe·
+                        bt-low-guard 모범답안(가)이 새 문안인지 브라우저에서 눈검사
+                        (세션 41 수정분). 이어서 bt- 5문항 중 하나를 통과시켜 "먹물이의
+                        참고 의견" 카드가 뜨는지·문구가 네 갈래(빌드업 있음·없음·순서
+                        어긋남·결정타 없음)로 맞는지·pending 이면 카드가 안 뜨는지 눈검사.
+                        원문 겹침(통째·문장 60%·3-gram 세 갈래 다)은 화면엔 config 값이
+                        안 보인다 — "앞 N 줄만 정확히 남기고 나머지를 그대로 낸" 답안이나
+                        "문장 순서를 섞은" 답안으로 직접 시험해야 확인된다.
                         그다음 npm run ai:support-golden 실행(set A 9쌍 + set B good 10 ·
-                        nak 5 · no_beat 5 — 세션 41 후속·후속 2 로 전부 하네스에 물렸다).
-                        결과(오탐·미검출·뒤집힘·비용, no_beat 미검출 포함)를 채팅에.
+                        nak 5 · no_beat 5 — 세션 41 후속·후속 2 로 전부 하네스에 물렸다.
+                        standoff 는 아직 자리만 있고 데이터가 없어 안 돈다). 결과(오탐·
+                        미검출·뒤집힘·비용, no_beat 미검출 포함)를 채팅에 — 그 결과가
+                        아래 3번(no_beat 부분 gating) 결정의 재료다.
 2  구성 16(ca-) 확장    set A·B 오탐 0 이고 set A 미검출이 낮으면(판정선, 세션 40 정정 3-4)
                         cliffhanger_adv 5문항(ca-)에도 ai_shadow: 'support' 를 켠다. 갈리면
                         프롬프트 재검토 — 새 문항을 늘리지 않는다.
-3  보스 문항(가칭)      ★ 로드맵 정정(박 님 결정 (a), 세션 39) — 도입 4 는 보스가 흡수하지
+3  no_beat 부분 gating 결정   세션 41 후속 2 실사용에서 "규칙은 형식을 놓치고 AI 는
+                        내용을 맞혔다"(no_beat) — 지금은 섀도 모드라 이 판정이 통과를
+                        안 막는다. 골든셋(위 1번) 결과로 no_beat 판정의 신뢰도가 충분히
+                        보이면, no_beat 만 부분적으로 gating 을 켤지 박 님이 결정한다.
+                        ★ 준비만 해 뒀다 — verifySupportJudgment 는 이미 beat_line===null
+                        일 때만 'no_beat' 를 내고 pending·beat_mismatch·quote_mismatch 와
+                        안 겹친다(세션 42 가드, verify.ts 로 문다). 실제 gating 코드는
+                        아직 없다 — 이 결정이 나야 route.ts 를 고친다.
+4  골든셋 set B standoff 문안   대치형 정당 답안(결정타 없이 끝나되 빌드업은 있음) 5건.
+                        data/probe/set_b_nak.json 에 자리(gold.standoff_answer)는 있다 —
+                        박 님이 문안을 확정하면 scripts/support-golden.ts 의 loadCases()
+                        가 자동으로 싣는다(코드 추가 작업 없음).
+5  보스 문항(가칭)      ★ 로드맵 정정(박 님 결정 (a), 세션 39) — 도입 4 는 보스가 흡수하지
    (별도 슬롯)          않는다. 도입 4 start_episode 가 세션 39 로 자립 완주했다(fill 4칸,
                         AI 없이 규칙만으로 통과). 보스는 별도의 새 stages 행 — 긴 글 +
                         AI 섀도가 필요한 자리는 여기 하나로 모인다.
@@ -202,6 +219,80 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
                         설정 카드형 '다섯 줄 쓰기'(18 설계안 5번, write 유형 없어 보류됐던 것)는
                         이 보스 문항에서 다룬다 — 이때 쓸 설정 카드 형식은 도입 4 의 네 칸
                         (①재미 ②인물 ③장면 ④첫마디)을 그대로 재사용한다(세션 39 결정).
+```
+
+### 끝난 것 — 세션 42 (원문 3-gram 겹침 검사 · 임계 실측 · 골든셋 경계 건 자리)
+
+```
+경위  실사용 1건이 손으로 쓴 뚫기 표본 12건(기존 verify.ts 픽스처들)이 못 찾은
+  구멍을 찾았다 — "학습자 한 건이 상상한 실패 열두 건보다 많이 말해 준다."
+  세션 41 후속 2 의 뚫기(문장 경계를 흐트러뜨린 "뭉개기")는 문장 60% 검사를
+  피해 간다는 게 이번에 실측으로 재확인됐다(문장 4개 중 1개만 남아도 25% —
+  60% 미달). 같은 실사용에서 규칙과 AI 의 분업이 처음으로 또렷하게 갈린
+  사례도 나왔다: 규칙은 형식(문장이 그대로 남았는가)을 놓쳤는데 AI 섀도는
+  내용(결정타가 없다)을 맞혔다(no_beat, 세션 41 후속 2). 규칙이 못 잡는
+  자리를 AI 가 메운다는 원래 설계(세션 6 §12 "AI 는 마지막 관문이다")가
+  처음으로 실측으로 보인 순간이다.
+
+1. 글자 3-gram 겹침 — lib/scoring/local.ts. passageCopy 의 셋째 갈래(OR).
+  charGrams(text): 공백·구두점을 지우고 겹치는 3글자 창을 집합으로 모은다.
+  passageOverlap(answer, passage, keep): |답안 3-gram ∩ 원문 3-gram| /
+  |답안 3-gram| — 분모가 답안이다(훔친 쪽 기준). passageCopyKeep 이 있으면
+  그 문장을 원문 쪽 3-gram 계산에서 뺀다. 대상은 forbidPassageCopy 켜진
+  문항만(새 config 플래그 없음 — 기존 opt-in 을 그대로 씀. remove·count 는
+  원래 forbidPassageCopy 가 안 켜져 있어 이 검사도 안 돈다). detail 에 실제
+  값을 낸다: "원문과 겹침 0.83 (기준 0.52)".
+
+  ★ 임계는 코드보다 먼저 분포를 쟀다(MAX_ECHO 절차, 박 님 조건) —
+    scripts/passage-overlap.ts 신설. 실행 결과(DB 없이 덤프만 읽음):
+
+    (a) 활성 forbidPassageCopy 36문항 · 모범답안 72행 — 최댓값(G) 0.2133
+        (ca-crystal-exam 가) · 중앙값 0.0380. 이름(requireAll/Any) 몫이 높은
+        행(예: bt-fireball-shield 1.0000)도 절댓값은 낮다 — 이름 글자가
+        원문과 우연히 겹쳐도 전체 비율을 못 끌어올린다.
+    (b) 박 님 뚫기 2건(bt-spear-range 원문 기준) — 왼팔 삭제 0.9683 ·
+        뭉개기(문장 경계 파괴, 실사용) 0.8966.
+    (c) 합성 공격 4종(이 세션에서 구성) — 중간 삭제 0.9636 · 문장 순서 바꿈
+        0.9385 · 어미 바꾸기 0.8261(최솟값) · 이름 덧붙이기 0.8784.
+
+    G=0.2133 · A(공격 최솟값)=0.8261 · 폭(A−G)=0.6128 · 임계 = 중점 0.52.
+    OVERLAP_THRESHOLD = 0.52(local.ts). 폭이 아주 넉넉하다 — pov-lock.ts
+    MAX_ECHO(폭 2)와 달리 좋은 답안이 임계에 닿을 걱정이 당장은 없다.
+
+  verify.ts [forbidPassageCopy 원문 겹침(3-gram)] 신설 블록: 뚫기 2건 fail ·
+  뭉개기가 문장 60% 검사만으로는 안 걸림을 직접 재확인(1/4=25%<60%) · "원문
+  1문장 인용 + 새 3문장" pass · 활성 forbidPassageCopy 모범답안 72행 전수
+  pass(3-gram 포함) · G 실측값이 스크립트 결과와 같음을 재확인 · 감도 픽스처
+  ±5%p(임계−0.05=0.47 에서 모범 새로 걸리는 것 0건 · 임계+0.05=0.57 에서
+  공격 6건 중 새는 것 0건 — 둘 다 0, 폭 충분) · summarizeConfig 는 그대로
+  "원문 그대로 내지 않기"(3-gram 임계는 화면에 안 나옴).
+
+2. 골든셋 set B — 경계 건(standoff) 자리  data/probe/set_b_nak.json 의 5개
+  항목에 gold.standoff_answer(선택 필드) 자리를 마련했다 — 문안은 박 님
+  확정 후. scripts/support-golden.ts 의 loadCases() 는 있는 항목만 싣는다
+  (지금은 전부 없어 아무것도 안 실린다 — --dry 실행 상한 190회 그대로,
+  변화 없음). summarize() 가 standoff 를 good/nak/no_beat 와 **따로** 센다 —
+  판정선(no_beat 로 볼지 별도로 볼지)이 아직 없어 "미검출" 수는 안 내고
+  건수만 보인다.
+
+  verify 가드(한 줄, 세션 42): 'no_beat' 는 beat_line===null 일 때만 나오고
+  beat_mismatch·quote_mismatch 와 안 겹친다 — 미래에 no_beat 부분 gating을
+  켤 때 verdict==='no_beat' 인 것에만 걸어야지 pending·mismatch 까지 막으면
+  안 된다는 표시다. 실제 gating 코드는 아직 없다(STATUS "다음" 3번 참고).
+
+검증  tsc 0 · test:scoring **8001 포트**에 형태소 서버 따로 띄워서 5850/0
+  (8000 은 박 님이 띄운 서버라 손 안 댐 · 이 세션이 끝나며 8001 만 내림,
+  8000 은 그대로 살아 있다) · check:numbers 0 · gen:seed 무변화(config 안
+  건드림 — 이 세션은 검사 로직만 바뀌었다) · next build 통과. 물기: local.ts
+  OVERLAP_THRESHOLD 를 0.99 로 올려 뚫기 2건이 pass 로 새는 것 확인 후 복원 ·
+  0.1 로 내려 실제 모범답안 다수(구성 13·15·16 등 기존 블록까지)가 새로
+  fail 하는 것 확인 후 복원(이 전수 불변식이 파일 전체를 지킨다는 실증) ·
+  prompt.ts 의 beat_mismatch 분기를 no_beat 로 잘못 합쳐 가드 fail 재현 후
+  복원 · support-golden.ts 의 standoff continue 조건을 무력화해 검사가 실제
+  실행을 확인한다는 것을 재현 후 복원 — 전부 통과.
+★ DB 절차(박 님)  이 세션은 config 를 안 건드렸다 — 돌릴 SQL 이 없다. 아직
+  안 돌린 것이 있다면 세션 41 후속 2 의 update-first-hook-v3.sql ·
+  update-action-turn-v4.sql 이다(STATUS "다음" 1번 참고).
 ```
 
 ### 끝난 것 — 세션 41 후속 2 (원문 근사 복사 차단(60%) + 섀도 v3 '결정타 없음' 출구)

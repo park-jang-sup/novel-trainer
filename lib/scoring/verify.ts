@@ -9,7 +9,7 @@
 
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import path from 'node:path'
-import { combine, countChars, countLetters, countOccurrences, countSentences, splitSentences, deriveFillParts, fillMarkerMismatch, findForbidden, mergeForbidChecks, mergeRepeatChecks, gradeLocal, pendingMorphChecks, summarizeConfig, gibberishScore, GIB_MAX } from './index'
+import { combine, countChars, countLetters, countOccurrences, countSentences, splitSentences, deriveFillParts, fillMarkerMismatch, findForbidden, mergeForbidChecks, mergeRepeatChecks, gradeLocal, pendingMorphChecks, summarizeConfig, gibberishScore, GIB_MAX, passageOverlap, OVERLAP_THRESHOLD } from './index'
 import { sqlStr, countRawNewlinesInStrings } from '../seed-sql'
 import { cycleNextProblemKey, nextProblemKey, nextStageId, stageProgress } from '../train-nav'
 import type { Answer, Check, CheckStatus, MorphResult, Problem, ProblemType, ScoringConfig, ScoringMode } from './types'
@@ -6550,6 +6550,124 @@ console.log('\n[forbidPassageCopy 근사 복사(60%): 전수 불변식 · 픽스
       atV4Src.includes("'bt-fireball-shield'"))
 }
 
+// ── forbidPassageCopy 원문 겹침(3-gram) — 세션 42 ─────────────────────────
+//
+// 문장 60% 검사는 **문장 경계가 살아 있을 때만** 잰다 — 순서를 섞거나 문장
+// 사이 마침표를 지워 뭉개면(박 님 실사용 뚫기) 완전히 같은 문장이 남는 비율이
+// 60% 밑으로 떨어져 안 걸린다(4문장 중 1개만 남아도 25%). 셋째 갈래는 문장
+// 경계와 무관하게 글자 3-gram 겹침을 본다 — 순서를 섞어도 3글자 조각은
+// 그대로 남는다.
+//
+// 임계는 **MAX_ECHO 절차로 실측했다**(코드보다 분포가 먼저, scripts/
+// passage-overlap.ts 실행 결과 — STATUS 세션 42 참고): 좋은 답안 72건
+// 최댓값(G) 0.2133 · 공격 6건(뚫기 2 + 합성 4) 최솟값(A) 0.8261 · 폭 0.6128.
+// 중점 0.52 를 OVERLAP_THRESHOLD 로 박았다(local.ts).
+console.log('\n[forbidPassageCopy 원문 겹침(3-gram): 임계 감도 · 픽스처]')
+{
+  const spearPassage = '곽무영의 창은 세 걸음 거리를 지켰다. 백서린이 들어가면 창끝이 찌르고, 물러서면 창대가 따라와 후렸다. 세 합 만에 서린의 왼팔 소매가 갈라졌다. 창은 거리 싸움이었다.'
+  const spearProblem: Problem = { id: 'x', type: 'continue', scoring_mode: 'auto', scoring_config: { forbidPassageCopy: true } }
+  const overlapOf = (text: string) => passageOverlap(text, spearPassage, 0)
+
+  // ── 박 님 뚫기 2건(실사용) — 문장 60% 검사를 피해 가지만 3-gram 은 못 피한다 ──
+  const breachLeftArm = spearPassage.replace('왼팔', '') // 왼팔 삭제
+  const breachMashed =
+    '곽무영의 창은음 거리를 지켰다이 들어가면 창끝이 찌르고, 물러서면 창대가 따라와 후렸다. 세 합 만에 서린의 소매가 갈라졌다. 창은 거리 싸움이었다.' // 뭉개기(박 님 제공, 문장 경계 파괴)
+
+  const breachLeftArmChecks = gradeLocal(spearProblem, { text: breachLeftArm }, undefined, spearPassage)
+  t('뚫기 1(왼팔 삭제): passageCopy fail — 이미 문장 60% 검사가 잡는다(3/4)',
+    breachLeftArmChecks.find((c) => c.key === 'passageCopy')?.status === 'fail',
+    JSON.stringify(breachLeftArmChecks.find((c) => c.key === 'passageCopy')))
+
+  const breachMashedChecks = gradeLocal(spearProblem, { text: breachMashed }, undefined, spearPassage)
+  const breachMashedPassageCopy = breachMashedChecks.find((c) => c.key === 'passageCopy')
+  // ★ 이 뚫기가 위험한 이유: 문장 60% 검사만으로는 못 잡는다 — 문장 경계가
+  //   파괴돼 완전히 같은 문장이 4개 중 1개(마지막 줄만 안 건드림)뿐이다.
+  //   1/4=25% < 60% 라 nearCopied 가 안 선다(splitSentences 로 직접 재확인).
+  const spearCheckable = splitSentences(spearPassage)
+  const matchesInMashed = spearCheckable.filter((s) => breachMashed.replace(/\s/g, '').includes(s.replace(/\s/g, ''))).length
+  t('★ 뚫기 2(뭉개기): 완전히 같은 문장 1/4(25%) — 60% 미달이라 문장 검사가 못 잡는다',
+    matchesInMashed === 1 && matchesInMashed / spearCheckable.length < 0.6, `matches=${matchesInMashed}`)
+  t('뚫기 2(뭉개기): passageCopy fail — 3-gram 겹침이 잡는다',
+    breachMashedPassageCopy?.status === 'fail' &&
+      breachMashedPassageCopy.detail.startsWith('원문과 겹침'),
+    JSON.stringify(breachMashedPassageCopy))
+  t(`뚫기 2(뭉개기): 겹침 실측 ${overlapOf(breachMashed).toFixed(4)} ≥ 기준 ${OVERLAP_THRESHOLD}`,
+    overlapOf(breachMashed) >= OVERLAP_THRESHOLD)
+
+  // ── "원문 1문장 인용 + 새 3문장" → pass(지시서 그대로) ──
+  const oneQuotePlusThree = '곽무영의 창은 세 걸음 거리를 지켰다. 그것을 알아챈 서린이 몸을 낮췄다. 검을 고쳐 쥐고 반걸음 물러섰다. 두 사람은 잠시 서로를 노려보았다.'
+  const oneQuotePlusThreeChecks = gradeLocal(spearProblem, { text: oneQuotePlusThree }, undefined, spearPassage)
+  t('픽스처: 원문 1문장 인용 + 새 3문장 → pass',
+    oneQuotePlusThreeChecks.find((c) => c.key === 'passageCopy')?.status === 'pass',
+    JSON.stringify(oneQuotePlusThreeChecks.find((c) => c.key === 'passageCopy')))
+
+  // ── 전수 불변식: 활성 forbidPassageCopy 모범답안 72행 전부 pass(3-gram 포함) ──
+  const seedDir4 = path.join(__dirname, '..', '..', 'seed', 'dump')
+  const readDump4 = <T,>(f: string): T =>
+    JSON.parse(readFileSync(path.join(seedDir4, f), 'utf8').replace(/^﻿/, '')) as T
+  interface OvProblem { source_key: string; type: string; passage: string | null; scoring_config: ScoringConfig }
+  const allProblems4 = readDump4<OvProblem[]>('problems.json')
+  const deactivate4 = readDump4<{ source_keys: string[] }>('deactivate.json')
+  const deadKeys4 = new Set(deactivate4.source_keys)
+  const fpc4 = allProblems4.filter((p) => !deadKeys4.has(p.source_key) && p.scoring_config.forbidPassageCopy)
+  const fpcKeys4 = new Set(fpc4.map((p) => p.source_key))
+  const passageOf4 = new Map(fpc4.map((p) => [p.source_key, p.passage ?? '']))
+  const cfgOf4 = new Map(fpc4.map((p) => [p.source_key, p.scoring_config]))
+  const typeOf4 = new Map(fpc4.map((p) => [p.source_key, p.type]))
+  const answersDump4 = readDump4<{ reference?: RefRow[] }>('answers.json')
+  const fpcRefs4 = (answersDump4.reference ?? []).filter((r) => fpcKeys4.has(r.source_key))
+
+  const overlapValues = fpcRefs4.map((r) => ({
+    key: r.source_key, ord: r.ord,
+    overlap: passageOverlap(r.content, passageOf4.get(r.source_key)!, (cfgOf4.get(r.source_key)!.passageCopyKeep ?? 0)),
+  }))
+  const G = Math.max(...overlapValues.map((r) => r.overlap))
+  t(`★ 좋은 답안 72건 겹침 최댓값(G) = ${G.toFixed(4)} — STATUS 실측(0.2133)과 같다`,
+    Math.abs(G - 0.2133) < 0.0001, `실제=${G}`)
+
+  const offenders3 = fpcRefs4.filter((r) => {
+    const checks = gradeLocal(
+      { id: r.source_key, type: typeOf4.get(r.source_key) as ProblemType, scoring_mode: 'auto', scoring_config: cfgOf4.get(r.source_key)! },
+      { text: r.content }, undefined, passageOf4.get(r.source_key)!
+    )
+    return checks.find((c) => c.key === 'passageCopy')?.status !== 'pass'
+  })
+  t(`활성 forbidPassageCopy 모범답안 ${fpcRefs4.length}건 전수 — 3-gram 겹침 포함 오탐 0`,
+    offenders3.length === 0,
+    JSON.stringify(offenders3.map((r) => `${r.source_key}:${r.ord}`)))
+
+  // ── 감도 픽스처(±5%p) — 임계를 5%p 흔들어도 모범·공격이 안 새는지 ──
+  // 임계 − 5%p: 모범답안 72건 중 몇 행이 새로 걸리는지(0 이어야 한다).
+  const lowerThreshold = OVERLAP_THRESHOLD - 0.05
+  const newlyFailingGood = overlapValues.filter((r) => r.overlap >= lowerThreshold)
+  t(`감도 −5%p(임계 ${lowerThreshold.toFixed(2)}): 모범답안 중 새로 걸리는 행 0건(폭 확인)`,
+    newlyFailingGood.length === 0,
+    JSON.stringify(newlyFailingGood))
+
+  // 임계 + 5%p: 공격 6건(뚫기 2 + 합성 4) 중 몇 건이 새는지(0 이어야 한다).
+  const S1 = '곽무영의 창은 세 걸음 거리를 지켰다.'
+  const S2 = '백서린이 들어가면 창끝이 찌르고, 물러서면 창대가 따라와 후렸다.'
+  const S3 = '세 합 만에 서린의 왼팔 소매가 갈라졌다.'
+  const S4 = '창은 거리 싸움이었다.'
+  const attackTexts = [
+    breachLeftArm,
+    breachMashed,
+    `${S1} 백서린이 들어가면 창끝이 찌르고 후렸다. ${S3} ${S4}`, // 중간 삭제
+    `${S3} ${S1} ${S4} ${S2}`, // 문장 순서 바꿈
+    '곽무영의 창은 세 걸음 거리를 지켰었다. 백서린이 들어가면 창끝이 찌르고, 물러서면 창대가 따라와 후렸었다. 세 합 만에 서린의 왼팔 소매가 갈라졌었다. 창은 거리의 싸움이었다.', // 어미 바꾸기
+    `${S1} ${S2} ${S3} ${S4} 무영과 서린의 대결이었다.`, // 이름 덧붙이기
+  ]
+  const upperThreshold = OVERLAP_THRESHOLD + 0.05
+  const leakingAttacks = attackTexts.filter((text) => overlapOf(text) < upperThreshold)
+  t(`감도 +5%p(임계 ${upperThreshold.toFixed(2)}): 합성 공격 6건 중 새는 것 0건(폭 확인)`,
+    leakingAttacks.length === 0,
+    JSON.stringify(leakingAttacks))
+
+  // ── summarizeConfig 는 그대로("원문 그대로 내지 않기") — 3-gram 임계는 화면에 안 나온다 ──
+  t('요약: forbidPassageCopy → "원문 그대로 내지 않기" (3-gram 임계는 안 드러남)',
+    summarizeConfig({ maxChars: 100, forbidPassageCopy: true }).includes('원문 그대로 내지 않기'))
+}
+
 // ── '쓰지 않을 말' 표시: forbidLabel/forbidDisplay ↔ 채점 (세션 22) ──────
 //
 // scoring_config 에 표시 전용 필드 둘을 더했다. 채점(forbidWords·forbidLemmas)은
@@ -7924,6 +8042,15 @@ console.log('\n[결정타 빌드업 섀도 support-v3]')
     verifySupportJudgment(answer3, { beat_line: null, support_line: null, quote: '' }).verdict === 'no_beat')
   t("병: beat_line null 이면 support_line·quote 가 뭐든 'no_beat' 다(안 본다)",
     verifySupportJudgment(answer3, { beat_line: null, support_line: 1, quote: '아무 값' }).verdict === 'no_beat')
+  // ★ 가드(세션 42) — no_beat 부분 gating(미래) 은 verdict 가 실제 'no_beat'
+  //   일 때만 걸어야 한다. pending(호출 실패·gate 닫힘)·beat_mismatch·
+  //   quote_mismatch 는 다른 판정이지 'no_beat' 가 아니다 — 셋을 뭉치면
+  //   AI 가 정직하게 "결정타 없음"이라 답한 것과, 그냥 응답이 깨진 것을
+  //   구분 못 하게 된다. 지금 코드에서 세 갈래가 실제로 안 겹치는지 문다.
+  t("가드: 'no_beat' 는 beat_line===null 일 때만 나오고 beat_mismatch·quote_mismatch 와 안 겹친다(미래 no_beat 부분 gating은 이 값에만 걸어야 한다는 표시)",
+    verifySupportJudgment(answer3, { beat_line: null, support_line: null, quote: '' }).verdict === 'no_beat' &&
+    verifySupportJudgment(answer3, { beat_line: 99, support_line: null, quote: '' }).verdict === 'beat_mismatch' &&
+    verifySupportJudgment(answer3, { beat_line: 1, support_line: 99, quote: 'x' }).verdict === 'quote_mismatch')
 
   // ── set A(ch10) 골든셋 자기 정합성 — gold.payoff_line/beat_line 로 j<k 를
   //    같은 함수로 검증(good: buildup 기대). AI 호출 없이 픽스처 자체를 문다 —
@@ -7994,7 +8121,7 @@ console.log('\n[결정타 빌드업 섀도 support-v3]')
   const setBNakPath = path.join(__dirname, '..', '..', 'data', 'probe', 'set_b_nak.json')
   t('data/probe/set_b_nak.json 이 존재한다', existsSync(setBNakPath))
   if (existsSync(setBNakPath)) {
-    interface SetBNakItem { id: string; gold: { good_answer: string; nak_answer: string; no_beat_answer: string; payoff_line: string; beat_line: string; note?: string } }
+    interface SetBNakItem { id: string; gold: { good_answer: string; nak_answer: string; no_beat_answer: string; standoff_answer?: string; payoff_line: string; beat_line: string; note?: string } }
     const setBNak = JSON.parse(readFileSync(setBNakPath, 'utf8').replace(/^﻿/, '')) as { items: SetBNakItem[] }
     t('set_b_nak.json: 5건', setBNak.items.length === 5, `실제=${setBNak.items.length}`)
     const nakIds = new Set(setBNak.items.map((i) => i.id))
@@ -8026,6 +8153,12 @@ console.log('\n[결정타 빌드업 섀도 support-v3]')
       t(`set_b_nak.json '${item.id}': no_beat_answer 가 문항 원문(passage)과 같다`,
         item.gold.no_beat_answer === passageByKey.get(item.id))
     }
+    // standoff 자리(세션 42) — 문안은 박 님 확정 후. 지금은 전부 없어야 한다 —
+    // 있으면 harness 가 자동으로 케이스에 싣게 돼 있으니(loadCases) 이 단언이
+    // "언제 채워졌는지"를 잡아 준다.
+    t('set_b_nak.json: standoff_answer 문안이 아직 없다(자리만) — 있으면 지금 확인해라',
+      setBNak.items.every((item) => !item.gold.standoff_answer),
+      JSON.stringify(setBNak.items.filter((item) => item.gold.standoff_answer).map((item) => item.id)))
   }
 
   // ── scripts/support-golden.ts: loadCases() 가 set_b_nak.json 을 읽어 set B 의
@@ -8039,6 +8172,13 @@ console.log('\n[결정타 빌드업 섀도 support-v3]')
     /set: 'B', itemId: item\.id, kind: 'no_beat'/.test(harnessSrc))
   t('support-golden.ts: 집계에 no_beat 열이 있다',
     harnessSrc.includes('noBeatMissed'))
+
+  // ── standoff 자리(세션 42) — 문안은 박 님 확정 후. 배선은 있고 데이터는 없다 ──
+  t("support-golden.ts: standoff 자리가 있다(문안 있는 항목만 싣는다)",
+    /set: 'B', itemId: item\.id, kind: 'standoff'/.test(harnessSrc) &&
+      harnessSrc.includes('if (!item.gold.standoff_answer) continue'))
+  t('support-golden.ts: 집계가 standoff 를 good/nak/no_beat 와 따로 센다',
+    harnessSrc.includes('const standoff = rows.filter'))
 
   // ── seed_schema.sql: ai_shadow_cache 테이블·grant ──
   const schemaSrc = readFileSync(path.join(__dirname, '..', '..', 'seed_schema.sql'), 'utf8')

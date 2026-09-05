@@ -130,6 +130,60 @@ export function gibberishScore(text: string): { count: number; samples: string[]
 /** language_gate 의 판정선. 오탐 0 이 최우선이라 넉넉히 둔다(세션 40 박 님 결정). */
 export const GIB_MAX = 2
 
+/**
+ * 글자 3-gram 집합. 공백·구두점을 지우고(한글·영문·숫자만 남긴다) 겹치는
+ * 3글자 창을 전부 모은다 — 중복은 집합이라 자동으로 걸러진다. forbidPassageCopy
+ * 의 셋째 갈래(원문 겹침, 세션 42)와 scripts/passage-overlap.ts(임계 실측)가
+ * 이 함수 하나를 같이 쓴다 — 로직을 두 군데 두지 않는다(파일 1행 원칙).
+ */
+export function charGrams(text: string, n = 3): Set<string> {
+  const clean = text.replace(/[^가-힣A-Za-z0-9]/g, '')
+  const grams = new Set<string>()
+  for (let i = 0; i + n <= clean.length; i++) grams.add(clean.slice(i, i + n))
+  return grams
+}
+
+/**
+ * 답안이 원문과 겹치는 비율. |답안 3-gram ∩ 원문 3-gram| / |답안 3-gram|.
+ * 분모가 답안이다 — 원문이 길어도 짧은 답안이 그 안의 몇 글자만 베끼면
+ * 비율이 낮게 나오는 게 아니라, 답안 자신이 얼마나 원문 글자로 이루어져
+ * 있는지를 잰다(도둑맞은 쪽이 아니라 훔친 쪽 기준).
+ *
+ * keep(passageCopyKeep)이 있으면 원문 앞 keep 문장을 겹침 계산에서 뺀다 —
+ * "앞 N 줄은 두고" 지시문을 따른 답안이 그 부분 때문에 겹침이 높게 잡히면
+ * 안 된다. splitSentences 로 자른 나머지 문장만 이어 붙여 원문 3-gram을 낸다.
+ *
+ * 답안 3-gram이 비어 있으면(3자 미만) 0을 낸다 — 겹칠 것이 없다. 다른
+ * 검사(minChars 등)가 짧은 답안을 이미 잡는다.
+ */
+export function passageOverlap(answer: string, passage: string, keep = 0): number {
+  const checkablePassage = splitSentences(passage).slice(keep).join(' ')
+  const passageGrams = charGrams(checkablePassage)
+  const answerGrams = charGrams(answer)
+  if (answerGrams.size === 0) return 0
+  let hit = 0
+  for (const g of answerGrams) {
+    if (passageGrams.has(g)) hit++
+  }
+  return hit / answerGrams.size
+}
+
+/**
+ * 겹침 판정선. **MAX_ECHO 절차로 정한다** — 코드를 먼저 안 짜고
+ * scripts/passage-overlap.ts 로 활성 forbidPassageCopy 문항 모범답안 72행
+ * (좋은 답안, 최댓값 G) · 박 님 뚫기 2건 + 합성 공격 4종(공격, 최솟값 A) 을
+ * 먼저 찍은 뒤, G 와 A 사이 중점(소수 둘째 자리)에 둔다.
+ *
+ * 실측(세션 42, scripts/passage-overlap.ts 실행 결과 — STATUS 에도 있다):
+ *   좋은 답안 72건 최댓값(G)   0.2133  (ca-crystal-exam 가)
+ *   공격 6건(뚫기 2 + 합성 4) 최솟값(A)  0.8261  (어미 바꾸기)
+ *   폭(A − G) = 0.6128 — 아주 넉넉하다. 중점 0.52.
+ *
+ * ★ 좋은 답안이 이 값에 닿으면(폭이 줄면) 다시 잰다 — pov-lock.ts MAX_ECHO 와
+ *   같은 경계 규율이다. 지금은 폭이 0.6 이 넘어 여유가 크다.
+ */
+export const OVERLAP_THRESHOLD = 0.52
+
 // 반복 어휘 검사는 여기 없다.
 //
 // "제비를 / 제비는 / 제비가"는 어절이 서로 달라 문자열 비교로는 반복을 잡지 못한다.
@@ -772,6 +826,14 @@ export function gradeLocal(
       //   문항의 예외다 — 앞 N 문장은 이 근사 검사에서 통째로 뺀다(세지도 않고
       //   분모에도 안 넣는다). opt-in 이라 forbidPassageCopy 가 없으면(예:
       //   ig-gate-wait) 이 검사도 안 돈다.
+      //
+      // ★ 세션 42 — 문장 경계를 흐트러뜨리면(순서를 섞거나, 문장 사이 마침표를
+      //   지워 뭉개거나) 완전히 같은 문장이 남는 비율이 60% 밑으로 떨어져
+      //   60% 검사가 안 걸린다(박 님 실사용 뚫기 — 문장 4개 중 1개만 남아도
+      //   25%다). 셋째 갈래로 글자 3-gram 겹침을 본다: 문장 경계와 무관하게
+      //   원문과 같은 3글자 조각이 얼마나 남아 있는지 재므로 순서를 섞거나
+      //   마침표를 지워도 못 피한다. 임계는 OVERLAP_THRESHOLD(0.52, MAX_ECHO
+      //   절차로 실측 — scripts/passage-overlap.ts 주석 참고).
       if (cfg.forbidPassageCopy && passage != null) {
         const strip = (s: string) => s.replace(/\s/g, '')
         const p = strip(passage)
@@ -783,7 +845,10 @@ export function gradeLocal(
         const matches = checkable.filter((s) => strip(text).includes(strip(s))).length
         const nearCopied = total > 0 && matches / total >= 0.6
 
-        const copied = wholeCopied || nearCopied
+        const overlap = passageOverlap(text, passage, keep)
+        const overlapCopied = overlap >= OVERLAP_THRESHOLD
+
+        const copied = wholeCopied || nearCopied || overlapCopied
         checks.push({
           key: 'passageCopy',
           label: '원문 그대로 옮김',
@@ -792,7 +857,9 @@ export function gradeLocal(
             ? '원문을 고치지 않고 그대로 냈다'
             : nearCopied
               ? `원문 문장 ${matches}/${total}개를 그대로 옮김`
-              : '고쳐 씀',
+              : overlapCopied
+                ? `원문과 겹침 ${overlap.toFixed(2)} (기준 ${OVERLAP_THRESHOLD.toFixed(2)})`
+                : '고쳐 씀',
           rule: '원문을 그대로 옮기지 않음',
           gating: true,
         })
