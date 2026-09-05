@@ -7871,6 +7871,42 @@ console.log('\n[결정타 빌드업 섀도 support-v2]')
   const ca2 = allProblems2.filter((p) => p.skill_key === 'cliffhanger_adv')
   t('구성 16(ca-) 는 ai_shadow 가 없다', ca2.every((p) => p.scoring_config.ai_shadow === undefined))
 
+  // ── 골든셋 set B nak 데이터 파일(세션 41) — 존재·5건·id 가 bt- 5건과 일치 ──
+  const setBNakPath = path.join(__dirname, '..', '..', 'data', 'probe', 'set_b_nak.json')
+  t('data/probe/set_b_nak.json 이 존재한다', existsSync(setBNakPath))
+  if (existsSync(setBNakPath)) {
+    interface SetBNakItem { id: string; gold: { good_answer: string; nak_answer: string; payoff_line: string; beat_line: string; note?: string } }
+    const setBNak = JSON.parse(readFileSync(setBNakPath, 'utf8').replace(/^﻿/, '')) as { items: SetBNakItem[] }
+    t('set_b_nak.json: 5건', setBNak.items.length === 5, `실제=${setBNak.items.length}`)
+    const nakIds = new Set(setBNak.items.map((i) => i.id))
+    const btIds = new Set(bt2.map((p) => p.source_key))
+    t('set_b_nak.json: id 가 활성 bt- 5건과 정확히 같다(짝 안 맞는 항목 없음)',
+      nakIds.size === 5 && [...nakIds].every((id) => btIds.has(id)) && [...btIds].every((id) => nakIds.has(id)),
+      JSON.stringify({ nak: [...nakIds].sort(), bt: [...btIds].sort() }))
+    for (const item of setBNak.items) {
+      t(`set_b_nak.json '${item.id}': good_answer·nak_answer·payoff_line·beat_line 이 비어 있지 않다`,
+        !!item.gold.good_answer && !!item.gold.nak_answer && !!item.gold.payoff_line && !!item.gold.beat_line)
+    }
+    // good_answer 는 세션 41 v3 수정 뒤의 bt- ord1(가)과 같아야 한다 — 데이터가 갈리면
+    // 하네스가 옛 문안을 잰다.
+    const btRefs = readDump2<{ reference?: RefRow[] }>('answers.json').reference ?? []
+    const ord1ByKey = new Map(
+      btRefs.filter((r) => r.source_key.startsWith('bt-') && r.ord === 1).map((r) => [r.source_key, r.content])
+    )
+    for (const item of setBNak.items) {
+      t(`set_b_nak.json '${item.id}': good_answer 가 reference_answers ord1(가)과 같다`,
+        item.gold.good_answer === ord1ByKey.get(item.id))
+    }
+  }
+
+  // ── scripts/support-golden.ts: loadCases() 가 set_b_nak.json 을 읽어 set B 의
+  //    nak 으로 쓴다(세션 41 배선) ──
+  const harnessSrc = readFileSync(path.join(__dirname, '..', '..', 'scripts', 'support-golden.ts'), 'utf8')
+  t('support-golden.ts: set_b_nak.json 을 읽는다',
+    harnessSrc.includes("'data', 'probe', 'set_b_nak.json'"))
+  t("support-golden.ts: nak 케이스를 set:'B' 로 싣는다",
+    /set: 'B', itemId: item\.id, kind: 'nak'/.test(harnessSrc))
+
   // ── seed_schema.sql: ai_shadow_cache 테이블·grant ──
   const schemaSrc = readFileSync(path.join(__dirname, '..', '..', 'seed_schema.sql'), 'utf8')
   t('seed_schema.sql: ai_shadow_cache 테이블 생성',

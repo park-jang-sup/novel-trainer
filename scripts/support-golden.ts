@@ -9,8 +9,12 @@
  *   set A  data/probe/ch10_decisive.json 의 9쌍(1인칭). good → 'buildup' 기대,
  *          nak → 'none' 기대. nak 은 good 의 정보 줄만 위치 제공형으로 바꾼
  *          통제 짝이라, 판정이 문체가 아니라 근거 유무를 재는지 가른다.
- *   set B  bt- 모범답안 10건(3인칭·good) → 'buildup' 기대. nak 자리는 비워
- *          둔다(다음 턴에 초안 5건 → 박 님이 거른다) — 형식은 set A 와 같다.
+ *   set B  bt- 모범답안 10건(3인칭·good, 답안 덤프에서) + data/probe/set_b_nak.json
+ *          의 nak 5건(good 의 근거 문장만 위치 제공형으로 바꾼 통제 짝, id 로
+ *          bt- 5건과 짝 맞춤) → good 'buildup' · nak 'none' 기대(세션 41).
+ *          ★ B-03(bt-orc-axe)·B-05(bt-low-guard)는 note 로 비통제 표시가 있다
+ *            (근거가 자리형 · nak 결정타 문장 주어가 good 과 다름) — 결과 출력에
+ *            함께 낸다. 뒤집힘·미검출이 나오면 프롬프트보다 이 표시를 먼저 본다.
  *
  * 각 답안 5회 반복(흔들림을 재려면 5회가 최소다 — gemini.ts 의 THINKING_LEVEL
  * 주석과 같은 이유). **캐시는 기본 우회한다** — 캐시를 쓰면 5회가 사실 1회가
@@ -70,6 +74,21 @@ interface Case {
   itemId: string // ch10 item id 또는 bt- source_key(:ord)
   kind: 'good' | 'nak'
   text: string
+  // set B nak 전용. bt-orc-axe·bt-low-guard 가 통제 짝으로 불완전하다는 표시
+  // (data/probe/set_b_nak.json 의 gold.note). 결과 출력에 함께 낸다 — 없으면
+  // 해석이 미검출·뒤집힘을 프롬프트 결함으로 잘못 읽는다.
+  note?: string
+}
+
+interface SetBNakItem {
+  id: string
+  gold: {
+    good_answer: string
+    nak_answer: string
+    payoff_line: string
+    beat_line: string
+    note?: string
+  }
 }
 
 /**
@@ -108,8 +127,20 @@ function loadCases(): Case[] {
   for (const r of bt) {
     out.push({ set: 'B', itemId: `${r.source_key}:${r.ord}`, kind: 'good', text: r.content })
   }
-  // set B nak: 자리만 비워 둔다(3-2). bt- 는 아직 nak 짝이 없다 — 다음 턴에
-  // 초안 5건이 오면 여기 kind:'nak' 로 채운다. 형식(good/nak)은 이미 맞다.
+
+  // set B nak(세션 41) — id(bt- source_key)로 위 good 10건과 짝을 맞춘다.
+  // itemId 는 good 과 달리 ord 가 없다 — good 은 가·나 두 세트지만 nak 은
+  // 세트당 하나뿐이라 ord 를 붙일 자리가 없다(뒤집힘 집계는 kind 로 이미
+  // good/nak 을 가르므로 itemId 꼴이 달라도 안 섞인다).
+  const nakData = JSON.parse(
+    readFileSync(path.join(root, 'data', 'probe', 'set_b_nak.json'), 'utf8').replace(/^﻿/, '')
+  ) as { items: SetBNakItem[] }
+  for (const item of nakData.items) {
+    out.push({
+      set: 'B', itemId: item.id, kind: 'nak', text: item.gold.nak_answer,
+      note: item.gold.note?.trim() || undefined,
+    })
+  }
 
   return out
 }
@@ -173,8 +204,17 @@ async function main() {
   const totalCalls = cases.length * reps
   const runCap = Number(arg('cap', String(totalCalls)))
 
-  console.log(`set A(ch10) ${setA.length}건 · set B(bt-) ${setB.length}건 · 반복 ${reps}회 · 모델 ${model} · thinking ${THINKING_LEVEL}`)
+  const countOf = (list: Case[], kind: 'good' | 'nak') => list.filter((c) => c.kind === kind).length
+  console.log(
+    `set A(ch10) good ${countOf(setA, 'good')} · nak ${countOf(setA, 'nak')} · ` +
+      `set B(bt-) good ${countOf(setB, 'good')} · nak ${countOf(setB, 'nak')} · ` +
+      `반복 ${reps}회 · 모델 ${model} · thinking ${THINKING_LEVEL}`
+  )
   console.log(`캐시 ${useCache ? '사용(--use-cache)' : '우회(기본)'} · 이 실행 상한 ${runCap}회`)
+  // set B nak 의 비통제 표시(note) — 결과를 읽기 전에 먼저 보여 둔다.
+  for (const c of setB) {
+    if (c.note) console.log(`  ★ set B '${c.itemId}' (통제 짝 표시): ${c.note}`)
+  }
   if (!PRICES[model]) console.log('★ 단가표에 없는 모델이다. 비용이 null 로 나간다 — pricing.ts 에 넣어라')
   else console.log(`★ 단가는 프로모다. ${PROMO_ENDS} 이후 두 배 — pricing.ts`)
 
@@ -324,6 +364,18 @@ async function main() {
 
     console.log(`\n[set ${set}] good ${good.length}건 오탐 ${falsePos} · nak ${nak.length}건 미검출 ${missed} · ` +
       `beat/quote 불일치 ${mismatch} · 뒤집힘(항목) ${flips}/${byItem.size} · 비용 $${cost.toFixed(6)}`)
+    // set B nak 은 항목별 미검출·note 를 결과 옆에 낸다 — 비통제 표시(B-03·B-05)가
+    // 없으면 미검출·뒤집힘을 프롬프트 결함으로 잘못 읽는다.
+    if (set === 'B') {
+      const nakCasesById = new Map(cases.filter((c) => c.set === 'B' && c.kind === 'nak').map((c) => [c.itemId, c]))
+      for (const [k, list] of byItem) {
+        if (!k.endsWith(':nak')) continue
+        const itemId = k.slice(0, -':nak'.length)
+        const itemMissed = list.filter((r) => r.verdict === 'buildup').length
+        const note = nakCasesById.get(itemId)?.note
+        console.log(`    nak '${itemId}': ${itemMissed}/${list.length}회 buildup(미검출)${note ? ` — ★ ${note}` : ''}`)
+      }
+    }
     return { set, good: good.length, falsePos, nak: nak.length, missed, mismatch, flips, itemCount: byItem.size, cost }
   }
   const summaryA = summarize('A')
