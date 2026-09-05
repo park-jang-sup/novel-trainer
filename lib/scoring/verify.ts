@@ -9,7 +9,7 @@
 
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import path from 'node:path'
-import { combine, countChars, countLetters, countOccurrences, countSentences, deriveFillParts, fillMarkerMismatch, findForbidden, mergeForbidChecks, mergeRepeatChecks, gradeLocal, pendingMorphChecks, summarizeConfig } from './index'
+import { combine, countChars, countLetters, countOccurrences, countSentences, splitSentences, deriveFillParts, fillMarkerMismatch, findForbidden, mergeForbidChecks, mergeRepeatChecks, gradeLocal, pendingMorphChecks, summarizeConfig, gibberishScore, GIB_MAX } from './index'
 import { sqlStr, countRawNewlinesInStrings } from '../seed-sql'
 import { cycleNextProblemKey, nextProblemKey, nextStageId, stageProgress } from '../train-nav'
 import type { Answer, Check, CheckStatus, MorphResult, Problem, ProblemType, ScoringConfig, ScoringMode } from './types'
@@ -95,9 +95,9 @@ import {
   checkRunBudget,
   type GateDecision,
 } from '../ai/gate'
-import { buildPoint2Prompt, buildPointPrompt, buildPrompt, elementOf, fourLines, looksLikeC4, parseObservation, parsePointObservation, passesAt, PROMPT_FRAME, PROMPT_FRAME_CHARS, PROMPT_FRAME_POINT, PROMPT_FRAME_POINT2, PROMPT_FRAME_POINT2_CHARS, PROMPT_FRAME_POINT_CHARS } from '../ai/prompt'
+import { buildPoint2Prompt, buildPointPrompt, buildPrompt, buildSupportPrompt, elementOf, fourLines, looksLikeC4, parseObservation, parsePointObservation, parseSupportObservation, passesAt, verifySupportJudgment, PROMPT_FRAME, PROMPT_FRAME_CHARS, PROMPT_FRAME_POINT, PROMPT_FRAME_POINT2, PROMPT_FRAME_POINT2_CHARS, PROMPT_FRAME_POINT_CHARS, PROMPT_FRAME_SUPPORT, PROMPT_VERSION_SUPPORT } from '../ai/prompt'
 import { costUsd } from '../ai/pricing'
-import { observeWith } from '../ai/observe'
+import { observeWith, judgeSupportWith } from '../ai/observe'
 import { backoffMs, isRetryable, statusOf } from '../ai/retry'
 
 let pass = 0
@@ -6362,6 +6362,91 @@ console.log('\n[도입 4 start_episode: 신설 4문항 · fill 두 번째]')
     fillMarkerMismatch('[설정] x\n\n첫 줄\n①\n둘째 줄\n②\n셋째 줄\n③\n넷째 줄\n④', KEYS) === null)
 }
 
+// ── 언어 관문(language_gate) — 세션 40 ────────────────────────────────
+//
+// "이것이 한국어 문장인가"를 재는 층. 자유서술형(remove·convert·continue —
+// gradeLocal 의 default 분기, TEXT_TYPES 와 정확히 일치)에 음절 뭉치·낱자모
+// 헛소리를 gating:true 로 막는다. fill·choice·order·coinage·count 는 text 가
+// 없거나 다른 채점 경로라 안 건다. 형태소 불필요.
+console.log('\n[언어 관문 language_gate: 전수 불변식 · 픽스처]')
+{
+  // ── 1-4 픽스처(지시서 정정 반영: 소문자 3자 이상 연속 중 모음 없음만 센다.
+  //    2자 연속(cm·km·kg·ml·mm·pc·tv)은 길이로 통째 제외 — 화이트리스트 아님) ──
+  const failFixtures = [
+    '뷇뷀롭 달렸다. 켴솧퐆 뛰었다. ㅁㄴㅇㄹ 막았다. qwer 찔렀다.',
+    'qwer 찔렀다. zxcv 막았다.',
+  ]
+  const passFixtures = [
+    '다현 움직여 창문 달린다 보인다 의자', // 낱말 나열은 관문 아님 — 형태소·AI 몫
+    '콰아앙!\n창이 부러졌다.', // 의성어 단독 줄
+    '5cm가 실제로는 2km라면 8cm는 몇 km일까.', // 2자 연속 단위 다수
+    'tv를 껐다.', // 2자 연속 약어
+  ]
+  for (const f of failFixtures) {
+    const g = gibberishScore(f)
+    t(`픽스처(fail 기대): "${f.replace(/\n/g, '\\n')}" → GIB_MAX(${GIB_MAX}) 초과`,
+      g.count > GIB_MAX, JSON.stringify(g))
+  }
+  for (const p of passFixtures) {
+    const g = gibberishScore(p)
+    t(`픽스처(pass 기대): "${p.replace(/\n/g, '\\n')}" → GIB_MAX(${GIB_MAX}) 이하`,
+      g.count <= GIB_MAX, JSON.stringify(g))
+  }
+
+  // ── 배선: default 분기(remove·convert·continue)에만 건다 ──
+  t('language_gate: convert 에 건다',
+    gradeLocal({ id: 'x', type: 'convert', scoring_mode: 'auto', scoring_config: {} }, { text: '뷇뷀롭' })
+      .some((c) => c.key === 'language_gate'))
+  t('language_gate: continue 에 건다',
+    gradeLocal({ id: 'x', type: 'continue', scoring_mode: 'auto', scoring_config: {} }, { text: '뷇뷀롭' })
+      .some((c) => c.key === 'language_gate'))
+  t('language_gate: remove 에 건다',
+    gradeLocal({ id: 'x', type: 'remove', scoring_mode: 'auto', scoring_config: {} }, { text: '뷇뷀롭' })
+      .some((c) => c.key === 'language_gate'))
+  t('병: fill 엔 안 건다',
+    !gradeLocal({ id: 'x', type: 'fill', scoring_mode: 'auto', scoring_config: {} }, { blanks: {} })
+      .some((c) => c.key === 'language_gate'))
+  t('병: choice 엔 안 건다',
+    !gradeLocal({ id: 'x', type: 'choice', scoring_mode: 'auto', scoring_config: {} }, { choiceIndex: 0 })
+      .some((c) => c.key === 'language_gate'))
+  t('병: order 엔 안 건다',
+    !gradeLocal({ id: 'x', type: 'order', scoring_mode: 'auto', scoring_config: {} }, { order: [] })
+      .some((c) => c.key === 'language_gate'))
+  t('병: count 엔 안 건다',
+    !gradeLocal({ id: 'x', type: 'count', scoring_mode: 'auto', scoring_config: { inputs: [] } }, { values: {} })
+      .some((c) => c.key === 'language_gate'))
+  t('병: coinage 엔 안 건다',
+    !gradeLocal({ id: 'x', type: 'coinage', scoring_mode: 'auto', scoring_config: {} }, { text: '뷇뷀롭' })
+      .some((c) => c.key === 'language_gate'))
+  t('요약: language_gate 는 summarizeConfig 에 안 나온다(바탕 검사라 조건 요약을 안 채운다)',
+    summarizeConfig({ maxChars: 100 }) === '100자 이하')
+
+  // ── 전수 불변식: 활성 144 · 그 안의 자유서술형 모범답안(reference_answers) 전부
+  //    오탐 0(판정선, 박 님 결정) ──
+  const seedDir = path.join(__dirname, '..', '..', 'seed', 'dump')
+  const readDump = <T,>(f: string): T =>
+    JSON.parse(readFileSync(path.join(seedDir, f), 'utf8').replace(/^﻿/, '')) as T
+  interface LgProblem { source_key: string; type: string }
+  const allProblems = readDump<LgProblem[]>('problems.json')
+  const deactivate = readDump<{ source_keys: string[] }>('deactivate.json')
+  const deadKeys = new Set(deactivate.source_keys)
+  const active = allProblems.filter((p) => !deadKeys.has(p.source_key))
+  t('★ 활성 문항 수 = 144 (전체 157 − 비활성 13) — STATUS 머리와 같은 숫자',
+    active.length === 144, `실제=${active.length}`)
+
+  const typeOf = new Map(allProblems.map((p) => [p.source_key, p.type]))
+  const gateTypes = new Set(['remove', 'convert', 'continue'])
+  const answersDump = readDump<{ reference?: RefRow[] }>('answers.json')
+  const refs = (answersDump.reference ?? []).filter((r) => {
+    if (deadKeys.has(r.source_key)) return false
+    return gateTypes.has(typeOf.get(r.source_key) ?? '')
+  })
+  const offenders = refs.filter((r) => gibberishScore(r.content).count > GIB_MAX)
+  t(`활성 자유서술형 모범답안 ${refs.length}건 전수 — language_gate 오탐 0`,
+    offenders.length === 0,
+    JSON.stringify(offenders.map((r) => `${r.source_key}:${r.ord}`)))
+}
+
 // ── '쓰지 않을 말' 표시: forbidLabel/forbidDisplay ↔ 채점 (세션 22) ──────
 //
 // scoring_config 에 표시 전용 필드 둘을 더했다. 채점(forbidWords·forbidLemmas)은
@@ -7652,6 +7737,188 @@ console.log('\n[AI 마개 — 게이트와 관측]')
         input, 'gemini-3.7-flash')
       return !r.ok && r.error === 'not_json' && r.costUsd !== null
     })
+  }
+}
+
+// ── 결정타 빌드업 섀도(support-v2) — 세션 40 ────────────────────────────
+//
+// **섀도 모드다.** 판정·코멘트를 보여주되 통과·진도에 안 쓴다(세션 32 원칙).
+// delete/point/point2(위 블록)는 4줄 고정·지문 필요형(옛 action_turn)이고,
+// 이쪽은 문장 수가 자유인 답안(bt-)을 다룬다 — 새 틀이라 별도 절로 문다.
+console.log('\n[결정타 빌드업 섀도 support-v2]')
+{
+  // ── 문안 조립 ────────────────────────────────────────────────────
+  t("PROMPT_VERSION_SUPPORT = 'support-v2' (v1 은 안 만든다)",
+    PROMPT_VERSION_SUPPORT === 'support-v2')
+  t('병: support-v1 문자열이 어디에도 없다', !PROMPT_FRAME_SUPPORT.includes('support-v1'))
+  // 문안 핵심 문장 — 세션 40 정정 2 가 확정한 글자 그대로.
+  t('문안: 결정타 먼저 짚기', PROMPT_FRAME_SUPPORT.includes('승부가 나는 문장(결정타 문장)을 하나 짚어라'))
+  t('문안: 있어야 하는 문장의 정의', PROMPT_FRAME_SUPPORT.includes("알게 해 주는' 문장이다"))
+  t('문안: 위치 제공은 근거 아님', PROMPT_FRAME_SUPPORT.includes('시간이나 자리로 \'가능하게\'만 한 것'))
+  t('문안: 대체 시험', PROMPT_FRAME_SUPPORT.includes('그럴 틈이 났다'))
+  t('문안: 지문([상황]/[결정타] 요소)이 없다 — 답안 안에서만 가른다',
+    !PROMPT_FRAME_SUPPORT.includes('[지문]') && !PROMPT_FRAME_SUPPORT.includes('[결정타 요소]'))
+  t('출력 형식: beat_line·support_line·quote 세 키',
+    PROMPT_FRAME_SUPPORT.includes('"beat_line"') &&
+    PROMPT_FRAME_SUPPORT.includes('"support_line"') &&
+    PROMPT_FRAME_SUPPORT.includes('"quote"'))
+
+  const threeSentence = '진은 가운데를 비워 적을 삼킨다. 나는 열린 가운데를 버렸다. 고리가 물어뜯었다.'
+  const built = buildSupportPrompt(threeSentence)
+  t('조립: 치환자 {lines} 가 안 남는다', !built.includes('{lines}'))
+  t('조립: 문장이 1..N 번호로 들어간다',
+    built.includes('1 진은 가운데를 비워 적을 삼킨다') &&
+    built.includes('2 나는 열린 가운데를 버렸다') &&
+    built.includes('3 고리가 물어뜯었다'))
+  t('조립: splitSentences 와 같은 분할 — 4문장이면 4줄',
+    buildSupportPrompt('가. 나. 다. 라.').split('\n').filter((l) => /^\d /.test(l)).length === 4)
+
+  // ── 파싱 ────────────────────────────────────────────────────────
+  const supportGoodJson = '{"beat_line":3,"support_line":1,"quote":"진은 가운데를 비워 적을 삼킨다"}'
+  t('관측: 바른 JSON 을 읽는다', parseSupportObservation(supportGoodJson).ok)
+  t('관측: null support_line 을 읽는다',
+    parseSupportObservation('{"beat_line":2,"support_line":null,"quote":""}').ok)
+  t('관측: 코드펜스를 벗긴다', parseSupportObservation('```json\n' + supportGoodJson + '\n```').ok)
+  t('병: JSON 이 아니면 not_json', !parseSupportObservation('음, 결정타는...').ok)
+  t('병: beat_line 이 문자열이면 bad_shape',
+    !parseSupportObservation('{"beat_line":"3","support_line":1,"quote":"x"}').ok)
+  t('병: quote 가 없으면 bad_shape',
+    !parseSupportObservation('{"beat_line":3,"support_line":1}').ok)
+  t('병: support_line 이 배열이면 bad_shape (delete 꼴 섞임 감시)',
+    !parseSupportObservation('{"beat_line":3,"support_line":[1],"quote":"x"}').ok)
+
+  // ── verifySupportJudgment — AI 호출 없는 순수 함수. 5종 전부 물기 ──────
+  const answer3 = '진은 가운데를 비워 적을 삼킨다. 나는 열린 가운데를 버렸다. 고리가 물어뜯었다.'
+  // S[1]="진은 가운데를 비워 적을 삼킨다" S[2]="나는 열린 가운데를 버렸다" S[3]="고리가 물어뜯었다"
+  t("verifySupportJudgment: j<k → 'buildup'",
+    verifySupportJudgment(answer3, { beat_line: 3, support_line: 1, quote: '진은 가운데를 비워 적을 삼킨다' }).verdict === 'buildup')
+  t("verifySupportJudgment: support_line null → 'none'",
+    verifySupportJudgment(answer3, { beat_line: 3, support_line: null, quote: '' }).verdict === 'none')
+  t("verifySupportJudgment: j>=k → 'support_not_before' (근거가 결정타와 같거나 뒤)",
+    verifySupportJudgment(answer3, { beat_line: 1, support_line: 2, quote: '나는 열린 가운데를 버렸다' }).verdict === 'support_not_before')
+  t("verifySupportJudgment: j===k 도 'support_not_before'",
+    verifySupportJudgment(answer3, { beat_line: 2, support_line: 2, quote: '나는 열린 가운데를 버렸다' }).verdict === 'support_not_before')
+  t("verifySupportJudgment: beat_line 이 1..N 밖 → 'beat_mismatch'",
+    verifySupportJudgment(answer3, { beat_line: 99, support_line: 1, quote: '진은 가운데를 비워 적을 삼킨다' }).verdict === 'beat_mismatch')
+  t("verifySupportJudgment: support_line 이 1..N 밖 → 'quote_mismatch'",
+    verifySupportJudgment(answer3, { beat_line: 3, support_line: 99, quote: 'x' }).verdict === 'quote_mismatch')
+  t("verifySupportJudgment: quote 가 그 문장 안에 없음 → 'quote_mismatch' (AI 가 지어낸 인용을 안 믿는다)",
+    verifySupportJudgment(answer3, { beat_line: 3, support_line: 1, quote: '전혀 다른 문장' }).verdict === 'quote_mismatch')
+  t("병: quote 가 빈 문자열이면 support_line 이 유효해도 'quote_mismatch' (부분 문자열 공집합 함정)",
+    verifySupportJudgment(answer3, { beat_line: 3, support_line: 1, quote: '' }).verdict === 'quote_mismatch')
+  t('verifySupportJudgment: quote 는 부분 문자열이어도 된다(전체 인용 강제 아님)',
+    verifySupportJudgment(answer3, { beat_line: 3, support_line: 1, quote: '적을 삼킨다' }).verdict === 'buildup')
+
+  // ── set A(ch10) 골든셋 자기 정합성 — gold.payoff_line/beat_line 로 j<k 를
+  //    같은 함수로 검증(good: buildup 기대). AI 호출 없이 픽스처 자체를 문다 —
+  //    9쌍 전부 splitSentences 분할에서 payoff_line·beat_line 문장이 실재하고
+  //    payoff_line 이 beat_line 보다 앞이어야 'buildup' 기대가 성립한다.
+  const ch10 = JSON.parse(
+    readFileSync(path.join(__dirname, '..', '..', 'data', 'probe', 'ch10_decisive.json'), 'utf8').replace(/^﻿/, '')
+  ) as { items: { id: string; gold: { good_answer: string; payoff_line: string; beat_line: string } }[] }
+  t('data/probe/ch10_decisive.json: set A 9쌍', ch10.items.length === 9, `실제=${ch10.items.length}`)
+  const stripEnd = (s: string) => s.trim().replace(/[.!?…]+$/, '')
+  for (const item of ch10.items) {
+    const S = splitSentences(item.gold.good_answer)
+    const j = S.findIndex((s) => s === stripEnd(item.gold.payoff_line))
+    const k = S.findIndex((s) => s === stripEnd(item.gold.beat_line))
+    t(`골든 '${item.id}': payoff_line·beat_line 이 good_answer 문장으로 실재한다`,
+      j !== -1 && k !== -1, `j=${j} k=${k} S=${JSON.stringify(S)}`)
+    if (j !== -1 && k !== -1) {
+      const v = verifySupportJudgment(item.gold.good_answer, { beat_line: k + 1, support_line: j + 1, quote: S[j] })
+      t(`골든 '${item.id}': gold 인덱스로 verifySupportJudgment → 'buildup' 기대`,
+        v.verdict === 'buildup', v.verdict)
+    }
+  }
+
+  // ── judgeSupportWith 전 구간 — 호출 없이(observeWith 물기와 같은 자리) ──
+  tAsync('전 구간: 성공하면 관측과 비용이 함께 나온다', async () => {
+    const r = await judgeSupportWith(
+      async () => ({ text: supportGoodJson, usage: { inputTokens: 300, cachedTokens: 0, outputTokens: 40 }, model: 'gemini-3.7-flash' }),
+      answer3, 'gemini-3.7-flash')
+    return r.ok && r.observation !== null && r.costUsd !== null && r.observation.beat_line === 3
+  })
+  tAsync('병: 호출이 실패하면 call_failed 이고 usage 가 없다', async () => {
+    const r = await judgeSupportWith(async () => { throw new Error('네트워크') }, answer3, 'gemini-3.7-flash')
+    return !r.ok && r.error === 'call_failed' && r.usage === null
+  })
+  tAsync('병: 헛소리를 뱉어도 not_json 이고 비용은 나온다', async () => {
+    const r = await judgeSupportWith(
+      async () => ({ text: '모르겠습니다', usage: { inputTokens: 300, cachedTokens: 0, outputTokens: 10 }, model: 'gemini-3.7-flash' }),
+      answer3, 'gemini-3.7-flash')
+    return !r.ok && r.error === 'not_json' && r.costUsd !== null
+  })
+
+  // ── 대상 5문항: bt- 5건 scoring_config.ai_shadow === 'support' · 다른 단계는
+  //    안 건드림(구성 16 ca- 는 이번에 안 켠다) ──
+  const seedDir2 = path.join(__dirname, '..', '..', 'seed', 'dump')
+  const readDump2 = <T,>(f: string): T =>
+    JSON.parse(readFileSync(path.join(seedDir2, f), 'utf8').replace(/^﻿/, '')) as T
+  interface ShadowProblem { source_key: string; skill_key: string; scoring_config: { ai_shadow?: string } }
+  const allProblems2 = readDump2<ShadowProblem[]>('problems.json')
+  const bt2 = allProblems2.filter((p) => p.skill_key === 'action_turn' && p.source_key.startsWith('bt-'))
+  t('bt- 5건 전부 ai_shadow: "support"',
+    bt2.length === 5 && bt2.every((p) => p.scoring_config.ai_shadow === 'support'),
+    JSON.stringify(bt2.map((p) => `${p.source_key}:${p.scoring_config.ai_shadow}`)))
+  const withShadow = allProblems2.filter((p) => p.scoring_config.ai_shadow !== undefined)
+  t('ai_shadow 를 켠 문항은 정확히 bt- 5건뿐(구성 16 ca- 는 이번에 안 켠다)',
+    withShadow.length === 5 && withShadow.every((p) => p.source_key.startsWith('bt-')),
+    JSON.stringify(withShadow.map((p) => p.source_key)))
+  const ca2 = allProblems2.filter((p) => p.skill_key === 'cliffhanger_adv')
+  t('구성 16(ca-) 는 ai_shadow 가 없다', ca2.every((p) => p.scoring_config.ai_shadow === undefined))
+
+  // ── seed_schema.sql: ai_shadow_cache 테이블·grant ──
+  const schemaSrc = readFileSync(path.join(__dirname, '..', '..', 'seed_schema.sql'), 'utf8')
+  t('seed_schema.sql: ai_shadow_cache 테이블 생성',
+    /create table if not exists ai_shadow_cache/.test(schemaSrc))
+  t('seed_schema.sql: ai_shadow_cache 컬럼(hash pk·problem_id·prompt_version·model·judgment·verdict)',
+    /hash\s+text primary key/.test(schemaSrc) &&
+    schemaSrc.includes('prompt_version') && schemaSrc.includes('judgment') && schemaSrc.includes('verdict'))
+  t('seed_schema.sql: ai_shadow_cache 는 service_role select·insert grant',
+    /grant select, insert on public\.ai_shadow_cache to service_role/.test(schemaSrc))
+  t('seed_schema.sql: ai_shadow_cache RLS 켜짐(정책 없음 = service_role 전용)',
+    /alter table ai_shadow_cache enable row level security/.test(schemaSrc))
+
+  // ── seed/update-action-turn-v2.sql: bt- 5건에 ai_shadow 를 jsonb_set 으로 켠다 ──
+  const updSrc = readFileSync(path.join(__dirname, '..', '..', 'seed', 'update-action-turn-v2.sql'), 'utf8')
+  t("update-action-turn-v2.sql: jsonb_set '{ai_shadow}' 'support'",
+    updSrc.includes("jsonb_set(scoring_config, '{ai_shadow}', '\"support\"'::jsonb)"))
+  for (const key of ['bt-alley-hook', 'bt-spear-range', 'bt-orc-axe', 'bt-fireball-shield', 'bt-low-guard']) {
+    t(`update-action-turn-v2.sql: ${key} 대상`, updSrc.includes(`'${key}'`))
+  }
+
+  // ── route.ts 텍스트 가드: 섀도가 통과 판정·submissions.insert 와 무관 ──
+  const routeSrc2 = readFileSync(path.join(__dirname, '..', '..', 'app', 'api', 'grade', 'route.ts'), 'utf8')
+  t("route.ts: is_passed(passed)는 result.status 로만 계산한다",
+    /passed: result\.status === 'pass'/.test(routeSrc2))
+  // computeShadow( 는 함수 선언(파일 앞)과 호출부(POST 안, step 8.5) 둘 다에
+  // 나온다 — indexOf 첫 매치는 선언이다. **호출부**를 따로 찾는다.
+  const submitInsertIdx = routeSrc2.indexOf("supabase.from('submissions').insert")
+  const shadowCallIdx = routeSrc2.indexOf('await computeShadow(')
+  t('★ route.ts: 섀도 호출(await computeShadow)이 submissions.insert 보다 뒤에 나온다 — 섀도가 제출 저장을 못 막는다',
+    submitInsertIdx !== -1 && shadowCallIdx !== -1 && shadowCallIdx > submitInsertIdx,
+    `submit=${submitInsertIdx} shadowCall=${shadowCallIdx}`)
+  t("route.ts: ai_shadow==='support' 이고 규칙 pass 일 때만 섀도를 잰다",
+    /result\.status === 'pass' && cfg\.ai_shadow === 'support'/.test(routeSrc2))
+  t('route.ts: 응답에 shadow 를 싣는다(무관해도 undefined 로 실린다)',
+    /shadow,\s*\n\s*\}\)/.test(routeSrc2) || routeSrc2.includes('reference,\n    shadow,'))
+
+  // ── TrainClient.tsx: 카드 문구 3종 + pending 무카드 ──
+  const tcSrc2 = readFileSync(path.join(__dirname, '..', '..', 'components', 'train', 'TrainClient.tsx'), 'utf8')
+  t('TrainClient: "먹물이의 참고 의견 (통과와 무관)" 문구', tcSrc2.includes('먹물이의 참고 의견 (통과와 무관)'))
+  t("TrainClient: buildup 문구 '결정타 앞에 근거 줄이 있어'", tcSrc2.includes('결정타 앞에 근거 줄이 있어'))
+  t("TrainClient: none 문구 '근거 줄이 안 보여'", tcSrc2.includes('근거 줄이 안 보여'))
+  t("TrainClient: support_not_before 문구 '결정타보다 앞으로'", tcSrc2.includes('결정타보다 앞으로'))
+  t("병: pending 이면 카드를 안 그린다(verdict !== 'pending' 가드)",
+    /result\.shadow && result\.shadow\.verdict !== 'pending'/.test(tcSrc2))
+  // ★ 카드가 실제로 그리는 텍스트(JSX 리턴 구간)만 좁혀서 본다 — 파일 전체를
+  //   보면 이 규칙을 설명하는 주석 자신의 낱말에 걸린다.
+  {
+    const cardStart = tcSrc2.indexOf('먹물이의 참고 의견')
+    const cardEnd = tcSrc2.indexOf('학습 루프', cardStart)
+    const cardJsx = tcSrc2.slice(cardStart, cardEnd)
+    t('병: 카드 텍스트에 합격/불합격 낱말을 안 쓴다',
+      cardStart !== -1 && cardEnd !== -1 && !cardJsx.includes('합격') && !cardJsx.includes('불합격'))
   }
 }
 

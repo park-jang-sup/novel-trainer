@@ -157,6 +157,14 @@ export interface ScoringConfig {
   /** 빈칸에 앞뒤 고정 줄을 그대로 베끼면 fail. cue_copied 관측을
    *  규칙으로 내린 것이다(재설계안 11-3장) */
   forbidCopyOfFixedLines?: boolean
+  /**
+   * AI 섀도 판정을 붙일 것인가. 'support' 면 규칙 판정이 pass 일 때
+   * 결정타 빌드업(2-3 verifySupportJudgment)을 매긴다 — **섀도 모드다.**
+   * submissions.is_passed·진도와 무관하다(세션 40, 세션 32 섀도 모드 원칙).
+   * 지금 값은 'support' 하나뿐이지만 문자열 유니온으로 열어 둔다 — 보스
+   * 문항이 다른 섀도 종류를 쓸 수 있다.
+   */
+  ai_shadow?: 'support'
 }
 
 export interface Problem {

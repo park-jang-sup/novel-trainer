@@ -4,7 +4,10 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 39 · 커밋 `cfed89a` 위
+마지막 갱신: 세션 40 · 커밋 `26d5935` 위
+
+★ 활성 144 (전체 157 − 비활성 13). 언어 관문 전수 불변식(verify.ts)이 이 수를
+  출력·단언한다 — 문항 증감 때마다 이 줄과 불변식을 같이 갱신한다.
 
 ---
 
@@ -12,7 +15,7 @@
 
 ```
 단계 26 · 문항 157(비활성 13건 포함 — action_turn(at-) 8 + 구성 12 재설계로
-밀려난 cc- 4 + ig-ball-envelope 1, 활성 152) · 화면이 붙은 유형 22단계분
+밀려난 cc- 4 + ig-ball-envelope 1, 활성 144) · 화면이 붙은 유형 22단계분
 (문장 1~12, 구성 11·12·13·14·15·16·17·18·19·20, 도입 1·2·3·4)
 ★ 26단계 전부 문항이 있다 — 빈 단계 0(세션 39, 도입 4 로 마지막 하나가 찼다).
   보스는 아직 stages 행이 없는 신규 슬롯이라 26 안에 없다(별도 결정 대기)
@@ -38,6 +41,9 @@
               보스 문항(별도 슬롯, 아직 stages 행 없음 — 설계 확정 전)
 ★ 10단계는 새 skill_key `action_reason`(fill 8). 문장 12 `action_turn`(전투 서사화) 은
   새 bt- 5건 활성(세션 37 재개), 옛 at- 8건은 is_active=false 유지 — 화면의 '준비 중'은 풀렸다
+★ bt- 5건에 결정타 빌드업 섀도(support-v2, 세션 40) — 규칙 통과 뒤 "먹물이의
+  참고 의견" 카드로 뜨지만 통과·진도엔 안 쓴다(섀도 모드). 언어 관문
+  (language_gate)은 자유서술형(remove·convert·continue) 전체 활성 문항에 켜졌다.
 ★ 문장 11 `cliffhanger`(절단신공)은 신규 5문항 전부 활성(세션 38) — 화면의 '준비 중'이 풀렸다.
   문장 트랙(1~12) 은 이제 전부 문항이 있다.
 ★ 도입 4 `start_episode`(1화 축약)는 fill 유형 두 번째 신설(첫째는 action_reason)
@@ -55,8 +61,12 @@ AI 심판                 세션 13~16. delete · 지목 · 결합(AND·OR·합�
                           그 전에는 문안을 안 쓴다. 어떤 문안도.
                         ★ gate.ts · 하니스 · probe 는 산다. 피드백(코멘트 한 줄) 용도로 붙인다.
                           통과 판정에는 안 쓴다.
-                        ★ 예외 — 보스 문항 한정, AI 는 섀도 모드로 먼저 연다
-                          (박 님 결정, 세션 32). 판정·코멘트는 보이되 통과에 안 씀.
+                        ★ 예외 — "보스 한정" → "bt- 5 + (골든셋 뒤) 16 + 보스"(세션 40
+                          정정). AI 는 섀도 모드로 먼저 연다(박 님 결정, 세션 32).
+                          판정·코멘트는 보이되 통과에 안 씀. 세션 40 이 문장 12
+                          action_turn(bt-) 5문항에 결정타 빌드업 섀도(support-v2)를
+                          먼저 열었다 — 골든셋(scripts/support-golden.ts)이 오탐 0 을
+                          확인하면 구성 16(ca-)으로 넓히고, 그다음이 보스다.
                           여기 쌓이는 답안·판정 기록이 위 재개 조건의 수집처다.
 10단계 자유 4줄 문항      빈칸안으로 대체. 재설계안 11장.
 ```
@@ -154,7 +164,21 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 ## 다음 — 순서대로. 하나가 verify 에서 물리기 전에 다음을 안 한다
 
 ```
-1  보스 문항(가칭)      ★ 로드맵 정정(박 님 결정 (a), 세션 39) — 도입 4 는 보스가 흡수하지
+1  박 님 실사용        DB 절차(seed_schema.sql → update-action-turn-v2.sql → seed_data.sql →
+   (bt- 섀도 카드)     seed_check.sql) 뒤 브라우저 '전투 서사화'에서 bt- 5문항 중 하나를
+                        통과시켜 "먹물이의 참고 의견" 카드가 뜨는지·문구가 세 갈래(빌드업 있음·
+                        없음·순서 어긋남)로 맞는지·pending 이면 카드가 안 뜨는지 눈검사.
+2  하네스 실행          npm run ai:support-golden — set A(ch10 9쌍) + set B(bt- 모범 10건,
+                        nak 없이 good 만) 5회 반복. 오탐(good→buildup 아님)·미검출(nak→buildup)·
+                        뒤집힘·비용을 집계. 결과는 data/probe/support-golden-<날짜>.json.
+3  set B nak            bt- 모범(good)의 근거 문장 하나만 '틈이 났다'류 위치 제공 문장으로
+                        바꾼 통제 짝 5건. 다음 턴에 초안 5건을 내고 박 님이 거른다 →
+                        scripts/support-golden.ts 의 loadCases() set B 자리를 채운다(형식은
+                        set A 와 동일 — good/nak/payoff_line/beat_line).
+4  구성 16(ca-) 확장    set A·B 오탐 0 이고 set A 미검출이 낮으면(판정선, 정정 3-4) cliffhanger_adv
+                        5문항(ca-)에도 ai_shadow: 'support' 를 켠다. 갈리면 프롬프트 재검토 —
+                        새 문항을 늘리지 않는다.
+5  보스 문항(가칭)      ★ 로드맵 정정(박 님 결정 (a), 세션 39) — 도입 4 는 보스가 흡수하지
    (별도 슬롯)          않는다. 도입 4 start_episode 가 세션 39 로 자립 완주했다(fill 4칸,
                         AI 없이 규칙만으로 통과). 보스는 별도의 새 stages 행 — 긴 글 +
                         AI 섀도가 필요한 자리는 여기 하나로 모인다.
@@ -172,6 +196,104 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
                         설정 카드형 '다섯 줄 쓰기'(18 설계안 5번, write 유형 없어 보류됐던 것)는
                         이 보스 문항에서 다룬다 — 이때 쓸 설정 카드 형식은 도입 4 의 네 칸
                         (①재미 ②인물 ③장면 ④첫마디)을 그대로 재사용한다(세션 39 결정).
+```
+
+### 끝난 것 — 세션 40 (AI 심사 1차 — 언어 관문 · 결정타 빌드업 섀도(bt- 5) · 골든셋 하네스)
+
+```
+지시서 정정 3건  박 님이 준 「AI채점_도입_지시서.md」(docs/ai/ 로 보관, 방향 문서일 뿐 —
+  실행 문서는 이 STATUS)를 실측 검증하며 정정한 것 셋.
+  ① 3-1 "requireInLastLine 완화" 는 폐기 — 대상인 옛 action_turn(at-) 8건은 이미
+     세션 18에 비활성이고, 세션 37의 새 bt- 5건은 애초에 requireInLastLine 이 아니라
+     requireAll(이름 존재만 봄)을 쓴다. 완화할 대상 자체가 없다.
+  ② 1-1 의 "KS X 1001 밖 음절" 판정 코드가 빈 껍데기(try 블록에 판정 로직 없이 code
+     변수만 읽고 버림)임을 실측으로 확인 — 넣지 않았다. 음절 뭉치는 형태소 서버
+     문장 점수 하한(미착수) 몫으로 명시적으로 미룬다. 영문 검사는 "소문자 2자
+     이상 연속 중 모음 없음" → "3자 이상"(2자 연속 cm·km·kg·ml·mm·pc·tv 는 길이
+     기준으로 통째 제외 — 화이트리스트 아님, 열린 목록 금지)으로 좁혔다(박 님 정정).
+  ③ 순서 1→2→3→4 원안 대신 1→3→4→2 로 갔다 — 형태소 서버 배포(2단계)는 이번
+     커밋에 안 묶었다("하지 않는 것"에 명시).
+  ★ 활성 수 오류 발견·정정: 세션 39 STATUS 머리의 "활성 152"가 오류였다 — 세션 34
+    STATUS 의 "활성 128"(원래 133−13=120 이 맞는데 128 로 적혔던 오류)에서 그대로
+    굴러온 값. 실측(덤프 스캔): 전체 157 · 비활성 13 · **활성 144**. 이 STATUS 머리와
+    verify.ts 전수 불변식이 같은 숫자를 낸다 — 이후 문항 증감 때마다 둘을 같이 갱신.
+
+1. 언어 관문(language_gate)  lib/scoring/local.ts. gibberishScore(text) — 줄 단위로
+   (a) 낱자모(ㄱ~ㅣ, 완성형 아닌 자모) 문자 수(본체) + (b) 소문자 3자 이상 연속 중
+   모음(aeiou) 없음의 글자 수(보조, 2자 연속은 길이로 제외)를 센다. 의성어 단독 줄
+   (따옴표 제거 후 ^[가-힣]{1,7}[-!…]+$)은 건너뛴다. gradeLocal 의 default 분기
+   (remove·convert·continue — TEXT_TYPES 와 정확히 일치, fill·choice·order·coinage·
+   count 제외)에 key 'language_gate' · label '한국어 문장' · gating:true · GIB_MAX 2 로
+   건다. summarizeConfig(학습자용 조건 요약)엔 안 넣는다 — 모든 문항에 늘 있는
+   바탕 검사라 넣으면 문항별 조건이 묻힌다.
+   ★ splitSentences(text) 신설 — countSentences 와 같은 분할을 배열로 낸다(local.ts).
+     AI 섀도 프롬프트(아래 2)가 이 배열의 인덱스로 문장을 번호 매기고,
+     verifySupportJudgment 도 같은 배열을 다시 만들어 대조한다 — 분할 로직을
+     하나로 묶어야 둘이 안 어긋난다. countSentences 는 이제 splitSentences(text).length.
+
+2. 결정타 빌드업 섀도(support-v2)  lib/ai/prompt.ts — PROMPT_VERSION_SUPPORT =
+   'support-v2'(v1 은 안 만든다). buildSupportPrompt(answer) 가 splitSentences 로
+   문장을 1..N 번호 매겨 프롬프트에 낸다(대사 안 !·? 로 갈리는 건 알려진 한계로
+   주석). 문안: "결정타 문장을 먼저 짚고, 그 문장이 성립하려면 반드시 있어야 하는
+   앞 문장을 짚어라" — {"beat_line","support_line","quote"} JSON.
+   verifySupportJudgment(answer, judgment) — AI 호출 없는 순수 함수. (a) beat_line
+   k 가 1..N 밖 → 'beat_mismatch' (b) support_line null → 'none' (c) support_line j
+   가 1..N 밖이거나 quote 가 S[j] 안에 없음(빈 문자열 포함) → 'quote_mismatch'
+   (d) j < k → 'buildup' · j >= k → 'support_not_before'(옛 last_is_support 폐기).
+   lib/ai/observe.ts — judgeSupportWith(call, answer, model) 신설(observeWith 안
+   건드리고 곁에 둠, observePointWith 와 같은 자리).
+   app/api/grade/route.ts — 규칙 판정 pass 이고 scoring_config.ai_shadow === 'support'
+   일 때만: 캐시(ai_shadow_cache, hash=sha256(정규화 답안+problem_id+prompt_version+
+   model)) 조회 → 없으면 기존 gate(api_key·kill_switch·spend_cap·quota) →
+   judgeSupportWith → verifySupportJudgment → beat_mismatch·quote_mismatch 면 재시도
+   1회, 그래도 안 서면 pending(캐시 안 함 — pending 을 캐시하면 같은 답안이 다음
+   기회를 영영 못 받는다) → 실제 판정 3종만 캐시 저장. **섀도 모드** —
+   is_passed·submissions.insert 는 이 블록과 무관(코드 순서로도 앞서 끝나 있다).
+   TrainClient.tsx — 통과 카드 아래 "먹물이의 참고 의견 (통과와 무관)" 작은 카드.
+   pending 이면(gate 닫힘·호출 실패 포함) 조용히 안 뜬다. 합격/불합격 낱말 안 씀.
+   대상 5문항: bt-alley-hook·bt-spear-range·bt-orc-axe·bt-fireball-shield·
+   bt-low-guard(기존 행 수정이라 seed/update-action-turn-v2.sql, jsonb_set 멱등).
+   구성 16(ca-)은 이번에 안 켠다.
+   seed_schema.sql — ai_shadow_cache(hash pk, problem_id, prompt_version, model,
+   judgment jsonb, verdict, cost_usd, created_at) 신설. service_role 전용(정책 없음
+   = problem_answers 와 같은 자리) + select/insert grant(ai_usage_log 와 같은 셋째
+   층 — id 가 uuid 라 시퀀스 grant 는 필요 없다).
+
+3. 골든셋 하네스  scripts/support-golden.ts(신규, ai-probe.ts 관례 재사용 — 하니스
+   게이트 경로 C: api_key→kill_switch→spend_cap→run_cap). data/probe/ch10_decisive.json
+   (박 님 파일 그대로, set A·1인칭·9쌍) + set B(bt- 모범답안 10건, nak 자리는
+   비워 둠 — 형식만 맞춰 둠). 각 답안 5회 반복, **재시도 없이 원본 그대로** 잰다
+   (route.ts 의 재시도 1회는 판정을 세우는 것, 하네스는 흔들림 자체를 재는 자리라
+   스무딩하면 안 된다). set A·B 분리 집계(오탐·미검출·뒤집힘·비용). 캐시는 기본
+   우회(--use-cache 옵션일 때만). npm run ai:support-golden. 아직 실행 안 함(API
+   비용 발생 — 박 님 승인 뒤 다음 세션 1번에서 돌린다).
+   data/probe/README.md 한 줄: "ch10_decisive.json — set A · 1인칭".
+
+verify.ts [언어 관문]  전수 불변식 — 활성 144 출력·단언(readDump 로 problems.json
+  ↔ deactivate.json 대조) · reference_answers(answers.json) 중 활성 remove·convert·
+  continue 타입 261행 전부 gibberishScore 오탐 0(판정선, 박 님 결정) · 1-4 픽스처
+  6건(fail 2: 낱자모+영문4개 · 낱자모3+영문2개, pass 4: 낱말나열 · 의성어줄 ·
+  cm/km 단위 · tv 약어) · gradeLocal 이 language_gate 를 default 분기에만 걸고
+  fill·choice·order·count 는 안 건드리는지.
+  [결정타 빌드업 섀도] buildSupportPrompt 조립(번호·치환자 없음) · PROMPT_VERSION_SUPPORT
+  'support-v2' · parseSupportObservation(코드펜스 벗김·꼴 틀리면 bad_shape) ·
+  verifySupportJudgment 5종 픽스처(buildup·none·support_not_before·beat_mismatch·
+  quote_mismatch) · judgeSupportWith 가짜 호출 전 구간(성공·call_failed·not_json) ·
+  bt- 5건 scoring_config.ai_shadow === 'support' 단언(기존 [문장 12 action_turn]
+  블록에 추가) · seed_schema.sql ai_shadow_cache 테이블·grant 텍스트 가드 ·
+  update-action-turn-v2.sql 이 jsonb_set '{ai_shadow}' 'support' 를 5건에 거는지 ·
+  route.ts 텍스트 가드(섀도 블록이 submissions.insert 뒤에 있다 · is_passed 는
+  result.status 로만 계산 · shadow 는 응답에만 실림) · TrainClient 카드 문구 3종 +
+  pending 무카드 가드.
+seed_verify.sql  손 안 댐 — ai_shadow_cache 는 데이터가 없어 이 파일의 전수 불변식
+  (problems 대상) 과 무관.
+검증  tsc 0 · next typegen · test:scoring 형태소 서버 켜고 돌릴 것(다음 세션 확인) ·
+      check:numbers · gen:seed(무변화 — bt- 5건 config 는 update SQL 이 낸다) ·
+      next build.
+★ DB 절차(박 님)  seed_schema.sql(ai_shadow_cache 절) → seed/update-action-turn-v2.sql
+  → seed_data.sql(멱등) → seed_check.sql → .env.local GEMINI_API_KEY 확인 →
+  브라우저 '전투 서사화' 문항 하나 통과 → "먹물이의 참고 의견" 카드 · 킬스위치
+  끄면 카드가 사라지는지 · ai_usage_log 행 1개 · ai_shadow_cache 행 1개(실제 판정일 때만).
 ```
 
 ### 끝난 것 — 세션 39 (도입 4 start_episode '1화 축약' 신설 · 로드맵 정정 · 빈 단계 0)
@@ -1416,9 +1538,10 @@ requireAny/requireAll '하늘' 누수  일반명사와 부분 문자열이 겹�
                             소민·하늘)의 표본 "저녁 하늘이 붉게 물들었다…"가 인물 하늘 없이
                             pass 하는 것을 verify 픽스처로 등재. 고칠지·어떻게 고칠지(lemma
                             NNP 요구 등)는 박 님 결정 대기 — 지금은 알려진 한계로 두고 진행
-자모 낱자 검사(후보)         완성형 아닌 낱자(ㄱ-ㅎ·ㅏ-ㅣ)가 답안에 있으면 fail — 형태소 불필요·
-                            오탐 여지 낮음. 장난·오타 답안 일부를 잡는다. 신규 규칙이라 박 님
-                            승인 뒤 연다
+★ 자모 낱자 검사(후보) 닫힘 — 세션 40 언어 관문(language_gate)이 이걸 흡수해 열었다.
+                            낱자모(본체) + 영문 소문자 3자 이상 연속·모음 없음(보조)을
+                            자유서술형(remove·convert·continue)에 gating:true 로 건다.
+                            박 님 확정. lib/scoring/local.ts gibberishScore.
 seed_data 는 갱신을 안 한다    문항 insert 가 `where not exists` 라 기존 행을 안 고친다. 덤프의
                             passage·scoring_config 를 바꾸면 seed_data 만으로는 DB 에 안 들어간다 —
                             DB update 를 따로 돌리고 seed_check 를 실제로 돌려 대조가 통과하는지 본다

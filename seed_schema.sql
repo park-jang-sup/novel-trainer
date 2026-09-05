@@ -165,4 +165,27 @@ create table if not exists golden_cases (
 );
 alter table golden_cases enable row level security;
 
+-- 결정타 빌드업 섀도(support-v2) 판정 캐시. hash = sha256(정규화 답안 +
+-- problem_id + prompt_version + model) — 같은 답안을 또 내면 재호출 없이
+-- 이 표의 verdict 를 쓴다(세션 40). service_role 전용 — problem_answers 와
+-- 같은 이유로 정책을 안 둔다(주석 없음 = RLS 가 전부 막는다).
+--
+-- 5회 반복으로 흔들림을 재는 골든셋 하네스(scripts/support-golden.ts)는
+-- 이 캐시를 기본으로 우회한다 — 캐시를 쓰면 5회가 사실 1회가 된다.
+create table if not exists ai_shadow_cache (
+  hash            text primary key,
+  problem_id      uuid references problems(id) on delete cascade,
+  prompt_version  text not null,
+  model           text not null,
+  judgment        jsonb not null,
+  verdict         text not null,
+  cost_usd        numeric,
+  created_at      timestamptz not null default now()
+);
+alter table ai_shadow_cache enable row level security;
+
+-- ai_usage_log 와 같은 셋째 층(테이블 권한 · 시퀀스 권한 · RLS) 문제가
+-- 여기도 있다 — 다만 id 가 uuid 라 시퀀스는 없다(hash 가 기본키다).
+grant select, insert on public.ai_shadow_cache to service_role;
+
 commit;

@@ -142,7 +142,7 @@ export function mergeRepeatChecks(checks: Check[]): Check[] {
     .map((c) => (c.key === 'maxRepeat' ? merged : c))
 }
 
-export { gradeLocal, pendingMorphChecks, countChars, countLetters, countSentences, findForbidden, countOccurrences } from './local'
+export { gradeLocal, pendingMorphChecks, countChars, countLetters, countSentences, splitSentences, findForbidden, countOccurrences, gibberishScore, GIB_MAX } from './local'
 export { gradeMorph } from './morph'
 export { deriveFillParts, fillMarkerMismatch, fillPassageParts, fillSituation } from './fill'
 export { summarizeConfig } from './summary'

@@ -54,6 +54,10 @@ interface GradeResponse {
   // 뜨는 첫 렌더에 아직 반영이 안 돼 해설이 안 나왔다(세션 28 버그). 한
   // 번의 setResult 로 원자화한다. 오답 뒤 다른 선택지를 눌러도 안 흔들린다.
   submittedChoiceIndex?: number
+  // 결정타 빌드업 섀도(support-v2, 문장 12 action_turn(bt-) 5문항). **섀도
+  // 모드다** — status·통과 판정과 무관하다. pending 이면(킬스위치·gate 닫힘·
+  // 호출 실패 포함) 카드를 안 띄운다. undefined 면 이 문항에 섀도가 없다.
+  shadow?: { verdict: 'buildup' | 'none' | 'support_not_before' | 'pending'; quote?: string }
 }
 
 interface LoopProps {
@@ -666,6 +670,26 @@ export default function TrainClient({
               {displayChecks?.map((c) => (
                 <CheckRow key={c.key} check={c} />
               ))}
+            </div>
+          )}
+
+          {/* 결정타 빌드업 섀도(support-v2) — **통과와 무관.** pending(킬스위치·
+              gate 닫힘·호출 실패 포함)이면 조용히 안 뜬다. 합격/불합격 낱말을
+              쓰지 않는다 — 통과 판정으로 읽히면 섀도 모드가 아니게 된다. */}
+          {result.shadow && result.shadow.verdict !== 'pending' && (
+            <div
+              className="space-y-1 p-3 text-sm"
+              style={{ background: 'var(--panel)', border: '1px solid var(--rule)', borderRadius: 6 }}
+            >
+              <p style={{ color: 'var(--ink-soft)', fontWeight: 700 }}>먹물이의 참고 의견 (통과와 무관)</p>
+              <p style={{ color: 'var(--ink-soft)' }}>
+                {result.shadow.verdict === 'buildup' &&
+                  `결정타 앞에 근거 줄이 있어. 「${result.shadow.quote}」`}
+                {result.shadow.verdict === 'none' &&
+                  '결정타 앞에 근거 줄이 안 보여 — 상대의 버릇·자리·논리를 알게 하는 줄 하나가 있으면 더 세.'}
+                {result.shadow.verdict === 'support_not_before' &&
+                  '근거가 결정타와 같거나 뒤에 있어. 결정타보다 앞으로.'}
+              </p>
             </div>
           )}
 

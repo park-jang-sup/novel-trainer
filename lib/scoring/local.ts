@@ -19,16 +19,29 @@ export const countLetters = (t: string) =>
   (t.match(/[가-힣A-Za-z0-9]/g) ?? []).length
 
 /**
- * 종결부호(. ! ? …)로 문장을 센다. 형태소가 필요 없다.
+ * 종결부호(. ! ? …)로 문장을 가른다. 형태소가 필요 없다.
  *
  * fill 빈칸 답안은 "한 문장에서 두 문장"이라 짧고, 지문 조건도 그 범위다.
  *
- * ★ 종결부호로 조각낸 뒤 **글자(한글·영문·숫자)가 든 조각만** 센다.
+ * ★ 종결부호로 조각낸 뒤 **글자(한글·영문·숫자)가 든 조각만** 남긴다.
  *   - 끝에 종결부호가 없는 꼬리도 글자가 있으면 한 문장이다.
- *   - '.' · '...' · '?!' 처럼 글자가 하나도 없으면 0이다 (구두점만 넣은 제출).
+ *   - '.' · '...' · '?!' 처럼 글자가 하나도 없으면 버린다 (구두점만 넣은 제출).
+ *
+ * ★ AI 섀도 프롬프트(lib/ai/prompt.ts buildSupportPrompt)가 이 배열의 인덱스로
+ *   문장을 1..N 번호 매겨 제시한다 — verifySupportJudgment 도 같은 배열을
+ *   봐야 quote·번호 검증이 어긋나지 않는다. 그래서 분할 로직을 여기 하나로
+ *   묶는다. 알려진 한계: 대사 안의 !·? 로 문장이 갈릴 수 있다(예: '"뭐야?!"
+ *   서린이 물었다' → 두 조각). 형태소 없이 종결부호만 보는 값싼 분할의 대가다.
  */
+export function splitSentences(text: string): string[] {
+  return text
+    .split(/[.!?…]+/)
+    .map((seg) => seg.trim())
+    .filter((seg) => /[가-힣A-Za-z0-9]/.test(seg))
+}
+
 export function countSentences(text: string): number {
-  return text.split(/[.!?…]+/).filter((seg) => /[가-힣A-Za-z0-9]/.test(seg)).length
+  return splitSentences(text).length
 }
 
 /** 문자열에서 낱말이 나온 횟수(겹치지 않게). repeatTargets 가 쓴다. */
@@ -63,6 +76,59 @@ export function findForbidden(text: string, stems: string[]): string[] {
   }
   return hits
 }
+
+/**
+ * 언어 관문. "이것이 한국어 문장인가"를 잰다 — 좋음·나쁨이 아니라 한국어
+ * 문장이 성립하는가. 자유서술형 답안에 이 층이 전혀 없으면 음절 뭉치
+ * (예: "뷇뷀롭 얼잫붑")에 요소 낱말만 박은 답안이 규칙을 전부 통과한다
+ * (세션 40 실측). 형태소 불필요 — 두 가지만 줄 단위로 센다.
+ *
+ * (a) 낱자모(ㄱ~ㅣ, 완성형이 아닌 자모) — 본체.
+ * (b) 소문자 **3자 이상 연속** 중 모음(aeiou)이 하나도 없는 것의 글자 수 — 보조.
+ *     2자 연속(cm·km·kg·ml·mm·pc·tv 등)은 길이 기준으로 통째 제외한다
+ *     (화이트리스트가 아니다 — 열린 목록을 안 만든다). 대문자 약어(UFC·VS)는 제외.
+ *
+ * ★ KS X 1001 밖 음절(완성형이지만 쓰이지 않는 조합) 판정은 여기 안 넣는다 —
+ *   Node 기본 API로는 정확히 못 하고, 잘못 만들면 빈 검사가 통과만 시킨다.
+ *   음절 뭉치는 형태소 서버의 문장 점수 하한(배포 세션)이 맡는다. 이 관문은
+ *   보조이고 본체는 낱자모다.
+ *
+ * 의성어 단독 줄(따옴표 제거 후 ^[가-힣]{1,7}[-!…]+$)은 건너뛴다 — "콰아앙!"
+ * 같은 줄을 헛소리로 오탐하지 않는다.
+ */
+export function gibberishScore(text: string): { count: number; samples: string[] } {
+  const lines = text.split('\n')
+  let count = 0
+  const samples: string[] = []
+  const pushSample = (s: string) => {
+    if (samples.length < 5) samples.push(s)
+  }
+  for (const raw of lines) {
+    const line = raw.trim()
+    if (!line) continue
+    if (/^[가-힣]{1,7}[-!…]+$/.test(line.replace(/["""''']/g, ''))) continue
+
+    for (const ch of line) {
+      if (ch >= 'ㄱ' && ch <= 'ㅣ') {
+        count++
+        pushSample(ch)
+      }
+    }
+
+    const words = line.match(/[a-z]{2,}/g) || []
+    for (const w of words) {
+      if (w.length < 3) continue // 2자 연속은 길이로 통째 제외 (cm·km·kg·ml·mm·pc·tv …)
+      if (!/[aeiou]/.test(w)) {
+        count += w.length
+        pushSample(w)
+      }
+    }
+  }
+  return { count, samples }
+}
+
+/** language_gate 의 판정선. 오탐 0 이 최우선이라 넉넉히 둔다(세션 40 박 님 결정). */
+export const GIB_MAX = 2
 
 // 반복 어휘 검사는 여기 없다.
 //
@@ -626,6 +692,22 @@ export function gradeLocal(
       checks.push(...lengthChecks(text, cfg))
       checks.push(...lineChecks(text, cfg))
       checks.push(...quoteChecks(text, cfg))
+
+      // 언어 관문 — "이것이 한국어 문장인가". 형태소 불필요. summarizeConfig
+      // (학습자용 조건 요약 한 줄)에는 안 넣는다 — 모든 문항에 늘 있는 바탕
+      // 검사라 요약이 그것으로 채워지면 문항별 조건이 묻힌다.
+      {
+        const gib = gibberishScore(text)
+        checks.push({
+          key: 'language_gate',
+          label: '한국어 문장',
+          status: gib.count <= GIB_MAX ? 'pass' : 'fail',
+          detail: gib.count <= GIB_MAX ? '정상' : `이상 글자 ${gib.count}개`,
+          rule: '음절 뭉치·낱자모가 아닌 한국어',
+          evidence: gib.samples,
+          gating: true,
+        })
+      }
 
       if (cfg.forbidWords?.length) {
         const hits = findForbidden(text, cfg.forbidWords)

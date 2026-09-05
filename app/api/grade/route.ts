@@ -1,15 +1,124 @@
+import { createHash } from 'node:crypto'
 import type { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { analyze } from '@/lib/scoring/remote'
 import { combine, countChars } from '@/lib/scoring'
-import type { Answer, Submission } from '@/lib/scoring/types'
+import type { Answer, ScoringConfig, Submission } from '@/lib/scoring/types'
+import { readFlags, sumSpendTodayUsd } from '@/lib/ai/flags'
+import { checkGate, DAILY_CALL_LIMIT } from '@/lib/ai/gate'
+import { consumeAiQuota } from '@/lib/quota'
+import { callGemini, DEFAULT_MODEL } from '@/lib/ai/gemini'
+import { judgeSupportWith } from '@/lib/ai/observe'
+import { PROMPT_VERSION_SUPPORT, verifySupportJudgment, type SupportObservation, type SupportVerdict } from '@/lib/ai/prompt'
 
-// TODO(다음 단계): 킬스위치 확인
-//   system_flags.kill_switch 가 true 면 AI 호출 차단
-// TODO(다음 단계): 한도 차감
-//   consume_ai_quota(user.id, LIMIT) 호출. needsAi 인 경우에만.
+// TODO(다음 단계): needsAi(ai/hybrid scoring_mode) 문항의 AI 채점.
+//   결정타 빌드업 섀도(ai_shadow: 'support')와는 다른 자리다 — 저건 통과에
+//   안 쓰는 섀도, 이건 통과 판정 자체를 AI 에 맡기는 자리(원칙 4 재개 전까지 보류).
+
+/**
+ * 결정타 빌드업 섀도(support-v2) 판정. **섀도 모드다** — 결과가 submissions.
+ * is_passed·진도에 안 실린다(세션 32 섀도 모드 원칙). 실패해도 응답은 정상
+ * 반환한다: gate 가 닫혔거나 호출이 깨지면 조용히 pending 이다.
+ *
+ * 순서: 캐시 조회(hash) → 없으면 gate → judgeSupportWith → verifySupportJudgment
+ * → beat_mismatch·quote_mismatch 면 재시도 1회 → 그래도 안 서면 pending.
+ * 실제 판정(buildup·none·support_not_before)만 캐시에 적는다 — pending 을
+ * 캐시하면 같은 답안이 다음에도 재시도할 기회를 영영 못 얻는다.
+ */
+interface ShadowResult {
+  verdict: SupportVerdict | 'pending'
+  beat_line?: number
+  support_line?: number | null
+  quote?: string
+}
+
+async function computeShadow(
+  admin: ReturnType<typeof createAdminClient>,
+  userId: string,
+  problemId: string,
+  normalized: string
+): Promise<ShadowResult> {
+  const model = DEFAULT_MODEL
+  const hash = createHash('sha256')
+    .update(`${normalized} ${problemId} ${PROMPT_VERSION_SUPPORT} ${model}`)
+    .digest('hex')
+
+  const { data: cached } = await admin
+    .from('ai_shadow_cache')
+    .select('verdict, judgment')
+    .eq('hash', hash)
+    .maybeSingle()
+  if (cached) {
+    const j = cached.judgment as SupportObservation
+    return { verdict: cached.verdict as SupportVerdict, beat_line: j.beat_line, support_line: j.support_line, quote: j.quote }
+  }
+
+  const flags = await readFlags()
+  let quotaRemaining: number | null = null
+  try {
+    quotaRemaining = await consumeAiQuota(userId, DAILY_CALL_LIMIT)
+  } catch {
+    quotaRemaining = null
+  }
+  const gate = checkGate({
+    hasApiKey: !!process.env.GEMINI_API_KEY,
+    killSwitch: flags.killSwitch,
+    dailySpendCapUsd: flags.dailySpendCapUsd,
+    spentTodayUsd: await sumSpendTodayUsd(),
+    quotaRemaining,
+  })
+  if (!gate.allow) return { verdict: 'pending' }
+
+  let verdict: SupportVerdict | 'pending' = 'pending'
+  let observation: SupportObservation | null = null
+
+  // 재시도 1회 — beat_mismatch·quote_mismatch 일 때만. call_failed·not_json·
+  // bad_shape 는 여기서 다시 안 건다(gemini.ts 의 네트워크 재시도와 다른 층이다).
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const outcome = await judgeSupportWith(callGemini, normalized, model)
+
+    // 돈을 태웠으면 먼저 적는다 — 관측이 깨져도 토큰은 나갔다.
+    if (outcome.usage) {
+      const { error } = await admin.from('ai_usage_log').insert({
+        user_id: userId,
+        submission_id: null,
+        model: outcome.model,
+        input_tokens: outcome.usage.inputTokens,
+        cached_tokens: outcome.usage.cachedTokens,
+        output_tokens: outcome.usage.outputTokens,
+        cost_usd: outcome.costUsd,
+      })
+      if (error) console.error('ai_usage_log insert failed(shadow)', 'message=' + error.message)
+    }
+
+    if (!outcome.ok || !outcome.observation) break // pending
+
+    const v = verifySupportJudgment(normalized, outcome.observation)
+    if (v.verdict === 'beat_mismatch' || v.verdict === 'quote_mismatch') continue // 재시도
+
+    verdict = v.verdict
+    observation = outcome.observation
+    break
+  }
+
+  if (observation && (verdict === 'buildup' || verdict === 'none' || verdict === 'support_not_before')) {
+    const { error } = await admin.from('ai_shadow_cache').insert({
+      hash,
+      problem_id: problemId,
+      prompt_version: PROMPT_VERSION_SUPPORT,
+      model,
+      judgment: observation,
+      verdict,
+    })
+    if (error) console.error('ai_shadow_cache insert failed', 'message=' + error.message)
+  }
+
+  return observation
+    ? { verdict, beat_line: observation.beat_line, support_line: observation.support_line, quote: observation.quote }
+    : { verdict: 'pending' }
+}
 
 const GradeRequestSchema = z.object({
   problemId: z.uuid(),
@@ -134,6 +243,20 @@ export async function POST(request: NextRequest) {
   }
   const reference: { ord: number; blank_key: string; content: string }[] = refData ?? []
 
+  // 8.5. 결정타 빌드업 섀도(support-v2) — **섀도 모드다.** 위 result.status ·
+  //      submissions.insert(passed) 는 이 블록과 무관하게 이미 끝났다. 규칙
+  //      판정이 pass 이고 이 문항이 ai_shadow: 'support' 를 켰을 때만 잰다.
+  let shadow: { verdict: SupportVerdict | 'pending'; beat_line?: number; support_line?: number | null; quote?: string } | undefined
+  const cfg = (problem.scoring_config ?? {}) as ScoringConfig
+  if (result.status === 'pass' && cfg.ai_shadow === 'support' && text && text.trim()) {
+    try {
+      shadow = await computeShadow(createAdminClient(), user.id, problemId, text.trim())
+    } catch (err) {
+      console.error('결정타 빌드업 섀도 실패(조용히 pending 취급)', err)
+      shadow = { verdict: 'pending' }
+    }
+  }
+
   // 9. 응답 — checks와 status만. 정답·scoring_config는 실리지 않는다.
   return Response.json({
     status: result.status,
@@ -141,5 +264,6 @@ export async function POST(request: NextRequest) {
     needsAi: result.needsAi,
     morphAvailable: morph !== null,
     reference,
+    shadow,
   })
 }

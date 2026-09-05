@@ -13,11 +13,14 @@ import {
   buildPoint2Prompt,
   buildPointPrompt,
   buildPrompt,
+  buildSupportPrompt,
   parseObservation,
   parsePointObservation,
+  parseSupportObservation,
   type Observation,
   type PointObservation,
   type PromptInput,
+  type SupportObservation,
 } from './prompt'
 import { costUsd, type TokenUsage } from './pricing'
 
@@ -154,6 +157,62 @@ export async function observePointWith(
 
   const cost = costUsd(reply.model, reply.usage)
   const parsed = parsePointObservation(reply.text)
+
+  if (!parsed.ok) {
+    return {
+      ok: false,
+      observation: null,
+      error: parsed.reason,
+      usage: reply.usage,
+      costUsd: cost,
+      model: reply.model,
+      raw: parsed.raw.slice(0, 500),
+      detail: parsed.reason === 'not_json' ? 'JSON 이 아니다' : '꼴이 다르다',
+    }
+  }
+
+  return {
+    ok: true,
+    observation: parsed.observation,
+    error: null,
+    usage: reply.usage,
+    costUsd: cost,
+    model: reply.model,
+    raw: null,
+    detail: null,
+  }
+}
+
+/**
+ * 결정타 빌드업 섀도(support-v2) 관측. **`observeWith` 를 안 건드리고 곁에 둔다**
+ * — `observePointWith` 와 같은 이유다. `buildSupportPrompt` 는 지문 없이 답안
+ * 하나만 받는다(prompt.ts 주석) — `PromptInput`(passage·lines·element)이 아니라
+ * 답안 문자열 하나가 입력이다.
+ */
+export interface SupportOutcome extends Omit<ObserveOutcome, 'observation'> {
+  observation: SupportObservation | null
+}
+
+export async function judgeSupportWith(
+  call: GeminiCall,
+  answer: string,
+  model: string
+): Promise<SupportOutcome> {
+  const prompt = buildSupportPrompt(answer)
+
+  let reply: GeminiReply
+  try {
+    reply = await call(prompt, model)
+  } catch (e) {
+    return {
+      ok: false, observation: null, error: 'call_failed',
+      usage: null, costUsd: null, model, raw: null,
+      detail: detailOf(e),
+    }
+  }
+
+  const cost = costUsd(reply.model, reply.usage)
+  const parsed = parseSupportObservation(reply.text)
 
   if (!parsed.ok) {
     return {
