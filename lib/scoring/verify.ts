@@ -5716,12 +5716,16 @@ console.log('\n[문장 12 action_turn: 재개 신규 5문항]')
     t(`'${d.source_key}': 가·나 두 세트`, JSON.stringify(ords) === '[1,2]', JSON.stringify(ords))
   }
   // 실측(kiwipiepy 실호출) 자수(공백 제외) — 순서: alley-hook·spear-range·orc-axe·fireball-shield·low-guard
+  // ★ orc-axe·low-guard 의 ord1(가)은 세션 41 수정본(박 님 실사용 발견) — 세션
+  //   40 문안은 "방패는 다시 사면 되지만"(반려)·"미끄러지게 받았는데 방패가
+  //   반으로 갈라짐"(논리 어긋남)·'노인' 지칭(인물 둘만이어야 함)이 문제였다.
+  //   107자·5문장·동사 9(orc-axe) / 140자·7문장·동사 15(low-guard) 실측.
   const LEN: Record<string, [number, number]> = {
     'bt-alley-hook': [122, 120],
     'bt-spear-range': [133, 116],
-    'bt-orc-axe': [115, 123],
+    'bt-orc-axe': [107, 123],
     'bt-fireball-shield': [139, 132],
-    'bt-low-guard': [126, 122],
+    'bt-low-guard': [140, 122],
   }
   for (const r of refs) {
     const cfg = cfgOf.get(r.source_key)!

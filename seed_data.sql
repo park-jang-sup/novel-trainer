@@ -3450,7 +3450,7 @@ on conflict (problem_id, ord, blank_key) do nothing;
 
 -- bt-orc-axe ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
-select p.id, 1, '', '방패는 다시 사면 되지만 유나는 아니다. 진서는 방패를 비스듬히 세워 도끼날이 정면이 아니라 미끄러지게 받았다. 방패가 반으로 갈라지며 왼팔이 어깨까지 저릿했지만, 도끼는 진서의 발치에 박혔다. "지금이야!" 도끼를 뽑느라 굳은 오크의 목에 유나의 단검이 들어갔다.'
+select p.id, 1, '', '유나를 다치게 할 수는 없다. 진서는 방패를 비스듬히 세워 도끼날을 흘리듯 받았다. 흘렸는데도 방패 한쪽이 뜯겨 나가며 왼팔이 어깨까지 저릿했지만, 도끼는 진서의 발치에 박혔다. "지금이야!" 도끼를 뽑느라 굳은 오크의 목에 유나의 단검이 들어갔다.'
 from problems p
 where p.source_key = 'bt-orc-axe'
 on conflict (problem_id, ord, blank_key) do nothing;
@@ -3954,7 +3954,7 @@ on conflict (problem_id, ord, blank_key) do nothing;
 
 -- bt-low-guard ord 1 
 insert into reference_answers (problem_id, ord, blank_key, content)
-select p.id, 1, '', '하단은 올려 베기다. 백리진은 그 검이 올라오기 전에 거리를 죽이기로 하고 한 걸음 안으로 들어섰다. 서른 해 전 그 검객도 이렇게 잡았었다. 그런데 정후의 검은 올라오지 않았다. 낮게 깔린 채 백리진의 무릎을 옆으로 그었고, 노인의 왼 다리가 접혔다. "하단은 올려 베는 게 아니오. 낮은 게 하단이지."'
+select p.id, 1, '', '하단은 올려 베기다. 백리진은 그 검이 올라오기 전에 거리를 죽이기로 하고 한 걸음 안으로 들어섰다. 서른 해 전 그 검객도 이렇게 잡았었다. 그런데 정후의 검은 올라오지 않았다. 낮은 자리에서 그대로 옆으로 휘둘러져 백리진의 무릎을 그었고, 베인 무릎이 힘을 잃어 왼 다리가 꺾였다. "하단은 올려 베는 게 아니오. 낮은 게 하단이지."'
 from problems p
 where p.source_key = 'bt-low-guard'
 on conflict (problem_id, ord, blank_key) do nothing;

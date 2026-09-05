@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 40 · 커밋 `26d5935` 위
+마지막 갱신: 세션 41 · 커밋 `9c976df` 위
 
 ★ 활성 144 (전체 157 − 비활성 13). 언어 관문 전수 불변식(verify.ts)이 이 수를
   출력·단언한다 — 문항 증감 때마다 이 줄과 불변식을 같이 갱신한다.
@@ -164,21 +164,27 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 ## 다음 — 순서대로. 하나가 verify 에서 물리기 전에 다음을 안 한다
 
 ```
-1  박 님 실사용        DB 절차(seed_schema.sql → update-action-turn-v2.sql → seed_data.sql →
-   (bt- 섀도 카드)     seed_check.sql) 뒤 브라우저 '전투 서사화'에서 bt- 5문항 중 하나를
+1  박 님 — DB → 눈검사 → 하네스   update-action-turn-v3.sql(멱등) → seed_data.sql →
+                        seed_check.sql. bt-orc-axe·bt-low-guard 모범답안(가)이 새 문안인지
+                        브라우저에서 눈검사(세션 41 수정분). 이어서 bt- 5문항 중 하나를
                         통과시켜 "먹물이의 참고 의견" 카드가 뜨는지·문구가 세 갈래(빌드업 있음·
                         없음·순서 어긋남)로 맞는지·pending 이면 카드가 안 뜨는지 눈검사.
-2  하네스 실행          npm run ai:support-golden — set A(ch10 9쌍) + set B(bt- 모범 10건,
-                        nak 없이 good 만) 5회 반복. 오탐(good→buildup 아님)·미검출(nak→buildup)·
-                        뒤집힘·비용을 집계. 결과는 data/probe/support-golden-<날짜>.json.
-3  set B nak            bt- 모범(good)의 근거 문장 하나만 '틈이 났다'류 위치 제공 문장으로
-                        바꾼 통제 짝 5건. 다음 턴에 초안 5건을 내고 박 님이 거른다 →
-                        scripts/support-golden.ts 의 loadCases() set B 자리를 채운다(형식은
-                        set A 와 동일 — good/nak/payoff_line/beat_line).
-4  구성 16(ca-) 확장    set A·B 오탐 0 이고 set A 미검출이 낮으면(판정선, 정정 3-4) cliffhanger_adv
-                        5문항(ca-)에도 ai_shadow: 'support' 를 켠다. 갈리면 프롬프트 재검토 —
-                        새 문항을 늘리지 않는다.
-5  보스 문항(가칭)      ★ 로드맵 정정(박 님 결정 (a), 세션 39) — 도입 4 는 보스가 흡수하지
+                        그다음 npm run ai:support-golden 실행(set A 9쌍 + set B good 10건 —
+                        set B nak 5건은 아직 하네스에 안 물림, 아래 2). 결과(오탐·미검출·
+                        뒤집힘·비용)를 채팅에.
+2  set B nak 코드 배선   data/probe/set_b_nak.json(세션 41 — good 10 · nak 5, 형식은 set A
+                        와 동일)이 있으나 scripts/support-golden.ts 의 loadCases() 는 아직
+                        이 파일을 안 읽는다(박 님 지시 "코드 무변경" — 이번엔 데이터만
+                        확정했다). 다음 코드 작업은 loadCases() 에 이 파일을 로드해
+                        kind:'nak' 케이스를 채우는 것뿐 — 그 밖은 안 건드린다.
+                        ★ B-03(orc-axe)은 근거가 '자리의 상태'(도끼가 박힘)라 set A 의
+                        cracked-ice 형과 같은 미검출 후보. B-05(low-guard)는 nak 의 결정타
+                        문장 주어가 good 과 달라('정후의 검이') 통제 짝으로 불완전 —
+                        뒤집힘이 나오면 프롬프트 결함이 아니라 이 항목 자체의 성격으로 먼저 본다.
+3  구성 16(ca-) 확장    set A·B 오탐 0 이고 set A 미검출이 낮으면(판정선, 세션 40 정정 3-4)
+                        cliffhanger_adv 5문항(ca-)에도 ai_shadow: 'support' 를 켠다. 갈리면
+                        프롬프트 재검토 — 새 문항을 늘리지 않는다.
+4  보스 문항(가칭)      ★ 로드맵 정정(박 님 결정 (a), 세션 39) — 도입 4 는 보스가 흡수하지
    (별도 슬롯)          않는다. 도입 4 start_episode 가 세션 39 로 자립 완주했다(fill 4칸,
                         AI 없이 규칙만으로 통과). 보스는 별도의 새 stages 행 — 긴 글 +
                         AI 섀도가 필요한 자리는 여기 하나로 모인다.
@@ -196,6 +202,62 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
                         설정 카드형 '다섯 줄 쓰기'(18 설계안 5번, write 유형 없어 보류됐던 것)는
                         이 보스 문항에서 다룬다 — 이때 쓸 설정 카드 형식은 도입 4 의 네 칸
                         (①재미 ②인물 ③장면 ④첫마디)을 그대로 재사용한다(세션 39 결정).
+```
+
+### 끝난 것 — 세션 41 (bt- 모범답안 2건 수정 · 골든셋 set B nak 5건)
+
+```
+경위  세션 40 이 열어 준 DB 절차를 박 님이 실행하고 실사용(브라우저에서 문항을
+  직접 풀어 보는 것)하다가 bt-orc-axe·bt-low-guard 모범답안(가)의 결함을 즉시
+  발견했다 — 원칙 3(박 님 실사용 판정으로 모범답안 교체, lack 모범답안 4행
+  교체 선례와 같은 자리). 저장소가 아니라 실사용에서 나온 정정이라 이번에도
+  기존 행 update SQL 델타로 처리한다(원칙 7 — problems·reference_answers 는
+  이미 있는 행이라 seed_data.sql 의 insert where not exists 로는 안 들어간다).
+
+bt-orc-axe ord1(가) 교체  결함 둘. ① "방패는 다시 사면 되지만 유나는 아니다" —
+  다시 살 수 있다는 말이 결정타 앞 정보로 부적절(반려). ② "미끄러지게 받았다"
+  다음 문장이 "방패가 반으로 갈라지며"인데, 미끄러지게 받은 방패가 갈라지는
+  것은 인과가 안 맞는다(정면으로 받아야 갈라진다). 새 문안은 "흘리듯 받았다.
+  흘렸는데도 방패 한쪽이 뜯겨 나가며"로 고쳐 인과를 바로 세웠다. 107자·5문장·
+  동사 9(실측, kiwipiepy 재확인) — maxChars 200·minVerbs 4 안에 여유.
+
+bt-low-guard ord1(가) 교체  결함 둘. ① 이 문항은 인물이 정후·백리진 둘뿐인데
+  "노인의 왼 다리가 접혔다"의 '노인'이 셋째 인물처럼 읽힌다(지칭 흐림). ②
+  결정타 문장("낮게 깔린 채 백리진의 무릎을 옆으로 그었고")의 주어가 생략돼
+  누구의 검인지 앞 문장에 기대야 하고, "무릎을 그은 것"과 "다리가 접힌 것"
+  사이 인과도 뜨다. 새 문안은 "낮은 자리에서 그대로 옆으로 휘둘러져 백리진의
+  무릎을 그었고, 베인 무릎이 힘을 잃어 왼 다리가 꺾였다"로 주어·동작·인과를
+  한 문장 안에 붙였다. 140자·7문장·동사 15(실측). ★ 대사 안 "!" 로 문장이
+  갈리는 알려진 한계(splitSentences 주석)가 이 두 건에도 그대로 적용된다
+  (orc-axe 의 "지금이야!"가 두 조각으로 갈린다) — 결과에 영향 없음(minVerbs·
+  maxChars 는 문장 수와 무관), 새 한계는 아니다.
+
+seed/update-action-turn-v3.sql  reference_answers 2행만(update-reduce-repeat-v4.sql
+  선례와 같은 꼴). 원문(passage)·scoring_config·ord2(나)는 전부 그대로.
+seed/dump/answers.json  두 content 필드만 갱신(단일 출처).
+verify.ts [문장 12 action_turn]  LEN 표의 bt-orc-axe[0] 115→107 · bt-low-guard[0]
+  126→140 로 갱신. [규격 6] 스타일 예외(styleReviewedBt)는 안 건드림 — 두 새
+  문안 다 대사(")를 포함해 휴리스틱이 그대로 잡는다(예외 목록에 없어도 통과).
+  requireAll·forbidWords·maxChars·passageCopy·combine 전 구간 재확인.
+
+골든셋 set B nak 5건  data/probe/set_b_nak.json 신설 — good(=bt- 현재 모범답안,
+  가) · nak(근거 문장만 '틈이 났다'류로 바꾼 통제 짝) · payoff_line · beat_line ·
+  note. B-01(alley-hook)·B-04(fireball-shield)는 payoff_line 이 두 문장이라
+  주석에 "대조는 첫 문장 기준"을 남겼다. B-03(orc-axe)은 근거가 자리의 상태라
+  set A 의 cracked-ice 형과 같은 미검출 후보로 표시. B-05(low-guard)는 nak 의
+  결정타 문장 주어가 good 과 달라('정후의 검이') 통제 짝으로 완전하지 않다고
+  박 님이 직접 표시 — 뒤집힘이 나오면 프롬프트 결함이 아니라 이 항목 성격으로
+  먼저 본다. ★ 박 님 지시대로 scripts/support-golden.ts 는 이번에 안 건드렸다
+  (코드 무변경) — loadCases() 가 이 파일을 아직 안 읽는다. 다음 "다음" 2번.
+
+검증  tsc 0 · next typegen 없음(스키마·타입 변화 없음, route 불변) · test:scoring
+  형태소 서버 켜고 5795/0 · check:numbers 0 · gen:seed(reference_answers 2행만
+  갱신 — seed_data.sql 2줄 변경, seed_check.sql 무변화. problems 테이블은
+  안 건드려 seed_check.sql 의 expect 대상 밖이다) · next build 통과. kiwipiepy
+  실호출로 동사 수(9·15) 재확인 — 문안에 적힌 실측값과 정확히 일치.
+★ DB 절차(박 님)  seed/update-action-turn-v3.sql(멱등) → seed_data.sql →
+  seed_check.sql → 브라우저에서 bt-orc-axe·bt-low-guard 모범답안(가)이 새
+  문안으로 뜨는지 눈검사.
 ```
 
 ### 끝난 것 — 세션 40 (AI 심사 1차 — 언어 관문 · 결정타 빌드업 섀도(bt- 5) · 골든셋 하네스)
