@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 41 · 커밋 `9c976df` 위
+마지막 갱신: 세션 41 후속 2 · 커밋 `ef11995` 위
 
 ★ 활성 144 (전체 157 − 비활성 13). 언어 관문 전수 불변식(verify.ts)이 이 수를
   출력·단언한다 — 문항 증감 때마다 이 줄과 불변식을 같이 갱신한다.
@@ -41,9 +41,11 @@
               보스 문항(별도 슬롯, 아직 stages 행 없음 — 설계 확정 전)
 ★ 10단계는 새 skill_key `action_reason`(fill 8). 문장 12 `action_turn`(전투 서사화) 은
   새 bt- 5건 활성(세션 37 재개), 옛 at- 8건은 is_active=false 유지 — 화면의 '준비 중'은 풀렸다
-★ bt- 5건에 결정타 빌드업 섀도(support-v2, 세션 40) — 규칙 통과 뒤 "먹물이의
-  참고 의견" 카드로 뜨지만 통과·진도엔 안 쓴다(섀도 모드). 언어 관문
-  (language_gate)은 자유서술형(remove·convert·continue) 전체 활성 문항에 켜졌다.
+★ bt- 5건에 결정타 빌드업 섀도(support-v3, 세션 40 신설·세션 41 후속 2 에서
+  '결정타 없음' 출구 추가) — 규칙 통과 뒤 "먹물이의 참고 의견" 카드로 뜨지만
+  통과·진도엔 안 쓴다(섀도 모드). 언어 관문(language_gate)은 자유서술형
+  (remove·convert·continue) 전체 활성 문항에 켜졌다. forbidPassageCopy 는
+  통째 복사 + 근사 복사(원문 문장 60% 이상 그대로) 둘 다 막는다(세션 41 후속 2).
 ★ 문장 11 `cliffhanger`(절단신공)은 신규 5문항 전부 활성(세션 38) — 화면의 '준비 중'이 풀렸다.
   문장 트랙(1~12) 은 이제 전부 문항이 있다.
 ★ 도입 4 `start_episode`(1화 축약)는 fill 유형 두 번째 신설(첫째는 action_reason)
@@ -64,7 +66,8 @@ AI 심판                 세션 13~16. delete · 지목 · 결합(AND·OR·합�
                         ★ 예외 — "보스 한정" → "bt- 5 + (골든셋 뒤) 16 + 보스"(세션 40
                           정정). AI 는 섀도 모드로 먼저 연다(박 님 결정, 세션 32).
                           판정·코멘트는 보이되 통과에 안 씀. 세션 40 이 문장 12
-                          action_turn(bt-) 5문항에 결정타 빌드업 섀도(support-v2)를
+                          action_turn(bt-) 5문항에 결정타 빌드업 섀도(support-v3,
+                          세션 41 후속 2 에서 '결정타 없음' 출구 추가)를
                           먼저 열었다 — 골든셋(scripts/support-golden.ts)이 오탐 0 을
                           확인하면 구성 16(ca-)으로 넓히고, 그다음이 보스다.
                           여기 쌓이는 답안·판정 기록이 위 재개 조건의 수집처다.
@@ -164,27 +167,24 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 ## 다음 — 순서대로. 하나가 verify 에서 물리기 전에 다음을 안 한다
 
 ```
-1  박 님 — DB → 눈검사 → 하네스   update-action-turn-v3.sql(멱등) → seed_data.sql →
-                        seed_check.sql. bt-orc-axe·bt-low-guard 모범답안(가)이 새 문안인지
-                        브라우저에서 눈검사(세션 41 수정분). 이어서 bt- 5문항 중 하나를
-                        통과시켜 "먹물이의 참고 의견" 카드가 뜨는지·문구가 세 갈래(빌드업 있음·
-                        없음·순서 어긋남)로 맞는지·pending 이면 카드가 안 뜨는지 눈검사.
-                        그다음 npm run ai:support-golden 실행(set A 9쌍 + set B good 10건 —
-                        set B nak 5건은 아직 하네스에 안 물림, 아래 2). 결과(오탐·미검출·
-                        뒤집힘·비용)를 채팅에.
-2  set B nak 코드 배선   data/probe/set_b_nak.json(세션 41 — good 10 · nak 5, 형식은 set A
-                        와 동일)이 있으나 scripts/support-golden.ts 의 loadCases() 는 아직
-                        이 파일을 안 읽는다(박 님 지시 "코드 무변경" — 이번엔 데이터만
-                        확정했다). 다음 코드 작업은 loadCases() 에 이 파일을 로드해
-                        kind:'nak' 케이스를 채우는 것뿐 — 그 밖은 안 건드린다.
-                        ★ B-03(orc-axe)은 근거가 '자리의 상태'(도끼가 박힘)라 set A 의
-                        cracked-ice 형과 같은 미검출 후보. B-05(low-guard)는 nak 의 결정타
-                        문장 주어가 good 과 달라('정후의 검이') 통제 짝으로 불완전 —
-                        뒤집힘이 나오면 프롬프트 결함이 아니라 이 항목 자체의 성격으로 먼저 본다.
-3  구성 16(ca-) 확장    set A·B 오탐 0 이고 set A 미검출이 낮으면(판정선, 세션 40 정정 3-4)
+1  박 님 — DB → 눈검사 → 하네스   seed/update-action-turn-v3.sql(모범답안 2건) →
+                        seed/update-first-hook-v3.sql(fh-burnt-manor passageCopyKeep) →
+                        seed/update-action-turn-v4.sql(bt-fireball-shield passageCopyKeep) →
+                        seed_data.sql(멱등) → seed_check.sql. bt-orc-axe·bt-low-guard
+                        모범답안(가)이 새 문안인지 브라우저에서 눈검사(세션 41 수정분).
+                        이어서 bt- 5문항 중 하나를 통과시켜 "먹물이의 참고 의견" 카드가
+                        뜨는지·문구가 네 갈래(빌드업 있음·없음·순서 어긋남·결정타 없음,
+                        세션 41 후속 2 가 넷째를 더했다)로 맞는지·pending 이면 카드가
+                        안 뜨는지 눈검사. 원문 근사 복사(60%)는 "앞 N 줄만 정확히 남기고
+                        나머지를 그대로 낸" 답안으로 직접 시험해야 확인된다(화면엔 config
+                        값이 안 보인다).
+                        그다음 npm run ai:support-golden 실행(set A 9쌍 + set B good 10 ·
+                        nak 5 · no_beat 5 — 세션 41 후속·후속 2 로 전부 하네스에 물렸다).
+                        결과(오탐·미검출·뒤집힘·비용, no_beat 미검출 포함)를 채팅에.
+2  구성 16(ca-) 확장    set A·B 오탐 0 이고 set A 미검출이 낮으면(판정선, 세션 40 정정 3-4)
                         cliffhanger_adv 5문항(ca-)에도 ai_shadow: 'support' 를 켠다. 갈리면
                         프롬프트 재검토 — 새 문항을 늘리지 않는다.
-4  보스 문항(가칭)      ★ 로드맵 정정(박 님 결정 (a), 세션 39) — 도입 4 는 보스가 흡수하지
+3  보스 문항(가칭)      ★ 로드맵 정정(박 님 결정 (a), 세션 39) — 도입 4 는 보스가 흡수하지
    (별도 슬롯)          않는다. 도입 4 start_episode 가 세션 39 로 자립 완주했다(fill 4칸,
                         AI 없이 규칙만으로 통과). 보스는 별도의 새 stages 행 — 긴 글 +
                         AI 섀도가 필요한 자리는 여기 하나로 모인다.
@@ -202,6 +202,87 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
                         설정 카드형 '다섯 줄 쓰기'(18 설계안 5번, write 유형 없어 보류됐던 것)는
                         이 보스 문항에서 다룬다 — 이때 쓸 설정 카드 형식은 도입 4 의 네 칸
                         (①재미 ②인물 ③장면 ④첫마디)을 그대로 재사용한다(세션 39 결정).
+```
+
+### 끝난 것 — 세션 41 후속 2 (원문 근사 복사 차단(60%) + 섀도 v3 '결정타 없음' 출구)
+
+```
+경위  실사용 첫 제출이 규칙(forbidPassageCopy)·AI(섀도) 둘 다 뚫었다 — 원문을
+  거의 그대로 내되 낱말 하나만 바꿔 통째 복사 검사(문자열 includes)를 피하고,
+  AI 는 상황 설명뿐인 답안에도 beat_line 을 억지로 짚어야 해서 아무 문장이나
+  결정타로 잘못 짚었다. 두 구멍을 한 커밋에 묶어 막는다.
+
+1. forbidPassageCopy 근사 복사(60%)  lib/scoring/local.ts — 기존 통째 복사
+  검사(문자열 포함)는 그대로 두고, 원문을 splitSentences 로 쪼개 각 문장이
+  답안(공백 제거)에 그대로 들어 있는지 세어 **60% 이상**이면 fail 을 OR 로
+  더했다. key 는 그대로 'passageCopy' — detail 이 "원문 문장 N/M개를 그대로
+  옮김"으로 갈린다. passageCopyKeep(신규 config 필드): 지시문이 "앞 N 줄은
+  두고"류로 유지를 요구하는 문항의 예외 — 앞 N 문장은 세지도, 분모에도
+  안 넣는다. fh-burnt-manor(3, "앞 세 줄은 두고")·bt-fireball-shield(1,
+  "첫 문장은 두고")에 적용 — 지시대로 정확히 그만큼만 남기면 각각 3/5=60%·
+  1/5=20% 로 경계에 걸리거나 가까워질 답안을 오탐 없이 통과시킨다.
+  ig-gate-wait 는 forbidPassageCopy 자체가 없어 이 검사도 안 돈다(예외 config
+  불필요, 세 예외 후보 중 하나).
+  seed/update-first-hook-v3.sql(fh-burnt-manor) · seed/update-action-turn-v4.sql
+  (bt-fireball-shield, ★ STATUS 지시문엔 fh- 델타만 명시됐으나 bt-fireball-shield
+  config 도 실제로 바뀌었으므로 덤프·DB 정합을 위해 이번 세션이 추가로
+  만들었다 — action_turn 델타 관례(v2 ai_shadow·v3 모범답안 교체)를 이어 v4).
+  둘 다 jsonb_set 멱등 · reference_answers 는 안 건드림.
+  verify.ts 전수 불변식(언어 관문과 같은 자리) — 활성 forbidPassageCopy 36건의
+  모범답안 72행 전부가 새 검사를 통과하는지(실측: keep 적용 전에도 이미 0건
+  오탐 — 기존 모범답안들은 근거 부분만 남기고 원문 나머지를 이미 고쳐 썼다.
+  keep 은 "지시대로 정확히 그만큼만 남기는" 경계 사례를 막기 위한 선제
+  조치다). 픽스처 3종 지시서 그대로(bt-spear-range "왼팔" 삭제 → fail(3/4) ·
+  원문 1문장 인용 → pass · fh-burnt-manor 가 → pass(keep 3)) + 합성 경계
+  픽스처(앞 3문장을 정확히 남긴 답안 — keep 없으면 3/5=60% 로 fail 함을
+  직접 물어 확인).
+  ★ 박 님 뚫기 답안(실사용 첫 제출) 원문은 이 세션에 전달되지 않았다 —
+  STATUS '뚫기 표본'에 남길 실제 텍스트는 박 님이 주시면 다음에 채운다.
+
+2. 섀도 프롬프트 v3 '결정타 없음' 출구  lib/ai/prompt.ts — PROMPT_VERSION_SUPPORT
+  'support-v2' → 'support-v3'(문안을 그대로 갈아 끼운다 — v1 처럼 별도 상수로
+  안 남긴다, 세션 40 정정 2 원칙 그대로). 문안에 "승부가 나는 문장이 없으면
+  beat_line 을 null 로 하고 support_line·quote 도 null·빈 문자열로 답하라.
+  상황 설명만 있고 아무도 수를 두지 않은 글이 그렇다" 한 문단을 더하고,
+  출력 형식의 beat_line 도 "<1~N 또는 null>"로 열었다.
+  SupportObservationSchema.beat_line: number → number|null.
+  verifySupportJudgment: beat_line null → 6종째 판정 'no_beat'(support_line·
+  quote 는 안 본다 — 결정타가 없으면 근거를 물을 것도 없다). 재시도 대상이
+  아니다(AI 가 정직하게 답한 것이라 그대로 최종 판정).
+  route.ts computeShadow: 캐시 저장 조건에 'no_beat' 추가(buildup·none·
+  support_not_before 와 같은 자리 — pending 만 캐시 안 함). ShadowResult.
+  beat_line 타입을 number|null 로 넓힘.
+  TrainClient.tsx: no_beat 문구 "아직 승부 수가 없어 — 누가 어떤 수를 두는지
+  한 줄이 있어야 결정타를 볼 수 있어." GradeResponse.shadow.verdict 유니온에
+  'no_beat' 추가.
+  골든셋: data/probe/set_b_nak.json 의 기존 5항목에 no_beat_answer 필드 추가
+  (bt- 문항 원문(passage) 그대로 — 세션 41 후속 2, 박 님 확정 텍스트). set A
+  (ch10)에는 대응 데이터가 없어 안 더했다(지시문이 준 것은 set B 5건뿐).
+  scripts/support-golden.ts: loadCases() 가 같은 파일에서 no_beat 케이스도
+  읽어 set B 에 합친다(id 로 good/nak 과 짝). 헤더 로그 "set B(bt-) good 10 ·
+  nak 5 · no_beat 5"로 확장. summarize() 에 noBeatMissed 열 추가(기대 verdict
+  가 'no_beat' 아니면 미검출) — set B 결과 줄에 조건부로 붙는다.
+  verify.ts: v3 문안 키워드(출구 문단·출력 형식) · SupportObservationSchema
+  null beat_line 파싱 · verifySupportJudgment 6종 픽스처(no_beat 추가, beat_line
+  null 이면 support_line·quote 값과 무관함도 병으로 문다) · judgeSupportWith
+  전 구간에 beat_line null 응답 케이스 추가 · no_beat_answer 가 문항 원문과
+  같은지 · 하네스가 no_beat 케이스를 싣고 집계에 noBeatMissed 열이 있는지.
+
+검증  tsc 0 · test:scoring 형태소 서버 켜고 5836/0(전수 불변식 둘 다 포함) ·
+  check:numbers 0 · gen:seed(problems 2건 config 변경 — seed_data.sql·
+  seed_check.sql 둘 다 갱신) · next build 통과 · ai:support-golden --dry
+  확인("set B(bt-) good 10 · nak 5 · no_beat 5", 이 실행 상한 190회) · 물기:
+  local.ts 근사 복사 임계(0.6→0.95)로 픽스처 fail 재현 · keep slice 를
+  slice(0) 으로 바꿔 경계 픽스처 fail 재현 · prompt.ts verifySupportJudgment
+  의 j<k 비교를 뒤집어 6종 픽스처 + 골든 9쌍 자기정합성 전부 fail 재현 ·
+  set_b_nak.json no_beat_answer 를 원문과 다르게 바꿔 대조 fail 재현 · 하네스
+  kind:'no_beat' 를 오타로 바꿔 tsc 컴파일 에러 + verify 텍스트 가드 fail
+  재현 — 전부 확인 후 복원.
+★ DB 절차(박 님)  seed/update-first-hook-v3.sql → seed/update-action-turn-v4.sql
+  → seed_data.sql(멱등) → seed_check.sql. 눈검사는 config 값이라 화면에
+  안 보인다 — 근사 복사가 실제로 걸리는지는 브라우저에서 "앞 N 줄만 정확히
+  남기고 나머지를 그대로 낸" 답안으로 직접 시험해야 확인된다(다음 세션
+  실사용 때 겸해도 된다).
 ```
 
 ### 끝난 것 — 세션 41 (bt- 모범답안 2건 수정 · 골든셋 set B nak 5건)
@@ -247,8 +328,15 @@ verify.ts [문장 12 action_turn]  LEN 표의 bt-orc-axe[0] 115→107 · bt-low-
   set A 의 cracked-ice 형과 같은 미검출 후보로 표시. B-05(low-guard)는 nak 의
   결정타 문장 주어가 good 과 달라('정후의 검이') 통제 짝으로 완전하지 않다고
   박 님이 직접 표시 — 뒤집힘이 나오면 프롬프트 결함이 아니라 이 항목 성격으로
-  먼저 본다. ★ 박 님 지시대로 scripts/support-golden.ts 는 이번에 안 건드렸다
-  (코드 무변경) — loadCases() 가 이 파일을 아직 안 읽는다. 다음 "다음" 2번.
+  먼저 본다. ★ 박 님 지시대로 scripts/support-golden.ts 는 이 세션에 안 건드렸다
+  (코드 무변경) — loadCases() 가 이 파일을 아직 안 읽는다.
+  ★★ 후속 커밋(ef11995, STATUS 반영 누락 — 이번 세션이 메운다)에서 배선했다:
+  loadCases() 가 set_b_nak.json 을 읽어 set B 의 nak 5건을 id 로 bt- 5건과
+  짝 맞춰 합친다. 헤더 로그를 "set B(bt-) good 10 · nak 5" 로 분리하고, B-03·
+  B-05 의 note 를 실행 시작 시·결과 표(항목별 미검출 수 옆) 양쪽에 낸다.
+  verify.ts 에 데이터 파일 존재·5건·id 일치·필드 비어있지 않음·good_answer가
+  실제 reference_answers(가)와 같음·하네스가 실제로 이 파일을 읽어 kind:'nak'
+  으로 신는지까지 물기 시험 추가.
 
 검증  tsc 0 · next typegen 없음(스키마·타입 변화 없음, route 불변) · test:scoring
   형태소 서버 켜고 5795/0 · check:numbers 0 · gen:seed(reference_answers 2행만

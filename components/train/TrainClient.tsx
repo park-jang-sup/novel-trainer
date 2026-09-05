@@ -54,10 +54,11 @@ interface GradeResponse {
   // 뜨는 첫 렌더에 아직 반영이 안 돼 해설이 안 나왔다(세션 28 버그). 한
   // 번의 setResult 로 원자화한다. 오답 뒤 다른 선택지를 눌러도 안 흔들린다.
   submittedChoiceIndex?: number
-  // 결정타 빌드업 섀도(support-v2, 문장 12 action_turn(bt-) 5문항). **섀도
+  // 결정타 빌드업 섀도(support-v3, 문장 12 action_turn(bt-) 5문항). **섀도
   // 모드다** — status·통과 판정과 무관하다. pending 이면(킬스위치·gate 닫힘·
   // 호출 실패 포함) 카드를 안 띄운다. undefined 면 이 문항에 섀도가 없다.
-  shadow?: { verdict: 'buildup' | 'none' | 'support_not_before' | 'pending'; quote?: string }
+  // no_beat(세션 41 후속 2) 는 승부 수 자체가 없다는 뜻 — quote 는 안 쓴다.
+  shadow?: { verdict: 'buildup' | 'none' | 'support_not_before' | 'no_beat' | 'pending'; quote?: string }
 }
 
 interface LoopProps {
@@ -673,9 +674,12 @@ export default function TrainClient({
             </div>
           )}
 
-          {/* 결정타 빌드업 섀도(support-v2) — **통과와 무관.** pending(킬스위치·
+          {/* 결정타 빌드업 섀도(support-v3) — **통과와 무관.** pending(킬스위치·
               gate 닫힘·호출 실패 포함)이면 조용히 안 뜬다. 합격/불합격 낱말을
-              쓰지 않는다 — 통과 판정으로 읽히면 섀도 모드가 아니게 된다. */}
+              쓰지 않는다 — 통과 판정으로 읽히면 섀도 모드가 아니게 된다.
+              no_beat(세션 41 후속 2)는 승부 수 자체가 안 보인다는 뜻 — 근거
+              줄 얘기(buildup·none·support_not_before)와 다른 결이라 문구를
+              따로 둔다. */}
           {result.shadow && result.shadow.verdict !== 'pending' && (
             <div
               className="space-y-1 p-3 text-sm"
@@ -689,6 +693,8 @@ export default function TrainClient({
                   '결정타 앞에 근거 줄이 안 보여 — 상대의 버릇·자리·논리를 알게 하는 줄 하나가 있으면 더 세.'}
                 {result.shadow.verdict === 'support_not_before' &&
                   '근거가 결정타와 같거나 뒤에 있어. 결정타보다 앞으로.'}
+                {result.shadow.verdict === 'no_beat' &&
+                  '아직 승부 수가 없어 — 누가 어떤 수를 두는지 한 줄이 있어야 결정타를 볼 수 있어.'}
               </p>
             </div>
           )}

@@ -763,15 +763,36 @@ export function gradeLocal(
       // fail. lack·contrast_char 는 원문이 무난한 장면이라 "원문 복사 + 이름"으로
       // 뚫렸다(세션 32 후기 실증). 원문이 안 넘어오면(passage 미지정) 판정 못 하니
       // 검사를 안 만든다 — 화면의 기준 목록은 빈 원문을 넘기지 말고 실제 원문을 준다.
+      //
+      // ★ 세션 41 후속 2 — 통째 복사만 잡으면 낱말 하나만 바꾼 근사 복사가
+      //   뚫린다(박 님 실사용 발견). 원문을 splitSentences 로 쪼개 각 문장이
+      //   답안(공백 제거)에 그대로 들어 있는지 세고, **60% 이상**이면 fail —
+      //   문장 하나를 살짝 고쳐도 나머지 전부가 원문 그대로면 여전히 걸린다.
+      //   passageCopyKeep 은 지시문이 "앞 N 줄은 두고"처럼 유지를 요구하는
+      //   문항의 예외다 — 앞 N 문장은 이 근사 검사에서 통째로 뺀다(세지도 않고
+      //   분모에도 안 넣는다). opt-in 이라 forbidPassageCopy 가 없으면(예:
+      //   ig-gate-wait) 이 검사도 안 돈다.
       if (cfg.forbidPassageCopy && passage != null) {
         const strip = (s: string) => s.replace(/\s/g, '')
         const p = strip(passage)
-        const copied = p.length > 0 && strip(text).includes(p)
+        const wholeCopied = p.length > 0 && strip(text).includes(p)
+
+        const keep = cfg.passageCopyKeep ?? 0
+        const checkable = splitSentences(passage).slice(keep)
+        const total = checkable.length
+        const matches = checkable.filter((s) => strip(text).includes(strip(s))).length
+        const nearCopied = total > 0 && matches / total >= 0.6
+
+        const copied = wholeCopied || nearCopied
         checks.push({
           key: 'passageCopy',
           label: '원문 그대로 옮김',
           status: copied ? 'fail' : 'pass',
-          detail: copied ? '원문을 고치지 않고 그대로 냈다' : '고쳐 씀',
+          detail: wholeCopied
+            ? '원문을 고치지 않고 그대로 냈다'
+            : nearCopied
+              ? `원문 문장 ${matches}/${total}개를 그대로 옮김`
+              : '고쳐 씀',
           rule: '원문을 그대로 옮기지 않음',
           gating: true,
         })

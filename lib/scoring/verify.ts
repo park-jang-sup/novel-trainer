@@ -6451,6 +6451,105 @@ console.log('\n[언어 관문 language_gate: 전수 불변식 · 픽스처]')
     JSON.stringify(offenders.map((r) => `${r.source_key}:${r.ord}`)))
 }
 
+// ── forbidPassageCopy 근사 복사 차단(60%) — 세션 41 후속 2 ────────────────
+//
+// 통째 복사만 잡으면 낱말 하나만 바꾼 근사 복사가 뚫린다(박 님 실사용
+// 발견 — 실사용 첫 제출이 규칙·AI 둘 다 뚫었다). 원문 문장(splitSentences)의
+// 60% 이상이 답안(공백 제거)에 그대로 들어 있으면 fail — local.ts gradeLocal
+// 의 passageCopy 검사가 통째 복사와 근사 복사를 OR 로 본다. passageCopyKeep
+// 은 "앞 N 줄은 두고"류 지시문의 예외(fh-burnt-manor 3 · bt-fireball-shield 1)
+// — 앞 N 문장은 세지도, 분모에도 안 넣는다.
+console.log('\n[forbidPassageCopy 근사 복사(60%): 전수 불변식 · 픽스처]')
+{
+  // ── 픽스처(지시서 그대로) ──
+  const spearPassage = '곽무영의 창은 세 걸음 거리를 지켰다. 백서린이 들어가면 창끝이 찌르고, 물러서면 창대가 따라와 후렸다. 세 합 만에 서린의 왼팔 소매가 갈라졌다. 창은 거리 싸움이었다.'
+  const spearProblem: Problem = { id: 'x', type: 'continue', scoring_mode: 'auto', scoring_config: { forbidPassageCopy: true } }
+
+  const noWordAnswer = spearPassage.replace('왼팔', '')
+  const noWordChecks = gradeLocal(spearProblem, { text: noWordAnswer }, undefined, spearPassage)
+  t('픽스처: bt-spear-range 원문에서 "왼팔"만 뺀 답안 → passageCopy fail(3/4)',
+    noWordChecks.find((c) => c.key === 'passageCopy')?.status === 'fail' &&
+      noWordChecks.find((c) => c.key === 'passageCopy')?.detail === '원문 문장 3/4개를 그대로 옮김',
+    JSON.stringify(noWordChecks.find((c) => c.key === 'passageCopy')))
+
+  const oneSentenceAnswer = '곽무영의 창은 세 걸음 거리를 지켰다. 그것을 알아챈 서린이 몸을 낮췄다.'
+  const oneSentenceChecks = gradeLocal(spearProblem, { text: oneSentenceAnswer }, undefined, spearPassage)
+  t('픽스처: 원문 1문장만 인용한 정상 답안 → pass',
+    oneSentenceChecks.find((c) => c.key === 'passageCopy')?.status === 'pass',
+    JSON.stringify(oneSentenceChecks.find((c) => c.key === 'passageCopy')))
+
+  // ── passageCopyKeep 예외 대상 config 값 ──
+  const seedDir3 = path.join(__dirname, '..', '..', 'seed', 'dump')
+  const readDump3 = <T,>(f: string): T =>
+    JSON.parse(readFileSync(path.join(seedDir3, f), 'utf8').replace(/^﻿/, '')) as T
+  interface PcProblem { source_key: string; type: string; passage: string | null; scoring_config: ScoringConfig }
+  const allProblems3 = readDump3<PcProblem[]>('problems.json')
+  const fhBurnt = allProblems3.find((p) => p.source_key === 'fh-burnt-manor')!
+  t('fh-burnt-manor: scoring_config.passageCopyKeep === 3', fhBurnt.scoring_config.passageCopyKeep === 3)
+  const bfShield = allProblems3.find((p) => p.source_key === 'bt-fireball-shield')!
+  t('bt-fireball-shield: scoring_config.passageCopyKeep === 1', bfShield.scoring_config.passageCopyKeep === 1)
+  t('ig-gate-wait: forbidPassageCopy 자체가 없다(예외 config 불필요)',
+    allProblems3.find((p) => p.source_key === 'ig-gate-wait')!.scoring_config.forbidPassageCopy === undefined)
+
+  const answersDump3 = readDump3<{ reference?: RefRow[] }>('answers.json')
+  const fhBurntRef1 = (answersDump3.reference ?? []).find((r) => r.source_key === 'fh-burnt-manor' && r.ord === 1)!
+  const fhChecks = gradeLocal(
+    { id: 'fh-burnt-manor', type: fhBurnt.type as ProblemType, scoring_mode: 'auto', scoring_config: fhBurnt.scoring_config },
+    { text: fhBurntRef1.content }, undefined, fhBurnt.passage ?? ''
+  )
+  t('픽스처: fh-burnt-manor 가(모범답안) → pass(keep 3)',
+    fhChecks.find((c) => c.key === 'passageCopy')?.status === 'pass',
+    JSON.stringify(fhChecks.find((c) => c.key === 'passageCopy')))
+
+  // 경계 픽스처 — keep 이 실제로 필요한 자리를 합성으로 만든다. 실제
+  // 모범답안(가·나)은 앞 3문장도 다 고쳐 써서 keep 유무와 무관하게 pass 하니
+  // (matches=0), keep 메커니즘 자체를 무는 픽스처가 따로 필요하다: 지시대로
+  // 앞 3문장만 "정확히" 남기고 뒤 2문장을 새로 쓴 답안은 keep 이 없으면
+  // 3/5=60% 로 근사 복사에 걸린다 — 그 결과를 keep 이 막는지 여기서 문다.
+  const fhKeepBoundary = '진운은 불탄 장원 앞에 섰다. 사문 백여 명이 하룻밤에 죽었고, 심부름으로 산을 내려갔던 진운 혼자 살아남았다. 그는 아버지의 부러진 검을 주워 들었다. 그는 검을 챙겨 성문을 나섰다. 상단을 따라 남쪽으로 향했다.'
+  const fhKeepChecks = gradeLocal(
+    { id: 'fh-burnt-manor', type: fhBurnt.type as ProblemType, scoring_mode: 'auto', scoring_config: fhBurnt.scoring_config },
+    { text: fhKeepBoundary }, undefined, fhBurnt.passage ?? ''
+  )
+  t('경계 픽스처: 지시대로 앞 3문장만 정확히 남긴 답안 → keep 예외로 pass(예외 없으면 3/5=60% fail)',
+    fhKeepChecks.find((c) => c.key === 'passageCopy')?.status === 'pass',
+    JSON.stringify(fhKeepChecks.find((c) => c.key === 'passageCopy')))
+
+  // ── 전수 불변식: 활성 forbidPassageCopy 문항 전부의 모범답안이 근사 복사
+  //    검사(60%)를 통과하는지 ──
+  const deactivate3 = readDump3<{ source_keys: string[] }>('deactivate.json')
+  const deadKeys3 = new Set(deactivate3.source_keys)
+  const fpcActive = allProblems3.filter((p) => !deadKeys3.has(p.source_key) && p.scoring_config.forbidPassageCopy)
+  t('활성 forbidPassageCopy 문항 36건', fpcActive.length === 36, `실제=${fpcActive.length}`)
+
+  const fpcKeys = new Set(fpcActive.map((p) => p.source_key))
+  const passageOf3 = new Map(fpcActive.map((p) => [p.source_key, p.passage ?? '']))
+  const cfgOf3 = new Map(fpcActive.map((p) => [p.source_key, p.scoring_config]))
+  const typeOf3 = new Map(fpcActive.map((p) => [p.source_key, p.type]))
+  const fpcRefs = (answersDump3.reference ?? []).filter((r) => fpcKeys.has(r.source_key))
+
+  const nearOffenders = fpcRefs.filter((r) => {
+    const checks = gradeLocal(
+      { id: r.source_key, type: typeOf3.get(r.source_key) as ProblemType, scoring_mode: 'auto', scoring_config: cfgOf3.get(r.source_key)! },
+      { text: r.content }, undefined, passageOf3.get(r.source_key)!
+    )
+    return checks.find((c) => c.key === 'passageCopy')?.status !== 'pass'
+  })
+  t(`활성 forbidPassageCopy 모범답안 ${fpcRefs.length}건 전수 — 근사 복사(60%) 오탐 0`,
+    nearOffenders.length === 0,
+    JSON.stringify(nearOffenders.map((r) => `${r.source_key}:${r.ord}`)))
+
+  // ── SQL 델타 텍스트 가드 ──
+  const fhV3Src = readFileSync(path.join(__dirname, '..', '..', 'seed', 'update-first-hook-v3.sql'), 'utf8')
+  t('update-first-hook-v3.sql: fh-burnt-manor 에 passageCopyKeep 3',
+    fhV3Src.includes("jsonb_set(scoring_config, '{passageCopyKeep}', '3'::jsonb)") &&
+      fhV3Src.includes("'fh-burnt-manor'"))
+  const atV4Src = readFileSync(path.join(__dirname, '..', '..', 'seed', 'update-action-turn-v4.sql'), 'utf8')
+  t('update-action-turn-v4.sql: bt-fireball-shield 에 passageCopyKeep 1',
+    atV4Src.includes("jsonb_set(scoring_config, '{passageCopyKeep}', '1'::jsonb)") &&
+      atV4Src.includes("'bt-fireball-shield'"))
+}
+
 // ── '쓰지 않을 말' 표시: forbidLabel/forbidDisplay ↔ 채점 (세션 22) ──────
 //
 // scoring_config 에 표시 전용 필드 둘을 더했다. 채점(forbidWords·forbidLemmas)은
@@ -7744,17 +7843,18 @@ console.log('\n[AI 마개 — 게이트와 관측]')
   }
 }
 
-// ── 결정타 빌드업 섀도(support-v2) — 세션 40 ────────────────────────────
+// ── 결정타 빌드업 섀도(support-v3) — 세션 40, '결정타 없음' 출구는 세션 41 후속 2 ──
 //
 // **섀도 모드다.** 판정·코멘트를 보여주되 통과·진도에 안 쓴다(세션 32 원칙).
 // delete/point/point2(위 블록)는 4줄 고정·지문 필요형(옛 action_turn)이고,
 // 이쪽은 문장 수가 자유인 답안(bt-)을 다룬다 — 새 틀이라 별도 절로 문다.
-console.log('\n[결정타 빌드업 섀도 support-v2]')
+console.log('\n[결정타 빌드업 섀도 support-v3]')
 {
   // ── 문안 조립 ────────────────────────────────────────────────────
-  t("PROMPT_VERSION_SUPPORT = 'support-v2' (v1 은 안 만든다)",
-    PROMPT_VERSION_SUPPORT === 'support-v2')
-  t('병: support-v1 문자열이 어디에도 없다', !PROMPT_FRAME_SUPPORT.includes('support-v1'))
+  t("PROMPT_VERSION_SUPPORT = 'support-v3' (v1 은 안 만든다 · v2→v3 는 세션 41 후속 2)",
+    PROMPT_VERSION_SUPPORT === 'support-v3')
+  t('병: support-v1·support-v2 문자열이 어디에도 없다',
+    !PROMPT_FRAME_SUPPORT.includes('support-v1') && !PROMPT_FRAME_SUPPORT.includes('support-v2'))
   // 문안 핵심 문장 — 세션 40 정정 2 가 확정한 글자 그대로.
   t('문안: 결정타 먼저 짚기', PROMPT_FRAME_SUPPORT.includes('승부가 나는 문장(결정타 문장)을 하나 짚어라'))
   t('문안: 있어야 하는 문장의 정의', PROMPT_FRAME_SUPPORT.includes("알게 해 주는' 문장이다"))
@@ -7766,6 +7866,10 @@ console.log('\n[결정타 빌드업 섀도 support-v2]')
     PROMPT_FRAME_SUPPORT.includes('"beat_line"') &&
     PROMPT_FRAME_SUPPORT.includes('"support_line"') &&
     PROMPT_FRAME_SUPPORT.includes('"quote"'))
+  // v3: '결정타 없음' 출구(세션 41 후속 2, 박 님 실사용 발견).
+  t("v3: '결정타 없음' 출구 문안", PROMPT_FRAME_SUPPORT.includes('승부가 나는 문장이 없으면 beat_line 을 null 로'))
+  t("v3: 출구 사유(상황 설명만 있고 아무도 수를 안 둠)", PROMPT_FRAME_SUPPORT.includes('아무도 수를 두지 않은 글이 그렇다'))
+  t('v3: 출력 형식이 beat_line 도 null 을 받는다', PROMPT_FRAME_SUPPORT.includes('<1~N 또는 null>, "support_line"'))
 
   const threeSentence = '진은 가운데를 비워 적을 삼킨다. 나는 열린 가운데를 버렸다. 고리가 물어뜯었다.'
   const built = buildSupportPrompt(threeSentence)
@@ -7782,6 +7886,8 @@ console.log('\n[결정타 빌드업 섀도 support-v2]')
   t('관측: 바른 JSON 을 읽는다', parseSupportObservation(supportGoodJson).ok)
   t('관측: null support_line 을 읽는다',
     parseSupportObservation('{"beat_line":2,"support_line":null,"quote":""}').ok)
+  t('관측: null beat_line 을 읽는다(v3 출구)',
+    parseSupportObservation('{"beat_line":null,"support_line":null,"quote":""}').ok)
   t('관측: 코드펜스를 벗긴다', parseSupportObservation('```json\n' + supportGoodJson + '\n```').ok)
   t('병: JSON 이 아니면 not_json', !parseSupportObservation('음, 결정타는...').ok)
   t('병: beat_line 이 문자열이면 bad_shape',
@@ -7812,6 +7918,12 @@ console.log('\n[결정타 빌드업 섀도 support-v2]')
     verifySupportJudgment(answer3, { beat_line: 3, support_line: 1, quote: '' }).verdict === 'quote_mismatch')
   t('verifySupportJudgment: quote 는 부분 문자열이어도 된다(전체 인용 강제 아님)',
     verifySupportJudgment(answer3, { beat_line: 3, support_line: 1, quote: '적을 삼킨다' }).verdict === 'buildup')
+  // 6종째(세션 41 후속 2) — beat_line null → 'no_beat'. support_line·quote 값과
+  // 무관하다(결정타가 없으면 근거를 물을 것도 없다 — 안 본다).
+  t("verifySupportJudgment: beat_line null → 'no_beat'",
+    verifySupportJudgment(answer3, { beat_line: null, support_line: null, quote: '' }).verdict === 'no_beat')
+  t("병: beat_line null 이면 support_line·quote 가 뭐든 'no_beat' 다(안 본다)",
+    verifySupportJudgment(answer3, { beat_line: null, support_line: 1, quote: '아무 값' }).verdict === 'no_beat')
 
   // ── set A(ch10) 골든셋 자기 정합성 — gold.payoff_line/beat_line 로 j<k 를
   //    같은 함수로 검증(good: buildup 기대). AI 호출 없이 픽스처 자체를 문다 —
@@ -7852,13 +7964,20 @@ console.log('\n[결정타 빌드업 섀도 support-v2]')
       answer3, 'gemini-3.7-flash')
     return !r.ok && r.error === 'not_json' && r.costUsd !== null
   })
+  tAsync("전 구간: beat_line null 응답도 관측이 선다(v3 출구, bad_shape 아님)", async () => {
+    const r = await judgeSupportWith(
+      async () => ({ text: '{"beat_line":null,"support_line":null,"quote":""}', usage: { inputTokens: 300, cachedTokens: 0, outputTokens: 20 }, model: 'gemini-3.7-flash' }),
+      answer3, 'gemini-3.7-flash')
+    return r.ok && r.observation !== null && r.observation.beat_line === null &&
+      verifySupportJudgment(answer3, r.observation).verdict === 'no_beat'
+  })
 
   // ── 대상 5문항: bt- 5건 scoring_config.ai_shadow === 'support' · 다른 단계는
   //    안 건드림(구성 16 ca- 는 이번에 안 켠다) ──
   const seedDir2 = path.join(__dirname, '..', '..', 'seed', 'dump')
   const readDump2 = <T,>(f: string): T =>
     JSON.parse(readFileSync(path.join(seedDir2, f), 'utf8').replace(/^﻿/, '')) as T
-  interface ShadowProblem { source_key: string; skill_key: string; scoring_config: { ai_shadow?: string } }
+  interface ShadowProblem { source_key: string; skill_key: string; passage: string | null; scoring_config: { ai_shadow?: string } }
   const allProblems2 = readDump2<ShadowProblem[]>('problems.json')
   const bt2 = allProblems2.filter((p) => p.skill_key === 'action_turn' && p.source_key.startsWith('bt-'))
   t('bt- 5건 전부 ai_shadow: "support"',
@@ -7875,7 +7994,7 @@ console.log('\n[결정타 빌드업 섀도 support-v2]')
   const setBNakPath = path.join(__dirname, '..', '..', 'data', 'probe', 'set_b_nak.json')
   t('data/probe/set_b_nak.json 이 존재한다', existsSync(setBNakPath))
   if (existsSync(setBNakPath)) {
-    interface SetBNakItem { id: string; gold: { good_answer: string; nak_answer: string; payoff_line: string; beat_line: string; note?: string } }
+    interface SetBNakItem { id: string; gold: { good_answer: string; nak_answer: string; no_beat_answer: string; payoff_line: string; beat_line: string; note?: string } }
     const setBNak = JSON.parse(readFileSync(setBNakPath, 'utf8').replace(/^﻿/, '')) as { items: SetBNakItem[] }
     t('set_b_nak.json: 5건', setBNak.items.length === 5, `실제=${setBNak.items.length}`)
     const nakIds = new Set(setBNak.items.map((i) => i.id))
@@ -7884,8 +8003,9 @@ console.log('\n[결정타 빌드업 섀도 support-v2]')
       nakIds.size === 5 && [...nakIds].every((id) => btIds.has(id)) && [...btIds].every((id) => nakIds.has(id)),
       JSON.stringify({ nak: [...nakIds].sort(), bt: [...btIds].sort() }))
     for (const item of setBNak.items) {
-      t(`set_b_nak.json '${item.id}': good_answer·nak_answer·payoff_line·beat_line 이 비어 있지 않다`,
-        !!item.gold.good_answer && !!item.gold.nak_answer && !!item.gold.payoff_line && !!item.gold.beat_line)
+      t(`set_b_nak.json '${item.id}': good_answer·nak_answer·no_beat_answer·payoff_line·beat_line 이 비어 있지 않다`,
+        !!item.gold.good_answer && !!item.gold.nak_answer && !!item.gold.no_beat_answer &&
+          !!item.gold.payoff_line && !!item.gold.beat_line)
     }
     // good_answer 는 세션 41 v3 수정 뒤의 bt- ord1(가)과 같아야 한다 — 데이터가 갈리면
     // 하네스가 옛 문안을 잰다.
@@ -7897,15 +8017,28 @@ console.log('\n[결정타 빌드업 섀도 support-v2]')
       t(`set_b_nak.json '${item.id}': good_answer 가 reference_answers ord1(가)과 같다`,
         item.gold.good_answer === ord1ByKey.get(item.id))
     }
+    // no_beat_answer 는 세션 41 후속 2 지시대로 bt- 문항 원문(passage) 그대로여야
+    // 한다 — 데이터가 갈리면 "결정타 없음" 출구가 실제로는 다른 걸 잰다.
+    const passageByKey = new Map(
+      allProblems2.filter((p) => p.source_key.startsWith('bt-')).map((p) => [p.source_key, p.passage])
+    )
+    for (const item of setBNak.items) {
+      t(`set_b_nak.json '${item.id}': no_beat_answer 가 문항 원문(passage)과 같다`,
+        item.gold.no_beat_answer === passageByKey.get(item.id))
+    }
   }
 
   // ── scripts/support-golden.ts: loadCases() 가 set_b_nak.json 을 읽어 set B 의
-  //    nak 으로 쓴다(세션 41 배선) ──
+  //    nak·no_beat 으로 쓴다(세션 41 · 세션 41 후속 2 배선) ──
   const harnessSrc = readFileSync(path.join(__dirname, '..', '..', 'scripts', 'support-golden.ts'), 'utf8')
   t('support-golden.ts: set_b_nak.json 을 읽는다',
     harnessSrc.includes("'data', 'probe', 'set_b_nak.json'"))
   t("support-golden.ts: nak 케이스를 set:'B' 로 싣는다",
     /set: 'B', itemId: item\.id, kind: 'nak'/.test(harnessSrc))
+  t("support-golden.ts: no_beat 케이스를 set:'B' 로 싣는다(세션 41 후속 2)",
+    /set: 'B', itemId: item\.id, kind: 'no_beat'/.test(harnessSrc))
+  t('support-golden.ts: 집계에 no_beat 열이 있다',
+    harnessSrc.includes('noBeatMissed'))
 
   // ── seed_schema.sql: ai_shadow_cache 테이블·grant ──
   const schemaSrc = readFileSync(path.join(__dirname, '..', '..', 'seed_schema.sql'), 'utf8')
@@ -7949,6 +8082,7 @@ console.log('\n[결정타 빌드업 섀도 support-v2]')
   t("TrainClient: buildup 문구 '결정타 앞에 근거 줄이 있어'", tcSrc2.includes('결정타 앞에 근거 줄이 있어'))
   t("TrainClient: none 문구 '근거 줄이 안 보여'", tcSrc2.includes('근거 줄이 안 보여'))
   t("TrainClient: support_not_before 문구 '결정타보다 앞으로'", tcSrc2.includes('결정타보다 앞으로'))
+  t("TrainClient: no_beat 문구 '아직 승부 수가 없어'(세션 41 후속 2)", tcSrc2.includes('아직 승부 수가 없어'))
   t("병: pending 이면 카드를 안 그린다(verdict !== 'pending' 가드)",
     /result\.shadow && result\.shadow\.verdict !== 'pending'/.test(tcSrc2))
   // ★ 카드가 실제로 그리는 텍스트(JSX 리턴 구간)만 좁혀서 본다 — 파일 전체를

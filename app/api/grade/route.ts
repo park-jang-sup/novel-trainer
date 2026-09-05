@@ -18,18 +18,20 @@ import { PROMPT_VERSION_SUPPORT, verifySupportJudgment, type SupportObservation,
 //   안 쓰는 섀도, 이건 통과 판정 자체를 AI 에 맡기는 자리(원칙 4 재개 전까지 보류).
 
 /**
- * 결정타 빌드업 섀도(support-v2) 판정. **섀도 모드다** — 결과가 submissions.
+ * 결정타 빌드업 섀도(support-v3) 판정. **섀도 모드다** — 결과가 submissions.
  * is_passed·진도에 안 실린다(세션 32 섀도 모드 원칙). 실패해도 응답은 정상
  * 반환한다: gate 가 닫혔거나 호출이 깨지면 조용히 pending 이다.
  *
  * 순서: 캐시 조회(hash) → 없으면 gate → judgeSupportWith → verifySupportJudgment
  * → beat_mismatch·quote_mismatch 면 재시도 1회 → 그래도 안 서면 pending.
- * 실제 판정(buildup·none·support_not_before)만 캐시에 적는다 — pending 을
- * 캐시하면 같은 답안이 다음에도 재시도할 기회를 영영 못 얻는다.
+ * 실제 판정(buildup·none·support_not_before·no_beat)만 캐시에 적는다 —
+ * pending 을 캐시하면 같은 답안이 다음에도 재시도할 기회를 영영 못 얻는다.
+ * no_beat 는 재시도 대상이 아니다(verifySupportJudgment 주석 참고) — AI 가
+ * "결정타가 없다"고 정직하게 답한 것이라 그대로 최종 판정으로 캐시한다.
  */
 interface ShadowResult {
   verdict: SupportVerdict | 'pending'
-  beat_line?: number
+  beat_line?: number | null
   support_line?: number | null
   quote?: string
 }
@@ -103,7 +105,7 @@ async function computeShadow(
     break
   }
 
-  if (observation && (verdict === 'buildup' || verdict === 'none' || verdict === 'support_not_before')) {
+  if (observation && (verdict === 'buildup' || verdict === 'none' || verdict === 'support_not_before' || verdict === 'no_beat')) {
     const { error } = await admin.from('ai_shadow_cache').insert({
       hash,
       problem_id: problemId,
@@ -246,7 +248,7 @@ export async function POST(request: NextRequest) {
   // 8.5. 결정타 빌드업 섀도(support-v2) — **섀도 모드다.** 위 result.status ·
   //      submissions.insert(passed) 는 이 블록과 무관하게 이미 끝났다. 규칙
   //      판정이 pass 이고 이 문항이 ai_shadow: 'support' 를 켰을 때만 잰다.
-  let shadow: { verdict: SupportVerdict | 'pending'; beat_line?: number; support_line?: number | null; quote?: string } | undefined
+  let shadow: { verdict: SupportVerdict | 'pending'; beat_line?: number | null; support_line?: number | null; quote?: string } | undefined
   const cfg = (problem.scoring_config ?? {}) as ScoringConfig
   if (result.status === 'pass' && cfg.ai_shadow === 'support' && text && text.trim()) {
     try {

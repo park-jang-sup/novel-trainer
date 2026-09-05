@@ -394,18 +394,28 @@ export function buildPoint2Prompt(i: PromptInput): string {
 // ─────────────────────────────────────────────────────────────────────────
 
 /** 프롬프트 버전. 문안을 고치면 올린다 — 캐시(ai_shadow_cache) 키의 일부다.
- *  v1 은 만들지 않는다(박 님 지시, 세션 40 정정 2). */
-export const PROMPT_VERSION_SUPPORT = 'support-v2'
+ *  v1 은 만들지 않는다(박 님 지시, 세션 40 정정 2). v2→v3(세션 41 후속 2):
+ *  '결정타 없음' 출구 추가 — 버전을 올려 v2 캐시를 자연 무효화한다(같은
+ *  답안이라도 hash 에 prompt_version 이 들어가 v2 시절 캐시는 다시 안 쓰인다). */
+export const PROMPT_VERSION_SUPPORT = 'support-v3'
 
 /**
- * 문안. **그대로다** — 세션 40 정정 2 가 확정한 글자다. 고칠 때 STATUS 에
- * 왜 고쳤는지 남겨라 — 이 문안이 골든셋(scripts/support-golden.ts)의 판을 짠다.
+ * 문안. **그대로다** — 세션 40 정정 2 가 확정한 글자에 세션 41 후속 2 가
+ * '결정타 없음' 출구 한 문단을 더했다. 고칠 때 STATUS 에 왜 고쳤는지
+ * 남겨라 — 이 문안이 골든셋(scripts/support-golden.ts)의 판을 짠다.
  *
  * ★ 지문을 안 준다. delete/point 와 달리 [상황]·[결정타] 요소가 없는 자유
  *   서술 답안이라 — 답안 안에서만 결정타(beat_line)와 근거(support_line)를
  *   가른다.
+ *
+ * ★ v3: 상황 설명만 있고 아무도 수를 두지 않은 글(결정타 자체가 없는 글)을
+ *   v2 는 다룰 말이 없었다 — beat_line 이 필수라 억지로 아무 문장이나 짚게
+ *   된다. 실사용에서 원문(상황만 있고 아무도 수를 안 둔 문장들)을 그대로
+ *   낸 답안이 이 구멍으로 빠졌다(박 님 실사용 발견). beat_line 도 null 을
+ *   받게 열어 "결정타가 없다"를 정직하게 답하게 한다.
  */
 export const PROMPT_FRAME_SUPPORT = `아래는 번호가 매겨진 전투 장면의 문장들이다. 먼저 승부가 나는 문장(결정타 문장)을 하나 짚어라. 그다음, 그 결정타 문장이 성립하려면 반드시 있어야 하는 앞 문장이 있는지 답하라.
+승부가 나는 문장이 없으면 beat_line 을 null 로 하고 support_line·quote 도 null·빈 문자열로 답하라. 상황 설명만 있고 아무도 수를 두지 않은 글이 그렇다.
 '있어야 하는 문장'이란: 그 문장이 없으면 결정타가 왜 통하는지 알 수 없게 되는 문장. 상대의 버릇·약점·패턴, 자리의 상태, 인물의 내력, 상대가 세운 논리 중 하나를 '알게 해 주는' 문장이다.
 '있어야 하는 문장'이 아닌 것: 앞 문장이 뒤 문장을 시간이나 자리로 '가능하게'만 한 것. "피했으니 틈이 났다", "굴렀으니 닿았다" 같은 것. 이런 것은 어느 싸움에나 있고, 결정타가 '왜 그 결정타여야 하는지'를 대지 못한다.
 시험: 그 앞 문장을 "그럴 틈이 났다"처럼 아무것도 알려주지 않는 문장으로 바꿔 본다. 결정타가 그래도 같은 결정타로 읽히면 그 문장은 근거가 아니다.
@@ -414,7 +424,7 @@ export const PROMPT_FRAME_SUPPORT = `아래는 번호가 매겨진 전투 장면
 {lines}
 
 답은 JSON 으로만 낸다. 점수·평가·고쳐쓰기는 쓰지 않는다:
-{"beat_line": <1~N>, "support_line": <1~N 또는 null>, "quote": "<support_line 문장을 그대로 인용, null 이면 빈 문자열>"}`
+{"beat_line": <1~N 또는 null>, "support_line": <1~N 또는 null>, "quote": "<support_line 문장을 그대로 인용, null 이면 빈 문자열>"}`
 
 /**
  * 답안을 문장 번호로 매긴다. **local.ts 의 splitSentences 를 그대로 쓴다**
@@ -432,7 +442,7 @@ export function buildSupportPrompt(answer: string): string {
 }
 
 export const SupportObservationSchema = z.object({
-  beat_line: z.number().int(),
+  beat_line: z.number().int().nullable(),
   support_line: z.number().int().nullable(),
   quote: z.string(),
 })
@@ -457,28 +467,34 @@ export function parseSupportObservation(raw: string): SupportParseResult {
 }
 
 /**
- * 5종 판정. 'beat_mismatch'·'quote_mismatch' 는 AI 출력이 답안과 안 맞는
- * 것이라 그 판정을 폐기하고 재시도하는 신호다(호출부가 재시도 1회 후에도
- * 안 서면 'pending' 으로 기록한다 — 이 함수는 그 마지막 판정까지는 안 낸다,
- * 'pending' 은 호출부의 재시도 루프가 붙인다).
+ * 6종 판정('no_beat' 는 세션 41 후속 2 가 더했다). 'beat_mismatch'·
+ * 'quote_mismatch' 는 AI 출력이 답안과 안 맞는 것이라 그 판정을 폐기하고
+ * 재시도하는 신호다(호출부가 재시도 1회 후에도 안 서면 'pending' 으로
+ * 기록한다 — 이 함수는 그 마지막 판정까지는 안 낸다, 'pending' 은 호출부의
+ * 재시도 루프가 붙인다). 'no_beat' 는 재시도 대상이 아니다 — AI 가
+ * "결정타가 없다"고 정직하게 답한 것이라 그대로 믿는다.
  */
-export type SupportVerdict = 'buildup' | 'none' | 'support_not_before' | 'beat_mismatch' | 'quote_mismatch'
+export type SupportVerdict = 'buildup' | 'none' | 'support_not_before' | 'beat_mismatch' | 'quote_mismatch' | 'no_beat'
 
 /**
  * AI 호출 없는 순수 함수. answer 를 다시 문장으로 쪼개 judgment 를 문자열
  * 그대로 대조한다 — AI 가 지어낸 번호·인용을 신뢰하지 않는다.
  *
- * (a) beat_line k 가 1..N 안이 아니면 'beat_mismatch'.
- * (b) support_line 이 null 이면 'none'.
- * (c) support_line j 가 1..N 밖이거나, quote 가 비어 있거나 S[j] 안에
+ * (a) beat_line 이 null 이면 'no_beat' — 결정타가 없다는 답을 그대로 믿는다
+ *     (support_line·quote 는 안 본다 — 결정타가 없으면 근거를 물을 것도 없다).
+ * (b) beat_line k 가 1..N 안이 아니면 'beat_mismatch'.
+ * (c) support_line 이 null 이면 'none'.
+ * (d) support_line j 가 1..N 밖이거나, quote 가 비어 있거나 S[j] 안에
  *     문자열로 없으면 'quote_mismatch'.
- * (d) j < k 면 'buildup', j >= k 면 'support_not_before'
+ * (e) j < k 면 'buildup', j >= k 면 'support_not_before'
  *     (근거가 결정타와 같거나 뒤에 있다 — 옛 last_is_support 는 폐기).
  */
 export function verifySupportJudgment(
   answer: string,
   judgment: SupportObservation
 ): { verdict: SupportVerdict } {
+  if (judgment.beat_line === null) return { verdict: 'no_beat' }
+
   const S = splitSentences(answer)
   const k = judgment.beat_line
   if (!Number.isInteger(k) || k < 1 || k > S.length) return { verdict: 'beat_mismatch' }

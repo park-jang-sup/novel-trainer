@@ -11,7 +11,9 @@
  *          통제 짝이라, 판정이 문체가 아니라 근거 유무를 재는지 가른다.
  *   set B  bt- 모범답안 10건(3인칭·good, 답안 덤프에서) + data/probe/set_b_nak.json
  *          의 nak 5건(good 의 근거 문장만 위치 제공형으로 바꾼 통제 짝, id 로
- *          bt- 5건과 짝 맞춤) → good 'buildup' · nak 'none' 기대(세션 41).
+ *          bt- 5건과 짝 맞춤) + 같은 파일의 no_beat 5건(세션 41 후속 2 — bt-
+ *          문항 원문 그대로. 상황 설명만 있고 아무도 수를 두지 않은 글) →
+ *          good 'buildup' · nak 'none' · no_beat 'no_beat' 기대.
  *          ★ B-03(bt-orc-axe)·B-05(bt-low-guard)는 note 로 비통제 표시가 있다
  *            (근거가 자리형 · nak 결정타 문장 주어가 good 과 다름) — 결과 출력에
  *            함께 낸다. 뒤집힘·미검출이 나오면 프롬프트보다 이 표시를 먼저 본다.
@@ -72,11 +74,11 @@ interface RefRow {
 interface Case {
   set: 'A' | 'B'
   itemId: string // ch10 item id 또는 bt- source_key(:ord)
-  kind: 'good' | 'nak'
+  kind: 'good' | 'nak' | 'no_beat'
   text: string
-  // set B nak 전용. bt-orc-axe·bt-low-guard 가 통제 짝으로 불완전하다는 표시
-  // (data/probe/set_b_nak.json 의 gold.note). 결과 출력에 함께 낸다 — 없으면
-  // 해석이 미검출·뒤집힘을 프롬프트 결함으로 잘못 읽는다.
+  // set B nak/no_beat 전용. bt-orc-axe·bt-low-guard 가 통제 짝으로 불완전하다는
+  // 표시(data/probe/set_b_nak.json 의 gold.note). 결과 출력에 함께 낸다 —
+  // 없으면 해석이 미검출·뒤집힘을 프롬프트 결함으로 잘못 읽는다.
   note?: string
 }
 
@@ -85,6 +87,8 @@ interface SetBNakItem {
   gold: {
     good_answer: string
     nak_answer: string
+    // 세션 41 후속 2. bt- 문항 원문(passage) 그대로 — 결정타 자체가 없는 글.
+    no_beat_answer: string
     payoff_line: string
     beat_line: string
     note?: string
@@ -142,6 +146,16 @@ function loadCases(): Case[] {
     })
   }
 
+  // set B no_beat(세션 41 후속 2) — 같은 파일, 같은 id 짝. bt- 문항 원문
+  // 그대로다 — 결정타가 아예 없는 글에 대해 프롬프트가 정직하게 null 을
+  // 내는지 잰다. note 는 nak 과 같은 값을 그대로 물려준다(같은 항목 성격 표시).
+  for (const item of nakData.items) {
+    out.push({
+      set: 'B', itemId: item.id, kind: 'no_beat', text: item.gold.no_beat_answer,
+      note: item.gold.note?.trim() || undefined,
+    })
+  }
+
   return out
 }
 
@@ -183,7 +197,7 @@ async function preflightWrite(): Promise<boolean> {
 interface RunResult {
   set: 'A' | 'B'
   itemId: string
-  kind: 'good' | 'nak'
+  kind: 'good' | 'nak' | 'no_beat'
   rep: number
   verdict: SupportVerdict | 'call_failed' | 'not_json' | 'bad_shape'
   fromCache: boolean
@@ -204,16 +218,17 @@ async function main() {
   const totalCalls = cases.length * reps
   const runCap = Number(arg('cap', String(totalCalls)))
 
-  const countOf = (list: Case[], kind: 'good' | 'nak') => list.filter((c) => c.kind === kind).length
+  const countOf = (list: Case[], kind: Case['kind']) => list.filter((c) => c.kind === kind).length
   console.log(
     `set A(ch10) good ${countOf(setA, 'good')} · nak ${countOf(setA, 'nak')} · ` +
-      `set B(bt-) good ${countOf(setB, 'good')} · nak ${countOf(setB, 'nak')} · ` +
+      `set B(bt-) good ${countOf(setB, 'good')} · nak ${countOf(setB, 'nak')} · no_beat ${countOf(setB, 'no_beat')} · ` +
       `반복 ${reps}회 · 모델 ${model} · thinking ${THINKING_LEVEL}`
   )
   console.log(`캐시 ${useCache ? '사용(--use-cache)' : '우회(기본)'} · 이 실행 상한 ${runCap}회`)
-  // set B nak 의 비통제 표시(note) — 결과를 읽기 전에 먼저 보여 둔다.
+  // set B nak/no_beat 의 비통제 표시(note) — 결과를 읽기 전에 먼저 보여 둔다.
+  // nak·no_beat 가 같은 note 를 물려받으므로(id 짝) nak 쪽에서만 한 번 낸다.
   for (const c of setB) {
-    if (c.note) console.log(`  ★ set B '${c.itemId}' (통제 짝 표시): ${c.note}`)
+    if (c.kind === 'nak' && c.note) console.log(`  ★ set B '${c.itemId}' (통제 짝 표시): ${c.note}`)
   }
   if (!PRICES[model]) console.log('★ 단가표에 없는 모델이다. 비용이 null 로 나간다 — pricing.ts 에 넣어라')
   else console.log(`★ 단가는 프로모다. ${PROMO_ENDS} 이후 두 배 — pricing.ts`)
@@ -343,8 +358,11 @@ async function main() {
     const rows = results.filter((r) => r.set === set)
     const good = rows.filter((r) => r.kind === 'good')
     const nak = rows.filter((r) => r.kind === 'nak')
+    const noBeat = rows.filter((r) => r.kind === 'no_beat')
     const falsePos = good.filter((r) => r.verdict !== 'buildup').length // 오탐: good인데 buildup 아님
     const missed = nak.filter((r) => r.verdict === 'buildup').length // 미검출: nak인데 buildup
+    // no_beat 미검출: 결정타가 없는 글인데 'no_beat' 가 아닌 다른 판정이 나온 것(세션 41 후속 2).
+    const noBeatMissed = noBeat.filter((r) => r.verdict !== 'no_beat').length
     const mismatch = rows.filter((r) => r.verdict === 'beat_mismatch' || r.verdict === 'quote_mismatch').length
     const cost = rows.reduce((s, r) => s + (r.costUsd ?? 0), 0)
 
@@ -362,10 +380,11 @@ async function main() {
       if (verdicts.size > 1) flips++
     }
 
-    console.log(`\n[set ${set}] good ${good.length}건 오탐 ${falsePos} · nak ${nak.length}건 미검출 ${missed} · ` +
-      `beat/quote 불일치 ${mismatch} · 뒤집힘(항목) ${flips}/${byItem.size} · 비용 $${cost.toFixed(6)}`)
-    // set B nak 은 항목별 미검출·note 를 결과 옆에 낸다 — 비통제 표시(B-03·B-05)가
-    // 없으면 미검출·뒤집힘을 프롬프트 결함으로 잘못 읽는다.
+    console.log(`\n[set ${set}] good ${good.length}건 오탐 ${falsePos} · nak ${nak.length}건 미검출 ${missed}` +
+      (noBeat.length > 0 ? ` · no_beat ${noBeat.length}건 미검출 ${noBeatMissed}` : '') +
+      ` · beat/quote 불일치 ${mismatch} · 뒤집힘(항목) ${flips}/${byItem.size} · 비용 $${cost.toFixed(6)}`)
+    // set B nak/no_beat 은 항목별 미검출·note 를 결과 옆에 낸다 — 비통제
+    // 표시(B-03·B-05)가 없으면 미검출·뒤집힘을 프롬프트 결함으로 잘못 읽는다.
     if (set === 'B') {
       const nakCasesById = new Map(cases.filter((c) => c.set === 'B' && c.kind === 'nak').map((c) => [c.itemId, c]))
       for (const [k, list] of byItem) {
@@ -375,8 +394,14 @@ async function main() {
         const note = nakCasesById.get(itemId)?.note
         console.log(`    nak '${itemId}': ${itemMissed}/${list.length}회 buildup(미검출)${note ? ` — ★ ${note}` : ''}`)
       }
+      for (const [k, list] of byItem) {
+        if (!k.endsWith(':no_beat')) continue
+        const itemId = k.slice(0, -':no_beat'.length)
+        const itemMissed = list.filter((r) => r.verdict !== 'no_beat').length
+        console.log(`    no_beat '${itemId}': ${itemMissed}/${list.length}회 no_beat 아님(미검출)`)
+      }
     }
-    return { set, good: good.length, falsePos, nak: nak.length, missed, mismatch, flips, itemCount: byItem.size, cost }
+    return { set, good: good.length, falsePos, nak: nak.length, missed, noBeat: noBeat.length, noBeatMissed, mismatch, flips, itemCount: byItem.size, cost }
   }
   const summaryA = summarize('A')
   const summaryB = summarize('B')

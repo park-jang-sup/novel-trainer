@@ -1091,7 +1091,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'first_hook'),
   'convert', 'auto', '아래 다섯 줄을 고쳐 쓰시오. 진운은 하룻밤에 사문이 몰살당하고 혼자 살아남은 소년이다. 원문은 어디로 가는지(복수)와 왜 이 사람인지(혼자 남아 검을 주웠다)는 있지만, 마지막 두 줄이 다짐뿐이라 어떻게 헤쳐 갈지가 없다. 앞 세 줄은 두고, 마지막 두 줄을 진운이 무엇부터 할지 보이는 행동으로 바꿔 다섯 줄로 다시 쓰시오. 진운의 속마음이나 대사 한 줄이 들리게 하시오.',
-  '진운은 불탄 장원 앞에 섰다. 사문 백여 명이 하룻밤에 죽었고, 심부름으로 산을 내려갔던 진운 혼자 살아남았다. 그는 아버지의 부러진 검을 주워 들었다. 반드시 갚아 줄 것이다. 언젠가는, 어떻게든.', null, '{"maxChars":200,"minVerbs":4,"requireAny":["진운"],"forbidLabel":"방법 없이 다짐만 하는 말","forbidWords":["어떻게든","반드시","언젠가","기필코"],"forbidDisplay":["어떻게든","반드시","언젠가","기필코"],"forbidPassageCopy":true}'::jsonb,
+  '진운은 불탄 장원 앞에 섰다. 사문 백여 명이 하룻밤에 죽었고, 심부름으로 산을 내려갔던 진운 혼자 살아남았다. 그는 아버지의 부러진 검을 주워 들었다. 반드시 갚아 줄 것이다. 언젠가는, 어떻게든.', null, '{"maxChars":200,"minVerbs":4,"requireAny":["진운"],"forbidLabel":"방법 없이 다짐만 하는 말","forbidWords":["어떻게든","반드시","언젠가","기필코"],"forbidDisplay":["어떻게든","반드시","언젠가","기필코"],"forbidPassageCopy":true,"passageCopyKeep":3}'::jsonb,
   'original', 'martial', 'planned',
   2, 'fh-burnt-manor'
 where not exists (select 1 from problems p where p.source_key = 'fh-burnt-manor');
@@ -1283,7 +1283,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'action_turn'),
   'convert', 'auto', '아래 전투를 고쳐 쓰시오. 리온은 방패와 검을 쓰는 기사고 카엘은 화염구를 쓰는 마법사다. 원문은 충격·고통·압도적 같은 느낌 말로 결과를 대신해서 독자 눈에 아무것도 안 보인다. 첫 문장은 두고, 결과를 방패·장갑·발뒤꿈치처럼 몸과 사물로 바꾸고, 리온이 카엘에게서 읽어 낸 것 하나로 다음 수를 고르게 다시 쓰시오. 리온의 속마음이나 대사 한 줄이 들리게 하시오.',
-  '화염구가 방패에 부딪쳤다. 끔찍한 충격이었다. 리온은 엄청난 고통을 느꼈다. 상대 마법사 카엘의 힘은 압도적이었다. 리온은 두려웠지만 버텼다.', null, '{"maxChars":200,"minVerbs":4,"requireAll":["리온","카엘"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","고통","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","고통","그때였다","과연"],"forbidPassageCopy":true,"ai_shadow":"support"}'::jsonb,
+  '화염구가 방패에 부딪쳤다. 끔찍한 충격이었다. 리온은 엄청난 고통을 느꼈다. 상대 마법사 카엘의 힘은 압도적이었다. 리온은 두려웠지만 버텼다.', null, '{"maxChars":200,"minVerbs":4,"requireAll":["리온","카엘"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","고통","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","고통","그때였다","과연"],"forbidPassageCopy":true,"passageCopyKeep":1,"ai_shadow":"support"}'::jsonb,
   'original', 'fantasy', 'planned',
   2, 'bt-fireball-shield'
 where not exists (select 1 from problems p where p.source_key = 'bt-fireball-shield');

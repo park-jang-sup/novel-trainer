@@ -4653,7 +4653,8 @@
         "언젠가",
         "기필코"
       ],
-      "forbidPassageCopy": true
+      "forbidPassageCopy": true,
+      "passageCopyKeep": 3
     }
   },
   {
@@ -4919,6 +4920,7 @@
         "과연"
       ],
       "forbidPassageCopy": true,
+      "passageCopyKeep": 1,
       "ai_shadow": "support"
     }
   },

@@ -137,6 +137,10 @@ export interface ScoringConfig {
    *  (세션 32 후기 박 님 실증). 원문 일부 유지가 정상인 remove 계열엔 쓰지 마라
    *  — opt-in 전용. gradeLocal 에 원문을 넘겨야 판정한다(config 가 아니라 인자). */
   forbidPassageCopy?: boolean
+  /** forbidPassageCopy 의 근사 복사 검사(60% 이상) 에서 원문 앞 N 문장을 뺀다
+   *  (세지도, 분모에도 안 넣는다). 지시문이 "앞 N 줄은 두고"류로 유지를
+   *  요구하는 문항의 예외 — fh-burnt-manor(3)·bt-fireball-shield(1). */
+  passageCopyKeep?: number
   // coinage
   count?: number
   minLen?: number
