@@ -25,12 +25,21 @@ import { PROMPT_VERSION_SUPPORT, verifySupportJudgment, type SupportObservation,
  * 함수는 판정만 낸다. 실패해도 응답은 정상 반환한다: gate 가 닫혔거나
  * 호출이 깨지면 조용히 pending 이다.
  *
- * 순서: 캐시 조회(hash) → 없으면 gate → judgeSupportWith → verifySupportJudgment
- * → beat_mismatch·quote_mismatch 면 재시도 1회 → 그래도 안 서면 pending.
+ * 순서: **kill_switch 확인(캐시보다 먼저!) → 캐시 조회(hash) → 없으면 나머지
+ * gate(api_key·spend_cap·quota) → judgeSupportWith → verifySupportJudgment
+ * → beat_mismatch·quote_mismatch 면 재시도 1회 → 그래도 안 서면 pending.**
  * 실제 판정(buildup·none·support_not_before·no_beat)만 캐시에 적는다 —
  * pending 을 캐시하면 같은 답안이 다음에도 재시도할 기회를 영영 못 얻는다.
  * no_beat 는 재시도 대상이 아니다(verifySupportJudgment 주석 참고) — AI 가
  * "결정타가 없다"고 정직하게 답한 것이라 그대로 최종 판정으로 캐시한다.
+ *
+ * ★ 킬스위치가 캐시보다 먼저인 이유(세션 44, 박 님 실사용 발견). 킬스위치를
+ * 켜고 시험하다가 이전에 캐시된 판정이 그대로 나오는 것을 봤다 — **캐시된
+ * 판정도 AI 판정이다.** 킬스위치는 "AI 판정 전면 정지"이지 "새 호출만 정지"가
+ * 아니다. spend_cap·quota 는 비용 문제라 캐시 사용(비용 0)을 막을 이유가
+ * 없어 그대로 캐시 뒤에 둔다 — 킬스위치만 방향이 다르다. flags.killSwitch 가
+ * null(못 읽음)이어도 닫힌 것으로 친다 — gate.ts checkGateBeforeQuota 와
+ * 같은 방향(못 읽으면 막는다).
  */
 interface ShadowResult {
   verdict: SupportVerdict | 'pending'
@@ -47,6 +56,11 @@ async function computeShadow(
   flags: SystemFlags
 ): Promise<ShadowResult> {
   const model = DEFAULT_MODEL
+
+  // ★ 킬스위치가 캐시보다 먼저다(세션 44) — 캐시된 판정도 AI 판정이라
+  //   킬스위치를 캐시가 앞지르면 안 된다. null(못 읽음)도 닫힌 것으로 친다.
+  if (flags.killSwitch === null || flags.killSwitch) return { verdict: 'pending' }
+
   const hash = createHash('sha256')
     .update(`${normalized} ${problemId} ${PROMPT_VERSION_SUPPORT} ${model}`)
     .digest('hex')

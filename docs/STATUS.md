@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 43 · 커밋 `5c5a578` 위
+마지막 갱신: 세션 44 · 커밋 `6fdce6b` 위
 
 ★ 활성 144 (전체 157 − 비활성 13). 언어 관문 전수 불변식(verify.ts)이 이 수를
   출력·단언한다 — 문항 증감 때마다 이 줄과 불변식을 같이 갱신한다.
@@ -49,7 +49,10 @@
   요구해…" 제약 안내를 보인다(품질 판정이 아니라 형식 요구). pending·
   beat_mismatch·quote_mismatch·none·support_not_before 는 안 막는다. 스위치가
   없거나 못 읽으면 항상 false(안 막음) — kill_switch(못 읽으면 막음)와 반대
-  방향. 켜는 것은 박 님 몫(아래 "다음" 1번). 언어 관문(language_gate)은 자유서술형
+  방향. 켜는 것은 박 님 몫(아래 "다음" 1번). ★ computeShadow() 는 킬스위치를
+  섀도 캐시보다 먼저 본다(세션 44) — 캐시된 판정도 AI 판정이라, 킬스위치가
+  켜져(또는 못 읽혀) 있으면 캐시를 보지 않고 즉시 pending 이다.
+  언어 관문(language_gate)은 자유서술형
   (remove·convert·continue) 전체 활성 문항에 켜졌다. forbidPassageCopy 는
   세 갈래 OR 다 — 통째 복사 · 근사 복사(원문 문장 60% 이상 그대로, 세션 41
   후속 2) · 글자 3-gram 겹침(임계 0.52, MAX_ECHO 절차로 실측, 세션 42) —
@@ -223,6 +226,47 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
                         설정 카드형 '다섯 줄 쓰기'(18 설계안 5번, write 유형 없어 보류됐던 것)는
                         이 보스 문항에서 다룬다 — 이때 쓸 설정 카드 형식은 도입 4 의 네 칸
                         (①재미 ②인물 ③장면 ④첫마디)을 그대로 재사용한다(세션 39 결정).
+```
+
+### 끝난 것 — 세션 44 (킬스위치가 섀도 캐시보다 먼저 — gating 우회 수정)
+
+```
+경위  세션 43 이 gating(no_beat 부분 gating)을 배선한 뒤 박 님이 실사용으로
+  처음 시험했다 — ⓐ 헛소리(gibberish) 답안이 막히는 것을 확인(설계대로 동작,
+  박 님 동의) ⓑ 킬스위치를 켜고 gating 이 실제로 안 걸리는지(설계 문장
+  "gate 가 닫히면 gating 도 자동 off"대로) 시험하다가, **캐시된 판정이 킬
+  스위치를 무시하고 그대로 나오는 것**을 발견했다. computeShadow() 가 캐시
+  조회를 킬스위치 확인보다 먼저 했기 때문 — 캐시 적중이면 gate 를 아예 안
+  거친다. 킬스위치를 "새 AI 호출만 막는다"로 잘못 짜 놓은 것이었다.
+  실사용 한 건이 설계 문장('gate 닫히면 막지 않는다')과 코드의 차이를 찾았다.
+
+1. app/api/grade/route.ts computeShadow() 순서 수정  킬스위치 확인을 캐시
+  조회보다 **앞**으로 옮겼다. flags.killSwitch 가 true 이거나 null(못 읽음)
+  이면 캐시를 보지 않고 즉시 { verdict: 'pending' } — gate.ts checkGateBefore
+  Quota 의 "못 읽으면 막는다" 방향과 맞췄다. 캐시 조회 뒤(캐시 미스일 때)의
+  나머지 gate(api_key·spend_cap·quota, checkGate() 그대로)는 안 건드렸다 —
+  spend_cap·quota 는 비용 문제라 캐시 사용(비용 0)을 막을 이유가 없다,
+  킬스위치만 방향이 다르다("AI 판정 전면 정지"이지 "새 호출만 정지"가
+  아니다 — 캐시된 판정도 AI 판정이다). gatedNoBeat 조건(shadow.verdict===
+  'no_beat' 일 때만)은 무변경 — 킬스위치로 pending 이 나오면 지금처럼
+  gating 이 안 걸린다(그대로 통과).
+
+2. lib/scoring/verify.ts  route.ts 를 통짜로 안 긁고 computeShadow() 함수
+  본문만 잘라(async function computeShadow( 부터 다음 top-level 선언
+  const GradeRequestSchema 앞까지) 그 안에서 'flags.killSwitch' 첫 등장이
+  ".from('ai_shadow_cache')" 보다 앞인지를 문다 — 함수 선언·POST 핸들러 안의
+  다른 'computeShadow('·'ai_shadow_cache' 언급과 안 섞이게 자르기 기준점
+  자체가 유효한지도 별도로 단언한다. 킬스위치 조건문이 null 도 포함하는지
+  (`flags.killSwitch === null || flags.killSwitch`) 텍스트로 별도 확인.
+
+검증  tsc 0 · test:scoring **8001 포트** 5884/0(8000 안 건드림, 세션 끝나며
+  8001 만 내림) · next build 통과. 물기(둘 다 확인 후 복원): 킬스위치 확인을
+  캐시 조회 **뒤**로 되돌려 새 순서 가드 fail 재현 → 복원 · null 분기를 지워
+  `if (flags.killSwitch) return { verdict: 'pending' }`로 좁혀 null-가드
+  fail 재현 → 복원.
+★ DB 절차(박 님)  코드만 바뀌었다 — 돌릴 SQL 없음. 배포 뒤 킬스위치를 다시
+  켜고, **이전에 이미 캐시된 판정이 있는 문항**으로 재시험해 이번엔 pending
+  으로 떨어지는지(카드가 안 뜨는지) 확인.
 ```
 
 ### 끝난 것 — 세션 43 (골든셋 수리 · no_beat gating 배선(기본 off) · 프롬프트 v4 준비)

@@ -8293,6 +8293,26 @@ console.log('\n[결정타 빌드업 섀도 support-v3]')
   t('route.ts: 응답에 shadow 를 싣는다(무관해도 undefined 로 실린다)',
     /shadow,\s*\n\s*\.\.\.\(gatedNoBeat/.test(routeSrc2))
 
+  // ── route.ts 텍스트 가드: 킬스위치가 섀도 캐시보다 먼저(세션 44, 박 님 실사용 발견) ──
+  //
+  // 세션 43 까지는 computeShadow() 가 캐시부터 봤다 — 킬스위치를 켜고 실사용
+  // 시험하다가 예전에 캐시된 판정이 그대로 나오는 것을 봤다(캐시된 판정도
+  // AI 판정이다). computeShadow() 함수 본문만 잘라서(선언부 밖의 다른
+  // 'ai_shadow_cache'·'computeShadow(' 언급과 안 섞이게) 킬스위치 확인이
+  // 캐시 조회보다 먼저 나오는지를 문다.
+  const computeShadowStart = routeSrc2.indexOf('async function computeShadow(')
+  const computeShadowEnd = routeSrc2.indexOf('\nconst GradeRequestSchema', computeShadowStart)
+  t('★★ route.ts: computeShadow() 함수를 실제로 찾았다(자르기 기준점이 어긋나지 않았다)',
+    computeShadowStart !== -1 && computeShadowEnd !== -1 && computeShadowEnd > computeShadowStart)
+  const computeShadowBody = routeSrc2.slice(computeShadowStart, computeShadowEnd)
+  const killSwitchIdx = computeShadowBody.indexOf('flags.killSwitch')
+  const cacheSelectIdx = computeShadowBody.indexOf(".from('ai_shadow_cache')")
+  t('★ route.ts: computeShadow() 안에서 kill_switch 확인이 ai_shadow_cache 조회보다 **앞**에 나온다(세션 44)',
+    killSwitchIdx !== -1 && cacheSelectIdx !== -1 && killSwitchIdx < cacheSelectIdx,
+    `killSwitch=${killSwitchIdx} cacheSelect=${cacheSelectIdx}`)
+  t("route.ts: 킬스위치 pending 조건이 null(못 읽음)도 포함한다 — 'flags.killSwitch === null || flags.killSwitch'",
+    /if \(flags\.killSwitch === null \|\| flags\.killSwitch\) return \{ verdict: 'pending' \}/.test(computeShadowBody))
+
   // ── lib/ai/flags.ts: shadowGateNoBeat 기본 off ──
   const flagsSrc = readFileSync(path.join(__dirname, '..', '..', 'lib', 'ai', 'flags.ts'), 'utf8')
   t('flags.ts: SystemFlags.shadowGateNoBeat 는 boolean(null 아님) — 항상 정해진 값',
