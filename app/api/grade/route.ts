@@ -5,13 +5,27 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { analyze } from '@/lib/scoring/remote'
 import { combine, countChars } from '@/lib/scoring'
-import type { Answer, ScoringConfig, Submission } from '@/lib/scoring/types'
+import { splitSentences } from '@/lib/scoring/local'
+import { shadowKinds, type Answer, type ScoringConfig, type Submission } from '@/lib/scoring/types'
 import { readFlags, sumSpendTodayUsd, type SystemFlags } from '@/lib/ai/flags'
 import { checkGate, DAILY_CALL_LIMIT } from '@/lib/ai/gate'
 import { consumeAiQuota } from '@/lib/quota'
 import { callGemini, DEFAULT_MODEL } from '@/lib/ai/gemini'
-import { judgeSupportWith } from '@/lib/ai/observe'
-import { PROMPT_VERSION_SUPPORT, verifySupportJudgment, type SupportObservation, type SupportVerdict } from '@/lib/ai/prompt'
+import { judgeHintWith, judgeSupportWith, judgeTellWith } from '@/lib/ai/observe'
+import {
+  PROMPT_VERSION_HINT,
+  PROMPT_VERSION_SUPPORT,
+  PROMPT_VERSION_TELL,
+  verifyHintJudgment,
+  verifySupportJudgment,
+  verifyTellJudgment,
+  type HintObservation,
+  type SupportObservation,
+  type SupportVerdict,
+  type TellObservation,
+  type TellVerdict,
+} from '@/lib/ai/prompt'
+import { buildHintCardText } from '@/lib/ai/hint-text'
 
 // TODO(다음 단계): needsAi(ai/hybrid scoring_mode) 문항의 AI 채점.
 //   결정타 빌드업 섀도(ai_shadow: 'support')와는 다른 자리다 — 저건 통과에
@@ -39,7 +53,10 @@ import { PROMPT_VERSION_SUPPORT, verifySupportJudgment, type SupportObservation,
  * 아니다. spend_cap·quota 는 비용 문제라 캐시 사용(비용 0)을 막을 이유가
  * 없어 그대로 캐시 뒤에 둔다 — 킬스위치만 방향이 다르다. flags.killSwitch 가
  * null(못 읽음)이어도 닫힌 것으로 친다 — gate.ts checkGateBeforeQuota 와
- * 같은 방향(못 읽으면 막는다).
+ * 같은 방향(못 읽으면 막는다). ★★ 세션 45 — 이 순서를 tell(computeTellShadow)·
+ * 힌트(computeHint) 에도 그대로 복제한다. 세 함수를 하나로 묶지 않았다 —
+ * `observeWith`·`observePointWith`·`judgeSupportWith` 가 이미 그렇듯, 묶으면
+ * 한쪽을 고칠 때 다른 쪽이 조용히 따라 움직인다(observe.ts 관례).
  */
 interface ShadowResult {
   verdict: SupportVerdict | 'pending'
@@ -139,6 +156,203 @@ async function computeShadow(
     : { verdict: 'pending' }
 }
 
+/**
+ * 느낌어 판정(tell) 관측. **gating 없다** — support 의 no_beat 부분
+ * gating(세션 43)과 다른 층이다. computeShadow() 와 순서·캐시 규칙이
+ * 글자까지 같다(세션 45 — 세션 44 의 킬스위치→캐시 순서를 그대로 복제).
+ * 다른 것은 verdict 종류(show·tell)와 재시도 조건(quote_mismatch 하나)뿐이다.
+ */
+interface TellResult {
+  verdict: TellVerdict | 'pending'
+  tell_line?: number | null
+  quote?: string
+}
+
+async function computeTellShadow(
+  admin: ReturnType<typeof createAdminClient>,
+  userId: string,
+  problemId: string,
+  normalized: string,
+  flags: SystemFlags
+): Promise<TellResult> {
+  const model = DEFAULT_MODEL
+
+  // ★ 킬스위치가 캐시보다 먼저다(세션 44 순서를 tell 에도 그대로 쓴다 — 세션 45).
+  if (flags.killSwitch === null || flags.killSwitch) return { verdict: 'pending' }
+
+  const hash = createHash('sha256')
+    .update(`${normalized} ${problemId} ${PROMPT_VERSION_TELL} ${model}`)
+    .digest('hex')
+
+  const { data: cached } = await admin
+    .from('ai_shadow_cache')
+    .select('verdict, judgment')
+    .eq('hash', hash)
+    .maybeSingle()
+  if (cached) {
+    const j = cached.judgment as TellObservation
+    return { verdict: cached.verdict as TellVerdict, tell_line: j.tell_line, quote: j.quote }
+  }
+
+  let quotaRemaining: number | null = null
+  try {
+    quotaRemaining = await consumeAiQuota(userId, DAILY_CALL_LIMIT)
+  } catch {
+    quotaRemaining = null
+  }
+  const gate = checkGate({
+    hasApiKey: !!process.env.GEMINI_API_KEY,
+    killSwitch: flags.killSwitch,
+    dailySpendCapUsd: flags.dailySpendCapUsd,
+    spentTodayUsd: await sumSpendTodayUsd(),
+    quotaRemaining,
+  })
+  if (!gate.allow) return { verdict: 'pending' }
+
+  let verdict: TellVerdict | 'pending' = 'pending'
+  let observation: TellObservation | null = null
+
+  // 재시도 1회 — quote_mismatch 일 때만(support 와 같은 자리).
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const outcome = await judgeTellWith(callGemini, normalized, model)
+
+    if (outcome.usage) {
+      const { error } = await admin.from('ai_usage_log').insert({
+        user_id: userId,
+        submission_id: null,
+        model: outcome.model,
+        input_tokens: outcome.usage.inputTokens,
+        cached_tokens: outcome.usage.cachedTokens,
+        output_tokens: outcome.usage.outputTokens,
+        cost_usd: outcome.costUsd,
+      })
+      if (error) console.error('ai_usage_log insert failed(tell)', 'message=' + error.message)
+    }
+
+    if (!outcome.ok || !outcome.observation) break // pending
+
+    const v = verifyTellJudgment(normalized, outcome.observation)
+    if (v.verdict === 'quote_mismatch') continue // 재시도
+
+    verdict = v.verdict
+    observation = outcome.observation
+    break
+  }
+
+  if (observation && (verdict === 'show' || verdict === 'tell')) {
+    const { error } = await admin.from('ai_shadow_cache').insert({
+      hash,
+      problem_id: problemId,
+      prompt_version: PROMPT_VERSION_TELL,
+      model,
+      judgment: observation,
+      verdict,
+    })
+    if (error) console.error('ai_shadow_cache insert failed(tell)', 'message=' + error.message)
+  }
+
+  return observation
+    ? { verdict, tell_line: observation.tell_line, quote: observation.quote }
+    : { verdict: 'pending' }
+}
+
+/**
+ * 힌트(hint) 2·3층 관측. support 판정이 실패 세 verdict(none·no_beat·
+ * support_not_before) 중 하나일 때만 호출부가 부른다(비용 절약). 킬스위치→
+ * 캐시 순서는 computeShadow() 와 같다(세션 44 순서 재사용, 세션 45).
+ *
+ * ★ 재시도가 없다 — "인용 검증 없이는 판정 폐기"가 원칙이다. 힌트는
+ *   실패해도 학습자에게 티 나지 않는다(1층 문구만 남는다) — 재시도로
+ *   억지로 세울 이유가 없다. verifyHintJudgment 가 'discard' 를 내면
+ *   그대로 'pending' 으로 접는다 — 'ok' 만 캐시한다.
+ */
+interface HintResult {
+  verdict: 'ok' | 'pending'
+  insert_before?: number | null
+  source_line?: number | null
+  source_quote?: string
+}
+
+async function computeHint(
+  admin: ReturnType<typeof createAdminClient>,
+  userId: string,
+  problemId: string,
+  normalized: string,
+  passage: string,
+  flags: SystemFlags
+): Promise<HintResult> {
+  const model = DEFAULT_MODEL
+
+  // ★ 킬스위치가 캐시보다 먼저다(세션 44 순서를 힌트에도 그대로 쓴다 — 세션 45).
+  if (flags.killSwitch === null || flags.killSwitch) return { verdict: 'pending' }
+
+  const hash = createHash('sha256')
+    .update(`${normalized} ${problemId} ${PROMPT_VERSION_HINT} ${model}`)
+    .digest('hex')
+
+  const { data: cached } = await admin
+    .from('ai_shadow_cache')
+    .select('verdict, judgment')
+    .eq('hash', hash)
+    .maybeSingle()
+  if (cached) {
+    const j = cached.judgment as HintObservation
+    return { verdict: 'ok', insert_before: j.insert_before, source_line: j.source_line, source_quote: j.source_quote }
+  }
+
+  let quotaRemaining: number | null = null
+  try {
+    quotaRemaining = await consumeAiQuota(userId, DAILY_CALL_LIMIT)
+  } catch {
+    quotaRemaining = null
+  }
+  const gate = checkGate({
+    hasApiKey: !!process.env.GEMINI_API_KEY,
+    killSwitch: flags.killSwitch,
+    dailySpendCapUsd: flags.dailySpendCapUsd,
+    spentTodayUsd: await sumSpendTodayUsd(),
+    quotaRemaining,
+  })
+  if (!gate.allow) return { verdict: 'pending' }
+
+  const outcome = await judgeHintWith(callGemini, normalized, passage, model)
+
+  if (outcome.usage) {
+    const { error } = await admin.from('ai_usage_log').insert({
+      user_id: userId,
+      submission_id: null,
+      model: outcome.model,
+      input_tokens: outcome.usage.inputTokens,
+      cached_tokens: outcome.usage.cachedTokens,
+      output_tokens: outcome.usage.outputTokens,
+      cost_usd: outcome.costUsd,
+    })
+    if (error) console.error('ai_usage_log insert failed(hint)', 'message=' + error.message)
+  }
+
+  if (!outcome.ok || !outcome.observation) return { verdict: 'pending' }
+
+  const v = verifyHintJudgment(normalized, passage, outcome.observation)
+  if (v.verdict !== 'ok') return { verdict: 'pending' } // 폐기 — 캐시 안 함
+
+  const { error } = await admin.from('ai_shadow_cache').insert({
+    hash,
+    problem_id: problemId,
+    prompt_version: PROMPT_VERSION_HINT,
+    model,
+    judgment: outcome.observation,
+    verdict: 'ok',
+  })
+  if (error) console.error('ai_shadow_cache insert failed(hint)', 'message=' + error.message)
+
+  return {
+    verdict: 'ok',
+    insert_before: outcome.observation.insert_before,
+    source_line: outcome.observation.source_line,
+    source_quote: outcome.observation.source_quote,
+  }
+}
+
 const GradeRequestSchema = z.object({
   problemId: z.uuid(),
   text: z.string().max(2000).optional(),
@@ -221,10 +435,11 @@ export async function POST(request: NextRequest) {
     content = joined || null
   }
 
-  // 7. 결정타 빌드업 섀도(support-v3) — **submissions.insert 보다 앞에 온다**
-  //    (세션 43). no_beat 부분 gating 이 is_passed 에 반영되려면 저장 전에
-  //    판정이 서 있어야 한다. 규칙 판정이 pass 이고 이 문항이 ai_shadow:
-  //    'support' 를 켰을 때만 잰다.
+  // 7. AI 섀도 셋(결정타 빌드업 support-v3 · 느낌어 판정 tell · 힌트) —
+  //    **submissions.insert 보다 앞에 온다**(세션 43·45). no_beat 부분
+  //    gating 이 is_passed 에 반영되려면 저장 전에 판정이 서 있어야 한다.
+  //    규칙 판정이 pass 이고 scoring_config.ai_shadow(shadowKinds — 문자열도
+  //    배열도 읽는다, 세션 45)가 켠 것만 잰다.
   //
   //    gating 조건은 **verdict === 'no_beat' 딱 하나**다 — pending(킬스위치·
   //    상한·키 없음·호출 실패 전부 포함)·beat_mismatch·quote_mismatch·none·
@@ -232,19 +447,68 @@ export async function POST(request: NextRequest) {
   //    false(기본값, system_flags 행이 없어도 false)면 gating 자체가 안 선다
   //    — "AI 가 없으면 규칙 통과를 그대로 둔다"는 원칙의 반대쪽도 같다:
   //    이 스위치가 없어도 학습자 진도는 안 막힌다.
-  let shadow: { verdict: SupportVerdict | 'pending'; beat_line?: number | null; support_line?: number | null; quote?: string } | undefined
+  //
+  //    tell·힌트는 **gating 이 없다** — 관측 층이다. 힌트는 support 가 실패
+  //    세 verdict(none·no_beat·support_not_before) 중 하나일 때만 별도로
+  //    부른다(buildup·pending·beat_mismatch·quote_mismatch 면 안 부른다 —
+  //    비용 절약). 힌트 카드 문구는 AI 가 안 짓는다 — buildHintCardText
+  //    (순수 함수, lib/ai/hint-text.ts)가 지목된 사실만으로 짓는다.
+  let shadow: ShadowResult | undefined
   let gatedNoBeat = false
+  let tell: TellResult | undefined
+  let hintText: string | null = null
+
   const cfg = (problem.scoring_config ?? {}) as ScoringConfig
-  if (result.status === 'pass' && cfg.ai_shadow === 'support' && text && text.trim()) {
+  const kinds = shadowKinds(cfg)
+
+  if (result.status === 'pass' && kinds.length > 0 && text && text.trim()) {
+    const normalized = text.trim()
     const flags = await readFlags()
-    try {
-      shadow = await computeShadow(createAdminClient(), user.id, problemId, text.trim(), flags)
-    } catch (err) {
-      console.error('결정타 빌드업 섀도 실패(조용히 pending 취급)', err)
-      shadow = { verdict: 'pending' }
+    const admin = createAdminClient()
+
+    if (kinds.includes('support')) {
+      try {
+        shadow = await computeShadow(admin, user.id, problemId, normalized, flags)
+      } catch (err) {
+        console.error('결정타 빌드업 섀도 실패(조용히 pending 취급)', err)
+        shadow = { verdict: 'pending' }
+      }
+      if (flags.shadowGateNoBeat && shadow.verdict === 'no_beat') {
+        gatedNoBeat = true
+      }
     }
-    if (flags.shadowGateNoBeat && shadow.verdict === 'no_beat') {
-      gatedNoBeat = true
+
+    if (kinds.includes('tell')) {
+      try {
+        tell = await computeTellShadow(admin, user.id, problemId, normalized, flags)
+      } catch (err) {
+        console.error('느낌어 판정(tell) 실패(조용히 pending 취급)', err)
+        tell = { verdict: 'pending' }
+      }
+    }
+
+    if (
+      shadow &&
+      (shadow.verdict === 'none' || shadow.verdict === 'no_beat' || shadow.verdict === 'support_not_before') &&
+      problem.passage &&
+      cfg.requireAll?.[0]
+    ) {
+      try {
+        const hint = await computeHint(admin, user.id, problemId, normalized, problem.passage, flags)
+        if (hint.verdict === 'ok') {
+          const S = splitSentences(normalized)
+          hintText = buildHintCardText({
+            supportVerdict: shadow.verdict,
+            person: cfg.requireAll[0],
+            beatText: shadow.beat_line != null ? (S[shadow.beat_line - 1] ?? null) : null,
+            supportQuote: shadow.quote ?? null,
+            sourceQuote: hint.source_quote ?? '',
+            beforeText: hint.insert_before != null ? (S[hint.insert_before - 1] ?? null) : null,
+          })
+        }
+      } catch (err) {
+        console.error('힌트 실패(조용히 무시 — 1층 문구만 남는다)', err)
+      }
     }
   }
 
@@ -252,9 +516,9 @@ export async function POST(request: NextRequest) {
   // 는 안 바꾼다(순수 규칙 판정 기록으로 남긴다) — passed 만 gating 을 반영한다.
   const passed = result.status === 'pass' && !gatedNoBeat
 
-  // 8. submissions 저장 — 실패해도 응답은 정상 반환. auto_result 에 shadow
-  //    verdict 를 적어 둔다(세션 43 — 나중에 오판 추적용) · gating 으로 막힌
-  //    제출은 no_beat_gate: true 로 표시한다.
+  // 8. submissions 저장 — 실패해도 응답은 정상 반환. auto_result 에 shadow·
+  //    tell verdict 를 적어 둔다(세션 43·45 — 나중에 오판 추적용) · gating
+  //    으로 막힌 제출은 no_beat_gate: true 로 표시한다.
   try {
     const { error } = await supabase.from('submissions').insert({
       user_id: user.id,
@@ -266,6 +530,8 @@ export async function POST(request: NextRequest) {
         morphAvailable: morph !== null,
         ...(shadow ? { shadow: shadow.verdict } : {}),
         ...(gatedNoBeat ? { no_beat_gate: true } : {}),
+        ...(tell ? { tell: tell.verdict } : {}),
+        ...(hintText ? { hint: true } : {}),
       },
       passed,
     })
@@ -302,6 +568,8 @@ export async function POST(request: NextRequest) {
 
   // 10. 응답. status 는 gating 이 걸리면 'fail' 로 낸다 — 화면이 통과 카드
   //     대신 gatedNoBeat 문구를 보여줄 신호다. 정답·scoring_config는 안 싣는다.
+  //     hint 는 이미 완성된 한국어 문장이다(서버가 지었다) — 화면은 그대로
+  //     보여주기만 한다.
   return Response.json({
     status: gatedNoBeat ? 'fail' : result.status,
     checks: result.checks,
@@ -310,5 +578,7 @@ export async function POST(request: NextRequest) {
     reference,
     shadow,
     ...(gatedNoBeat ? { gatedNoBeat: true } : {}),
+    ...(tell ? { tell: { verdict: tell.verdict, quote: tell.quote } } : {}),
+    ...(hintText ? { hint: hintText } : {}),
   })
 }

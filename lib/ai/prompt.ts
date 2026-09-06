@@ -544,3 +544,170 @@ export function verifySupportJudgment(
 
   return { verdict: j < k ? 'buildup' : 'support_not_before' }
 }
+
+// ─────────────────────────────────────────────────────────────────────────
+// 느낌어 판정(tell) — 문장 12 action_turn(bt-) 관측 층(세션 45). **gating
+// 없다** — support 의 no_beat 부분 gating(세션 43)과 다른 층이다. 순수
+// 관측 하나만 낸다: 몸·사물의 변화를 느낌의 이름으로만 대신한 문장이
+// 있는가. 옆에 둔다 — support 문안을 안 건드린다(observe.ts 관례와 같다).
+// ─────────────────────────────────────────────────────────────────────────
+
+/** 프롬프트 버전. tell 캐시(ai_shadow_cache) 키의 일부다 — support 와 같은
+ *  표를 쓰지만 prompt_version 이 달라 해시가 안 겹친다. */
+export const PROMPT_VERSION_TELL = 'tell-v1'
+
+/** 문안(박 님 확정, 세션 45). 글자 그대로 — 고칠 때 STATUS 에 왜인지 남겨라. */
+export const PROMPT_FRAME_TELL = `아래 문장들에서, 맞음·다침·밀림·부서짐 같은 결과를 독자가 볼 수 있는 몸이나 사물의 변화로 쓰지 않고 느낌의 이름(충격·고통·아픔·통증·열기·두려움 같은 감각·감정을 이름 붙인 말)으로만 대신한 문장이 있는가. 있으면 가장 먼저 나오는 그 문장 하나를 그대로 인용하라. 몸·사물의 변화가 함께 있으면 대신한 것이 아니다.
+
+[답안]
+{lines}
+
+답은 JSON 으로만 낸다. 점수·평가·고쳐쓰기는 쓰지 않는다:
+{"tell_line": <1~N 또는 null>, "quote": "<그 문장 그대로, null 이면 빈 문자열>"}`
+
+/** buildSupportPrompt 와 같은 번호 매기기(local.ts 의 splitSentences). */
+export function buildTellPrompt(answer: string): string {
+  const numbered = splitSentences(answer)
+    .map((s, i) => `${i + 1} ${s}`)
+    .join('\n')
+  return PROMPT_FRAME_TELL.replace('{lines}', numbered)
+}
+
+export const TellObservationSchema = z.object({
+  tell_line: z.number().int().nullable(),
+  quote: z.string(),
+})
+export type TellObservation = z.infer<typeof TellObservationSchema>
+
+export type TellParseResult =
+  | { ok: true; observation: TellObservation }
+  | { ok: false; reason: 'not_json' | 'bad_shape'; raw: string }
+
+/** parseSupportObservation 과 같은 규칙 — 코드펜스는 벗기고, 꼴이 틀리면 고쳐 읽지 않는다. */
+export function parseTellObservation(raw: string): TellParseResult {
+  const trimmed = raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/```$/, '').trim()
+  let json: unknown
+  try {
+    json = JSON.parse(trimmed)
+  } catch {
+    return { ok: false, reason: 'not_json', raw }
+  }
+  const parsed = TellObservationSchema.safeParse(json)
+  if (!parsed.success) return { ok: false, reason: 'bad_shape', raw }
+  return { ok: true, observation: parsed.data }
+}
+
+/**
+ * 'show'(느낌어로 안 대신함, tell_line null) · 'tell'(대신함, 인용이 답안에
+ * 실재) · 'quote_mismatch'(AI 가 지어낸 번호·인용 — 호출부가 재시도 1회
+ * 뒤에도 안 서면 'pending' 으로 접는다. 이 함수는 그 마지막 접음까지는
+ * 안 낸다). AI 호출 없는 순수 함수 — support 와 같은 이유로 답안을 다시
+ * 쪼개 문자열 그대로 대조한다(AI 가 지어낸 번호·인용을 안 믿는다).
+ */
+export type TellVerdict = 'show' | 'tell' | 'quote_mismatch'
+
+export function verifyTellJudgment(
+  answer: string,
+  judgment: TellObservation
+): { verdict: TellVerdict } {
+  if (judgment.tell_line === null) return { verdict: 'show' }
+
+  const S = splitSentences(answer)
+  const n = judgment.tell_line
+  if (!Number.isInteger(n) || n < 1 || n > S.length) return { verdict: 'quote_mismatch' }
+
+  const quote = judgment.quote.trim()
+  if (quote === '' || !S[n - 1].includes(quote)) return { verdict: 'quote_mismatch' }
+
+  return { verdict: 'tell' }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 힌트(hint) — support 가 근거를 못 찾았을 때(none·no_beat·support_not_before)
+// 만 별도로 부르는 2·3층(세션 45). **support-v3 캐시·골든 기준선은 안
+// 건드린다** — 이 문안은 support 판정이 선 *뒤*에만, 그것도 실패한 세
+// verdict 에서만 부른다(비용 절약 — buildup·no_beat 아닌 나머지엔 안 부른다).
+// 결정적 검사는 원문 인용(source_quote) 하나다 — 인용이 원문에 실재하지
+// 않으면 힌트 전체를 폐기한다("인용 검증 없이는 판정 폐기" 원칙).
+// ─────────────────────────────────────────────────────────────────────────
+
+export const PROMPT_VERSION_HINT = 'hint-v1'
+
+/** 문안(박 님 확정, 세션 45). 답안·원문 둘 다 번호를 매겨 준다 — support 와
+ *  달리 지문(원문)이 필요하다(힌트 재료를 원문에서 찾아야 하니까). */
+export const PROMPT_FRAME_HINT = `답안에는 결정타 앞에 근거가 되는 줄이 없다(또는 승부 문장이 없다). 답을 쓰지 말고 두 가지만 짚어라. ① 답안에서 근거 줄이 들어갈 자리 — 그 바로 뒤 문장의 번호. ② 원문에서 근거 재료로 쓸 수 있는 문장 하나 — 상대의 버릇·약점·패턴, 자리의 상태, 인물의 내력, 상대가 세운 논리를 알게 하는 문장.
+
+[답안]
+{answerLines}
+
+[원문]
+{passageLines}
+
+답은 JSON 으로만 낸다. 점수·평가·고쳐쓰기는 쓰지 않는다:
+{"insert_before": <1~N 또는 null>, "source_line": <1~M 또는 null>, "source_quote": "<원문 문장 그대로>"}`
+
+/** 답안 1..N · 원문 1..M — 두 배열을 독립적으로 번호 매긴다(local.ts 의
+ *  splitSentences, support 와 같은 분할 함수). */
+export function buildHintPrompt(answer: string, passage: string): string {
+  const answerLines = splitSentences(answer)
+    .map((s, i) => `${i + 1} ${s}`)
+    .join('\n')
+  const passageLines = splitSentences(passage)
+    .map((s, i) => `${i + 1} ${s}`)
+    .join('\n')
+  return PROMPT_FRAME_HINT.replace('{answerLines}', answerLines).replace('{passageLines}', passageLines)
+}
+
+export const HintObservationSchema = z.object({
+  insert_before: z.number().int().nullable(),
+  source_line: z.number().int().nullable(),
+  source_quote: z.string(),
+})
+export type HintObservation = z.infer<typeof HintObservationSchema>
+
+export type HintParseResult =
+  | { ok: true; observation: HintObservation }
+  | { ok: false; reason: 'not_json' | 'bad_shape'; raw: string }
+
+/** parseSupportObservation 과 같은 규칙 — 코드펜스는 벗기고, 꼴이 틀리면 고쳐 읽지 않는다. */
+export function parseHintObservation(raw: string): HintParseResult {
+  const trimmed = raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/```$/, '').trim()
+  let json: unknown
+  try {
+    json = JSON.parse(trimmed)
+  } catch {
+    return { ok: false, reason: 'not_json', raw }
+  }
+  const parsed = HintObservationSchema.safeParse(json)
+  if (!parsed.success) return { ok: false, reason: 'bad_shape', raw }
+  return { ok: true, observation: parsed.data }
+}
+
+/**
+ * 결정적 검사는 원문 인용(source_quote) 하나다 — 원문 S[m] 안에 문자열로
+ * 실재해야 'ok' 쪽으로 간다. insert_before(1..N, 답안 쪽)도 같이 본다 —
+ * 카드 문구가 "「그 문장」 앞에 넣어 봐"를 지으려면 그 문장이 실제로
+ * 있어야 한다. 골든은 둘을 **따로** 센다(quoteReal·insertValid, source_quote
+ * 원문 실재율·insert_before 유효율) — route.ts 는 **둘 다** 서야만 카드를
+ * 만든다('ok'). AI 호출 없는 순수 함수.
+ */
+export type HintVerdict = 'ok' | 'discard'
+
+export function verifyHintJudgment(
+  answer: string,
+  passage: string,
+  judgment: HintObservation
+): { verdict: HintVerdict; quoteReal: boolean; insertValid: boolean } {
+  const A = splitSentences(answer)
+  const P = splitSentences(passage)
+
+  const before = judgment.insert_before
+  const insertValid = before !== null && Number.isInteger(before) && before >= 1 && before <= A.length
+
+  const m = judgment.source_line
+  const quote = judgment.source_quote.trim()
+  const quoteReal =
+    m !== null && Number.isInteger(m) && m >= 1 && m <= P.length && quote !== '' && P[m - 1].includes(quote)
+
+  return { verdict: quoteReal && insertValid ? 'ok' : 'discard', quoteReal, insertValid }
+}

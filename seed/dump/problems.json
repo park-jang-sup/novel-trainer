@@ -4777,7 +4777,7 @@
         "과연"
       ],
       "forbidPassageCopy": true,
-      "ai_shadow": "support"
+      "ai_shadow": ["support", "tell"]
     }
   },
   {
@@ -4824,7 +4824,7 @@
         "과연"
       ],
       "forbidPassageCopy": true,
-      "ai_shadow": "support"
+      "ai_shadow": ["support", "tell"]
     }
   },
   {
@@ -4871,7 +4871,7 @@
         "과연"
       ],
       "forbidPassageCopy": true,
-      "ai_shadow": "support"
+      "ai_shadow": ["support", "tell"]
     }
   },
   {
@@ -4921,7 +4921,7 @@
       ],
       "forbidPassageCopy": true,
       "passageCopyKeep": 1,
-      "ai_shadow": "support"
+      "ai_shadow": ["support", "tell"]
     }
   },
   {
@@ -4968,7 +4968,7 @@
         "과연"
       ],
       "forbidPassageCopy": true,
-      "ai_shadow": "support"
+      "ai_shadow": ["support", "tell"]
     }
   },
   {

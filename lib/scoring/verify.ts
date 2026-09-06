@@ -13,6 +13,7 @@ import { combine, countChars, countLetters, countOccurrences, countSentences, sp
 import { sqlStr, countRawNewlinesInStrings } from '../seed-sql'
 import { cycleNextProblemKey, nextProblemKey, nextStageId, stageProgress } from '../train-nav'
 import type { Answer, Check, CheckStatus, MorphResult, Problem, ProblemType, ScoringConfig, ScoringMode } from './types'
+import { shadowKinds } from './types'
 import { buildMarks } from '../../components/train/marks'
 import { CONVERT_SEEDS } from './fixtures/convert-seeds'
 import {
@@ -95,9 +96,10 @@ import {
   checkRunBudget,
   type GateDecision,
 } from '../ai/gate'
-import { buildPoint2Prompt, buildPointPrompt, buildPrompt, buildSupportPrompt, elementOf, fourLines, looksLikeC4, parseObservation, parsePointObservation, parseSupportObservation, passesAt, verifySupportJudgment, PROMPT_FRAME, PROMPT_FRAME_CHARS, PROMPT_FRAME_POINT, PROMPT_FRAME_POINT2, PROMPT_FRAME_POINT2_CHARS, PROMPT_FRAME_POINT_CHARS, PROMPT_FRAME_SUPPORT, PROMPT_VERSION_SUPPORT, PROMPT_FRAME_SUPPORT_GENERAL, PROMPT_VERSION_SUPPORT_GENERAL } from '../ai/prompt'
+import { buildPoint2Prompt, buildPointPrompt, buildPrompt, buildSupportPrompt, elementOf, fourLines, looksLikeC4, parseObservation, parsePointObservation, parseSupportObservation, passesAt, verifySupportJudgment, PROMPT_FRAME, PROMPT_FRAME_CHARS, PROMPT_FRAME_POINT, PROMPT_FRAME_POINT2, PROMPT_FRAME_POINT2_CHARS, PROMPT_FRAME_POINT_CHARS, PROMPT_FRAME_SUPPORT, PROMPT_VERSION_SUPPORT, PROMPT_FRAME_SUPPORT_GENERAL, PROMPT_VERSION_SUPPORT_GENERAL, buildTellPrompt, buildHintPrompt, parseTellObservation, parseHintObservation, verifyTellJudgment, verifyHintJudgment, PROMPT_FRAME_TELL, PROMPT_VERSION_TELL, PROMPT_FRAME_HINT, PROMPT_VERSION_HINT } from '../ai/prompt'
 import { costUsd } from '../ai/pricing'
-import { observeWith, judgeSupportWith } from '../ai/observe'
+import { observeWith, judgeSupportWith, judgeTellWith, judgeHintWith } from '../ai/observe'
+import { buildHintCardText } from '../ai/hint-text'
 import { backoffMs, isRetryable, statusOf } from '../ai/retry'
 
 let pass = 0
@@ -8139,19 +8141,23 @@ console.log('\n[결정타 빌드업 섀도 support-v3]')
       verifySupportJudgment(answer3, r.observation).verdict === 'no_beat'
   })
 
-  // ── 대상 5문항: bt- 5건 scoring_config.ai_shadow === 'support' · 다른 단계는
-  //    안 건드림(구성 16 ca- 는 이번에 안 켠다) ──
+  // ── 대상 5문항: bt- 5건 scoring_config.ai_shadow ⊇ {support,tell} · 다른
+  //    단계는 안 건드림(구성 16 ca- 는 이번에도 안 켠다) ──
+  //    ★ 세션 45 — ai_shadow 가 문자열에서 배열로 승격했다(["support","tell"]).
+  //    이 절의 단언도 방향이 바뀐다: '===' 문자열 비교가 아니라 배열 포함이다.
   const seedDir2 = path.join(__dirname, '..', '..', 'seed', 'dump')
   const readDump2 = <T,>(f: string): T =>
     JSON.parse(readFileSync(path.join(seedDir2, f), 'utf8').replace(/^﻿/, '')) as T
-  interface ShadowProblem { source_key: string; skill_key: string; passage: string | null; scoring_config: { ai_shadow?: string } }
+  interface ShadowProblem { source_key: string; skill_key: string; passage: string | null; scoring_config: { ai_shadow?: 'support' | ('support' | 'tell')[] } }
   const allProblems2 = readDump2<ShadowProblem[]>('problems.json')
   const bt2 = allProblems2.filter((p) => p.skill_key === 'action_turn' && p.source_key.startsWith('bt-'))
-  t('bt- 5건 전부 ai_shadow: "support"',
-    bt2.length === 5 && bt2.every((p) => p.scoring_config.ai_shadow === 'support'),
-    JSON.stringify(bt2.map((p) => `${p.source_key}:${p.scoring_config.ai_shadow}`)))
+  t('bt- 5건 전부 ai_shadow 가 배열 ["support","tell"](세션 45 — 문자열에서 승격)',
+    bt2.length === 5 && bt2.every((p) => Array.isArray(p.scoring_config.ai_shadow) &&
+      p.scoring_config.ai_shadow.length === 2 &&
+      p.scoring_config.ai_shadow.includes('support') && p.scoring_config.ai_shadow.includes('tell')),
+    JSON.stringify(bt2.map((p) => `${p.source_key}:${JSON.stringify(p.scoring_config.ai_shadow)}`)))
   const withShadow = allProblems2.filter((p) => p.scoring_config.ai_shadow !== undefined)
-  t('ai_shadow 를 켠 문항은 정확히 bt- 5건뿐(구성 16 ca- 는 이번에 안 켠다)',
+  t('ai_shadow 를 켠 문항은 정확히 bt- 5건뿐(구성 16 ca- 는 이번에도 안 켠다)',
     withShadow.length === 5 && withShadow.every((p) => p.source_key.startsWith('bt-')),
     JSON.stringify(withShadow.map((p) => p.source_key)))
   const ca2 = allProblems2.filter((p) => p.skill_key === 'cliffhanger_adv')
@@ -8280,8 +8286,12 @@ console.log('\n[결정타 빌드업 섀도 support-v3]')
   t('★ route.ts: 섀도 호출(await computeShadow)이 submissions.insert 보다 **앞**에 나온다(세션 43 — gating 이 저장 전에 반영돼야 한다)',
     submitInsertIdx !== -1 && shadowCallIdx !== -1 && shadowCallIdx < submitInsertIdx,
     `shadowCall=${shadowCallIdx} submit=${submitInsertIdx}`)
-  t("route.ts: ai_shadow==='support' 이고 규칙 pass 일 때만 섀도를 잰다",
-    /result\.status === 'pass' && cfg\.ai_shadow === 'support'/.test(routeSrc2))
+  t("★ route.ts: 규칙 pass 이고 shadowKinds(cfg) 가 하나라도 있을 때만 AI 섀도 블록에 들어간다(세션 45 — ai_shadow 배열화로 조건이 바뀌었다)",
+    /result\.status === 'pass' && kinds\.length > 0 && text && text\.trim\(\)/.test(routeSrc2))
+  t("route.ts: support 는 shadowKinds 가 'support' 를 포함할 때만 잰다",
+    /if \(kinds\.includes\('support'\)\)/.test(routeSrc2))
+  t("route.ts: tell 은 shadowKinds 가 'tell' 을 포함할 때만 잰다(세션 45, gating 없음)",
+    /if \(kinds\.includes\('tell'\)\)/.test(routeSrc2))
   t('route.ts: submissions.insert 가 passed(gating 반영값)를 쓴다 — result.status 를 직접 안 쓴다',
     /\n\s*passed,\n\s*\}\)/.test(routeSrc2))
   t('route.ts: auto_result 에 shadow verdict 를 적는다(세션 43 — 오판 추적용)',
@@ -8292,26 +8302,50 @@ console.log('\n[결정타 빌드업 섀도 support-v3]')
     /status: gatedNoBeat \? 'fail' : result\.status/.test(routeSrc2))
   t('route.ts: 응답에 shadow 를 싣는다(무관해도 undefined 로 실린다)',
     /shadow,\s*\n\s*\.\.\.\(gatedNoBeat/.test(routeSrc2))
+  t('route.ts: auto_result 에 tell verdict 를 적는다(세션 45)',
+    routeSrc2.includes('...(tell ? { tell: tell.verdict } : {})'))
+  t('route.ts: auto_result 에 힌트 표시(hint: true)를 적는다(세션 45)',
+    routeSrc2.includes('...(hintText ? { hint: true } : {})'))
+  t('route.ts: 응답에 tell(verdict·quote)을 싣는다(세션 45)',
+    routeSrc2.includes('...(tell ? { tell: { verdict: tell.verdict, quote: tell.quote } } : {})'))
+  t('route.ts: 응답에 hint(서버가 완성한 문장)를 싣는다(세션 45)',
+    routeSrc2.includes('...(hintText ? { hint: hintText } : {})'))
+  t("route.ts: 힌트는 support verdict 가 none·no_beat·support_not_before 일 때만 부른다(세션 45, 비용 절약)",
+    /shadow\.verdict === 'none' \|\| shadow\.verdict === 'no_beat' \|\| shadow\.verdict === 'support_not_before'/.test(routeSrc2))
+  t('route.ts: 힌트 카드 문구는 AI 가 안 짓는다 — buildHintCardText(순수 함수)를 부른다(세션 45)',
+    /hintText = buildHintCardText\(/.test(routeSrc2))
 
-  // ── route.ts 텍스트 가드: 킬스위치가 섀도 캐시보다 먼저(세션 44, 박 님 실사용 발견) ──
+  // ── route.ts 텍스트 가드: 킬스위치가 섀도 캐시보다 먼저(세션 44 순서를
+  //    tell·힌트에도 그대로 복제, 세션 45) ──
   //
   // 세션 43 까지는 computeShadow() 가 캐시부터 봤다 — 킬스위치를 켜고 실사용
   // 시험하다가 예전에 캐시된 판정이 그대로 나오는 것을 봤다(캐시된 판정도
-  // AI 판정이다). computeShadow() 함수 본문만 잘라서(선언부 밖의 다른
-  // 'ai_shadow_cache'·'computeShadow(' 언급과 안 섞이게) 킬스위치 확인이
-  // 캐시 조회보다 먼저 나오는지를 문다.
-  const computeShadowStart = routeSrc2.indexOf('async function computeShadow(')
-  const computeShadowEnd = routeSrc2.indexOf('\nconst GradeRequestSchema', computeShadowStart)
-  t('★★ route.ts: computeShadow() 함수를 실제로 찾았다(자르기 기준점이 어긋나지 않았다)',
-    computeShadowStart !== -1 && computeShadowEnd !== -1 && computeShadowEnd > computeShadowStart)
-  const computeShadowBody = routeSrc2.slice(computeShadowStart, computeShadowEnd)
-  const killSwitchIdx = computeShadowBody.indexOf('flags.killSwitch')
-  const cacheSelectIdx = computeShadowBody.indexOf(".from('ai_shadow_cache')")
-  t('★ route.ts: computeShadow() 안에서 kill_switch 확인이 ai_shadow_cache 조회보다 **앞**에 나온다(세션 44)',
-    killSwitchIdx !== -1 && cacheSelectIdx !== -1 && killSwitchIdx < cacheSelectIdx,
-    `killSwitch=${killSwitchIdx} cacheSelect=${cacheSelectIdx}`)
-  t("route.ts: 킬스위치 pending 조건이 null(못 읽음)도 포함한다 — 'flags.killSwitch === null || flags.killSwitch'",
-    /if \(flags\.killSwitch === null \|\| flags\.killSwitch\) return \{ verdict: 'pending' \}/.test(computeShadowBody))
+  // AI 판정이다). 이제 세 함수(computeShadow·computeTellShadow·computeHint)
+  // 가 같은 순서를 각각 지킨다 — 셋을 하나로 안 묶었으므로(observe.ts 관례)
+  // 셋 다 따로 문다. 함수 본문만 각각 잘라서(다음 함수 선언 앞까지) 다른
+  // 함수의 'ai_shadow_cache'·'flags.killSwitch' 언급과 안 섞이게 한다.
+  function extractFn(src: string, name: string, nextMarker: string) {
+    const start = src.indexOf(`async function ${name}(`)
+    const end = src.indexOf(nextMarker, start)
+    return { start, end, body: start !== -1 && end !== -1 && end > start ? src.slice(start, end) : '' }
+  }
+  const shadowFn = extractFn(routeSrc2, 'computeShadow', '\nasync function computeTellShadow(')
+  const tellFn = extractFn(routeSrc2, 'computeTellShadow', '\nasync function computeHint(')
+  const hintFn = extractFn(routeSrc2, 'computeHint', '\nconst GradeRequestSchema')
+  t('★★ route.ts: computeShadow·computeTellShadow·computeHint 세 함수를 전부 찾았다(자르기 기준점이 어긋나지 않았다, 세션 45)',
+    shadowFn.start !== -1 && shadowFn.end > shadowFn.start &&
+    tellFn.start !== -1 && tellFn.end > tellFn.start &&
+    hintFn.start !== -1 && hintFn.end > hintFn.start,
+    JSON.stringify({ shadowFn, tellFn, hintFn }, (k, v) => (k === 'body' ? undefined : v)))
+  for (const [name, fn] of [['computeShadow', shadowFn], ['computeTellShadow', tellFn], ['computeHint', hintFn]] as const) {
+    const killSwitchIdx = fn.body.indexOf('flags.killSwitch')
+    const cacheSelectIdx = fn.body.indexOf(".from('ai_shadow_cache')")
+    t(`★ route.ts: ${name}() 안에서 kill_switch 확인이 ai_shadow_cache 조회보다 **앞**에 나온다(세션 44 순서, 세션 45 는 tell·힌트에도 복제)`,
+      killSwitchIdx !== -1 && cacheSelectIdx !== -1 && killSwitchIdx < cacheSelectIdx,
+      `${name}: killSwitch=${killSwitchIdx} cacheSelect=${cacheSelectIdx}`)
+    t(`route.ts: ${name}() 의 킬스위치 pending 조건이 null(못 읽음)도 포함한다`,
+      /if \(flags\.killSwitch === null \|\| flags\.killSwitch\) return \{ verdict: 'pending' \}/.test(fn.body))
+  }
 
   // ── lib/ai/flags.ts: shadowGateNoBeat 기본 off ──
   const flagsSrc = readFileSync(path.join(__dirname, '..', '..', 'lib', 'ai', 'flags.ts'), 'utf8')
@@ -8350,6 +8384,256 @@ console.log('\n[결정타 빌드업 섀도 support-v3]')
     t('병: 카드 텍스트에 합격/불합격 낱말을 안 쓴다',
       cardStart !== -1 && cardEnd !== -1 && !cardJsx.includes('합격') && !cardJsx.includes('불합격'))
   }
+
+  // ── TrainClient.tsx: 힌트·tell 카드(세션 45) ──
+  t('TrainClient: 힌트 카드는 result.hint(서버가 완성한 문장)를 그대로 보여준다',
+    /\{result\.hint && \(/.test(tcSrc2))
+  t('병: 힌트 카드가 gatedNoBeat 조건에 안 걸린다(막혀도 뜬다는 원칙)',
+    (() => {
+      const hintBlockStart = tcSrc2.indexOf('{result.hint && (')
+      const hintBlockEnd = tcSrc2.indexOf(')}', hintBlockStart)
+      const hintJsx = tcSrc2.slice(hintBlockStart, hintBlockEnd)
+      return hintBlockStart !== -1 && hintBlockEnd !== -1 && !hintJsx.includes('gatedNoBeat')
+    })())
+  t("TrainClient: tell 카드는 verdict === 'tell' 일 때만 뜬다(관측 층, gating 없음)",
+    /result\.tell && result\.tell\.verdict === 'tell'/.test(tcSrc2))
+  t("TrainClient: tell 카드 문구 '느낌의 이름이야'", tcSrc2.includes('는 느낌의 이름이야'))
+}
+
+console.log('\n[느낌어 판정(tell) · 힌트 · 골든셋 set C·D — 세션 45]')
+{
+  // ── tell 문안 조립 ──────────────────────────────────────────────
+  t("PROMPT_VERSION_TELL = 'tell-v1'", PROMPT_VERSION_TELL === 'tell-v1')
+  t('문안: 느낌의 이름 예시(충격·고통·아픔·통증·열기·두려움)',
+    PROMPT_FRAME_TELL.includes('충격·고통·아픔·통증·열기·두려움'))
+  t('문안: 몸·사물의 변화가 함께 있으면 대신한 것이 아니다',
+    PROMPT_FRAME_TELL.includes('몸·사물의 변화가 함께 있으면 대신한 것이 아니다'))
+  t('출력 형식: tell_line·quote 두 키',
+    PROMPT_FRAME_TELL.includes('"tell_line"') && PROMPT_FRAME_TELL.includes('"quote"'))
+  {
+    const built = buildTellPrompt('그는 검을 들었다. 강한 충격이 몸을 스쳤다. 그가 쓰러졌다.')
+    t('buildTellPrompt: 문장이 1..N 번호로 들어간다',
+      built.includes('1 그는 검을 들었다') && built.includes('2 강한 충격이 몸을 스쳤다') && built.includes('3 그가 쓰러졌다'))
+    t('buildTellPrompt: 치환자 {lines} 가 안 남는다', !built.includes('{lines}'))
+  }
+  t('parseTellObservation: 정상 JSON', parseTellObservation('{"tell_line":2,"quote":"강한 충격이 몸을 스쳤다."}').ok)
+  t('parseTellObservation: 코드펜스를 벗긴다',
+    parseTellObservation('```json\n{"tell_line":null,"quote":""}\n```').ok)
+  t('parseTellObservation: JSON 아니면 not_json',
+    (() => { const r = parseTellObservation('모르겠습니다'); return !r.ok && r.reason === 'not_json' })())
+  t('parseTellObservation: 꼴이 다르면 bad_shape',
+    (() => { const r = parseTellObservation('{"tell_line":"둘"}'); return !r.ok && r.reason === 'bad_shape' })())
+
+  // ── verifyTellJudgment 픽스처 ────────────────────────────────────
+  {
+    const tellAnswer = '그는 검을 들었다. 강한 충격이 몸을 스쳤다. 그가 쓰러졌다.'
+    t("tell_line null → 'show'",
+      verifyTellJudgment(tellAnswer, { tell_line: null, quote: '' }).verdict === 'show')
+    t("quote 가 S[n] 안에 실재 → 'tell'",
+      verifyTellJudgment(tellAnswer, { tell_line: 2, quote: '강한 충격이 몸을 스쳤다' }).verdict === 'tell')
+    t("quote 가 지어낸 것 → 'quote_mismatch'",
+      verifyTellJudgment(tellAnswer, { tell_line: 2, quote: '전혀 다른 문장' }).verdict === 'quote_mismatch')
+    t("tell_line 이 1..N 밖 → 'quote_mismatch'",
+      verifyTellJudgment(tellAnswer, { tell_line: 9, quote: '아무거나' }).verdict === 'quote_mismatch')
+    t("quote 빈 문자열 → 'quote_mismatch'",
+      verifyTellJudgment(tellAnswer, { tell_line: 2, quote: '' }).verdict === 'quote_mismatch')
+  }
+
+  // ── judgeTellWith 전 구간(가짜 호출) ─────────────────────────────
+  tAsync('judgeTellWith: 성공하면 관측이 선다', async () => {
+    const r = await judgeTellWith(
+      async () => ({ text: '{"tell_line":2,"quote":"강한 충격이 몸을 스쳤다."}', usage: { inputTokens: 100, cachedTokens: 0, outputTokens: 20 }, model: 'gemini-3.7-flash' }),
+      '그는 검을 들었다. 강한 충격이 몸을 스쳤다. 그가 쓰러졌다.', 'gemini-3.7-flash')
+    return r.ok && r.observation !== null && r.observation.tell_line === 2 && r.costUsd !== null
+  })
+  tAsync('judgeTellWith: 호출 실패면 call_failed 이고 usage 가 없다', async () => {
+    const r = await judgeTellWith(async () => { throw new Error('네트워크') }, '아무 문장.', 'gemini-3.7-flash')
+    return !r.ok && r.error === 'call_failed' && r.usage === null
+  })
+  tAsync('judgeTellWith: 헛소리를 뱉어도 not_json 이고 비용은 나온다', async () => {
+    const r = await judgeTellWith(
+      async () => ({ text: '모르겠습니다', usage: { inputTokens: 100, cachedTokens: 0, outputTokens: 10 }, model: 'gemini-3.7-flash' }),
+      '아무 문장.', 'gemini-3.7-flash')
+    return !r.ok && r.error === 'not_json' && r.costUsd !== null
+  })
+
+  // ── hint 문안 조립 ──────────────────────────────────────────────
+  t("PROMPT_VERSION_HINT = 'hint-v1'", PROMPT_VERSION_HINT === 'hint-v1')
+  t('문안: 답안·원문 두 자리를 짚으라는 지시(① ②)',
+    PROMPT_FRAME_HINT.includes('①') && PROMPT_FRAME_HINT.includes('②'))
+  t('문안: 근거 재료 네 갈래(support 와 같은 낱말)',
+    PROMPT_FRAME_HINT.includes('상대의 버릇·약점·패턴, 자리의 상태, 인물의 내력, 상대가 세운 논리'))
+  t('출력 형식: insert_before·source_line·source_quote 세 키',
+    PROMPT_FRAME_HINT.includes('"insert_before"') && PROMPT_FRAME_HINT.includes('"source_line"') && PROMPT_FRAME_HINT.includes('"source_quote"'))
+  {
+    const built = buildHintPrompt('그는 물러섰다. 그가 반격했다.', '상대는 항상 왼쪽만 노린다. 발밑이 젖어 있었다.')
+    t('buildHintPrompt: 답안·원문이 각각 1..N 번호로 독립적으로 매겨진다',
+      built.includes('1 그는 물러섰다') && built.includes('2 그가 반격했다') &&
+      built.includes('1 상대는 항상 왼쪽만 노린다') && built.includes('2 발밑이 젖어 있었다'))
+    t('buildHintPrompt: 치환자가 안 남는다', !built.includes('{answerLines}') && !built.includes('{passageLines}'))
+  }
+  t('parseHintObservation: 정상 JSON', parseHintObservation('{"insert_before":1,"source_line":1,"source_quote":"상대는 항상 왼쪽만 노린다."}').ok)
+  t('parseHintObservation: JSON 아니면 not_json',
+    (() => { const r = parseHintObservation('모르겠습니다'); return !r.ok && r.reason === 'not_json' })())
+  t('parseHintObservation: 꼴이 다르면 bad_shape',
+    (() => { const r = parseHintObservation('{"insert_before":"하나"}'); return !r.ok && r.reason === 'bad_shape' })())
+
+  // ── verifyHintJudgment 픽스처 ────────────────────────────────────
+  {
+    const hintAnswer = '그는 물러섰다. 그가 반격했다.'
+    const hintPassage = '상대는 항상 왼쪽만 노린다. 발밑이 젖어 있었다.'
+    t("인용·자리 둘 다 실재·유효 → 'ok'(quoteReal·insertValid 둘 다 true)",
+      (() => {
+        const v = verifyHintJudgment(hintAnswer, hintPassage, { insert_before: 1, source_line: 1, source_quote: '상대는 항상 왼쪽만 노린다' })
+        return v.verdict === 'ok' && v.quoteReal && v.insertValid
+      })())
+    t("인용이 지어낸 것 → 'discard'(quoteReal=false, 결정적 검사)",
+      (() => {
+        const v = verifyHintJudgment(hintAnswer, hintPassage, { insert_before: 1, source_line: 1, source_quote: '전혀 다른 문장' })
+        return v.verdict === 'discard' && !v.quoteReal
+      })())
+    t("insert_before 가 1..N 밖 → 'discard'(insertValid=false, 인용은 실재해도)",
+      (() => {
+        const v = verifyHintJudgment(hintAnswer, hintPassage, { insert_before: 9, source_line: 1, source_quote: '상대는 항상 왼쪽만 노린다' })
+        return v.verdict === 'discard' && v.quoteReal && !v.insertValid
+      })())
+    t("insert_before·source_line 둘 다 null → 'discard'",
+      verifyHintJudgment(hintAnswer, hintPassage, { insert_before: null, source_line: null, source_quote: '' }).verdict === 'discard')
+  }
+
+  // ── judgeHintWith 전 구간(가짜 호출) ─────────────────────────────
+  tAsync('judgeHintWith: 성공하면 관측이 선다', async () => {
+    const r = await judgeHintWith(
+      async () => ({ text: '{"insert_before":1,"source_line":1,"source_quote":"상대는 항상 왼쪽만 노린다."}', usage: { inputTokens: 150, cachedTokens: 0, outputTokens: 25 }, model: 'gemini-3.7-flash' }),
+      '그는 물러섰다. 그가 반격했다.', '상대는 항상 왼쪽만 노린다. 발밑이 젖어 있었다.', 'gemini-3.7-flash')
+    return r.ok && r.observation !== null && r.observation.insert_before === 1 && r.costUsd !== null
+  })
+  tAsync('judgeHintWith: 호출 실패면 call_failed 이고 usage 가 없다', async () => {
+    const r = await judgeHintWith(async () => { throw new Error('네트워크') }, '답안.', '원문.', 'gemini-3.7-flash')
+    return !r.ok && r.error === 'call_failed' && r.usage === null
+  })
+  tAsync('judgeHintWith: 헛소리를 뱉어도 not_json 이고 비용은 나온다', async () => {
+    const r = await judgeHintWith(
+      async () => ({ text: '모르겠습니다', usage: { inputTokens: 150, cachedTokens: 0, outputTokens: 10 }, model: 'gemini-3.7-flash' }),
+      '답안.', '원문.', 'gemini-3.7-flash')
+    return !r.ok && r.error === 'not_json' && r.costUsd !== null
+  })
+
+  // ── buildHintCardText(lib/ai/hint-text.ts) 픽스처 — AI 는 지목만, 문구는
+  //    이 순수 함수가 짓는다(단계 언어 원칙) ──
+  {
+    const noneText = buildHintCardText({
+      supportVerdict: 'none', person: '주원', beatText: '주원은 턱 밑을 올려 쳤다.',
+      supportQuote: null, sourceQuote: '강태의 왼손은 늘 얼굴 옆에서 논다.', beforeText: '강태의 주먹이 허공을 갈랐다.',
+    })
+    t("'none': 결정타·인물·원문 인용·자리 문장을 전부 담는다",
+      !!noneText && noneText.includes('주원') && noneText.includes('턱 밑을 올려 쳤다') &&
+      noneText.includes('강태의 왼손은 늘 얼굴 옆에서 논다') && noneText.includes('강태의 주먹이 허공을 갈랐다'))
+    t("'none': beatText 나 beforeText 가 없으면 null(억지로 안 짓는다)",
+      buildHintCardText({ supportVerdict: 'none', person: '주원', beatText: null, supportQuote: null, sourceQuote: '원문', beforeText: '자리' }) === null &&
+      buildHintCardText({ supportVerdict: 'none', person: '주원', beatText: '결정타', supportQuote: null, sourceQuote: '원문', beforeText: null }) === null)
+
+    const noBeatText = buildHintCardText({
+      supportVerdict: 'no_beat', person: '리온', beatText: null, supportQuote: null,
+      sourceQuote: '카엘은 같은 자리에서 다음 화염구를 빚고 있었다.', beforeText: null,
+    })
+    t("'no_beat': beat 가 없어도 짓는다(승부 자체가 없는 경우라 beat 불필요)",
+      !!noBeatText && noBeatText.includes('리온') && noBeatText.includes('카엘은 같은 자리에서 다음 화염구를 빚고 있었다'))
+
+    const notBeforeText = buildHintCardText({
+      supportVerdict: 'support_not_before', person: '서린', beatText: '서린의 검이 그 목덜미 앞에서 멈췄다.',
+      supportQuote: '거리를 잃으면 창은 막대기다.', sourceQuote: '', beforeText: null,
+    })
+    t("'support_not_before': 근거 인용과 결정타 문장을 담는다(sourceQuote·beforeText 는 안 쓴다)",
+      !!notBeforeText && notBeforeText.includes('거리를 잃으면 창은 막대기다') && notBeforeText.includes('서린의 검이 그 목덜미 앞에서 멈췄다'))
+    t("'support_not_before': supportQuote 나 beatText 가 없으면 null",
+      buildHintCardText({ supportVerdict: 'support_not_before', person: '서린', beatText: null, supportQuote: '근거', sourceQuote: '', beforeText: null }) === null &&
+      buildHintCardText({ supportVerdict: 'support_not_before', person: '서린', beatText: '결정타', supportQuote: null, sourceQuote: '', beforeText: null }) === null)
+  }
+
+  // ── shadowKinds(lib/scoring/types.ts) — ai_shadow 문자열/배열 하위 호환 ──
+  t('shadowKinds: undefined → 빈 배열', shadowKinds({}).length === 0)
+  t("shadowKinds: 문자열 'support' → ['support'](하위 호환)",
+    JSON.stringify(shadowKinds({ ai_shadow: 'support' })) === JSON.stringify(['support']))
+  t("shadowKinds: 배열 ['support','tell'] → 그대로",
+    JSON.stringify(shadowKinds({ ai_shadow: ['support', 'tell'] })) === JSON.stringify(['support', 'tell']))
+
+  // ── seed/update-action-turn-v5.sql: bt- 5건 ai_shadow 를 배열로 승격 ──
+  const v5Src = readFileSync(path.join(__dirname, '..', '..', 'seed', 'update-action-turn-v5.sql'), 'utf8')
+  t('update-action-turn-v5.sql: jsonb_set으로 ["support","tell"] 을 넣는다',
+    v5Src.includes(`jsonb_set(scoring_config, '{ai_shadow}', '["support","tell"]'::jsonb)`))
+  for (const key of ['bt-alley-hook', 'bt-spear-range', 'bt-orc-axe', 'bt-fireball-shield', 'bt-low-guard']) {
+    t(`update-action-turn-v5.sql: ${key} 대상`, v5Src.includes(`'${key}'`))
+  }
+
+  // ── 골든셋 set C(ca-, 세션 45) — 존재·5건·id 가 활성 ca- 5건과 일치 ──
+  const setCPath = path.join(__dirname, '..', '..', 'data', 'probe', 'set_c_cliff.json')
+  t('data/probe/set_c_cliff.json 이 존재한다', existsSync(setCPath))
+  if (existsSync(setCPath)) {
+    interface SetCItem { id: string; gold: { nak_answer: string; emotion_good_answer?: string; payoff_line: string; beat_line: string; note?: string } }
+    const setC = JSON.parse(readFileSync(setCPath, 'utf8').replace(/^﻿/, '')) as { items: SetCItem[] }
+    t('set_c_cliff.json: 5건', setC.items.length === 5, `실제=${setC.items.length}`)
+    const caIds = new Set(setC.items.map((i) => i.id))
+    interface CaProblem { source_key: string; skill_key: string }
+    const allProblemsForCa = JSON.parse(
+      readFileSync(path.join(__dirname, '..', '..', 'seed', 'dump', 'problems.json'), 'utf8').replace(/^﻿/, '')
+    ) as CaProblem[]
+    const activeCaIds = new Set(allProblemsForCa.filter((p) => p.skill_key === 'cliffhanger_adv').map((p) => p.source_key))
+    t('set_c_cliff.json: id 가 활성 ca- 5건과 정확히 같다',
+      caIds.size === 5 && [...caIds].every((id) => activeCaIds.has(id)) && [...activeCaIds].every((id) => caIds.has(id)),
+      JSON.stringify({ setC: [...caIds].sort(), active: [...activeCaIds].sort() }))
+    for (const item of setC.items) {
+      t(`set_c_cliff.json '${item.id}': nak_answer·payoff_line·beat_line·note 가 비어 있지 않다`,
+        !!item.gold.nak_answer && !!item.gold.payoff_line && !!item.gold.beat_line && !!item.gold.note?.trim())
+    }
+    const emotionIds = setC.items.filter((i) => i.gold.emotion_good_answer).map((i) => i.id)
+    t("set_c_cliff.json: emotion_good_answer 는 정확히 ca-walk-home 1건뿐",
+      emotionIds.length === 1 && emotionIds[0] === 'ca-walk-home', JSON.stringify(emotionIds))
+  }
+
+  // ── 골든셋 set D(tell, 세션 45) — 존재·6건·경계 표본 2건(D-4·D-6) ──
+  const setDPath = path.join(__dirname, '..', '..', 'data', 'probe', 'set_d_tell.json')
+  t('data/probe/set_d_tell.json 이 존재한다', existsSync(setDPath))
+  if (existsSync(setDPath)) {
+    interface SetDItem { id: string; source_key: string; expected: 'tell' | null; tell_answer: string; tell_line: string; note?: string }
+    const setD = JSON.parse(readFileSync(setDPath, 'utf8').replace(/^﻿/, '')) as { items: SetDItem[] }
+    t('set_d_tell.json: 6건(D-1~D-6)', setD.items.length === 6, `실제=${setD.items.length}`)
+    for (const item of setD.items) {
+      t(`set_d_tell.json '${item.id}': tell_answer·tell_line 이 비어 있지 않다`,
+        !!item.tell_answer && !!item.tell_line)
+    }
+    const hardIds = setD.items.filter((i) => i.expected === 'tell').map((i) => i.id)
+    const boundaryIds = setD.items.filter((i) => i.expected === null).map((i) => i.id)
+    t('set_d_tell.json: 하드 기대(tell) 4건 — D-1·D-2·D-3·D-5',
+      hardIds.length === 4 && ['D-1', 'D-2', 'D-3', 'D-5'].every((id) => hardIds.includes(id)), JSON.stringify(hardIds))
+    t('set_d_tell.json: 경계 표본(기대 없음) 2건 — D-4·D-6',
+      boundaryIds.length === 2 && ['D-4', 'D-6'].every((id) => boundaryIds.includes(id)), JSON.stringify(boundaryIds))
+    // 각 tell_line 이 실제로 tell_answer 안에 문자열로 실재하는지 — 골든 자료
+    // 자체가 자기모순이면(문서화 실수) 사람이 잘못된 기준으로 읽는다.
+    for (const item of setD.items) {
+      t(`set_d_tell.json '${item.id}': tell_line 이 tell_answer 안에 실재한다(문서 자기정합성)`,
+        item.tell_answer.includes(item.tell_line))
+    }
+  }
+
+  // ── scripts/support-golden.ts: set C·D·힌트 배선(세션 45) ──
+  const goldenSrc = readFileSync(path.join(__dirname, '..', '..', 'scripts', 'support-golden.ts'), 'utf8')
+  t('support-golden.ts: --only 가 A·B·C 조합 또는 D(tell 전용)를 받는다',
+    goldenSrc.includes("/^[ABC]+$/.test(only)"))
+  t("support-golden.ts: --only=D 가 tellMode 를 켠다", goldenSrc.includes("const tellMode = only === 'D'"))
+  t('support-golden.ts: --hint 는 --only 와 같이 못 쓴다(가드 존재)',
+    goldenSrc.includes('힌트 표본은 set B nak·no_beat 10건으로 고정이다'))
+  t('★ support-golden.ts: domainFor 가 set B 만 battle 로 강제한다 — set C 는 강제 안 한다(세션 45, set A 와 같은 자리)',
+    /domainFor = \(c: Case\): SupportDomain => \(c\.set === 'B' \? 'battle' : \(domainArg as SupportDomain\)\)/.test(goldenSrc))
+  t('support-golden.ts: loadCases() 가 set C(ca-)를 싣는다', goldenSrc.includes("set: 'C', itemId: `${r.source_key}:${r.ord}`, kind: 'good'"))
+  t('support-golden.ts: loadCases() 가 set C 의 emotion 케이스를 good/nak 과 따로 싣는다',
+    goldenSrc.includes("kind: 'emotion'"))
+  t('support-golden.ts: loadTellCases() 가 set D 를 싣는다(support 케이스와 안 섞는다)',
+    goldenSrc.includes('function loadTellCases()'))
+  t('support-golden.ts: loadHintCases() 가 set B nak·no_beat 10건을 싣는다',
+    goldenSrc.includes('function loadHintCases()'))
+  t('support-golden.ts: 힌트 골든이 source_quote 원문 실재율·insert_before 유효율을 따로 집계한다',
+    goldenSrc.includes('quoteRealRate') && goldenSrc.includes('insertValidRate'))
 }
 
 console.log('\n[docs ↔ README 대조]')

@@ -162,13 +162,31 @@ export interface ScoringConfig {
    *  규칙으로 내린 것이다(재설계안 11-3장) */
   forbidCopyOfFixedLines?: boolean
   /**
-   * AI 섀도 판정을 붙일 것인가. 'support' 면 규칙 판정이 pass 일 때
-   * 결정타 빌드업(2-3 verifySupportJudgment)을 매긴다 — **섀도 모드다.**
-   * submissions.is_passed·진도와 무관하다(세션 40, 세션 32 섀도 모드 원칙).
-   * 지금 값은 'support' 하나뿐이지만 문자열 유니온으로 열어 둔다 — 보스
-   * 문항이 다른 섀도 종류를 쓸 수 있다.
+   * AI 섀도 판정을 붙일 것인가. 규칙 판정이 pass 일 때만 매긴다 —
+   * **섀도 모드다.** submissions.is_passed·진도와 무관하다(세션 40, 세션
+   * 32 섀도 모드 원칙 — 단 세션 43 의 no_beat 부분 gating 은 예외).
+   *
+   * 세션 45 가 문자열에서 **배열**로 승격했다 — 한 문항에 섀도 여럿을
+   * 같이 켤 수 있다(bt- 5건: ["support","tell"]). 문자열 하나('support')도
+   * 여전히 유효한 값이다(하위 호환 — 세션 40~44 의 값이 전부 문자열이었다).
+   * 코드는 항상 `shadowKinds(cfg)` 로 배열화해서 읽는다 — cfg.ai_shadow 를
+   * 직접 문자열 비교(=== 'support')하지 않는다.
    */
-  ai_shadow?: 'support'
+  ai_shadow?: 'support' | ('support' | 'tell')[]
+}
+
+/** ai_shadow 값. 지금 둘뿐이다 — support(결정타 빌드업) · tell(느낌어 대신, 세션 45). */
+export type ShadowKind = 'support' | 'tell'
+
+/**
+ * ai_shadow 를 항상 배열로 읽는다. undefined → [] · 문자열 → [문자열] ·
+ * 배열 → 그대로. 호출부(route.ts 등)가 cfg.ai_shadow 를 직접 비교하지
+ * 않고 이 함수를 거치게 해서, 문자열이냐 배열이냐를 한 곳에서만 안다.
+ */
+export function shadowKinds(cfg: Pick<ScoringConfig, 'ai_shadow'>): ShadowKind[] {
+  const v = cfg.ai_shadow
+  if (v === undefined) return []
+  return Array.isArray(v) ? v : [v]
 }
 
 export interface Problem {

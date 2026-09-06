@@ -1,10 +1,11 @@
 /**
- * 결정타 빌드업 섀도(support-v2) 골든셋 하네스 — **게이트의 하니스 경로(C)** 를
- * 탄다. scripts/ai-probe.ts 와 같은 마개·예비쓰기 관례를 그대로 재사용한다
+ * 결정타 빌드업 섀도 골든셋 하네스 — **게이트의 하니스 경로(C)** 를 탄다.
+ * scripts/ai-probe.ts 와 같은 마개·예비쓰기 관례를 그대로 재사용한다
  * (세션 40) — 하니스가 게이트를 안 타면 그게 세션 6 §12 가 막으려던 'B' 다.
  *
- * 재는 것: 골든셋 판정이 문체가 아니라 빌드업을 재는가. 두 집합을
- * **분리 집계**한다 — 둘 다 오탐이 없어야 "빌드업을 재는 것"이라고 말할 수 있다.
+ * 재는 것: 골든셋 판정이 문체가 아니라 빌드업(support)·느낌어(tell)·힌트를
+ * 재는가. 셋은 서로 다른 프롬프트라 **모드가 다르다** — support 는
+ * `--only`(A·B·C 조합)로, tell 은 `--only=D`, 힌트는 `--hint` 로 고른다.
  *
  *   set A  data/probe/ch10_decisive.json 의 9쌍(1인칭). good → 'buildup' 기대,
  *          nak → 'none' 기대. nak 은 good 의 정보 줄만 위치 제공형으로 바꾼
@@ -17,29 +18,51 @@
  *          ★ B-03(bt-orc-axe)·B-05(bt-low-guard)는 note 로 비통제 표시가 있다
  *            (근거가 자리형 · nak 결정타 문장 주어가 good 과 다름) — 결과 출력에
  *            함께 낸다. 뒤집힘·미검출이 나오면 프롬프트보다 이 표시를 먼저 본다.
+ *   set C  data/probe/set_c_cliff.json(세션 45) — 구성 16 cliffhanger_adv(ca-)
+ *          5문항. good 은 answers.json 의 가·나(set B 와 같은 방식) · nak 은
+ *          같은 파일의 통제 짝 5건 · emotion 은 ca-walk-home 의 감정형 신호
+ *          변형 1건(good/nak 과 따로 센다, standoff 와 같은 자리 — 기대 없이
+ *          분포만). set A 와 같은 자리라 --domain 값을 그대로 탄다(set B 처럼
+ *          battle 로 강제하지 않는다) — ca- 는 전투가 아니라서 --only C 는
+ *          --domain=general 과 함께 쓴다(박 님 지시).
+ *   set D  data/probe/set_d_tell.json(세션 45) — **support 가 아니라 tell
+ *          프롬프트**로 잰다. good(=show 기대)은 bt- 모범 10건(answers.json,
+ *          set B 의 good 과 같은 답안을 재사용) · tell 표본 6건(D-1~D-6, 그중
+ *          D-4·D-6 은 경계 표본이라 기대 없이 분포만). `--only=D` 로 고른다 —
+ *          A·B·C 와 동시에 못 쓴다(다른 프롬프트라 한 실행에서 안 섞는다).
+ *   힌트   `--hint` — set B nak·no_beat 표본 10건(5+5)에 힌트 프롬프트를
+ *          바로 부른다(support 재판정 없이 — 이미 근거가 없다고 아는 표본
+ *          이라 비용 절약). source_quote 원문 실재율·insert_before 유효율만
+ *          집계한다(둘 다 100% 기대) — --only 와 무관한 별도 모드다.
  *
  * 각 답안 5회 반복(흔들림을 재려면 5회가 최소다 — gemini.ts 의 THINKING_LEVEL
  * 주석과 같은 이유). **캐시는 기본 우회한다** — 캐시를 쓰면 5회가 사실 1회가
  * 된다. --use-cache 를 줘야 ai_shadow_cache 를 본다(실제 캐시 배선 자체를
  * 검증하고 싶을 때만).
  *
- * 이 하니스는 verifySupportJudgment 를 **재시도 없이 원본 그대로** 잰다 —
- * route.ts 의 재시도 1회는 프로덕션 판정을 세우는 것이고, 여기는 흔들림
- * 자체(같은 답안 5회가 얼마나 갈리는지)를 재는 자리라 스무딩하면 안 된다.
+ * 이 하니스는 verifySupportJudgment·verifyTellJudgment·verifyHintJudgment 를
+ * **재시도 없이 원본 그대로** 잰다 — route.ts 의 재시도는 프로덕션 판정을
+ * 세우는 것이고, 여기는 흔들림 자체(같은 답안 반복이 얼마나 갈리는지)를
+ * 재는 자리라 스무딩하면 안 된다.
  *
  * ```bash
- * npx tsx scripts/support-golden.ts --dry            # DB·네트워크 없이 프롬프트 한 건
- * npx tsx scripts/support-golden.ts --check           # 마개와 쓰기만 재고 멈춘다
- * npx tsx scripts/support-golden.ts                   # 전 표본 5회 실행 (기본 안전 확인 절차)
- * npx tsx scripts/support-golden.ts --reps=1 --cap=20 # 값싸게 한 번만 훑어본다
- * npx tsx scripts/support-golden.ts --domain general --only A  # set A 만 v4 로 재측정(세션 43)
+ * npx tsx scripts/support-golden.ts --dry                      # DB·네트워크 없이 프롬프트 한 건
+ * npx tsx scripts/support-golden.ts --check                    # 마개와 쓰기만 재고 멈춘다
+ * npx tsx scripts/support-golden.ts                             # set A·B 5회 실행(기본)
+ * npx tsx scripts/support-golden.ts --reps=1 --cap=20            # 값싸게 한 번만 훑어본다
+ * npx tsx scripts/support-golden.ts --domain=general --only=A    # set A 만 v4 로 재측정(세션 43)
+ * npx tsx scripts/support-golden.ts --domain=general --only=C    # set C(세션 45)
+ * npx tsx scripts/support-golden.ts --only=D                     # tell 골든(세션 45)
+ * npx tsx scripts/support-golden.ts --hint                       # 힌트 골든(세션 45)
  * ```
  *
  * 인자: `--reps`(반복 횟수, 기본 5) · `--cap`(이 실행의 자기 상한) · `--model` ·
  *       `--out` · `--dry` · `--check` · `--use-cache` ·
- *       `--domain`(battle 기본 | general, 세션 43) · `--only`(A | B | AB 기본)
+ *       `--domain`(battle 기본 | general, 세션 43) · `--only`(A·B·C 의 조합
+ *       또는 D, 기본 AB) · `--hint`(세션 45, 부울)
  *       ★ `--domain general` 을 줘도 **set B(bt-)는 항상 battle 이다** — 코드가
  *         set 으로 강제한다(사람이 --only 를 깜빡해도 bt- 캐시 키가 안 바뀐다).
+ *         set C 는 강제하지 않는다 — set A 와 같은 자리.
  * 환경: `GEMINI_API_KEY` · `GEMINI_THINKING_LEVEL` · `AI_PROBE_USER_ID`(필요하면)
  *
  * ★ `--conditions=react-server` 가 필요하다(package.json 이 npm script 로 준다).
@@ -50,8 +73,23 @@ import { createHash } from 'node:crypto'
 import { writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { readFileSync } from 'node:fs'
-import { judgeSupportWith, type SupportOutcome } from '../lib/ai/observe'
-import { verifySupportJudgment, PROMPT_VERSION_SUPPORT, PROMPT_VERSION_SUPPORT_GENERAL, type SupportDomain, type SupportVerdict } from '../lib/ai/prompt'
+import { judgeHintWith, judgeSupportWith, judgeTellWith, type HintOutcome, type SupportOutcome, type TellOutcome } from '../lib/ai/observe'
+import {
+  buildHintPrompt,
+  buildSupportPrompt,
+  buildTellPrompt,
+  verifyHintJudgment,
+  verifySupportJudgment,
+  verifyTellJudgment,
+  PROMPT_VERSION_HINT,
+  PROMPT_VERSION_SUPPORT,
+  PROMPT_VERSION_SUPPORT_GENERAL,
+  PROMPT_VERSION_TELL,
+  type HintVerdict,
+  type SupportDomain,
+  type SupportVerdict,
+  type TellVerdict,
+} from '../lib/ai/prompt'
 import { callGemini, DEFAULT_MODEL, THINKING_LEVEL } from '../lib/ai/gemini'
 import { checkGateBeforeQuota, checkRunBudget } from '../lib/ai/gate'
 import { countTodayRows, logPgError, readFlags, sumSpendTodayUsd } from '../lib/ai/flags'
@@ -76,17 +114,17 @@ interface RefRow {
 }
 
 interface Case {
-  set: 'A' | 'B'
-  itemId: string // ch10 item id 또는 bt- source_key(:ord)
-  // standoff(세션 42) — 대치형 정당 답안(결정타 없이 끝나되 빌드업은 있음).
-  // good/nak/no_beat 와 **따로 센다**(summarize) — 이 갈래는 no_beat 이
-  // 맞는지 아닌지가 아직 판정선 미정이라, 다른 셋의 집계에 섞으면 오탐·
-  // 미검출 수가 흐려진다.
-  kind: 'good' | 'nak' | 'no_beat' | 'standoff'
+  set: 'A' | 'B' | 'C'
+  itemId: string // ch10 item id 또는 bt-/ca- source_key(:ord)
+  // standoff·emotion(세션 42·45) — 대치형 정당 답안(결정타 없이 끝나되
+  // 빌드업은 있음) · 감정형 신호 변형. good/nak/no_beat 와 **따로 센다**
+  // (summarize) — 이 갈래들은 판정선이 아직 미정이라, 다른 셋의 집계에
+  // 섞으면 오탐·미검출 수가 흐려진다.
+  kind: 'good' | 'nak' | 'no_beat' | 'standoff' | 'emotion'
   text: string
-  // set B nak/no_beat/standoff 전용. bt-orc-axe·bt-low-guard 가 통제 짝으로
-  // 불완전하다는 표시(data/probe/set_b_nak.json 의 gold.note). 결과 출력에
-  // 함께 낸다 — 없으면 해석이 미검출·뒤집힘을 프롬프트 결함으로 잘못 읽는다.
+  // set B/C nak·no_beat·standoff·emotion 전용. 통제 짝이 불완전하다는 표시
+  // (data/probe/*.json 의 gold.note). 결과 출력에 함께 낸다 — 없으면 해석이
+  // 미검출·뒤집힘을 프롬프트 결함으로 잘못 읽는다.
   note?: string
 }
 
@@ -106,6 +144,27 @@ interface SetBNakItem {
   }
 }
 
+interface SetCItem {
+  id: string
+  gold: {
+    nak_answer: string
+    // ca-walk-home 만. good/nak 과 따로 센다(kind 'emotion').
+    emotion_good_answer?: string
+    payoff_line: string
+    beat_line: string
+    note?: string
+  }
+}
+
+interface SetDItem {
+  id: string
+  source_key: string
+  expected: 'tell' | null // null = 경계 표본, 분포만
+  tell_answer: string
+  tell_line: string
+  note?: string
+}
+
 /**
  * ch10 항목에 합성 problem_id 를 붙인다 — RFC4122 v5(namespace + name 의
  * sha1). uuid 패키지가 저장소에 없어(package.json 확인) 손으로 잰다. 이
@@ -122,9 +181,23 @@ function uuidv5(name: string, namespace: string): string {
   const hex = bytes.toString('hex')
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
 }
+void uuidv5 // ch10 항목은 결과 파일 안 이름표로 id 를 그대로 쓴다 — 지금은 실행에 안 쓰인다. 자리만 유지한다.
+
+const root = path.join(__dirname, '..')
+
+function loadAnswersJson(): { reference?: RefRow[] } {
+  return JSON.parse(
+    readFileSync(path.join(root, 'seed', 'dump', 'answers.json'), 'utf8').replace(/^﻿/, '')
+  ) as { reference?: RefRow[] }
+}
+
+function loadSetBNak(): { items: SetBNakItem[] } {
+  return JSON.parse(
+    readFileSync(path.join(root, 'data', 'probe', 'set_b_nak.json'), 'utf8').replace(/^﻿/, '')
+  ) as { items: SetBNakItem[] }
+}
 
 function loadCases(): Case[] {
-  const root = path.join(__dirname, '..')
   const ch10 = JSON.parse(
     readFileSync(path.join(root, 'data', 'probe', 'ch10_decisive.json'), 'utf8').replace(/^﻿/, '')
   ) as { items: Ch10Item[] }
@@ -135,9 +208,7 @@ function loadCases(): Case[] {
     out.push({ set: 'A', itemId: item.id, kind: 'nak', text: item.gold.nak_answer })
   }
 
-  const answers = JSON.parse(
-    readFileSync(path.join(root, 'seed', 'dump', 'answers.json'), 'utf8').replace(/^﻿/, '')
-  ) as { reference?: RefRow[] }
+  const answers = loadAnswersJson()
   const bt = (answers.reference ?? []).filter((r) => r.source_key.startsWith('bt-'))
   for (const r of bt) {
     out.push({ set: 'B', itemId: `${r.source_key}:${r.ord}`, kind: 'good', text: r.content })
@@ -147,9 +218,7 @@ function loadCases(): Case[] {
   // itemId 는 good 과 달리 ord 가 없다 — good 은 가·나 두 세트지만 nak 은
   // 세트당 하나뿐이라 ord 를 붙일 자리가 없다(뒤집힘 집계는 kind 로 이미
   // good/nak 을 가르므로 itemId 꼴이 달라도 안 섞인다).
-  const nakData = JSON.parse(
-    readFileSync(path.join(root, 'data', 'probe', 'set_b_nak.json'), 'utf8').replace(/^﻿/, '')
-  ) as { items: SetBNakItem[] }
+  const nakData = loadSetBNak()
   for (const item of nakData.items) {
     out.push({
       set: 'B', itemId: item.id, kind: 'nak', text: item.gold.nak_answer,
@@ -167,8 +236,8 @@ function loadCases(): Case[] {
     })
   }
 
-  // set B standoff(세션 42) — 자리만. 문안이 아직 없다(박 님 확정 후) — 있는
-  // 항목만 싣는다. 지금은 전부 없어 이 루프가 아무것도 안 싣는다.
+  // set B standoff(세션 42/43) — bt-spear-range 1건만 문안이 있다(나머지는
+  // 자리만) — 있는 항목만 싣는다.
   for (const item of nakData.items) {
     if (!item.gold.standoff_answer) continue
     out.push({
@@ -177,6 +246,76 @@ function loadCases(): Case[] {
     })
   }
 
+  // set C(ca-, 세션 45) — good 은 answers.json 에서 직접(가·나, set B 와 같은
+  // 방식) · nak·emotion 은 set_c_cliff.json.
+  const ca = (answers.reference ?? []).filter((r) => r.source_key.startsWith('ca-'))
+  for (const r of ca) {
+    out.push({ set: 'C', itemId: `${r.source_key}:${r.ord}`, kind: 'good', text: r.content })
+  }
+  const setCData = JSON.parse(
+    readFileSync(path.join(root, 'data', 'probe', 'set_c_cliff.json'), 'utf8').replace(/^﻿/, '')
+  ) as { items: SetCItem[] }
+  for (const item of setCData.items) {
+    out.push({
+      set: 'C', itemId: item.id, kind: 'nak', text: item.gold.nak_answer,
+      note: item.gold.note?.trim() || undefined,
+    })
+    if (item.gold.emotion_good_answer) {
+      out.push({
+        set: 'C', itemId: item.id, kind: 'emotion', text: item.gold.emotion_good_answer,
+        note: item.gold.note?.trim() || undefined,
+      })
+    }
+  }
+
+  return out
+}
+
+/** set D(tell 골든, 세션 45) 표본. support 케이스와 형태가 달라 loadCases()
+ *  에 안 섞는다 — 프롬프트 자체가 다르다(judgeTellWith). */
+interface TellCase {
+  id: string
+  kind: 'show_good' | 'tell_sample'
+  expected: 'show' | 'tell' | null // null = 경계 표본, 분포만
+  text: string
+  note?: string
+}
+
+function loadTellCases(): TellCase[] {
+  const out: TellCase[] = []
+  const answers = loadAnswersJson()
+  const bt = (answers.reference ?? []).filter((r) => r.source_key.startsWith('bt-'))
+  for (const r of bt) {
+    out.push({ id: `${r.source_key}:${r.ord}`, kind: 'show_good', expected: 'show', text: r.content })
+  }
+  const setD = JSON.parse(
+    readFileSync(path.join(root, 'data', 'probe', 'set_d_tell.json'), 'utf8').replace(/^﻿/, '')
+  ) as { items: SetDItem[] }
+  for (const item of setD.items) {
+    out.push({
+      id: item.id, kind: 'tell_sample', expected: item.expected, text: item.tell_answer,
+      note: item.note?.trim() || undefined,
+    })
+  }
+  return out
+}
+
+/** 힌트 골든(세션 45) 표본 — set B nak·no_beat 10건. passage 는 같은 항목의
+ *  no_beat_answer(=bt- 문항 원문 그대로, meta 주석 참고)를 그대로 쓴다. */
+interface HintCase {
+  id: string
+  kind: 'nak' | 'no_beat'
+  text: string
+  passage: string
+}
+
+function loadHintCases(): HintCase[] {
+  const nakData = loadSetBNak()
+  const out: HintCase[] = []
+  for (const item of nakData.items) {
+    out.push({ id: item.id, kind: 'nak', text: item.gold.nak_answer, passage: item.gold.no_beat_answer })
+    out.push({ id: item.id, kind: 'no_beat', text: item.gold.no_beat_answer, passage: item.gold.no_beat_answer })
+  }
   return out
 }
 
@@ -215,10 +354,33 @@ async function preflightWrite(): Promise<boolean> {
   return true
 }
 
+/** ai_usage_log 에 호출 비용을 적는다. 세 모드(support·tell·hint) 가 다 쓴다. */
+async function logUsage(
+  admin: ReturnType<typeof createAdminClient>,
+  outcome: { usage: { inputTokens: number; cachedTokens: number; outputTokens: number } | null; costUsd: number | null; model: string }
+): Promise<boolean> {
+  if (!outcome.usage) return true
+  const { error } = await admin.from('ai_usage_log').insert({
+    user_id: process.env.AI_PROBE_USER_ID ?? null,
+    submission_id: null,
+    model: outcome.model,
+    input_tokens: outcome.usage.inputTokens,
+    cached_tokens: outcome.usage.cachedTokens,
+    output_tokens: outcome.usage.outputTokens,
+    cost_usd: outcome.costUsd,
+  })
+  if (error) {
+    console.error('\n★ ai_usage_log 에 못 적었다 — 멈춘다.')
+    logPgError('ai_usage_log insert', error)
+    return false
+  }
+  return true
+}
+
 interface RunResult {
-  set: 'A' | 'B'
+  set: 'A' | 'B' | 'C'
   itemId: string
-  kind: 'good' | 'nak' | 'no_beat' | 'standoff'
+  kind: 'good' | 'nak' | 'no_beat' | 'standoff' | 'emotion'
   rep: number
   verdict: SupportVerdict | 'call_failed' | 'not_json' | 'bad_shape'
   fromCache: boolean
@@ -231,9 +393,9 @@ async function main() {
   const dry = flag('dry')
   const check = flag('check')
   const useCache = flag('use-cache')
+  const hintMode = flag('hint')
   const reps = Number(arg('reps', '5'))
   const model = arg('model', DEFAULT_MODEL)
-  const out = arg('out', `data/probe/support-golden-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.json`)
 
   // ★ ai-probe.ts 의 --prompt 와 같은 함정 — `arg()` 는 `--name=value` 꼴만
   //   읽는다. 공백 꼴(`--domain general`)은 조용히 기본값으로 떨어져 **엉뚱한
@@ -250,7 +412,8 @@ async function main() {
   }
 
   // 도메인 일반화(세션 43). set B(bt-)는 --domain 값과 무관하게 **항상 battle**
-  // 이다 — domainFor 가 강제한다. general 은 set A(ch10, 비전투 포함)만 잰다.
+  // 이다 — domainFor 가 강제한다. set C(ca-, 세션 45)는 set A 와 같은 자리라
+  // --domain 값을 그대로 탄다.
   const domainArg = arg('domain', 'battle')
   if (domainArg !== 'battle' && domainArg !== 'general') {
     console.error(`★ --domain 은 battle · general 뿐이다. 받은 것: ${domainArg}`)
@@ -260,38 +423,48 @@ async function main() {
   const promptVersionFor = (domain: SupportDomain) => (domain === 'general' ? PROMPT_VERSION_SUPPORT_GENERAL : PROMPT_VERSION_SUPPORT)
 
   const only = arg('only', 'AB')
-  if (!/^(A|B|AB|BA)$/.test(only)) {
-    console.error(`★ --only 는 A · B · AB 뿐이다. 받은 것: ${only}`)
+  // tell 모드(세션 45) — support 가 아니라 완전히 다른 프롬프트라 A·B·C 와
+  // 동시에 못 켠다. --only=D 하나로만 고른다.
+  const tellMode = only === 'D'
+  if (!tellMode && (!/^[ABC]+$/.test(only) || new Set(only).size !== only.length)) {
+    console.error(`★ --only 는 A·B·C 의 조합(예: A, AB, ABC) 또는 D(tell 전용) 뿐이다. 받은 것: ${only}`)
+    process.exit(1)
+  }
+  if (hintMode && (tellMode || only !== 'AB')) {
+    console.error('★ --hint 는 --only 와 같이 안 쓴다 — 힌트 표본은 set B nak·no_beat 10건으로 고정이다.')
     process.exit(1)
   }
 
-  const cases = loadCases().filter((c) => only.includes(c.set))
-  const setA = cases.filter((c) => c.set === 'A')
-  const setB = cases.filter((c) => c.set === 'B')
-  const totalCalls = cases.length * reps
-  const runCap = Number(arg('cap', String(totalCalls)))
-
-  const countOf = (list: Case[], kind: Case['kind']) => list.filter((c) => c.kind === kind).length
-  console.log(
-    `set A(ch10) good ${countOf(setA, 'good')} · nak ${countOf(setA, 'nak')} · ` +
-      `set B(bt-) good ${countOf(setB, 'good')} · nak ${countOf(setB, 'nak')} · no_beat ${countOf(setB, 'no_beat')} · ` +
-      `반복 ${reps}회 · 모델 ${model} · thinking ${THINKING_LEVEL}`
+  const out = arg(
+    'out',
+    hintMode
+      ? `data/probe/hint-golden-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.json`
+      : tellMode
+        ? `data/probe/tell-golden-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.json`
+        : `data/probe/support-golden-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.json`
   )
-  console.log(`도메인 set A=${setA.length > 0 ? domainArg : '-'} · set B=battle(고정) · --only ${only}`)
-  console.log(`캐시 ${useCache ? '사용(--use-cache)' : '우회(기본)'} · 이 실행 상한 ${runCap}회`)
-  // set B nak/no_beat 의 비통제 표시(note) — 결과를 읽기 전에 먼저 보여 둔다.
-  // nak·no_beat 가 같은 note 를 물려받으므로(id 짝) nak 쪽에서만 한 번 낸다.
-  for (const c of setB) {
-    if (c.kind === 'nak' && c.note) console.log(`  ★ set B '${c.itemId}' (통제 짝 표시): ${c.note}`)
-  }
+
   if (!PRICES[model]) console.log('★ 단가표에 없는 모델이다. 비용이 null 로 나간다 — pricing.ts 에 넣어라')
   else console.log(`★ 단가는 프로모다. ${PROMO_ENDS} 이후 두 배 — pricing.ts`)
 
+  // ── --dry: DB·Gemini 없이 프롬프트 한 건만 본다. 모드마다 다른 프롬프트. ──
   if (dry) {
-    const c = cases[0]
-    console.log(`\n--- 프롬프트 한 건 (${c.set}/${c.itemId}/${c.kind}, domain=${domainFor(c)}) ---`)
-    const { buildSupportPrompt } = await import('../lib/ai/prompt')
-    console.log(buildSupportPrompt(c.text, domainFor(c)))
+    if (hintMode) {
+      const cs = loadHintCases()
+      const c = cs[0]
+      console.log(`\n--- 힌트 프롬프트 한 건 (${c.id}/${c.kind}) ---`)
+      console.log(buildHintPrompt(c.text, c.passage))
+    } else if (tellMode) {
+      const cs = loadTellCases()
+      const c = cs[0]
+      console.log(`\n--- tell 프롬프트 한 건 (${c.id}/${c.kind}) ---`)
+      console.log(buildTellPrompt(c.text))
+    } else {
+      const cases = loadCases().filter((c) => only.includes(c.set))
+      const c = cases[0]
+      console.log(`\n--- 프롬프트 한 건 (${c.set}/${c.itemId}/${c.kind}, domain=${domainFor(c)}) ---`)
+      console.log(buildSupportPrompt(c.text, domainFor(c)))
+    }
     console.log('\n--dry 다. DB 도 Gemini 도 안 탔다. 마개까지 재려면 --check 다.')
     return
   }
@@ -326,6 +499,183 @@ async function main() {
   if (!gate.allow) process.exit(1)
 
   const admin = createAdminClient()
+
+  if (hintMode) {
+    await runHintGolden(admin, flags, reps, model, out)
+    return
+  }
+  if (tellMode) {
+    await runTellGolden(admin, flags, reps, model, out)
+    return
+  }
+  await runSupportGolden(admin, flags, reps, model, out, only, domainArg, domainFor, promptVersionFor)
+}
+
+// ── 힌트 골든(세션 45) ────────────────────────────────────────────────
+async function runHintGolden(
+  admin: ReturnType<typeof createAdminClient>,
+  flags: Awaited<ReturnType<typeof readFlags>>,
+  reps: number,
+  model: string,
+  out: string
+) {
+  const cases = loadHintCases()
+  const totalCalls = cases.length * reps
+  const runCap = Number(arg('cap', String(totalCalls)))
+  console.log(`\n힌트 표본 ${cases.length}건(nak 5 · no_beat 5) · 반복 ${reps}회 · 모델 ${model} · 이 실행 상한 ${runCap}회`)
+
+  const results: { id: string; kind: 'nak' | 'no_beat'; rep: number; quoteReal: boolean | null; insertValid: boolean | null; verdict: HintVerdict | 'call_failed' | 'not_json' | 'bad_shape'; costUsd: number | null }[] = []
+  let calls = 0
+
+  outer: for (const c of cases) {
+    for (let rep = 1; rep <= reps; rep++) {
+      const spent = await sumSpendTodayUsd()
+      const pre = checkGateBeforeQuota({ hasApiKey: true, killSwitch: flags.killSwitch, dailySpendCapUsd: flags.dailySpendCapUsd, spentTodayUsd: spent })
+      if (!pre.allow) { console.log(`\n막혔다 [${pre.rule}] ${pre.detail} — ${calls}회에서 멈춘다`); break outer }
+      const budget = checkRunBudget(calls, runCap)
+      if (!budget.allow) { console.log(`\n막혔다 [${budget.rule}] ${budget.detail}`); break outer }
+
+      const outcome: HintOutcome = await judgeHintWith(callGemini, c.text.trim(), c.passage, model)
+      calls++
+      if (!(await logUsage(admin, outcome))) break outer
+
+      let verdict: (typeof results)[number]['verdict']
+      let quoteReal: boolean | null = null
+      let insertValid: boolean | null = null
+      if (!outcome.ok || !outcome.observation) {
+        verdict = (outcome.error ?? 'call_failed') as (typeof results)[number]['verdict']
+      } else {
+        const v = verifyHintJudgment(c.text.trim(), c.passage, outcome.observation)
+        verdict = v.verdict
+        quoteReal = v.quoteReal
+        insertValid = v.insertValid
+      }
+      results.push({ id: c.id, kind: c.kind, rep, quoteReal, insertValid, verdict, costUsd: outcome.costUsd })
+      console.log(`${String(calls).padStart(3)} ${c.id}/${c.kind} rep${rep}  ${verdict}  quoteReal=${quoteReal} insertValid=${insertValid}  $${outcome.costUsd ?? '-'}`)
+
+      if (outcome.error === 'call_failed' && calls === 1) {
+        console.log('\n★ 첫 호출부터 못 나갔다. 설정 문제다 — 뒤를 안 돌린다.')
+        break outer
+      }
+    }
+  }
+
+  const withQuote = results.filter((r) => r.quoteReal !== null)
+  const quoteRealRate = withQuote.length > 0 ? withQuote.filter((r) => r.quoteReal).length / withQuote.length : null
+  const insertValidRate = withQuote.length > 0 ? withQuote.filter((r) => r.insertValid).length / withQuote.length : null
+  const cost = results.reduce((s, r) => s + (r.costUsd ?? 0), 0)
+  console.log(`\n[힌트] ${results.length}회 · source_quote 원문 실재율 ${quoteRealRate === null ? '-' : (quoteRealRate * 100).toFixed(1) + '%'} · insert_before 유효율 ${insertValidRate === null ? '-' : (insertValidRate * 100).toFixed(1) + '%'} · 비용 $${cost.toFixed(6)}`)
+  console.log('판정선(STATUS): 둘 다 100% 기대 — 못 미치면 프롬프트 재검토.')
+
+  writeFileSync(out, JSON.stringify({ model, reps, results, quoteRealRate, insertValidRate, cost }, null, 2))
+  console.log(`결과를 ${out} 에 적었다.`)
+}
+
+// ── tell 골든(세션 45) ────────────────────────────────────────────────
+async function runTellGolden(
+  admin: ReturnType<typeof createAdminClient>,
+  flags: Awaited<ReturnType<typeof readFlags>>,
+  reps: number,
+  model: string,
+  out: string
+) {
+  const cases = loadTellCases()
+  const totalCalls = cases.length * reps
+  const runCap = Number(arg('cap', String(totalCalls)))
+  const showGood = cases.filter((c) => c.kind === 'show_good')
+  const tellSamples = cases.filter((c) => c.kind === 'tell_sample')
+  console.log(`\nset D(tell) good(show 기대) ${showGood.length} · tell 표본 ${tellSamples.length}(경계 포함) · 반복 ${reps}회 · 모델 ${model} · 이 실행 상한 ${runCap}회`)
+  for (const c of tellSamples) {
+    if (c.expected === null && c.note) console.log(`  ★ ${c.id}(경계 표본): ${c.note}`)
+  }
+
+  const results: { id: string; kind: TellCase['kind']; expected: TellCase['expected']; rep: number; verdict: TellVerdict | 'call_failed' | 'not_json' | 'bad_shape'; costUsd: number | null }[] = []
+  let calls = 0
+
+  outer: for (const c of cases) {
+    for (let rep = 1; rep <= reps; rep++) {
+      const spent = await sumSpendTodayUsd()
+      const pre = checkGateBeforeQuota({ hasApiKey: true, killSwitch: flags.killSwitch, dailySpendCapUsd: flags.dailySpendCapUsd, spentTodayUsd: spent })
+      if (!pre.allow) { console.log(`\n막혔다 [${pre.rule}] ${pre.detail} — ${calls}회에서 멈춘다`); break outer }
+      const budget = checkRunBudget(calls, runCap)
+      if (!budget.allow) { console.log(`\n막혔다 [${budget.rule}] ${budget.detail}`); break outer }
+
+      const outcome: TellOutcome = await judgeTellWith(callGemini, c.text.trim(), model)
+      calls++
+      if (!(await logUsage(admin, outcome))) break outer
+
+      let verdict: (typeof results)[number]['verdict']
+      if (!outcome.ok || !outcome.observation) {
+        verdict = (outcome.error ?? 'call_failed') as (typeof results)[number]['verdict']
+      } else {
+        verdict = verifyTellJudgment(c.text.trim(), outcome.observation).verdict
+      }
+      results.push({ id: c.id, kind: c.kind, expected: c.expected, rep, verdict, costUsd: outcome.costUsd })
+      console.log(`${String(calls).padStart(3)} ${c.id}/${c.kind} rep${rep}  ${verdict}  $${outcome.costUsd ?? '-'}`)
+
+      if (outcome.error === 'call_failed' && calls === 1) {
+        console.log('\n★ 첫 호출부터 못 나갔다. 설정 문제다 — 뒤를 안 돌린다.')
+        break outer
+      }
+    }
+  }
+
+  const showRows = results.filter((r) => r.kind === 'show_good')
+  const showFalsePos = showRows.filter((r) => r.verdict !== 'show').length
+  const hardRows = results.filter((r) => r.kind === 'tell_sample' && r.expected === 'tell')
+  const hardMissed = hardRows.filter((r) => r.verdict !== 'tell').length
+  const boundaryRows = results.filter((r) => r.kind === 'tell_sample' && r.expected === null)
+  const cost = results.reduce((s, r) => s + (r.costUsd ?? 0), 0)
+  console.log(`\n[set D] good(show) ${showRows.length}건 오탐 ${showFalsePos} · tell 표본(하드) ${hardRows.length}건 미검출 ${hardMissed} · 경계 ${boundaryRows.length}건(판정선 미정 — 분포만) · 비용 $${cost.toFixed(6)}`)
+
+  const byId = new Map<string, typeof boundaryRows>()
+  for (const r of boundaryRows) byId.set(r.id, [...(byId.get(r.id) ?? []), r])
+  for (const [id, list] of byId) {
+    const counts = new Map<string, number>()
+    for (const r of list) counts.set(r.verdict, (counts.get(r.verdict) ?? 0) + 1)
+    const dist = [...counts.entries()].map(([v, n]) => `${v} ${n}`).join(' · ')
+    console.log(`    경계 '${id}': ${list.length}회 분포 — ${dist}`)
+  }
+
+  writeFileSync(out, JSON.stringify({ model, reps, promptVersion: PROMPT_VERSION_TELL, results, showFalsePos, hardMissed, cost }, null, 2))
+  console.log(`결과를 ${out} 에 적었다.`)
+  console.log('판정선(STATUS): good(show) 오탐 0 이고 하드 표본 미검출 0 이면 bt- 5건 tell 실사용으로.')
+}
+
+// ── support 골든(set A·B·C) ──────────────────────────────────────────
+async function runSupportGolden(
+  admin: ReturnType<typeof createAdminClient>,
+  flags: Awaited<ReturnType<typeof readFlags>>,
+  reps: number,
+  model: string,
+  out: string,
+  only: string,
+  domainArg: string,
+  domainFor: (c: Case) => SupportDomain,
+  promptVersionFor: (domain: SupportDomain) => string
+) {
+  const useCache = flag('use-cache')
+  const cases = loadCases().filter((c) => only.includes(c.set))
+  const setA = cases.filter((c) => c.set === 'A')
+  const setB = cases.filter((c) => c.set === 'B')
+  const setC = cases.filter((c) => c.set === 'C')
+  const totalCalls = cases.length * reps
+  const runCap = Number(arg('cap', String(totalCalls)))
+
+  const countOf = (list: Case[], kind: Case['kind']) => list.filter((c) => c.kind === kind).length
+  console.log(
+    `set A(ch10) good ${countOf(setA, 'good')} · nak ${countOf(setA, 'nak')} · ` +
+      `set B(bt-) good ${countOf(setB, 'good')} · nak ${countOf(setB, 'nak')} · no_beat ${countOf(setB, 'no_beat')} · ` +
+      `set C(ca-) good ${countOf(setC, 'good')} · nak ${countOf(setC, 'nak')} · emotion ${countOf(setC, 'emotion')} · ` +
+      `반복 ${reps}회 · 모델 ${model} · thinking ${THINKING_LEVEL}`
+  )
+  console.log(`도메인 set A=${setA.length > 0 ? domainArg : '-'} · set B=battle(고정) · set C=${setC.length > 0 ? domainArg : '-'} · --only ${only}`)
+  console.log(`캐시 ${useCache ? '사용(--use-cache)' : '우회(기본)'} · 이 실행 상한 ${runCap}회`)
+  // set B/C nak/no_beat 의 비통제 표시(note) — 결과를 읽기 전에 먼저 보여 둔다.
+  for (const c of [...setB, ...setC]) {
+    if (c.kind === 'nak' && c.note) console.log(`  ★ set ${c.set} '${c.itemId}' (통제 짝 표시): ${c.note}`)
+  }
+
   const results: RunResult[] = []
   let calls = 0
 
@@ -371,23 +721,7 @@ async function main() {
         outcome = await judgeSupportWith(callGemini, normalized, model, domain)
         calls++
         costUsd = outcome.costUsd
-
-        if (outcome.usage) {
-          const { error } = await admin.from('ai_usage_log').insert({
-            user_id: process.env.AI_PROBE_USER_ID ?? null,
-            submission_id: null,
-            model: outcome.model,
-            input_tokens: outcome.usage.inputTokens,
-            cached_tokens: outcome.usage.cachedTokens,
-            output_tokens: outcome.usage.outputTokens,
-            cost_usd: outcome.costUsd,
-          })
-          if (error) {
-            console.error('\n★ ai_usage_log 에 못 적었다 — 멈춘다.')
-            logPgError('ai_usage_log insert', error)
-            break outer
-          }
-        }
+        if (!(await logUsage(admin, outcome))) break outer
 
         if (!outcome.ok || !outcome.observation) {
           verdict = (outcome.error ?? 'call_failed') as RunResult['verdict']
@@ -409,15 +743,16 @@ async function main() {
     }
   }
 
-  // ── 집계. set A · set B 분리(3-2) ──────────────────────────────────
-  function summarize(set: 'A' | 'B') {
+  // ── 집계. set A·B·C 분리 ──────────────────────────────────────────
+  function summarize(set: 'A' | 'B' | 'C') {
     const rows = results.filter((r) => r.set === set)
     const good = rows.filter((r) => r.kind === 'good')
     const nak = rows.filter((r) => r.kind === 'nak')
     const noBeat = rows.filter((r) => r.kind === 'no_beat')
-    // standoff(세션 42) — good/nak/no_beat 와 따로 센다. 판정선이 아직 없어
-    // (박 님 확정 전) "미검출" 수는 안 낸다 — 건수만 보여서 사람이 직접 읽는다.
+    // standoff·emotion(세션 42·45) — good/nak/no_beat 와 따로 센다. 판정선이
+    // 아직 없어(박 님 확정 전) "미검출" 수는 안 낸다 — 건수·분포만 보여준다.
     const standoff = rows.filter((r) => r.kind === 'standoff')
+    const emotion = rows.filter((r) => r.kind === 'emotion')
     const falsePos = good.filter((r) => r.verdict !== 'buildup').length // 오탐: good인데 buildup 아님(no_beat 로 잘못 빠지는 것도 포함)
     const missed = nak.filter((r) => r.verdict === 'buildup').length // 미검출: nak인데 buildup
     // no_beat 미검출: 결정타가 없는 글인데 'no_beat' 가 아닌 다른 판정이 나온 것(세션 41 후속 2).
@@ -442,11 +777,14 @@ async function main() {
     console.log(`\n[set ${set}] good ${good.length}건 오탐 ${falsePos} · nak ${nak.length}건 미검출 ${missed}` +
       (noBeat.length > 0 ? ` · no_beat ${noBeat.length}건 미검출 ${noBeatMissed}` : '') +
       (standoff.length > 0 ? ` · standoff ${standoff.length}건(판정선 미정 — 건수만)` : '') +
+      (emotion.length > 0 ? ` · emotion ${emotion.length}건(판정선 미정 — 건수만)` : '') +
       ` · beat/quote 불일치 ${mismatch} · 뒤집힘(항목) ${flips}/${byItem.size} · 비용 $${cost.toFixed(6)}`)
-    // set B nak/no_beat 은 항목별 미검출·note 를 결과 옆에 낸다 — 비통제
-    // 표시(B-03·B-05)가 없으면 미검출·뒤집힘을 프롬프트 결함으로 잘못 읽는다.
-    if (set === 'B') {
-      const nakCasesById = new Map(cases.filter((c) => c.set === 'B' && c.kind === 'nak').map((c) => [c.itemId, c]))
+
+    // set B/C nak/no_beat/standoff/emotion 은 항목별 미검출·note·분포를
+    // 결과 옆에 낸다 — 비통제 표시가 없으면 미검출·뒤집힘을 프롬프트
+    // 결함으로 잘못 읽는다.
+    if (set === 'B' || set === 'C') {
+      const nakCasesById = new Map(cases.filter((c) => c.set === set && c.kind === 'nak').map((c) => [c.itemId, c]))
       for (const [k, list] of byItem) {
         if (!k.endsWith(':nak')) continue
         const itemId = k.slice(0, -':nak'.length)
@@ -454,6 +792,8 @@ async function main() {
         const note = nakCasesById.get(itemId)?.note
         console.log(`    nak '${itemId}': ${itemMissed}/${list.length}회 buildup(미검출)${note ? ` — ★ ${note}` : ''}`)
       }
+    }
+    if (set === 'B') {
       for (const [k, list] of byItem) {
         if (!k.endsWith(':no_beat')) continue
         const itemId = k.slice(0, -':no_beat'.length)
@@ -473,10 +813,24 @@ async function main() {
         console.log(`    standoff '${itemId}': ${list.length}회 분포 — ${dist}${note ? ` — ★ ${note}` : ''}`)
       }
     }
-    return { set, good: good.length, falsePos, nak: nak.length, missed, noBeat: noBeat.length, noBeatMissed, standoff: standoff.length, mismatch, flips, itemCount: byItem.size, cost }
+    if (set === 'C') {
+      // emotion(세션 45) — ca-walk-home 하나뿐. 기대 verdict 없음, 분포만.
+      const emotionCasesById = new Map(cases.filter((c) => c.set === 'C' && c.kind === 'emotion').map((c) => [c.itemId, c]))
+      for (const [k, list] of byItem) {
+        if (!k.endsWith(':emotion')) continue
+        const itemId = k.slice(0, -':emotion'.length)
+        const counts = new Map<string, number>()
+        for (const r of list) counts.set(r.verdict, (counts.get(r.verdict) ?? 0) + 1)
+        const dist = [...counts.entries()].map(([v, n]) => `${v} ${n}`).join(' · ')
+        const note = emotionCasesById.get(itemId)?.note
+        console.log(`    emotion '${itemId}': ${list.length}회 분포 — ${dist}${note ? ` — ★ ${note}` : ''}`)
+      }
+    }
+    return { set, good: good.length, falsePos, nak: nak.length, missed, noBeat: noBeat.length, noBeatMissed, standoff: standoff.length, emotion: emotion.length, mismatch, flips, itemCount: byItem.size, cost }
   }
-  const summaryA = summarize('A')
-  const summaryB = summarize('B')
+  const summaryA = setA.length > 0 ? summarize('A') : null
+  const summaryB = setB.length > 0 ? summarize('B') : null
+  const summaryC = setC.length > 0 ? summarize('C') : null
 
   // promptVersion 은 이제 domain 마다 다르다(세션 43) — 결과 파일엔 실행에
   // 실제로 쓰인 조합을 둘 다 적는다. results 의 각 행은 domain 을 따로 갖는다.
@@ -485,11 +839,11 @@ async function main() {
     promptVersionBattle: PROMPT_VERSION_SUPPORT,
     promptVersionGeneral: PROMPT_VERSION_SUPPORT_GENERAL,
     domainArg,
-    results, summaryA, summaryB,
+    results, summaryA, summaryB, summaryC,
   }, null, 2))
   console.log(`\n결과를 ${out} 에 적었다.`)
-  console.log('판정선(STATUS): set A·B 오탐 0 이고 set A 미검출이 낮으면 → 다음 세션 16(ca-) 확장.')
-  console.log('두 집합이 갈리면 문체를 재는 것 — 프롬프트 재검토(3-4).')
+  console.log('판정선(STATUS): set A·B·C 오탐 0 이고 미검출이 낮으면 → 다음 세션 실사용/확장 결정.')
+  console.log('집합끼리 갈리면 문체를 재는 것 — 프롬프트 재검토.')
 }
 
 main().catch((e) => {

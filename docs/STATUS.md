@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 44 · 커밋 `6fdce6b` 위
+마지막 갱신: 세션 45 · 커밋 `019388c` 위
 
 ★ 활성 144 (전체 157 − 비활성 13). 언어 관문 전수 불변식(verify.ts)이 이 수를
   출력·단언한다 — 문항 증감 때마다 이 줄과 불변식을 같이 갱신한다.
@@ -52,6 +52,18 @@
   방향. 켜는 것은 박 님 몫(아래 "다음" 1번). ★ computeShadow() 는 킬스위치를
   섀도 캐시보다 먼저 본다(세션 44) — 캐시된 판정도 AI 판정이라, 킬스위치가
   켜져(또는 못 읽혀) 있으면 캐시를 보지 않고 즉시 pending 이다.
+★ bt- 5건에 느낌어 판정(tell, 세션 45) 신설 — scoring_config.ai_shadow 가
+  문자열에서 배열로 승격("support" → ["support","tell"]), 코드는 shadowKinds(cfg)
+  로 항상 배열화해서 읽는다(문자열도 하위 호환으로 받는다). tell 은 **gating
+  없다** — 순수 관측 층. 결과 몸·사물의 변화를 느낌의 이름(충격·고통·아픔·
+  통증·열기·두려움류)으로만 대신한 문장이 있으면 지목·인용, 없으면 조용히.
+  같은 세션이 **힌트 2·3층**도 열었다 — support 가 근거를 못 찾았을 때
+  (none·no_beat·support_not_before)만 별도 호출. 결정적 검사는 원문 인용
+  하나(인용이 원문에 실재해야 힌트를 보인다 — "인용 검증 없이는 판정 폐기").
+  힌트 카드 문구는 AI 가 안 짓는다 — buildHintCardText(순수 함수, lib/ai/
+  hint-text.ts)가 AI 의 지목(자리·인용)만으로 단계 언어를 짓는다. 킬스위치→
+  캐시 순서(세션 44)를 tell·힌트에도 그대로 복제했다(computeTellShadow·
+  computeHint, route.ts).
   언어 관문(language_gate)은 자유서술형
   (remove·convert·continue) 전체 활성 문항에 켜졌다. forbidPassageCopy 는
   세 갈래 OR 다 — 통째 복사 · 근사 복사(원문 문장 60% 이상 그대로, 세션 41
@@ -123,7 +135,11 @@ repeatTargets 는 부분 문자열을 센다  원문에 대상 낱말을 품은 
                               두려면, 학습자가 그 합성어를 남기고도 한도 안이 되는지 미리 센다.
                               세션 27 후기 실사용 — kongjwi 원문 '물동이' 가 '물' 을 선점해 정직한
                               수정이 어휘 교체를 강요당했다. '항아리' 로 갈아 함정을 걷음(한도는 유지)
-AI 는 피드백이지 심판이 아니다     위 재개 조건 전까지
+AI 는 피드백이지 심판이 아니다     위 재개 조건 전까지. ★ 문구 갱신(세션 45): "AI 는 피드백 —
+                              관측·힌트는 AI 자리, 통과는 오탐 0 실측된 이진 판정(no_beat)만."
+                              세션 43 이 no_beat 하나에 부분 gating 을 열었지만(기본 off),
+                              그 예외를 뺀 나머지 전부(support 의 buildup·none·support_not_before ·
+                              세션 45 의 tell·힌트)는 여전히 순수 관측 — 통과·진도에 안 쓴다.
 문서는 이 파일 하나              STATUS 를 덮어쓴다. 인수인계를 새로 안 쓴다
 인물은 docs/characters.md 가 단일 출처(세션 32 후기)  문항이 인물을 쓰면 원장에서
                               꺼내고, 새 면모를 만들면 원장에도 적는다(왕복 규칙) —
@@ -178,36 +194,52 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 ## 다음 — 순서대로. 하나가 verify 에서 물리기 전에 다음을 안 한다
 
 ```
-1  박 님 — 하네스 재실행 → gating on 결정 → v4 확장 → 보스   순서(세션 43 지시 그대로):
-                        ① npm run ai:support-golden 재실행 — set B 는 이번 세션에 nak
-                        2건 교체(bt-alley-hook·bt-low-guard, 통제 짝 결함 수리)와
-                        bt-spear-range standoff_answer 신설이 배선됐다(코드 추가 작업
-                        없음, loadCases() 가 자동으로 싣는다). standoff 는 기대 verdict가
-                        없다 — 5회 verdict 분포만 출력된다(no_beat 몇 회인지).
-                        ② npm run ai:support-golden -- --domain=general --only=A 로 set A
-                        만 프롬프트 v4(도메인 일반화, support-general-v4)로 재측정 — 04·
-                        06·08(비전투 항목)이 buildup 으로 도는지가 통과 조건, 02(논리형
-                        근거)는 특성으로 볼 것(세션 42 해석 참고, 아래).
-                        ③ 결과를 보고 no_beat 부분 gating 을 켤지 결정. ★ 켜기 조건(박 님
-                        지시): standoff 5회 중 no_beat 가 0 이거나, 있어도 (품질 판정이
-                        아니라) 제약 안내 문구로 막기로 박 님이 정하면 켠다. 켜는 법:
-                        `update system_flags set value = 'true' where key =
-                        'shadow_gate_no_beat';`(seed/update-shadow-gate-no-beat.sql 주석
-                        참고 — 이 SQL 파일 자체는 false 로만 넣는다, 켜는 건 손으로).
-                        ④ v4(general) 결과가 좋으면 16 확장(구성 16 ca-)에 v4 를 적용할지
-                        검토 — 아래 2번과 합쳐서 본다.
-                        ⑤ 보스(아래 5번).
-2  구성 16(ca-) 확장    set A·B 오탐 0 이고 set A 미검출이 낮으면(판정선, 세션 40 정정 3-4)
-                        cliffhanger_adv 5문항(ca-)에도 ai_shadow: 'support' 를 켠다. 갈리면
-                        프롬프트 재검토 — 새 문항을 늘리지 않는다. ★ 세션 42 실측: set A
-                        오탐 19 중 14 는 04·06·08(비전투 항목)의 도메인 불일치, 5 는
-                        02(논리형 근거) — 문체가 아니라 도메인·근거 정의 문제였다(세션 43
-                        해석 아래). v4(general) 로 04·06·08 이 buildup 으로 돌면 이 갈래의
-                        오탐이 해소된다는 뜻 — 위 1번 결과로 이 항목 착수 여부를 정한다.
-3  골든셋 set B standoff 문안 나머지 4건   bt-spear-range 는 세션 43 에서 확정(위 1번
-                        ①). 나머지 4건(bt-alley-hook·bt-orc-axe·bt-fireball-shield·
-                        bt-low-guard)은 아직 자리만 있고 문안이 없다 — 박 님이 확정하면
-                        자동으로 실린다(코드 추가 작업 없음).
+1  박 님 — DB → 눈검사 → 하네스 3종 → 결과로 다음 세션 결정   순서:
+                        ① seed/update-action-turn-v5.sql(멱등, bt- 5건 ai_shadow 를
+                        ["support","tell"] 로 승격) → seed_data.sql → seed_check.sql.
+                        ② 브라우저에서 bt- 5문항 중 D-2 류(느낌어로 동의어 우회한 답안,
+                        예: "통증"·"열기") 재제출 → "먹물이의 참고 의견" 아래에 tell 카드
+                        (「…」는 느낌의 이름이야 …)가 뜨는지 눈검사. 이어서 결정타 근거가
+                        없는 답안(support verdict none·no_beat·support_not_before 중
+                        하나가 나오는 답안)을 제출해 힌트 카드가 같이 뜨는지 — no_beat 면
+                        gatedNoBeat 카드 아래에도 힌트가 붙어야 한다(막기만 하고 길을
+                        안 주면 안 된다는 원칙, 세션 45).
+                        ③ 하네스 3종 실행 — `npm run ai:support-golden -- --only=C
+                        --domain=general`(구성 16 ca- 골든, good/nak 오탐·미검출 +
+                        emotion 분포) · `npm run ai:support-golden -- --only=D`(tell
+                        골든, good=show 오탐 + tell 표본 미검출 + 경계 D-4·D-6 분포) ·
+                        `npm run ai:support-golden -- --hint`(힌트 골든, set B nak·no_beat
+                        10건 — source_quote 원문 실재율·insert_before 유효율, 둘 다 100%
+                        기대).
+                        ④ 결과를 채팅에 — 그 결과로 다음 세션이 셋을 정한다: 구성 16(ca-)
+                        확장(set C 결과 + 세션 42/43 의 set A 해석, 아래 2번 참고) · tell
+                        gating 여부(good 오탐 0 이고 하드 표본 미검출 0 이면 검토) · bt-
+                        재제출 비교(같은 학습자 답안을 tell 신설 전후로 비교 — 실사용 관찰).
+2  구성 16(ca-) 확장    set A·B·C 오탐 0 이고 미검출이 낮으면(판정선, 세션 40 정정 3-4)
+                        cliffhanger_adv 5문항(ca-)에도 ai_shadow 를 켠다(support 부터 —
+                        tell 은 별도 판단). 갈리면 프롬프트 재검토 — 새 문항을 늘리지 않는다.
+                        ★ 세션 42 실측: set A 오탐 19 중 14 는 04·06·08(비전투 항목)의
+                        도메인 불일치, 5 는 02(논리형 근거) — 문체가 아니라 도메인·근거
+                        정의 문제였다. ★ 세션 43/44(실제 실행) 결과 해석(세션 44 채팅):
+                        set B 는 판정선 통과. standoff(bt-spear-range) 는 5/5 전부
+                        'buildup' — "무영이 창을 거두고 반 걸음 물러섰다"를 모델이 승부로
+                        읽었다는 뜻이다. 대치(무승부)를 결정타로 오인한 것 — **승부의
+                        정의가 지금 느슨하다**는 신호로 본다. none/buildup gating 을
+                        논의할 때 이 항목이 다시 돌아온다(대치도 gating 대상으로 볼지
+                        결정할 재료). set A 는 04 를 "문항 결함 — 제외"(정보 줄이 독자
+                        배경지식에 기대는 구조라 판정이 물을 근거 자체가 약하다, 문항
+                        설계 반패턴 스킬 antipatterns 13 참고)로, 06 은 "은폐 갈래
+                        미지원 — 열림"(모델이 아직 못 미는 갈래이지 문항 결함이 아니다)
+                        으로 갈랐다. 실패 부류를 이름 붙였다: (a) 은폐형 근거 미인식
+                        (자기 정보를 감춰 상대가 오판하게 하는 근거를 모델이 못 읽음)
+                        (b) 사건 전제를 근거로 오인(장면이 성립하려고 이미 깔린 전제를
+                        '근거 줄'로 잘못 짚음). 이 둘이 v4(general) 재측정과 구성 16
+                        착수 여부를 가르는 갈래다 — 위 1번 하네스 결과로 이어서 본다.
+3  골든셋 set B standoff 문안 나머지 4건   bt-spear-range 는 세션 43 에서 확정, 세션
+                        43/44 에서 5/5 buildup 으로 실측(위 2번 해석 참고). 나머지 4건
+                        (bt-alley-hook·bt-orc-axe·bt-fireball-shield·bt-low-guard)은
+                        아직 자리만 있고 문안이 없다 — 박 님이 확정하면 자동으로 실린다
+                        (코드 추가 작업 없음).
 4  보스 문항(가칭)      ★ 로드맵 정정(박 님 결정 (a), 세션 39) — 도입 4 는 보스가 흡수하지
    (별도 슬롯)          않는다. 도입 4 start_episode 가 세션 39 로 자립 완주했다(fill 4칸,
                         AI 없이 규칙만으로 통과). 보스는 별도의 새 stages 행 — 긴 글 +
@@ -226,6 +258,122 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
                         설정 카드형 '다섯 줄 쓰기'(18 설계안 5번, write 유형 없어 보류됐던 것)는
                         이 보스 문항에서 다룬다 — 이때 쓸 설정 카드 형식은 도입 4 의 네 칸
                         (①재미 ②인물 ③장면 ④첫마디)을 그대로 재사용한다(세션 39 결정).
+```
+
+### 끝난 것 — 세션 45 (느낌어 판정(tell) 관측 · 힌트 2·3층 · 골든셋 set C·D)
+
+```
+경위  세션 44 커밋(019388c) 뒤 박 님이 실사용을 이어갔다. 규칙(forbidWords:
+  "끔찍"·"고통"류)이 정확 어간만 잡는다는 것을 학습자가(뚫으려는 의도 없이도)
+  자연스럽게 찾아냈다 — "통증"·"열기" 같은 동의어로 결과를 서술한 것이다.
+  이 답안은 규칙을 통과했지만 몸·사물이 실제로 어떻게 됐는지(방패가 어떻게
+  됐는지·리온이 어디를 다쳤는지)는 여전히 안 보였다. forbidWords 목록을
+  늘리는 길은 동의어가 무한하다는 근본 한계에 부딪힌다(막을 때마다 다음
+  동의어가 나온다) — 그래서 규칙으로 더 조이지 않고, support 와 같은 자리에
+  **관측 하나**(tell)를 더 여는 쪽으로 갔다. 뜻은 재지만 판정은 안 한다는
+  같은 설계(세션 6 §12 "AI 는 마지막 관문이다")의 두 번째 적용이다. 이
+  실사용 답안(세션 45 계기)이 골든셋 set D 의 핵심 표본(D-2)이 됐다.
+
+  같은 실사용에서 "근거 줄이 없다"는 판정(support none·no_beat)이 나와도
+  학습자에게 남는 건 "안 됐다"는 결과뿐, 어디를 어떻게 고칠지는 안 보였다
+  — 그래서 실패한 세 verdict 에만 별도로 부르는 힌트 2·3층을 같이 열었다
+  (선 셋: ① 규칙 판정 ② support 관측 ③ 힌트). 막기만 하고 길을 안 주면
+  안 된다는 원칙이 이 설계의 근거다.
+
+1. 느낌어 판정(tell) — 관측 층, gating 없음
+  lib/ai/prompt.ts  PROMPT_VERSION_TELL = 'tell-v1' · PROMPT_FRAME_TELL(박
+   님 확정 문안 그대로) — "몸이나 사물의 변화로 쓰지 않고 느낌의 이름(충격·
+   고통·아픔·통증·열기·두려움류)으로만 대신한 문장이 있는가"를 묻고, 있으면
+   가장 먼저 나오는 문장을 그대로 인용시킨다. buildTellPrompt(answer) 는
+   buildSupportPrompt 와 같은 번호 매기기(splitSentences). verifyTellJudgment
+   — AI 호출 없는 순수 함수: tell_line null → 'show' · quote 가 S[n] 안에
+   실재 → 'tell' · 아니면 'quote_mismatch'(호출부가 재시도 1회 뒤 pending).
+  lib/ai/observe.ts  judgeTellWith(call, answer, model) — judgeSupportWith 와
+   같은 자리에 곁들인다(observe.ts 관례 — 묶지 않는다).
+  lib/scoring/types.ts  scoring_config.ai_shadow 를 문자열에서 **배열**로
+   승격 — `'support' | ('support' | 'tell')[]`. shadowKinds(cfg) 신설(항상
+   배열로 읽는다 — undefined→[] · 문자열→[문자열] · 배열→그대로). 코드는
+   어디서도 cfg.ai_shadow 를 직접 문자열 비교하지 않는다 — 전부 이 함수를
+   거친다. 문자열 값도 여전히 유효하다(하위 호환 — 세션 40~44 의 값).
+  app/api/grade/route.ts  computeTellShadow() 신설 — computeShadow() 와
+   순서·캐시 규칙이 글자까지 같다(킬스위치가 캐시보다 먼저, 세션 44 순서를
+   그대로 복제). 다른 것은 verdict 종류(show·tell)와 재시도 조건(quote_
+   mismatch 하나)뿐. **gating 없다** — computeShadow 의 gatedNoBeat 로 안
+   이어진다, tell 결과는 auto_result.tell 과 응답 tell 에만 실린다.
+   호출 조건은 `kinds.includes('tell')`(shadowKinds(cfg) 가 'tell' 을
+   포함할 때)뿐 — support 와 독립적으로 켜고 끌 수 있다.
+  components/train/TrainClient.tsx  tell 카드(관측 층) — verdict==='tell'
+   일 때만 "「{quote}」는 느낌의 이름이야 — 몸이나 사물이 어떻게 됐는지로
+   바꿔 봐. 방패·장갑·발뒤꿈치처럼." · 'show'·'pending' 은 조용히.
+  seed/update-action-turn-v5.sql(신규) + seed/dump/problems.json  bt- 5건
+   ai_shadow 를 jsonb_set 으로 ["support","tell"] 로 승격(멱등). gen:seed 로
+   seed_data.sql·seed_check.sql 재생성 — 이 5줄(ai_shadow 값)만 바뀌었다,
+   해시·나머지 config 는 그대로(실측 확인).
+
+2. 힌트 2·3층 — support 실패 세 verdict 에만, gating 없음
+  lib/ai/prompt.ts  PROMPT_VERSION_HINT = 'hint-v1' · PROMPT_FRAME_HINT(박
+   님 확정 문안) — 답안·원문을 각각 1..N/1..M 로 번호 매겨 ① 답안에서 근거
+   줄이 들어갈 자리 ② 원문에서 근거 재료로 쓸 문장을 짚게 한다.
+   buildHintPrompt(answer, passage) — support 와 달리 지문(원문)이 필요하다.
+   verifyHintJudgment — **결정적 검사는 원문 인용(source_quote) 하나**:
+   원문 S[m] 안에 실재해야 한다("인용 검증 없이는 판정 폐기" 원칙). insert_
+   before(1..N)도 같이 본다 — 카드 문구가 "「그 문장」 앞에 넣어 봐"를
+   지으려면 그 문장이 실제로 있어야 한다. 골든은 둘을 quoteReal·insertValid
+   로 **따로** 센다, route.ts 는 둘 다 서야만('ok') 카드를 만든다.
+  lib/ai/observe.ts  judgeHintWith(call, answer, passage, model) 신설.
+  lib/ai/hint-text.ts(신규)  buildHintCardText — **AI 는 지목만, 문구는
+   이 순수 함수가 짓는다**(단계 언어 원칙을 문자 그대로 지키는 자리). none·
+   no_beat·support_not_before 세 verdict 별 문안(박 님 확정). 재료(beatText·
+   beforeText 등)가 없으면 억지로 안 짓고 null — 카드가 안 뜬다(1층 문구만
+   남는다).
+  app/api/grade/route.ts  computeHint() — computeShadow() 와 같은 킬스위치→
+   캐시 순서. **재시도 없다** — 인용 검증 실패는 그대로 폐기(pending)한다,
+   힌트는 실패해도 학습자에게 안 보일 뿐이라 재시도로 억지로 세울 이유가
+   없다. 호출 조건: `shadow.verdict`가 none·no_beat·support_not_before 중
+   하나이고 problem.passage·cfg.requireAll[0] 이 있을 때만(비용 절약 — 
+   buildup·pending 이면 안 부른다). hintText 는 splitSentences 로 beat_line·
+   insert_before 인덱스를 답안 문장 텍스트로 바꾼 뒤 buildHintCardText 에
+   넘겨 짓는다.
+  components/train/TrainClient.tsx  힌트 카드 — result.hint(서버가 이미
+   완성한 문장)를 그대로 보여준다. **gatedNoBeat 여도 뜬다** — 위 제약
+   안내 카드와 별개로 보인다("막기만 하고 길을 안 주면 안 된다").
+
+3. 골든셋 데이터
+  data/probe/set_c_cliff.json(신규)  구성 16 cliffhanger_adv(ca-) 5문항의
+   골든 — good 은 answers.json 의 가·나(파일에 안 담는다, set B 와 같은
+   방식) · nak 5건(신호 문장만 위치 제공형으로 바꾼 통제 짝, 박 님 초안
+   문안 그대로) · ca-walk-home 에 emotion_good_answer 1건(감정형 신호 변형
+   — good/nak 과 따로 센다, 기대 없이 분포만). set A 와 같은 자리라 하네스
+   --domain 값을 그대로 탄다(set B 처럼 battle 강제 안 함) — ca- 는 전투가
+   아니라서 --only=C 는 --domain=general(v4)과 함께 쓴다.
+  data/probe/set_d_tell.json(신규)  tell 골든 — good(=show 기대)은 bt- 모범
+   10건을 answers.json 에서 직접 재사용(파일에 안 담는다) · tell 표본 6건
+   (D-1~D-6, 박 님 초안). D-1 은 bt-fireball-shield 원문 그대로, D-2 는
+   박 님 실사용 답안(동의어 우회형 — 이 세트의 핵심), D-3·D-5 는 하드
+   기대(tell), D-4·D-6 은 경계 표본(몸의 결과와 느낌어가 근처에 같이
+   있음 — 기대 없이 5회 분포만 본다).
+  scripts/support-golden.ts  세 모드로 나뉘었다 — runSupportGolden(set
+   A·B·C, --only 가 A·B·C 의 조합) · runTellGolden(--only=D, tell 프롬프트
+   전용) · runHintGolden(--hint, set B nak·no_beat 10건 고정, source_quote
+   원문 실재율·insert_before 유효율 집계). --only=D 와 --hint 는 서로
+   배타적이고 둘 다 A·B·C 의 --domain/--only 체계와 다른 자리다. domainFor
+   는 여전히 set B 만 battle 로 강제 — set C 는 강제하지 않는다(set A 와
+   같은 자리, 세션 43 원칙을 그대로 잇는다).
+
+검증  tsc 0 · test:scoring **8001 포트** 5982/0(8000 안 건드림, 세션 끝나며
+  8001 만 내림) · check:numbers 0 · gen:seed(problems.json 의 ai_shadow 5줄만
+  갱신 — seed_data.sql·seed_check.sql 재생성 뒤 재실행해도 무변화 확인,
+  해시는 그대로) · next build 통과 · --dry 로 네 모드(기본 A·B, --only=C
+  --domain=general, --only=D, --hint) 전부 올바른 프롬프트를 내는 것 확인.
+  물기(전부 확인 후 복원): computeTellShadow·computeHint 의 킬스위치 확인을
+  캐시 조회 뒤로 옮겨 순서 가드 fail 재현(둘 다 개별로) · route.ts 의
+  `kinds.includes('support')`를 무력화(`|| true`)해 gating 조건 가드 fail
+  재현 · buildHintCardText 의 'none' 분기에서 beatText null 가드를 지워
+  픽스처 fail 재현 · shadowKinds 의 배열 분기를 죽여(`Array.isArray(v) ? v
+  : []`) 문자열 하위 호환 픽스처 fail 재현 — 전부 통과.
+★ DB 절차(박 님)  seed/update-action-turn-v5.sql(멱등) → seed_data.sql →
+  seed_check.sql → 브라우저 눈검사(위 STATUS "다음" 1번 ②) → 하네스 3종
+  실행(다음 1번 ③) → 결과를 채팅에.
 ```
 
 ### 끝난 것 — 세션 44 (킬스위치가 섀도 캐시보다 먼저 — gating 우회 수정)

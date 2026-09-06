@@ -64,6 +64,13 @@ interface GradeResponse {
   // 문구를 보여준다. 이건 "글이 나쁘다"는 품질 판정이 아니라 "이 훈련은
   // 결정타 한 문장을 요구한다"는 형식 제약 안내다 — 문구를 그렇게 가른다.
   gatedNoBeat?: boolean
+  // 느낌어 판정(tell, 세션 45). **gating 없다** — 관측 층. verdict==='tell'
+  // 일 때만 카드를 띄운다('show'·'pending' 은 조용히).
+  tell?: { verdict: 'show' | 'tell' | 'pending'; quote?: string }
+  // 힌트(세션 45). 서버가 이미 완성한 한국어 문장이다(buildHintCardText,
+  // lib/ai/hint-text.ts) — 화면은 그대로 보여주기만 한다. gatedNoBeat 여도
+  // 뜬다("막기만 하고 길을 안 주면 안 된다").
+  hint?: string
 }
 
 interface LoopProps {
@@ -712,6 +719,33 @@ export default function TrainClient({
                   '근거가 결정타와 같거나 뒤에 있어. 결정타보다 앞으로.'}
                 {result.shadow.verdict === 'no_beat' &&
                   '아직 승부 수가 없어 — 누가 어떤 수를 두는지 한 줄이 있어야 결정타를 볼 수 있어.'}
+              </p>
+            </div>
+          )}
+
+          {/* 힌트(세션 45) — support 가 실패한 세 verdict 일 때만 서버가 짓는다
+              (buildHintCardText). **gatedNoBeat 여도 뜬다** — 위 제약 안내
+              카드가 떴어도 이 카드는 별개로 보인다. 막기만 하고 길을 안
+              주면 안 된다는 원칙이라, 이 조건에 !result.gatedNoBeat 를
+              넣지 않는다. */}
+          {result.hint && (
+            <div
+              className="space-y-1 p-3 text-sm"
+              style={{ background: 'var(--panel)', border: '1px solid var(--rule)', borderRadius: 6 }}
+            >
+              <p style={{ color: 'var(--ink-soft)' }}>{result.hint}</p>
+            </div>
+          )}
+
+          {/* 느낌어 판정(tell, 세션 45) — 관측 층, gating 없음. 'tell' 일
+              때만 뜬다 — 'show'·'pending' 은 조용히. */}
+          {result.tell && result.tell.verdict === 'tell' && (
+            <div
+              className="space-y-1 p-3 text-sm"
+              style={{ background: 'var(--panel)', border: '1px solid var(--rule)', borderRadius: 6 }}
+            >
+              <p style={{ color: 'var(--ink-soft)' }}>
+                「{result.tell.quote}」는 느낌의 이름이야 — 몸이나 사물이 어떻게 됐는지로 바꿔 봐. 방패·장갑·발뒤꿈치처럼.
               </p>
             </div>
           )}

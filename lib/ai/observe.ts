@@ -10,18 +10,24 @@
  *   그걸 ai_usage_log 에 적어야 지출 상한이 다음 호출에서 맞는다.
  */
 import {
+  buildHintPrompt,
   buildPoint2Prompt,
   buildPointPrompt,
   buildPrompt,
   buildSupportPrompt,
+  buildTellPrompt,
+  parseHintObservation,
   parseObservation,
   parsePointObservation,
   parseSupportObservation,
+  parseTellObservation,
+  type HintObservation,
   type Observation,
   type PointObservation,
   type PromptInput,
   type SupportDomain,
   type SupportObservation,
+  type TellObservation,
 } from './prompt'
 import { costUsd, type TokenUsage } from './pricing'
 
@@ -219,6 +225,117 @@ export async function judgeSupportWith(
 
   const cost = costUsd(reply.model, reply.usage)
   const parsed = parseSupportObservation(reply.text)
+
+  if (!parsed.ok) {
+    return {
+      ok: false,
+      observation: null,
+      error: parsed.reason,
+      usage: reply.usage,
+      costUsd: cost,
+      model: reply.model,
+      raw: parsed.raw.slice(0, 500),
+      detail: parsed.reason === 'not_json' ? 'JSON 이 아니다' : '꼴이 다르다',
+    }
+  }
+
+  return {
+    ok: true,
+    observation: parsed.observation,
+    error: null,
+    usage: reply.usage,
+    costUsd: cost,
+    model: reply.model,
+    raw: null,
+    detail: null,
+  }
+}
+
+/**
+ * 느낌어 판정(tell) 관측. **`observeWith` 를 안 건드리고 곁에 둔다** —
+ * `observePointWith`·`judgeSupportWith` 와 같은 이유(prompt.ts 주석 참고,
+ * 세션 45).
+ */
+export interface TellOutcome extends Omit<ObserveOutcome, 'observation'> {
+  observation: TellObservation | null
+}
+
+export async function judgeTellWith(
+  call: GeminiCall,
+  answer: string,
+  model: string
+): Promise<TellOutcome> {
+  const prompt = buildTellPrompt(answer)
+
+  let reply: GeminiReply
+  try {
+    reply = await call(prompt, model)
+  } catch (e) {
+    return {
+      ok: false, observation: null, error: 'call_failed',
+      usage: null, costUsd: null, model, raw: null,
+      detail: detailOf(e),
+    }
+  }
+
+  const cost = costUsd(reply.model, reply.usage)
+  const parsed = parseTellObservation(reply.text)
+
+  if (!parsed.ok) {
+    return {
+      ok: false,
+      observation: null,
+      error: parsed.reason,
+      usage: reply.usage,
+      costUsd: cost,
+      model: reply.model,
+      raw: parsed.raw.slice(0, 500),
+      detail: parsed.reason === 'not_json' ? 'JSON 이 아니다' : '꼴이 다르다',
+    }
+  }
+
+  return {
+    ok: true,
+    observation: parsed.observation,
+    error: null,
+    usage: reply.usage,
+    costUsd: cost,
+    model: reply.model,
+    raw: null,
+    detail: null,
+  }
+}
+
+/**
+ * 힌트(hint) 관측. `buildHintPrompt` 는 답안 하나가 아니라 답안·원문
+ * 둘을 받는다(prompt.ts 주석 참고) — 그래서 시그니처가 `judgeSupportWith`·
+ * `judgeTellWith` 와 다르다. 나머지(마개·비용·파싱 실패 처리)는 같다.
+ */
+export interface HintOutcome extends Omit<ObserveOutcome, 'observation'> {
+  observation: HintObservation | null
+}
+
+export async function judgeHintWith(
+  call: GeminiCall,
+  answer: string,
+  passage: string,
+  model: string
+): Promise<HintOutcome> {
+  const prompt = buildHintPrompt(answer, passage)
+
+  let reply: GeminiReply
+  try {
+    reply = await call(prompt, model)
+  } catch (e) {
+    return {
+      ok: false, observation: null, error: 'call_failed',
+      usage: null, costUsd: null, model, raw: null,
+      detail: detailOf(e),
+    }
+  }
+
+  const cost = costUsd(reply.model, reply.usage)
+  const parsed = parseHintObservation(reply.text)
 
   if (!parsed.ok) {
     return {
