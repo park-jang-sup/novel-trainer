@@ -51,24 +51,32 @@ export interface SystemFlags {
    * 없어야 한다.** null 이 아니라 boolean 으로 고정한 이유도 이것이다.
    */
   shadowGateNoBeat: boolean
+  /**
+   * 힌트 v2 노출 스위치(세션 46). shadowGateNoBeat 와 같은 방향이다 — 못
+   * 읽거나 행이 없거나 값이 이상하면 **false**(노출 안 함)로 낸다. 이건
+   * gating 이 아니라 **전시** 스위치다: false 여도 힌트 v2 는 여전히
+   * 계산·캐시된다(route.ts) — 화면에만 안 보낸다. 박 님이 하네스 --hint
+   * 로 문구 품질을 먼저 거른 뒤에 켠다(STATUS "다음" 참고).
+   */
+  hintVisible: boolean
 }
 
 /**
- * 세 깃발을 읽는다. kill_switch·daily_spend_cap_usd 는 **못 읽은 것을 null 로
+ * 네 깃발을 읽는다. kill_switch·daily_spend_cap_usd 는 **못 읽은 것을 null 로
  * 낸다 — 기본값으로 채우지 않는다.** 여기서 `kill_switch ?? false` 를 쓰면
- * 조회가 죽은 날 마개가 통째로 열린다. shadow_gate_no_beat 는 반대 방향이라
- * (위 주석) 항상 boolean 이고, 없거나 못 읽으면 false 로 접는다.
+ * 조회가 죽은 날 마개가 통째로 열린다. shadow_gate_no_beat·hint_visible 은
+ * 반대 방향이라(위 주석) 항상 boolean 이고, 없거나 못 읽으면 false 로 접는다.
  */
 export async function readFlags(): Promise<SystemFlags> {
   const admin = createAdminClient()
   const { data, error } = await admin
     .from('system_flags')
     .select('key, value')
-    .in('key', ['kill_switch', 'daily_spend_cap_usd', 'shadow_gate_no_beat'])
+    .in('key', ['kill_switch', 'daily_spend_cap_usd', 'shadow_gate_no_beat', 'hint_visible'])
 
   if (error) {
     logPgError('system_flags select', error)
-    return { killSwitch: null, dailySpendCapUsd: null, shadowGateNoBeat: false }
+    return { killSwitch: null, dailySpendCapUsd: null, shadowGateNoBeat: false, hintVisible: false }
   }
 
   const byKey = new Map((data ?? []).map((r) => [r.key as string, r.value as unknown]))
@@ -78,6 +86,7 @@ export async function readFlags(): Promise<SystemFlags> {
       ? asNumber(byKey.get('daily_spend_cap_usd'))
       : null,
     shadowGateNoBeat: asBoolean(byKey.get('shadow_gate_no_beat')) ?? false,
+    hintVisible: asBoolean(byKey.get('hint_visible')) ?? false,
   }
 }
 

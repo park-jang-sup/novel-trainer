@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 45 · 커밋 `019388c` 위
+마지막 갱신: 세션 46 · 커밋 `8acb785` 위
 
 ★ 활성 144 (전체 157 − 비활성 13). 언어 관문 전수 불변식(verify.ts)이 이 수를
   출력·단언한다 — 문항 증감 때마다 이 줄과 불변식을 같이 갱신한다.
@@ -45,25 +45,42 @@
   '결정타 없음' 출구 추가) — 규칙 통과 뒤 "먹물이의 참고 의견" 카드로 뜨지만
   통과·진도엔 안 쓴다(섀도 모드). ★ 예외 하나(세션 43, 기본 off): system_flags
   'shadow_gate_no_beat' 를 true 로 켜면 bt- 5문항에서 verdict 가 정확히
-  'no_beat' 일 때만 is_passed=false 로 떨어뜨리고 "이 훈련은 결정타 한 문장을
-  요구해…" 제약 안내를 보인다(품질 판정이 아니라 형식 요구). pending·
-  beat_mismatch·quote_mismatch·none·support_not_before 는 안 막는다. 스위치가
+  'no_beat' 일 때만 is_passed=false 로 떨어뜨리고 제약 안내 카드를 보인다
+  (품질 판정이 아니라 형식 요구). 그 문구가 세션 46 에서 바뀌었다 — 인물·
+  상대 이름을 넣어 "아직 누가 이기고 지는지가 안 나왔어. {인물}이 {상대}를
+  보고 뭘 알아챘는지 한 줄, …"로 서버가 짓는다(buildNoBeatGateCardText,
+  requireAll[0]/[1] 필요 — 부족하면 옛 일반 문구로 대체). pending·beat_
+  mismatch·quote_mismatch·none·support_not_before 는 안 막는다. 스위치가
   없거나 못 읽으면 항상 false(안 막음) — kill_switch(못 읽으면 막음)와 반대
-  방향. 켜는 것은 박 님 몫(아래 "다음" 1번). ★ computeShadow() 는 킬스위치를
+  방향. 켜는 것은 박 님 몫(아래 "다음" 참고). ★ computeShadow() 는 킬스위치를
   섀도 캐시보다 먼저 본다(세션 44) — 캐시된 판정도 AI 판정이라, 킬스위치가
   켜져(또는 못 읽혀) 있으면 캐시를 보지 않고 즉시 pending 이다.
-★ bt- 5건에 느낌어 판정(tell, 세션 45) 신설 — scoring_config.ai_shadow 가
+★ bt- 5건에 느낌어 판정(tell, 세션 45 신설) — scoring_config.ai_shadow 가
   문자열에서 배열로 승격("support" → ["support","tell"]), 코드는 shadowKinds(cfg)
   로 항상 배열화해서 읽는다(문자열도 하위 호환으로 받는다). tell 은 **gating
   없다** — 순수 관측 층. 결과 몸·사물의 변화를 느낌의 이름(충격·고통·아픔·
   통증·열기·두려움류)으로만 대신한 문장이 있으면 지목·인용, 없으면 조용히.
-  같은 세션이 **힌트 2·3층**도 열었다 — support 가 근거를 못 찾았을 때
-  (none·no_beat·support_not_before)만 별도 호출. 결정적 검사는 원문 인용
-  하나(인용이 원문에 실재해야 힌트를 보인다 — "인용 검증 없이는 판정 폐기").
-  힌트 카드 문구는 AI 가 안 짓는다 — buildHintCardText(순수 함수, lib/ai/
-  hint-text.ts)가 AI 의 지목(자리·인용)만으로 단계 언어를 짓는다. 킬스위치→
-  캐시 순서(세션 44)를 tell·힌트에도 그대로 복제했다(computeTellShadow·
-  computeHint, route.ts).
+  카드 문구가 세션 46 에서 바뀌었다 — "「…」는 아픈 느낌의 이름만 말한
+  거야. 독자는 이름을 볼 수 없어. 방패가 어떻게 됐는지, 손이 어떻게
+  됐는지, 발이 어디까지 밀렸는지 — …"(buildTellCardText, 인용은 앞 15자+…
+  로 자른다). tell·gatedNoBeat 카드 모두 이제 **서버가 순수 함수로 완성한
+  문장**을 보낸다(lib/ai/hint-text.ts) — 화면은 그대로 보여주기만 한다.
+★ **힌트는 세션 46 에 v1→v2 로 갈아탔다.** v1(세션 45, 템플릿 3층 — AI 가
+  지목한 자리·인용을 고정 문구에 끼워 넣는 방식)은 박 님 실사용에서 반려됐다
+  — 조립한 문장이 "사람 말이 아니고", 결함 있는 원문 문항에서는 "지우라고
+  가르치는" 문장을 재료로 짚었다. 코드는 지우지 않고 남겼다(computeHint·
+  buildHintCardText 등, route.ts 는 더는 안 부른다) — v2 로 대신한다: AI 가
+  2~3문장 코칭을 **직접** 쓰고(반말, 학습자 문장 고쳐쓰기·소설 문장·대신
+  쓰기·점수평가 금지, 「」 인용 하나 필수), verifyHintV2 가 네 제약(120자
+  이하·인용 실재·소설 문장 없음·반말 종결 있음)을 검증해 하나라도 어긋나면
+  폐기한다. 재료(scoring_config.ai_hint_material — 문항마다 박 님이 거른
+  관찰 거리 한 줄, 답이 아니다)가 없는 문항(bt-spear-range)은 원문 마지막
+  문장 중 forbidWords 에 안 걸리는 것으로 대신한다(resolveHintMaterial).
+  ★★ 노출은 system_flags 'hint_visible'(기본 false)이 막는다 — **계산·
+  캐시는 hintVisible 과 무관하게 항상 선다**(support 가 실패 세 verdict일
+  때만, 비용 절약), 화면에 보내느냐만 이 플래그가 가른다. 킬스위치→캐시
+  순서(세션 44)를 세 함수(computeTellShadow·computeHint(v1, 안 씀)·
+  computeHintV2) 전부에 그대로 복제했다.
   언어 관문(language_gate)은 자유서술형
   (remove·convert·continue) 전체 활성 문항에 켜졌다. forbidPassageCopy 는
   세 갈래 OR 다 — 통째 복사 · 근사 복사(원문 문장 60% 이상 그대로, 세션 41
@@ -194,27 +211,32 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 ## 다음 — 순서대로. 하나가 verify 에서 물리기 전에 다음을 안 한다
 
 ```
-1  박 님 — DB → 눈검사 → 하네스 3종 → 결과로 다음 세션 결정   순서:
-                        ① seed/update-action-turn-v5.sql(멱등, bt- 5건 ai_shadow 를
-                        ["support","tell"] 로 승격) → seed_data.sql → seed_check.sql.
-                        ② 브라우저에서 bt- 5문항 중 D-2 류(느낌어로 동의어 우회한 답안,
-                        예: "통증"·"열기") 재제출 → "먹물이의 참고 의견" 아래에 tell 카드
-                        (「…」는 느낌의 이름이야 …)가 뜨는지 눈검사. 이어서 결정타 근거가
-                        없는 답안(support verdict none·no_beat·support_not_before 중
-                        하나가 나오는 답안)을 제출해 힌트 카드가 같이 뜨는지 — no_beat 면
-                        gatedNoBeat 카드 아래에도 힌트가 붙어야 한다(막기만 하고 길을
-                        안 주면 안 된다는 원칙, 세션 45).
+1  박 님 — DB → 눈검사 → 하네스 3종(힌트는 본문 읽기) → 결과로 다음 세션 결정   순서:
+                        ① seed/update-action-turn-v5.sql(세션 45, 아직 안 돌렸으면 —
+                        bt- 5건 ai_shadow 를 ["support","tell"] 로 승격) → seed/update-
+                        action-turn-v6.sql(세션 46, 신규 — bt- 4건에 ai_hint_material
+                        신설, bt-spear-range 는 없음) → seed/update-hint-visible.sql
+                        (세션 46, 신규 — system_flags 'hint_visible' 행을 'false' 로
+                        멱등 삽입) → seed_data.sql → seed_check.sql.
+                        ② 브라우저 눈검사 — bt- 5문항 중 D-2 류(느낌어 동의어 우회 답안,
+                        예: "통증"·"열기") 재제출 → tell 카드("「…」는 아픈 느낌의 이름만
+                        말한 거야…", 세션 46 새 문구)가 뜨는지. no_beat 부분 gating 이
+                        켜져 있다면 그 카드 문구도 "아직 누가 이기고 지는지가 안
+                        나왔어…"로 인물·상대 이름이 들어간 새 문구인지 확인. **힌트는
+                        hint_visible 이 기본 false 라 화면에 안 뜬다** — ③에서 하네스로만
+                        본문을 확인한다(눈검사에서 힌트 카드는 안 보이는 게 정상이다).
                         ③ 하네스 3종 실행 — `npm run ai:support-golden -- --only=C
                         --domain=general`(구성 16 ca- 골든, good/nak 오탐·미검출 +
                         emotion 분포) · `npm run ai:support-golden -- --only=D`(tell
                         골든, good=show 오탐 + tell 표본 미검출 + 경계 D-4·D-6 분포) ·
-                        `npm run ai:support-golden -- --hint`(힌트 골든, set B nak·no_beat
-                        10건 — source_quote 원문 실재율·insert_before 유효율, 둘 다 100%
-                        기대).
-                        ④ 결과를 채팅에 — 그 결과로 다음 세션이 셋을 정한다: 구성 16(ca-)
-                        확장(set C 결과 + 세션 42/43 의 set A 해석, 아래 2번 참고) · tell
-                        gating 여부(good 오탐 0 이고 하드 표본 미검출 0 이면 검토) · bt-
-                        재제출 비교(같은 학습자 답안을 tell 신설 전후로 비교 — 실사용 관찰).
+                        `npm run ai:support-golden -- --hint`(힌트 v2 골든, set B nak·
+                        no_beat 10건 — **힌트 본문 10건이 그대로 콘솔에 출력된다**, 통과/
+                        폐기 표시 + 통과율도 같이 나오지만 참고 수치일 뿐이다. 박 님이
+                        본문을 직접 읽고 hint_visible 을 켤지 정한다).
+                        ④ 결과를 채팅에 — 그 결과로 다음 세션이 정한다: 구성 16(ca-) 확장
+                        (set C 결과 + 세션 42/43 의 set A 해석, 아래 2번 참고) · tell
+                        gating 여부(good 오탐 0 이고 하드 표본 미검출 0 이면 검토) · 힌트
+                        v2 hint_visible 을 켤지(본문 10건을 읽고 판단) · bt- 재제출 비교.
 2  구성 16(ca-) 확장    set A·B·C 오탐 0 이고 미검출이 낮으면(판정선, 세션 40 정정 3-4)
                         cliffhanger_adv 5문항(ca-)에도 ai_shadow 를 켠다(support 부터 —
                         tell 은 별도 판단). 갈리면 프롬프트 재검토 — 새 문항을 늘리지 않는다.
@@ -258,6 +280,118 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
                         설정 카드형 '다섯 줄 쓰기'(18 설계안 5번, write 유형 없어 보류됐던 것)는
                         이 보스 문항에서 다룬다 — 이때 쓸 설정 카드 형식은 도입 4 의 네 칸
                         (①재미 ②인물 ③장면 ④첫마디)을 그대로 재사용한다(세션 39 결정).
+```
+
+### 끝난 것 — 세션 46 (힌트 v1 내림 · 카드 문구 확정 · 힌트 v2(AI 작성·제약 검증·노출 off))
+
+```
+경위  세션 45 커밋(8acb785) 뒤 박 님이 세 카드(support 참고 의견·tell·힌트)를
+  실사용으로 켜 봤다. support·tell 카드는 잘 작동했다. **힌트(v1, 템플릿
+  3층)는 반려됐다** — 이유 둘. ① 조립한 문장이 사람 말이 아니다("이걸
+  {인물}이 읽는 한 줄로 「…」 앞에 넣어 봐" 류 — AI 지목 + 고정 틀 짜맞추기가
+  기계적으로 읽혔다). ② 원문에 결함이 있는 문항(예: 원문 자체가 이미
+  '지워야 할 서술'을 담은 경우)에서, 힌트가 그 결함 문장을 "재료"로 그대로
+  짚어 "지우라고 가르치는" 꼴이 됐다 — 학습자에게 도움은커녕 나쁜 재료를
+  권한 것이다. 박 님 판정: "보조가 없는 게 나은 퀄리티." 규칙(forbidWords)
+  으로 더 조이는 대신(동의어가 무한해 결국 못 막는다) **AI 가 짧은 코칭
+  문장을 직접 쓰고, 그 문장이 지켜야 할 제약(길이·인용·문체)만 코드가
+  검증**하는 쪽으로 방향을 바꿨다 — 그리고 그 결과를 박 님이 사전에 먼저
+  읽고 거른 뒤에만 화면에 노출한다(hint_visible, 기본 off).
+
+1. 힌트 v1 즉시 내림 — route.ts 는 더는 computeHint(v1)를 안 부른다. 함수·
+  프롬프트(buildHintPrompt·verifyHintJudgment·HintObservationSchema)·카드
+  빌더(buildHintCardText)는 코드에서 안 지웠다(박 님 지시 — hint-v1 코드·
+  캐시는 보존) — verify.ts 의 세션 45 픽스처가 계속 선다. PROMPT_VERSION_HINT
+  ('hint-v1')도 그대로 둔다 — 힌트 v2 는 이름을 갈아 끼우지 않고 새 상수
+  PROMPT_VERSION_HINT_V2('hint-v2')를 따로 뒀다(PROMPT_VERSION_SUPPORT_
+  GENERAL 과 같은 자리, 세션 43) — "코드는 두되"라는 지시와 "PROMPT_VERSION_
+  HINT='hint-v2'로 갈아 끼운다"는 지시가 서로 부딪혀서, 이름을 가르는 쪽으로
+  풀었다(STATUS 에 남긴다 — 다르게 읽었다면 다음 세션에 정정).
+
+2. 카드 문구 교체(lib/ai/hint-text.ts, 박 님 확정 문구) tell — "「{quote}」는
+  아픈 느낌의 이름만 말한 거야. 독자는 이름을 볼 수 없어. 방패가 어떻게
+  됐는지, 손이 어떻게 됐는지, 발이 어디까지 밀렸는지 — 눈에 보이는 것으로
+  바꿔 봐. 통과 뒤에 뜨는 모범답안 가·나에서 결과를 어떻게 그렸는지 보면
+  감이 올 거야."(buildTellCardText — {quote} 는 답안 문장 앞 15자+…, "방패·
+  손·발"은 fireball 문항 재료라 문항마다 안 바꾼다, 박 님 결정). no_beat
+  gating(미달) — "아직 누가 이기고 지는지가 안 나왔어. {인물}이 {상대}를
+  보고 뭘 알아챘는지 한 줄, 그걸 믿고 어떤 수를 뒀는지 한 줄, 그래서
+  {상대}가 어떻게 됐는지 한 줄 — 이 셋이 있어야 한 턴이야."(buildNoBeatGate
+  CardText — {인물}=requireAll[0]·{상대}=requireAll[1]). none(관측)은 기존
+  문구 그대로("결정타 앞에 근거 줄이 안 보여 — …") — 안 건드렸다. 둘 다
+  이제 **route.ts 가 서버에서 완성해 응답에 싣는다**(gatedNoBeatText·
+  tell.text) — TrainClient 는 그대로 보여주기만 한다(continue 타입 문항은
+  scoringConfig 를 클라이언트로 안 보내므로 인물·상대 이름을 서버에서
+  넣어야 한다, 세션 45 에서 이미 정한 이유와 같다).
+  ★ 조사(은/는·이/가·을/를) 헬퍼 — 세션 지시문은 "기존 헬퍼 재사용"이라고
+  했으나 저장소를 뒤져도 그런 헬퍼가 없었다(STATUS 정정) — 받침 유무로만
+  가르는 josaIGa·josaEulReul 을 lib/ai/hint-text.ts 에 새로 짰다.
+
+3. 힌트 v2 — AI 작성 · 제약 검증 · 노출 off
+  scoring_config.ai_hint_material(신규) — 문항별 관찰 재료 한 줄(**답이
+  아니라 관찰 거리**, 박 님이 문항마다 직접 거른 문안). bt-fireball-shield
+  "카엘은 같은 자리에 서서 같은 주문을 되풀이한다." · bt-alley-hook "강태는
+  오른손만 쓰고, 주먹을 크게 돌린다." · bt-orc-axe "도끼는 내려찍은 뒤
+  뽑는 데 한 호흡이 걸린다." · bt-low-guard "하단 자세는 보통 올려 베기의
+  준비 자세로 읽힌다." · bt-spear-range 는 없음 — route.ts 가 resolveHint
+  Material(lib/ai/hint-text.ts)로 원문(passage) 마지막 문장부터 거슬러
+  forbidWords 에 안 걸리는 첫 문장("창은 거리 싸움이었다")을 대신 쓴다(모든
+  문장이 걸리면 null — 힌트 자체를 건너뛴다). seed/update-action-turn-v6.sql
+  (신규, jsonb_set 멱등) + seed/dump/problems.json 4건 갱신.
+  lib/ai/prompt.ts buildHintPromptV2(answer, material, person, opponent,
+  verdict) · PROMPT_VERSION_HINT_V2='hint-v2'. 문안: "너는 글쓰기 코치
+  먹물이다. 학습자 답안(번호 문장)에 {verdict 설명}. [인물]·[상대]·[관찰
+  재료]를 준다. 2~3문장, 반말(~야·~봐·~해·~지)로 관찰과 질문만 — 학습자
+  문장 고쳐쓰기·소설 문장(~했다/~였다)·답안 대신 쓰기·점수평가는 금지.
+  답안 문장 하나의 앞부분(15자 안팎)을 「」로 인용. 텍스트만 낸다(JSON
+  아님)." verdict 설명은 none→"근거 줄이 없다"·no_beat→"승부 문장이
+  없다"·support_not_before→"근거가 결정타 뒤에 있다".
+  verifyHintV2(text, answer) — 자유 텍스트라 JSON 파싱이 없다, 순수 함수
+  네 제약: ① countChars(text) ≤ 120 ② 「」 인용이 답안 문장의 **앞부분**
+  으로 실재(포함이 아니라 접두사 검사 — "15자 안팎 인용"을 시켰으므로)
+  ③ 인용 밖에 '다.'(소설 서술 종결)가 없음 ④ 반말 종결(~야·~봐·~해·~지·
+  ~까)이 최소 하나. 하나라도 어긋나면 폐기(캐시 안 함) — "인용 검증 없이는
+  판정 폐기" 원칙, hint-v1 과 같은 방향.
+  lib/ai/observe.ts judgeHintV2With — 자유 텍스트라 파싱 실패(not_json·
+  bad_shape)가 없다, 대신 'empty'(코드펜스 벗긴 뒤도 빈 문자열) 갈래.
+  app/api/grade/route.ts computeHintV2() — computeShadow() 와 킬스위치→
+  캐시 순서가 글자까지 같다(세션 44 순서 재사용). **재시도 없음**(v1 과
+  같은 이유). ★★ hint_visible 과 **무관하게 항상 계산·캐시된다** — 세션
+  지시 "false 면 계산·기록만, 화면엔 안 띄움"을 그대로 지켰다. 호출 조건은
+  세션 45 와 같다(support 실패 세 verdict + passage + requireAll 2개).
+  lib/ai/flags.ts SystemFlags.hintVisible(boolean, 기본 false — shadowGate
+  NoBeat 와 같은 방향: 못 읽으면 "안 보여준다"쪽으로 접는다). readFlags 가
+  'hint_visible' 키도 함께 조회.
+  seed/update-hint-visible.sql(신규) — system_flags 'hint_visible' 을
+  'false' 로 멱등 삽입(true 로는 이 파일이 안 켠다 — 켜는 건 박 님 손으로).
+  components/train/TrainClient.tsx — 힌트 카드 JSX 자체는 세션 45 와
+  그대로다(result.hint 를 보여주기만) — 이제 hintVisible 이 false 인 동안
+  result.hint 가 거의 항상 undefined 로 와서 카드가 자연히 안 뜬다(플래그
+  하나로 v1 내림·v2 신설 둘 다 만족).
+  scripts/support-golden.ts --hint 모드 — hint-v1(judgeHintWith) 대신
+  hint-v2(judgeHintV2With)를 부른다. loadHintCases() 가 problems.json 에서
+  requireAll·ai_hint_material·forbidWords 를 읽어 인물·상대·재료를 결정하고,
+  nak→verdict 'none'·no_beat→verdict 'no_beat' 로 매긴다(support 를 다시
+  안 부른다 — 이미 근거가 없다고 아는 표본). **힌트 본문 10건을 콘솔에
+  그대로 출력한다**(통과/폐기 표시 + 사유) — 박 님이 읽고 거르는 것이
+  목적이지 통과율(참고 수치)이 목적이 아니다.
+
+검증  tsc 0 · test:scoring **8001 포트** 6040/0(8000 안 건드림, 세션 끝나며
+  8001 만 내림) · check:numbers 0 · gen:seed(ai_hint_material 4줄만 갱신 —
+  재실행해도 무변화 확인) · next build 통과 · --dry 로 네 모드(기본 A·B,
+  --only=C --domain=general, --only=D, --hint)가 전부 올바른 프롬프트를
+  내는 것 확인(힌트는 v2 문안·인물·상대·재료가 실제로 나가는 것까지).
+  물기(전부 확인 후 복원): computeHintV2 의 킬스위치 확인을 캐시 조회 뒤로
+  옮겨 순서 가드 fail 재현 · route.ts 의 `if (flags.hintVisible)` 를 지워
+  "항상 계산되지만 노출만 막는다" 가드 fail 재현 · verifyHintV2 의 인용
+  실재 검사(②)를 지워 지어낸 인용이 통과하는 것 재현 · hasBatchim 을 항상
+  true 로 고정해 josaIGa·josaEulReul·buildNoBeatGateCardText 픽스처 fail
+  재현 — 전부 확인 후 복원.
+★ DB 절차(박 님)  seed/update-action-turn-v5.sql(세션 45, 아직이면) →
+  seed/update-action-turn-v6.sql(신규) → seed/update-hint-visible.sql
+  (신규) → seed_data.sql → seed_check.sql → 브라우저 눈검사(tell·gatedNoBeat
+  새 문구, 힌트는 hint_visible=false 라 안 보이는 게 정상) → 하네스 3종
+  (--hint 는 본문을 콘솔에서 읽고 거른다) → 결과를 채팅에.
 ```
 
 ### 끝난 것 — 세션 45 (느낌어 판정(tell) 관측 · 힌트 2·3층 · 골든셋 set C·D)

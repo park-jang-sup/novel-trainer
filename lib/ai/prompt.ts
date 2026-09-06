@@ -15,7 +15,7 @@
  */
 import { z } from 'zod'
 import type { ScoringConfig } from '../scoring/types'
-import { splitSentences } from '../scoring/local'
+import { countChars, splitSentences } from '../scoring/local'
 
 /**
  * 프롬프트 **v2**. 치환자를 뺀 틀이다. 설계안 8-1 이 이 길이를 실측해 비용을 냈다.
@@ -710,4 +710,112 @@ export function verifyHintJudgment(
     m !== null && Number.isInteger(m) && m >= 1 && m <= P.length && quote !== '' && P[m - 1].includes(quote)
 
   return { verdict: quoteReal && insertValid ? 'ok' : 'discard', quoteReal, insertValid }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 힌트 v2(세션 46) — AI 가 직접 짧은 코칭 문장을 쓴다. **hint-v1(위
+// buildHintPrompt·verifyHintJudgment)은 안 건드리고 그대로 둔다** — 이미
+// 물려 있는 픽스처가 계속 통과해야 하고, observe.ts 관례(묶지 않는다)와도
+// 같은 자리다. 다만 route.ts 는 이제 v1 을 안 부른다 — v2 로 갈아탔다
+// (세션 46 실사용: v1 의 템플릿 조립이 "사람 말이 아니다"·결함 원문 문항의
+// 재료를 그대로 짚어 "지우라고 가르치는" 문장이 나왔다, 박 님 실사용 반려).
+//
+// ★ 이름을 PROMPT_VERSION_HINT_V2 로 새로 둔다(PROMPT_VERSION_SUPPORT_GENERAL
+// 과 같은 자리 — 세션 43) — PROMPT_VERSION_HINT(hint-v1)를 그대로 두고 싶어서
+// 값을 덮어쓰지 않았다. 세션 지시문의 "PROMPT_VERSION_HINT='hint-v2'"는 이
+// 상수 이름 관례를 가리키는 것으로 읽었다 — v1 코드를 건드리지 않는다는
+// 원칙과 충돌해서, 이름을 갈라 both 를 살렸다(STATUS 에 남긴다).
+// ─────────────────────────────────────────────────────────────────────────
+
+export const PROMPT_VERSION_HINT_V2 = 'hint-v2'
+
+/** support 의 실패 세 verdict — 힌트가 부르는 조건과 정확히 같다(route.ts). */
+export type HintV2Verdict = 'none' | 'no_beat' | 'support_not_before'
+
+const HINT_V2_VERDICT_DESC: Record<HintV2Verdict, string> = {
+  none: '근거 줄이 없다',
+  no_beat: '승부 문장이 없다',
+  support_not_before: '근거가 결정타 뒤에 있다',
+}
+
+/**
+ * 문안(세션 46, 요지에서 문장으로 구성). AI 에게 **관찰과 질문만** 쓰게
+ * 한다 — 답을 대신 쓰거나 소설 문장을 짓는 것을 명시적으로 금한다.
+ * 인물·상대 이름을 프롬프트에 준다 — 코칭 문장이 구체적인 이름을 쓸 수
+ * 있게(옛 템플릿 카드의 {인물} 자리를 AI 가 자연스럽게 채우게 하는 것과
+ * 같은 목적). 재료(material)는 route.ts 가 cfg.ai_hint_material 이나
+ * 원문 마지막 문장으로 미리 정해서 준다 — AI 는 재료를 짓지 않는다.
+ */
+export const PROMPT_FRAME_HINT_V2 = `너는 글쓰기 코치 먹물이다. 학습자 답안(번호 문장)에 {verdictDesc}.
+
+[인물] {person} · [상대] {opponent}
+[관찰 재료] {material}
+
+[답안]
+{lines}
+
+학습자에게 2~3문장, 반말(~야·~봐·~해·~지)로 관찰과 질문만 말해라.
+하지 말 것: 학습자 문장을 고쳐 쓰기 · 소설 문장(~했다·~였다로 끝나는 서술) 만들기 · 답안 대신 써 주기 · 점수나 평가.
+답안 문장 하나의 앞부분(15자 안팎)을 「」로 한 번 그대로 인용해라.
+
+텍스트만 낸다. JSON 도, 코드펜스도, 다른 말도 쓰지 않는다.`
+
+export function buildHintPromptV2(
+  answer: string,
+  material: string,
+  person: string,
+  opponent: string,
+  verdict: HintV2Verdict
+): string {
+  const numbered = splitSentences(answer)
+    .map((s, i) => `${i + 1} ${s}`)
+    .join('\n')
+  return PROMPT_FRAME_HINT_V2
+    .replace('{verdictDesc}', HINT_V2_VERDICT_DESC[verdict])
+    .replace('{person}', person)
+    .replace('{opponent}', opponent)
+    .replace('{material}', material)
+    .replace('{lines}', numbered)
+}
+
+/**
+ * v2 결과 검증. **자유 텍스트라 JSON 파싱이 없다** — 대신 네 가지 제약을
+ * 문자열로 직접 잰다. 하나라도 어긋나면 폐기(호출부가 캐시도 안 하고
+ * pending 으로 접는다) — "인용 검증 없이는 판정 폐기" 원칙, hint-v1 과
+ * 같은 방향이다.
+ *
+ * ① 120자 이하(countChars — 공백 제외, 이 앱의 maxChars 관례 그대로)
+ * ② 「」 인용이 답안 문장의 **앞부분**으로 실재한다(답안 문장이 그 인용으로
+ *    시작해야 한다 — AI 에게 "앞부분(15자 안팎)"을 인용하라고 시켰으니
+ *    포함이 아니라 접두사 검사다)
+ * ③ 인용 밖에 '다.'(소설 서술 종결)가 없다 — 소설 문장을 짓지 말라는
+ *    지시를 실제로 지켰는지, AI 의 다짐이 아니라 텍스트로 잰다
+ * ④ 반말 종결(~야·~봐·~해·~지·~까)이 최소 하나 있다
+ */
+export interface HintV2Check {
+  ok: boolean
+  reasons: string[]
+  quote: string | null
+}
+
+export function verifyHintV2(text: string, answer: string): HintV2Check {
+  const reasons: string[] = []
+
+  if (countChars(text) > 120) reasons.push('120자 초과')
+
+  const quoteMatch = text.match(/「([^」]+)」/)
+  const quote = quoteMatch ? quoteMatch[1] : null
+  if (!quote) {
+    reasons.push('「」 인용 없음')
+  } else {
+    const S = splitSentences(answer)
+    if (!S.some((s) => s.startsWith(quote))) reasons.push('인용이 답안 문장 앞부분으로 실재하지 않음')
+  }
+
+  const withoutQuote = text.replace(/「[^」]*」/g, '')
+  if (/다\./.test(withoutQuote)) reasons.push("소설 문장('다.') 섞임")
+
+  if (!/(야|봐|해|지|까)[.!?」]?(\s|$)/.test(text)) reasons.push('반말 종결(~야·~봐·~해·~지·~까) 없음')
+
+  return { ok: reasons.length === 0, reasons, quote }
 }

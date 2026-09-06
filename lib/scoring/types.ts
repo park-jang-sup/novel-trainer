@@ -173,6 +173,13 @@ export interface ScoringConfig {
    * 직접 문자열 비교(=== 'support')하지 않는다.
    */
   ai_shadow?: 'support' | ('support' | 'tell')[]
+  /**
+   * 힌트 v2(세션 46)가 AI 에게 주는 관찰 재료 한 줄. **답이 아니라 관찰
+   * 거리다** — "상대는 이런 버릇이 있다"류. 박 님이 문항마다 직접 거른다.
+   * 없으면 route.ts 가 원문(passage) 마지막 문장 중 forbidWords 에 안
+   * 걸리는 것으로 대신한다(resolveHintMaterial, lib/ai/hint-text.ts).
+   */
+  ai_hint_material?: string
 }
 
 /** ai_shadow 값. 지금 둘뿐이다 — support(결정타 빌드업) · tell(느낌어 대신, 세션 45). */

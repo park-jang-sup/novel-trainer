@@ -11,6 +11,7 @@
  */
 import {
   buildHintPrompt,
+  buildHintPromptV2,
   buildPoint2Prompt,
   buildPointPrompt,
   buildPrompt,
@@ -22,6 +23,7 @@ import {
   parseSupportObservation,
   parseTellObservation,
   type HintObservation,
+  type HintV2Verdict,
   type Observation,
   type PointObservation,
   type PromptInput,
@@ -359,5 +361,58 @@ export async function judgeHintWith(
     model: reply.model,
     raw: null,
     detail: null,
+  }
+}
+
+/**
+ * 힌트 v2(세션 46) 관측. **자유 텍스트라 JSON 파싱이 없다** — hint-v1(위
+ * judgeHintWith)과 나란히 둔다(observe.ts 관례, 묶지 않는다). 코드펜스를
+ * 두르고 오는 경우에 대비해 벗기기만 하고, 나머지는 그대로 믿는다 — 실제
+ * 제약 검증(길이·인용·문체)은 prompt.ts 의 verifyHintV2 가 순수 함수로 한다.
+ */
+export interface HintV2Outcome {
+  ok: boolean
+  text: string | null
+  error: 'call_failed' | 'empty' | null
+  usage: TokenUsage | null
+  costUsd: number | null
+  model: string
+  detail: string | null
+}
+
+export async function judgeHintV2With(
+  call: GeminiCall,
+  answer: string,
+  material: string,
+  person: string,
+  opponent: string,
+  verdict: HintV2Verdict,
+  model: string
+): Promise<HintV2Outcome> {
+  const prompt = buildHintPromptV2(answer, material, person, opponent, verdict)
+
+  let reply: GeminiReply
+  try {
+    reply = await call(prompt, model)
+  } catch (e) {
+    return {
+      ok: false, text: null, error: 'call_failed',
+      usage: null, costUsd: null, model, detail: detailOf(e),
+    }
+  }
+
+  const cost = costUsd(reply.model, reply.usage)
+  const text = reply.text.trim().replace(/^```(?:\w+)?\s*/i, '').replace(/```$/, '').trim()
+
+  if (!text) {
+    return {
+      ok: false, text: null, error: 'empty',
+      usage: reply.usage, costUsd: cost, model: reply.model, detail: '빈 응답',
+    }
+  }
+
+  return {
+    ok: true, text, error: null,
+    usage: reply.usage, costUsd: cost, model: reply.model, detail: null,
   }
 }

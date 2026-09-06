@@ -4777,7 +4777,8 @@
         "과연"
       ],
       "forbidPassageCopy": true,
-      "ai_shadow": ["support", "tell"]
+      "ai_shadow": ["support", "tell"],
+      "ai_hint_material": "강태는 오른손만 쓰고, 주먹을 크게 돌린다."
     }
   },
   {
@@ -4871,7 +4872,8 @@
         "과연"
       ],
       "forbidPassageCopy": true,
-      "ai_shadow": ["support", "tell"]
+      "ai_shadow": ["support", "tell"],
+      "ai_hint_material": "도끼는 내려찍은 뒤 뽑는 데 한 호흡이 걸린다."
     }
   },
   {
@@ -4921,7 +4923,8 @@
       ],
       "forbidPassageCopy": true,
       "passageCopyKeep": 1,
-      "ai_shadow": ["support", "tell"]
+      "ai_shadow": ["support", "tell"],
+      "ai_hint_material": "카엘은 같은 자리에 서서 같은 주문을 되풀이한다."
     }
   },
   {
@@ -4968,7 +4971,8 @@
         "과연"
       ],
       "forbidPassageCopy": true,
-      "ai_shadow": ["support", "tell"]
+      "ai_shadow": ["support", "tell"],
+      "ai_hint_material": "하단 자세는 보통 올려 베기의 준비 자세로 읽힌다."
     }
   },
   {

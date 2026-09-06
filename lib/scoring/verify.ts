@@ -96,10 +96,10 @@ import {
   checkRunBudget,
   type GateDecision,
 } from '../ai/gate'
-import { buildPoint2Prompt, buildPointPrompt, buildPrompt, buildSupportPrompt, elementOf, fourLines, looksLikeC4, parseObservation, parsePointObservation, parseSupportObservation, passesAt, verifySupportJudgment, PROMPT_FRAME, PROMPT_FRAME_CHARS, PROMPT_FRAME_POINT, PROMPT_FRAME_POINT2, PROMPT_FRAME_POINT2_CHARS, PROMPT_FRAME_POINT_CHARS, PROMPT_FRAME_SUPPORT, PROMPT_VERSION_SUPPORT, PROMPT_FRAME_SUPPORT_GENERAL, PROMPT_VERSION_SUPPORT_GENERAL, buildTellPrompt, buildHintPrompt, parseTellObservation, parseHintObservation, verifyTellJudgment, verifyHintJudgment, PROMPT_FRAME_TELL, PROMPT_VERSION_TELL, PROMPT_FRAME_HINT, PROMPT_VERSION_HINT } from '../ai/prompt'
+import { buildPoint2Prompt, buildPointPrompt, buildPrompt, buildSupportPrompt, elementOf, fourLines, looksLikeC4, parseObservation, parsePointObservation, parseSupportObservation, passesAt, verifySupportJudgment, PROMPT_FRAME, PROMPT_FRAME_CHARS, PROMPT_FRAME_POINT, PROMPT_FRAME_POINT2, PROMPT_FRAME_POINT2_CHARS, PROMPT_FRAME_POINT_CHARS, PROMPT_FRAME_SUPPORT, PROMPT_VERSION_SUPPORT, PROMPT_FRAME_SUPPORT_GENERAL, PROMPT_VERSION_SUPPORT_GENERAL, buildTellPrompt, buildHintPrompt, buildHintPromptV2, parseTellObservation, parseHintObservation, verifyTellJudgment, verifyHintJudgment, verifyHintV2, PROMPT_FRAME_TELL, PROMPT_VERSION_TELL, PROMPT_FRAME_HINT, PROMPT_VERSION_HINT, PROMPT_FRAME_HINT_V2, PROMPT_VERSION_HINT_V2 } from '../ai/prompt'
 import { costUsd } from '../ai/pricing'
-import { observeWith, judgeSupportWith, judgeTellWith, judgeHintWith } from '../ai/observe'
-import { buildHintCardText } from '../ai/hint-text'
+import { observeWith, judgeSupportWith, judgeTellWith, judgeHintWith, judgeHintV2With } from '../ai/observe'
+import { buildHintCardText, buildTellCardText, buildNoBeatGateCardText, resolveHintMaterial, josaIGa, josaEulReul } from '../ai/hint-text'
 import { backoffMs, isRetryable, statusOf } from '../ai/retry'
 
 let pass = 0
@@ -8304,26 +8304,33 @@ console.log('\n[결정타 빌드업 섀도 support-v3]')
     /shadow,\s*\n\s*\.\.\.\(gatedNoBeat/.test(routeSrc2))
   t('route.ts: auto_result 에 tell verdict 를 적는다(세션 45)',
     routeSrc2.includes('...(tell ? { tell: tell.verdict } : {})'))
-  t('route.ts: auto_result 에 힌트 표시(hint: true)를 적는다(세션 45)',
-    routeSrc2.includes('...(hintText ? { hint: true } : {})'))
-  t('route.ts: 응답에 tell(verdict·quote)을 싣는다(세션 45)',
-    routeSrc2.includes('...(tell ? { tell: { verdict: tell.verdict, quote: tell.quote } } : {})'))
-  t('route.ts: 응답에 hint(서버가 완성한 문장)를 싣는다(세션 45)',
+  t("route.ts: auto_result 에 힌트 계산 여부(hint_v2: true)를 적는다 — hintVisible 과 무관하게(세션 46)",
+    routeSrc2.includes('...(hintComputedOk ? { hint_v2: true } : {})'))
+  t('route.ts: 응답에 tell(verdict·서버가 지은 text)을 싣는다(세션 46 — quote 대신 text)',
+    routeSrc2.includes('...(tell ? { tell: { verdict: tell.verdict, text: tellText } } : {})'))
+  t('route.ts: 응답에 hint(서버가 완성한 문장)를 싣는다',
     routeSrc2.includes('...(hintText ? { hint: hintText } : {})'))
-  t("route.ts: 힌트는 support verdict 가 none·no_beat·support_not_before 일 때만 부른다(세션 45, 비용 절약)",
+  t('route.ts: 응답에 gatedNoBeat 이면 gatedNoBeatText 도 같이 싣는다(세션 46)',
+    routeSrc2.includes('...(gatedNoBeat ? { gatedNoBeat: true, gatedNoBeatText } : {})'))
+  t("route.ts: 힌트(v2)는 support verdict 가 none·no_beat·support_not_before 일 때만 부른다(세션 45, 비용 절약)",
     /shadow\.verdict === 'none' \|\| shadow\.verdict === 'no_beat' \|\| shadow\.verdict === 'support_not_before'/.test(routeSrc2))
-  t('route.ts: 힌트 카드 문구는 AI 가 안 짓는다 — buildHintCardText(순수 함수)를 부른다(세션 45)',
-    /hintText = buildHintCardText\(/.test(routeSrc2))
+  t('★ route.ts: 힌트 v2 는 flags.hintVisible 과 무관하게 항상 계산·캐시된다 — hintVisible 은 노출(hintText 대입)만 막는다(세션 46)',
+    /if \(flags\.hintVisible\) hintText = hint\.text/.test(routeSrc2))
+  t('route.ts: tell·gatedNoBeat 카드 문구도 서버가 순수 함수로 짓는다(buildTellCardText·buildNoBeatGateCardText, 세션 46)',
+    /tellText = buildTellCardText\(/.test(routeSrc2) && /gatedNoBeatText = buildNoBeatGateCardText\(/.test(routeSrc2))
 
   // ── route.ts 텍스트 가드: 킬스위치가 섀도 캐시보다 먼저(세션 44 순서를
-  //    tell·힌트에도 그대로 복제, 세션 45) ──
+  //    tell·힌트에도 그대로 복제, 세션 45·46) ──
   //
   // 세션 43 까지는 computeShadow() 가 캐시부터 봤다 — 킬스위치를 켜고 실사용
   // 시험하다가 예전에 캐시된 판정이 그대로 나오는 것을 봤다(캐시된 판정도
-  // AI 판정이다). 이제 세 함수(computeShadow·computeTellShadow·computeHint)
-  // 가 같은 순서를 각각 지킨다 — 셋을 하나로 안 묶었으므로(observe.ts 관례)
-  // 셋 다 따로 문다. 함수 본문만 각각 잘라서(다음 함수 선언 앞까지) 다른
-  // 함수의 'ai_shadow_cache'·'flags.killSwitch' 언급과 안 섞이게 한다.
+  // AI 판정이다). 이제 네 함수(computeShadow·computeTellShadow·computeHint·
+  // computeHintV2)가 같은 순서를 각각 지킨다 — 하나로 안 묶었으므로
+  // (observe.ts 관례) 넷 다 따로 문다. computeHint(v1)는 세션 46 부터 안
+  // 불리지만 코드는 그대로 두었다(박 님 지시) — 이 순서 가드도 계속 문다,
+  // 죽은 코드라고 순서 원칙까지 느슨해지면 안 된다. 함수 본문만 각각
+  // 잘라서(다음 함수 선언 앞까지) 다른 함수의 'ai_shadow_cache'·
+  // 'flags.killSwitch' 언급과 안 섞이게 한다.
   function extractFn(src: string, name: string, nextMarker: string) {
     const start = src.indexOf(`async function ${name}(`)
     const end = src.indexOf(nextMarker, start)
@@ -8331,36 +8338,52 @@ console.log('\n[결정타 빌드업 섀도 support-v3]')
   }
   const shadowFn = extractFn(routeSrc2, 'computeShadow', '\nasync function computeTellShadow(')
   const tellFn = extractFn(routeSrc2, 'computeTellShadow', '\nasync function computeHint(')
-  const hintFn = extractFn(routeSrc2, 'computeHint', '\nconst GradeRequestSchema')
-  t('★★ route.ts: computeShadow·computeTellShadow·computeHint 세 함수를 전부 찾았다(자르기 기준점이 어긋나지 않았다, 세션 45)',
+  const hintFn = extractFn(routeSrc2, 'computeHint', '\nasync function computeHintV2(')
+  const hintV2Fn = extractFn(routeSrc2, 'computeHintV2', '\nconst GradeRequestSchema')
+  t('★★ route.ts: computeShadow·computeTellShadow·computeHint·computeHintV2 네 함수를 전부 찾았다(자르기 기준점이 어긋나지 않았다, 세션 45·46)',
     shadowFn.start !== -1 && shadowFn.end > shadowFn.start &&
     tellFn.start !== -1 && tellFn.end > tellFn.start &&
-    hintFn.start !== -1 && hintFn.end > hintFn.start,
-    JSON.stringify({ shadowFn, tellFn, hintFn }, (k, v) => (k === 'body' ? undefined : v)))
-  for (const [name, fn] of [['computeShadow', shadowFn], ['computeTellShadow', tellFn], ['computeHint', hintFn]] as const) {
+    hintFn.start !== -1 && hintFn.end > hintFn.start &&
+    hintV2Fn.start !== -1 && hintV2Fn.end > hintV2Fn.start,
+    JSON.stringify({ shadowFn, tellFn, hintFn, hintV2Fn }, (k, v) => (k === 'body' ? undefined : v)))
+  for (const [name, fn] of [
+    ['computeShadow', shadowFn], ['computeTellShadow', tellFn], ['computeHint', hintFn], ['computeHintV2', hintV2Fn],
+  ] as const) {
     const killSwitchIdx = fn.body.indexOf('flags.killSwitch')
     const cacheSelectIdx = fn.body.indexOf(".from('ai_shadow_cache')")
-    t(`★ route.ts: ${name}() 안에서 kill_switch 확인이 ai_shadow_cache 조회보다 **앞**에 나온다(세션 44 순서, 세션 45 는 tell·힌트에도 복제)`,
+    t(`★ route.ts: ${name}() 안에서 kill_switch 확인이 ai_shadow_cache 조회보다 **앞**에 나온다(세션 44 순서, 세션 45·46 이 tell·힌트에 복제)`,
       killSwitchIdx !== -1 && cacheSelectIdx !== -1 && killSwitchIdx < cacheSelectIdx,
       `${name}: killSwitch=${killSwitchIdx} cacheSelect=${cacheSelectIdx}`)
     t(`route.ts: ${name}() 의 킬스위치 pending 조건이 null(못 읽음)도 포함한다`,
       /if \(flags\.killSwitch === null \|\| flags\.killSwitch\) return \{ verdict: 'pending' \}/.test(fn.body))
   }
 
-  // ── lib/ai/flags.ts: shadowGateNoBeat 기본 off ──
+  // ── lib/ai/flags.ts: shadowGateNoBeat·hintVisible 기본 off ──
   const flagsSrc = readFileSync(path.join(__dirname, '..', '..', 'lib', 'ai', 'flags.ts'), 'utf8')
   t('flags.ts: SystemFlags.shadowGateNoBeat 는 boolean(null 아님) — 항상 정해진 값',
     /shadowGateNoBeat: boolean\n/.test(flagsSrc))
   t("flags.ts: 못 읽거나 행이 없으면 shadowGateNoBeat 가 false 로 접힌다(?? false)",
     /shadowGateNoBeat: asBoolean\(byKey\.get\('shadow_gate_no_beat'\)\) \?\? false/.test(flagsSrc) &&
-      flagsSrc.includes("shadowGateNoBeat: false }") /* 조회 자체가 에러난 분기 */)
+      flagsSrc.includes("shadowGateNoBeat: false, hintVisible: false }") /* 조회 자체가 에러난 분기 */)
+  t('flags.ts: SystemFlags.hintVisible 는 boolean(세션 46 — 힌트 v2 노출 스위치)',
+    /hintVisible: boolean\n/.test(flagsSrc))
+  t("flags.ts: 못 읽거나 행이 없으면 hintVisible 이 false 로 접힌다(?? false)",
+    /hintVisible: asBoolean\(byKey\.get\('hint_visible'\)\) \?\? false/.test(flagsSrc))
+  t("flags.ts: readFlags 가 'hint_visible' 키도 함께 조회한다",
+    /\.in\('key', \['kill_switch', 'daily_spend_cap_usd', 'shadow_gate_no_beat', 'hint_visible'\]\)/.test(flagsSrc))
 
-  // ── seed/update-shadow-gate-no-beat.sql: 기본 false 로 넣는다(true 로 안 켠다) ──
+  // ── seed/update-shadow-gate-no-beat.sql·update-hint-visible.sql: 기본
+  //    false 로 넣는다(true 로 안 켠다) ──
   const gateFlagSql = readFileSync(path.join(__dirname, '..', '..', 'seed', 'update-shadow-gate-no-beat.sql'), 'utf8')
   t("update-shadow-gate-no-beat.sql: 'shadow_gate_no_beat' 를 'false' 로 넣는다",
     gateFlagSql.includes("select 'shadow_gate_no_beat', 'false'"))
   t('병: 이 SQL 파일이 값을 true 로 켜지 않는다(주석 속 안내 문장은 예외)',
     !/\nupdate system_flags set value = 'true'/.test(gateFlagSql.replace(/^--.*$/gm, '')))
+  const hintVisibleSql = readFileSync(path.join(__dirname, '..', '..', 'seed', 'update-hint-visible.sql'), 'utf8')
+  t("update-hint-visible.sql: 'hint_visible' 를 'false' 로 넣는다(세션 46)",
+    hintVisibleSql.includes("select 'hint_visible', 'false'"))
+  t('병: 이 SQL 파일이 값을 true 로 켜지 않는다(주석 속 안내 문장은 예외)',
+    !/\nupdate system_flags set value = 'true'/.test(hintVisibleSql.replace(/^--.*$/gm, '')))
 
   // ── TrainClient.tsx: 카드 문구 3종 + pending 무카드 + gatedNoBeat 제약 안내 ──
   const tcSrc2 = readFileSync(path.join(__dirname, '..', '..', 'components', 'train', 'TrainClient.tsx'), 'utf8')
@@ -8395,9 +8418,14 @@ console.log('\n[결정타 빌드업 섀도 support-v3]')
       const hintJsx = tcSrc2.slice(hintBlockStart, hintBlockEnd)
       return hintBlockStart !== -1 && hintBlockEnd !== -1 && !hintJsx.includes('gatedNoBeat')
     })())
-  t("TrainClient: tell 카드는 verdict === 'tell' 일 때만 뜬다(관측 층, gating 없음)",
-    /result\.tell && result\.tell\.verdict === 'tell'/.test(tcSrc2))
-  t("TrainClient: tell 카드 문구 '느낌의 이름이야'", tcSrc2.includes('는 느낌의 이름이야'))
+  t("TrainClient: tell 카드는 verdict === 'tell' 이고 text 가 있을 때만 뜬다(관측 층, gating 없음, 세션 46)",
+    /result\.tell && result\.tell\.verdict === 'tell' && result\.tell\.text/.test(tcSrc2))
+  t('TrainClient: tell 카드는 result.tell.text(서버가 buildTellCardText 로 지은 문장)를 그대로 보여준다(세션 46)',
+    /\{result\.tell\.text\}/.test(tcSrc2))
+  t('병: TrainClient 가 더 이상 tell 문구를 직접 짓지 않는다(옛 quote 템플릿 리터럴이 없다, 세션 46)',
+    !tcSrc2.includes('result.tell.quote'))
+  t("TrainClient: gatedNoBeatText 가 있으면 그것을 쓰고, 없으면 일반 문구로 대체한다(세션 46)",
+    /\{result\.gatedNoBeatText \?\? '이 훈련은 결정타 한 문장을 요구해/.test(tcSrc2))
 }
 
 console.log('\n[느낌어 판정(tell) · 힌트 · 골든셋 set C·D — 세션 45]')
@@ -8632,8 +8660,145 @@ console.log('\n[느낌어 판정(tell) · 힌트 · 골든셋 set C·D — 세�
     goldenSrc.includes('function loadTellCases()'))
   t('support-golden.ts: loadHintCases() 가 set B nak·no_beat 10건을 싣는다',
     goldenSrc.includes('function loadHintCases()'))
-  t('support-golden.ts: 힌트 골든이 source_quote 원문 실재율·insert_before 유효율을 따로 집계한다',
-    goldenSrc.includes('quoteRealRate') && goldenSrc.includes('insertValidRate'))
+  t('support-golden.ts: 힌트 골든이 hint-v2 를 부른다(세션 46 — v1 judgeHintWith 가 아니다)',
+    goldenSrc.includes('judgeHintV2With') && !goldenSrc.includes('judgeHintWith(callGemini'))
+  t('support-golden.ts: 힌트 골든이 통과율(passRate)을 집계하고 본문 텍스트를 그대로 출력한다(세션 46)',
+    goldenSrc.includes('passRate') && goldenSrc.includes("console.log(`     ${text ?? '(응답 없음)'}`)"))
+  t('support-golden.ts: loadHintCases 가 nak→none·no_beat→no_beat verdict 를 매긴다(세션 46, v2 프롬프트가 필요로 한다)',
+    goldenSrc.includes("kind: 'nak', verdict: 'none'") && goldenSrc.includes("kind: 'no_beat', verdict: 'no_beat'"))
+  t('support-golden.ts: loadHintCases 가 resolveHintMaterial 로 재료를 정한다(문항마다 ai_hint_material 또는 원문 마지막 문장, 세션 46)',
+    goldenSrc.includes('resolveHintMaterial('))
+}
+
+console.log('\n[힌트 v1 내림 · 카드 문구 교체 · 힌트 v2 — 세션 46]')
+{
+  // ── 조사 헬퍼(lib/ai/hint-text.ts) ──────────────────────────────
+  t("josaIGa: 받침 있으면 '이' — \"주원\" → \"주원이\"", josaIGa('주원') === '주원이')
+  t("josaIGa: 받침 없으면 '가' — \"강태\" → \"강태가\"", josaIGa('강태') === '강태가')
+  t("josaEulReul: 받침 있으면 '을' — \"주원\" → \"주원을\"", josaEulReul('주원') === '주원을')
+  t("josaEulReul: 받침 없으면 '를' — \"강태\" → \"강태를\"", josaEulReul('강태') === '강태를')
+
+  // ── tell 카드 문구(세션 46 확정 문안) ────────────────────────────
+  t('buildTellCardText: 15자 이하 인용은 안 자른다',
+    buildTellCardText('짧은 인용').includes('「짧은 인용」'))
+  {
+    const longQuote = '이것은 열다섯 글자를 훌쩍 넘는 아주 긴 인용문이다'
+    const text = buildTellCardText(longQuote)
+    t('buildTellCardText: 15자를 넘으면 앞 15자 + … 로 자른다',
+      text.includes(`「${longQuote.slice(0, 15)}…」`) && !text.includes(longQuote))
+  }
+  t('buildTellCardText: 확정 문구(아픈 느낌의 이름 · 방패·손·발 · 모범답안 가·나)',
+    buildTellCardText('아무 인용').includes('아픈 느낌의 이름만 말한 거야') &&
+    buildTellCardText('아무 인용').includes('방패가 어떻게 됐는지, 손이 어떻게 됐는지, 발이 어디까지 밀렸는지') &&
+    buildTellCardText('아무 인용').includes('모범답안 가·나'))
+
+  // ── no_beat gating 카드 문구(세션 46 확정 문안) ──────────────────
+  t('buildNoBeatGateCardText: 인물·상대에 조사가 올바르게 붙는다(주원이·강태를·강태가)',
+    buildNoBeatGateCardText('주원', '강태') ===
+      '아직 누가 이기고 지는지가 안 나왔어. 주원이 강태를 보고 뭘 알아챘는지 한 줄, 그걸 믿고 어떤 수를 뒀는지 한 줄, 그래서 강태가 어떻게 됐는지 한 줄 — 이 셋이 있어야 한 턴이야.')
+  t('buildNoBeatGateCardText: 받침 없는 이름 조합도 맞는다(리온·카엘)',
+    buildNoBeatGateCardText('리온', '카엘').startsWith('아직 누가 이기고 지는지가 안 나왔어. 리온이 카엘을'))
+
+  // ── 힌트 v2 재료 결정(resolveHintMaterial) ───────────────────────
+  t('resolveHintMaterial: ai_hint_material 이 있으면 그대로 쓴다',
+    resolveHintMaterial({ ai_hint_material: '재료 문장' }, '아무 원문.') === '재료 문장')
+  {
+    const passage = '첫 문장이다. 두려웠던 문장이다. 마지막 문장이다.'
+    t('resolveHintMaterial: 없으면 원문 마지막 문장부터 forbidWords 에 안 걸리는 첫 문장을 쓴다',
+      resolveHintMaterial({ forbidWords: [] }, passage) === '마지막 문장이다')
+    t('resolveHintMaterial: 마지막 문장이 forbidWords 에 걸리면 그 앞 문장으로 거슬러 올라간다',
+      resolveHintMaterial({ forbidWords: ['마지막'] }, passage) === '두려웠던 문장이다')
+    t('resolveHintMaterial: 모든 문장이 forbidWords 에 걸리면 null(호출부가 힌트를 건너뛴다)',
+      resolveHintMaterial({ forbidWords: ['문장'] }, passage) === null)
+  }
+
+  // ── 힌트 v2 문안 조립(prompt.ts) ──────────────────────────────────
+  t("PROMPT_VERSION_HINT_V2 = 'hint-v2'", PROMPT_VERSION_HINT_V2 === 'hint-v2')
+  t('병: hint-v2 버전 문자열이 hint-v1 과 다르다(캐시 키가 안 섞인다)',
+    (PROMPT_VERSION_HINT_V2 as string) !== (PROMPT_VERSION_HINT as string))
+  t('문안: 인물·상대·관찰 재료 자리가 있다', PROMPT_FRAME_HINT_V2.includes('[인물]') && PROMPT_FRAME_HINT_V2.includes('[상대]') && PROMPT_FRAME_HINT_V2.includes('[관찰 재료]'))
+  t('문안: 하지 말 것 넷(고쳐쓰기·소설 문장·대신 쓰기·점수평가)이 명시돼 있다',
+    PROMPT_FRAME_HINT_V2.includes('고쳐 쓰기') && PROMPT_FRAME_HINT_V2.includes('소설 문장') &&
+    PROMPT_FRAME_HINT_V2.includes('답안 대신 써') && PROMPT_FRAME_HINT_V2.includes('점수나 평가'))
+  t('문안: 반말 종결(~야·~봐·~해·~지) 지시가 있다', PROMPT_FRAME_HINT_V2.includes('~야·~봐·~해·~지'))
+  t('문안: 「」 인용 지시가 있다(15자 안팎)', PROMPT_FRAME_HINT_V2.includes('「」') && PROMPT_FRAME_HINT_V2.includes('15자 안팎'))
+  t('문안: JSON 이 아니라 텍스트만 내라고 명시한다(자유 텍스트 — 구조화 출력이 아니다)',
+    PROMPT_FRAME_HINT_V2.includes('텍스트만 낸다') && PROMPT_FRAME_HINT_V2.includes('JSON 도'))
+  {
+    const built = buildHintPromptV2('그는 물러섰다. 그가 반격했다.', '카엘은 같은 자리에 서서 되풀이한다.', '리온', '카엘', 'none')
+    t('buildHintPromptV2: 답안이 1..N 번호로 들어간다', built.includes('1 그는 물러섰다') && built.includes('2 그가 반격했다'))
+    t('buildHintPromptV2: 인물·상대·재료가 그대로 들어간다', built.includes('[인물] 리온') && built.includes('[상대] 카엘') && built.includes('카엘은 같은 자리에 서서 되풀이한다'))
+    t('buildHintPromptV2: verdict 별로 설명이 갈린다(none→근거 줄이 없다)', built.includes('근거 줄이 없다'))
+    const noBeatBuilt = buildHintPromptV2('아무 답안.', '재료.', '리온', '카엘', 'no_beat')
+    t('buildHintPromptV2: no_beat→승부 문장이 없다', noBeatBuilt.includes('승부 문장이 없다'))
+    const snbBuilt = buildHintPromptV2('아무 답안.', '재료.', '리온', '카엘', 'support_not_before')
+    t('buildHintPromptV2: support_not_before→근거가 결정타 뒤에 있다', snbBuilt.includes('근거가 결정타 뒤에 있다'))
+    t('병: 치환자가 안 남는다', !built.includes('{lines}') && !built.includes('{person}') && !built.includes('{opponent}') && !built.includes('{material}') && !built.includes('{verdictDesc}'))
+  }
+
+  // ── verifyHintV2 픽스처 ────────────────────────────────────────
+  {
+    const answer = '그는 물러섰다. 그가 반격했다.'
+    const good = '「그는 물러섰다」 하고 물러난 다음 어떻게 반격할지 생각해 봤어? 다음 수를 좀 더 구체적으로 써 봐.'
+    t('verifyHintV2: 네 제약을 다 지키면 통과', verifyHintV2(good, answer).ok, JSON.stringify(verifyHintV2(good, answer)))
+    t('verifyHintV2: 120자 초과면 폐기',
+      !verifyHintV2(good + good.repeat(2), answer).ok)
+    t('verifyHintV2: 「」 인용이 없으면 폐기', !verifyHintV2('인용 없이 그냥 반말로 물어봐? 좋아 해 봐.', answer).ok)
+    t('verifyHintV2: 인용이 답안 문장 앞부분이 아니면(지어낸 인용) 폐기',
+      !verifyHintV2('「전혀 다른 문장」 이건 뭘까? 한번 생각해 봐.', answer).ok)
+    t("verifyHintV2: 인용 밖에 소설 문장('다.')이 섞이면 폐기",
+      !verifyHintV2('「그는 물러섰다」 그는 다시 돌아섰다. 다음은 어떻게 할까?', answer).ok)
+    t('verifyHintV2: 반말 종결이 하나도 없으면 폐기',
+      !verifyHintV2('「그는 물러섰다」 다음 수를 궁금합니다', answer).ok)
+    t('verifyHintV2: quote 필드에 실제로 뽑은 인용을 담는다',
+      verifyHintV2(good, answer).quote === '그는 물러섰다')
+  }
+
+  // ── judgeHintV2With 전 구간(가짜 호출) ───────────────────────────
+  tAsync('judgeHintV2With: 성공하면 텍스트가 선다', async () => {
+    const r = await judgeHintV2With(
+      async () => ({ text: '「그는 물러섰다」 다음엔 뭘 해 볼래?', usage: { inputTokens: 100, cachedTokens: 0, outputTokens: 20 }, model: 'gemini-3.7-flash' }),
+      '그는 물러섰다. 그가 반격했다.', '재료.', '리온', '카엘', 'none', 'gemini-3.7-flash')
+    return r.ok && r.text !== null && r.costUsd !== null
+  })
+  tAsync('judgeHintV2With: 코드펜스를 두르고 와도 벗긴다', async () => {
+    const r = await judgeHintV2With(
+      async () => ({ text: '```\n「그는 물러섰다」 다음엔?\n```', usage: { inputTokens: 100, cachedTokens: 0, outputTokens: 15 }, model: 'gemini-3.7-flash' }),
+      '그는 물러섰다.', '재료.', '리온', '카엘', 'none', 'gemini-3.7-flash')
+    return r.ok && r.text !== null && !r.text.includes('```')
+  })
+  tAsync('judgeHintV2With: 호출 실패면 call_failed 이고 usage 가 없다', async () => {
+    const r = await judgeHintV2With(async () => { throw new Error('네트워크') }, '답안.', '재료.', '리온', '카엘', 'none', 'gemini-3.7-flash')
+    return !r.ok && r.error === 'call_failed' && r.usage === null
+  })
+  tAsync('judgeHintV2With: 빈 응답이면 empty 이고 비용은 나온다', async () => {
+    const r = await judgeHintV2With(
+      async () => ({ text: '   ', usage: { inputTokens: 100, cachedTokens: 0, outputTokens: 1 }, model: 'gemini-3.7-flash' }),
+      '답안.', '재료.', '리온', '카엘', 'none', 'gemini-3.7-flash')
+    return !r.ok && r.error === 'empty' && r.costUsd !== null
+  })
+
+  // ── seed/update-action-turn-v6.sql: bt- 4건 ai_hint_material 신설 ──
+  const v6Src = readFileSync(path.join(__dirname, '..', '..', 'seed', 'update-action-turn-v6.sql'), 'utf8')
+  for (const key of ['bt-fireball-shield', 'bt-alley-hook', 'bt-orc-axe', 'bt-low-guard']) {
+    t(`update-action-turn-v6.sql: ${key} 에 ai_hint_material 을 jsonb_set 으로 넣는다`,
+      new RegExp(`jsonb_set\\(scoring_config, '\\{ai_hint_material\\}'.*where source_key = '${key}'`, 's').test(v6Src))
+  }
+  t('병: bt-spear-range 는 이 파일이 update 하지 않는다(재료 없음 — route.ts 가 원문 마지막 문장으로 대신한다)',
+    !/where source_key = 'bt-spear-range'/.test(v6Src))
+
+  // ── seed/dump/problems.json: 4건은 ai_hint_material 이 있고 bt-spear-range 는 없다 ──
+  interface HintMaterialProblem { source_key: string; skill_key: string; scoring_config: { ai_hint_material?: string } }
+  const problemsForHintMaterial = JSON.parse(
+    readFileSync(path.join(__dirname, '..', '..', 'seed', 'dump', 'problems.json'), 'utf8').replace(/^﻿/, '')
+  ) as HintMaterialProblem[]
+  const btForHintMaterial = problemsForHintMaterial.filter((p) => p.skill_key === 'action_turn' && p.source_key.startsWith('bt-'))
+  const withMaterial = btForHintMaterial.filter((p) => p.scoring_config.ai_hint_material !== undefined)
+  t('problems.json: ai_hint_material 이 있는 bt- 는 정확히 4건(bt-spear-range 는 없다)',
+    withMaterial.length === 4 && !withMaterial.some((p) => p.source_key === 'bt-spear-range'),
+    JSON.stringify(withMaterial.map((p) => p.source_key)))
+  t('problems.json: bt-spear-range 는 ai_hint_material 이 없다(원문 마지막 문장이 재료)',
+    btForHintMaterial.find((p) => p.source_key === 'bt-spear-range')?.scoring_config.ai_hint_material === undefined)
 }
 
 console.log('\n[docs ↔ README 대조]')

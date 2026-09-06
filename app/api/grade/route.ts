@@ -5,27 +5,29 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { analyze } from '@/lib/scoring/remote'
 import { combine, countChars } from '@/lib/scoring'
-import { splitSentences } from '@/lib/scoring/local'
 import { shadowKinds, type Answer, type ScoringConfig, type Submission } from '@/lib/scoring/types'
 import { readFlags, sumSpendTodayUsd, type SystemFlags } from '@/lib/ai/flags'
 import { checkGate, DAILY_CALL_LIMIT } from '@/lib/ai/gate'
 import { consumeAiQuota } from '@/lib/quota'
 import { callGemini, DEFAULT_MODEL } from '@/lib/ai/gemini'
-import { judgeHintWith, judgeSupportWith, judgeTellWith } from '@/lib/ai/observe'
+import { judgeHintV2With, judgeHintWith, judgeSupportWith, judgeTellWith } from '@/lib/ai/observe'
 import {
   PROMPT_VERSION_HINT,
+  PROMPT_VERSION_HINT_V2,
   PROMPT_VERSION_SUPPORT,
   PROMPT_VERSION_TELL,
   verifyHintJudgment,
+  verifyHintV2,
   verifySupportJudgment,
   verifyTellJudgment,
   type HintObservation,
+  type HintV2Verdict,
   type SupportObservation,
   type SupportVerdict,
   type TellObservation,
   type TellVerdict,
 } from '@/lib/ai/prompt'
-import { buildHintCardText } from '@/lib/ai/hint-text'
+import { buildNoBeatGateCardText, buildTellCardText, resolveHintMaterial } from '@/lib/ai/hint-text'
 
 // TODO(다음 단계): needsAi(ai/hybrid scoring_mode) 문항의 AI 채점.
 //   결정타 빌드업 섀도(ai_shadow: 'support')와는 다른 자리다 — 저건 통과에
@@ -257,9 +259,16 @@ async function computeTellShadow(
 }
 
 /**
- * 힌트(hint) 2·3층 관측. support 판정이 실패 세 verdict(none·no_beat·
+ * 힌트(hint) v1 관측 — **세션 46 부터 안 부른다.** 박 님 실사용 반려
+ * 사유: 템플릿 + 인용 조립이 "사람 말이 아니다", 결함 원문 문항에선
+ * "지우라고 가르치는" 문장을 재료로 짚었다. 아래 computeHintV2 가
+ * 대신한다(AI 가 직접 짧은 코칭 문장을 쓰고 제약만 검증). 함수는 지우지
+ * 않고 둔다(박 님 지시 — hint-v1 코드·캐시는 보존) — verify.ts 의 기존
+ * 픽스처가 계속 서 있고, prompt.ts·observe.ts 의 v1 조각도 그대로다.
+ *
+ * (세션 45 원문 주석) support 판정이 실패 세 verdict(none·no_beat·
  * support_not_before) 중 하나일 때만 호출부가 부른다(비용 절약). 킬스위치→
- * 캐시 순서는 computeShadow() 와 같다(세션 44 순서 재사용, 세션 45).
+ * 캐시 순서는 computeShadow() 와 같다(세션 44 순서 재사용).
  *
  * ★ 재시도가 없다 — "인용 검증 없이는 판정 폐기"가 원칙이다. 힌트는
  *   실패해도 학습자에게 티 나지 않는다(1층 문구만 남는다) — 재시도로
@@ -351,6 +360,101 @@ async function computeHint(
     source_line: outcome.observation.source_line,
     source_quote: outcome.observation.source_quote,
   }
+}
+
+/**
+ * 힌트 v2(세션 46) — AI 가 2~3문장 코칭 문장을 직접 쓴다. computeHint(v1)
+ * 와 킬스위치→캐시 순서가 글자까지 같다(세션 44 순서를 그대로 복제). 다른
+ * 것은 프롬프트(구조화 JSON 대신 자유 텍스트)와 검증(verifyHintV2 — 길이·
+ * 인용·문체 네 제약)뿐이다.
+ *
+ * ★ **재시도가 없다** — v1 과 같은 이유("인용 검증 없이는 판정 폐기").
+ * ★★ 이 함수는 **hint_visible 플래그를 안 본다** — 노출은 호출부(POST)의
+ *   몫이다. 여기는 항상 계산·캐시한다(system_flags.hint_visible 이 false
+ *   여도) — 세션 46 지시: "false 면 계산·기록만, 화면엔 안 띄움". 계산까지
+ *   막는 건 이 함수가 아니라 킬스위치·gate 뿐이다.
+ */
+interface HintV2Result {
+  verdict: 'ok' | 'pending'
+  text?: string
+}
+
+async function computeHintV2(
+  admin: ReturnType<typeof createAdminClient>,
+  userId: string,
+  problemId: string,
+  normalized: string,
+  material: string,
+  person: string,
+  opponent: string,
+  verdict: HintV2Verdict,
+  flags: SystemFlags
+): Promise<HintV2Result> {
+  const model = DEFAULT_MODEL
+
+  // ★ 킬스위치가 캐시보다 먼저다(세션 44 순서를 힌트 v2 에도 그대로 쓴다 — 세션 46).
+  if (flags.killSwitch === null || flags.killSwitch) return { verdict: 'pending' }
+
+  const hash = createHash('sha256')
+    .update(`${normalized} ${problemId} ${PROMPT_VERSION_HINT_V2} ${model}`)
+    .digest('hex')
+
+  const { data: cached } = await admin
+    .from('ai_shadow_cache')
+    .select('verdict, judgment')
+    .eq('hash', hash)
+    .maybeSingle()
+  if (cached) {
+    const j = cached.judgment as { text: string }
+    return { verdict: 'ok', text: j.text }
+  }
+
+  let quotaRemaining: number | null = null
+  try {
+    quotaRemaining = await consumeAiQuota(userId, DAILY_CALL_LIMIT)
+  } catch {
+    quotaRemaining = null
+  }
+  const gate = checkGate({
+    hasApiKey: !!process.env.GEMINI_API_KEY,
+    killSwitch: flags.killSwitch,
+    dailySpendCapUsd: flags.dailySpendCapUsd,
+    spentTodayUsd: await sumSpendTodayUsd(),
+    quotaRemaining,
+  })
+  if (!gate.allow) return { verdict: 'pending' }
+
+  const outcome = await judgeHintV2With(callGemini, normalized, material, person, opponent, verdict, model)
+
+  if (outcome.usage) {
+    const { error } = await admin.from('ai_usage_log').insert({
+      user_id: userId,
+      submission_id: null,
+      model: outcome.model,
+      input_tokens: outcome.usage.inputTokens,
+      cached_tokens: outcome.usage.cachedTokens,
+      output_tokens: outcome.usage.outputTokens,
+      cost_usd: outcome.costUsd,
+    })
+    if (error) console.error('ai_usage_log insert failed(hint-v2)', 'message=' + error.message)
+  }
+
+  if (!outcome.ok || !outcome.text) return { verdict: 'pending' }
+
+  const check = verifyHintV2(outcome.text, normalized)
+  if (!check.ok) return { verdict: 'pending' } // 폐기 — 캐시 안 함(인용 검증 없이는 판정 폐기)
+
+  const { error } = await admin.from('ai_shadow_cache').insert({
+    hash,
+    problem_id: problemId,
+    prompt_version: PROMPT_VERSION_HINT_V2,
+    model,
+    judgment: { text: outcome.text },
+    verdict: 'ok',
+  })
+  if (error) console.error('ai_shadow_cache insert failed(hint-v2)', 'message=' + error.message)
+
+  return { verdict: 'ok', text: outcome.text }
 }
 
 const GradeRequestSchema = z.object({
@@ -448,18 +552,27 @@ export async function POST(request: NextRequest) {
   //    — "AI 가 없으면 규칙 통과를 그대로 둔다"는 원칙의 반대쪽도 같다:
   //    이 스위치가 없어도 학습자 진도는 안 막힌다.
   //
-  //    tell·힌트는 **gating 이 없다** — 관측 층이다. 힌트는 support 가 실패
+  //    tell 은 **gating 이 없다** — 관측 층이다. 힌트(v2)는 support 가 실패
   //    세 verdict(none·no_beat·support_not_before) 중 하나일 때만 별도로
   //    부른다(buildup·pending·beat_mismatch·quote_mismatch 면 안 부른다 —
-  //    비용 절약). 힌트 카드 문구는 AI 가 안 짓는다 — buildHintCardText
-  //    (순수 함수, lib/ai/hint-text.ts)가 지목된 사실만으로 짓는다.
+  //    비용 절약). ★★ 힌트 v2 는 flags.hintVisible 과 무관하게 **항상**
+  //    계산·캐시된다(세션 46) — hintVisible 이 gating 하는 건 오직 응답에
+  //    싣느냐뿐이다(계산은 안 막는다, 화면 노출만 막는다). 카드 문구는
+  //    tell·gatedNoBeat 둘 다 서버가 순수 함수(lib/ai/hint-text.ts)로
+  //    짓는다 — AI 는 지목·서술만, 프로즈는 AI 가 안 쓴다는 원칙을 tell·
+  //    no_beat 카드에도 확장한다(세션 46).
   let shadow: ShadowResult | undefined
   let gatedNoBeat = false
+  let gatedNoBeatText: string | undefined
   let tell: TellResult | undefined
-  let hintText: string | null = null
+  let tellText: string | undefined
+  let hintText: string | undefined
+  let hintComputedOk = false
 
   const cfg = (problem.scoring_config ?? {}) as ScoringConfig
   const kinds = shadowKinds(cfg)
+  const person = cfg.requireAll?.[0]
+  const opponent = cfg.requireAll?.[1]
 
   if (result.status === 'pass' && kinds.length > 0 && text && text.trim()) {
     const normalized = text.trim()
@@ -475,6 +588,7 @@ export async function POST(request: NextRequest) {
       }
       if (flags.shadowGateNoBeat && shadow.verdict === 'no_beat') {
         gatedNoBeat = true
+        if (person && opponent) gatedNoBeatText = buildNoBeatGateCardText(person, opponent)
       }
     }
 
@@ -485,29 +599,29 @@ export async function POST(request: NextRequest) {
         console.error('느낌어 판정(tell) 실패(조용히 pending 취급)', err)
         tell = { verdict: 'pending' }
       }
+      if (tell.verdict === 'tell' && tell.quote) {
+        tellText = buildTellCardText(tell.quote)
+      }
     }
 
     if (
       shadow &&
       (shadow.verdict === 'none' || shadow.verdict === 'no_beat' || shadow.verdict === 'support_not_before') &&
       problem.passage &&
-      cfg.requireAll?.[0]
+      person &&
+      opponent
     ) {
-      try {
-        const hint = await computeHint(admin, user.id, problemId, normalized, problem.passage, flags)
-        if (hint.verdict === 'ok') {
-          const S = splitSentences(normalized)
-          hintText = buildHintCardText({
-            supportVerdict: shadow.verdict,
-            person: cfg.requireAll[0],
-            beatText: shadow.beat_line != null ? (S[shadow.beat_line - 1] ?? null) : null,
-            supportQuote: shadow.quote ?? null,
-            sourceQuote: hint.source_quote ?? '',
-            beforeText: hint.insert_before != null ? (S[hint.insert_before - 1] ?? null) : null,
-          })
+      const material = resolveHintMaterial(cfg, problem.passage)
+      if (material) {
+        try {
+          const hint = await computeHintV2(admin, user.id, problemId, normalized, material, person, opponent, shadow.verdict, flags)
+          if (hint.verdict === 'ok' && hint.text) {
+            hintComputedOk = true
+            if (flags.hintVisible) hintText = hint.text
+          }
+        } catch (err) {
+          console.error('힌트 v2 실패(조용히 무시 — 1층 문구만 남는다)', err)
         }
-      } catch (err) {
-        console.error('힌트 실패(조용히 무시 — 1층 문구만 남는다)', err)
       }
     }
   }
@@ -518,7 +632,9 @@ export async function POST(request: NextRequest) {
 
   // 8. submissions 저장 — 실패해도 응답은 정상 반환. auto_result 에 shadow·
   //    tell verdict 를 적어 둔다(세션 43·45 — 나중에 오판 추적용) · gating
-  //    으로 막힌 제출은 no_beat_gate: true 로 표시한다.
+  //    으로 막힌 제출은 no_beat_gate: true 로 표시한다. 힌트는 hintVisible
+  //    과 무관하게 **계산이 섰으면**(hintComputedOk) 적는다 — 노출 여부와
+  //    별개로 오판 추적 재료가 쌓여야 한다(세션 46).
   try {
     const { error } = await supabase.from('submissions').insert({
       user_id: user.id,
@@ -531,7 +647,7 @@ export async function POST(request: NextRequest) {
         ...(shadow ? { shadow: shadow.verdict } : {}),
         ...(gatedNoBeat ? { no_beat_gate: true } : {}),
         ...(tell ? { tell: tell.verdict } : {}),
-        ...(hintText ? { hint: true } : {}),
+        ...(hintComputedOk ? { hint_v2: true } : {}),
       },
       passed,
     })
@@ -567,9 +683,11 @@ export async function POST(request: NextRequest) {
   const reference: { ord: number; blank_key: string; content: string }[] = refData ?? []
 
   // 10. 응답. status 는 gating 이 걸리면 'fail' 로 낸다 — 화면이 통과 카드
-  //     대신 gatedNoBeat 문구를 보여줄 신호다. 정답·scoring_config는 안 싣는다.
-  //     hint 는 이미 완성된 한국어 문장이다(서버가 지었다) — 화면은 그대로
-  //     보여주기만 한다.
+  //     대신 gatedNoBeatText 를 보여줄 신호다. 정답·scoring_config는 안 싣는다.
+  //     tell·gatedNoBeat·hint 문구는 전부 서버가 순수 함수로 이미 완성해
+  //     보낸다(lib/ai/hint-text.ts) — 화면은 그대로 보여주기만 한다. hint
+  //     는 flags.hintVisible 이 true 일 때만 실린다(계산은 항상 서지만
+  //     노출만 막혀 있을 수 있다 — 세션 46).
   return Response.json({
     status: gatedNoBeat ? 'fail' : result.status,
     checks: result.checks,
@@ -577,8 +695,8 @@ export async function POST(request: NextRequest) {
     morphAvailable: morph !== null,
     reference,
     shadow,
-    ...(gatedNoBeat ? { gatedNoBeat: true } : {}),
-    ...(tell ? { tell: { verdict: tell.verdict, quote: tell.quote } } : {}),
+    ...(gatedNoBeat ? { gatedNoBeat: true, gatedNoBeatText } : {}),
+    ...(tell ? { tell: { verdict: tell.verdict, text: tellText } } : {}),
     ...(hintText ? { hint: hintText } : {}),
   })
 }

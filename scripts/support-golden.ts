@@ -73,23 +73,24 @@ import { createHash } from 'node:crypto'
 import { writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { readFileSync } from 'node:fs'
-import { judgeHintWith, judgeSupportWith, judgeTellWith, type HintOutcome, type SupportOutcome, type TellOutcome } from '../lib/ai/observe'
+import { judgeHintV2With, judgeSupportWith, judgeTellWith, type HintV2Outcome, type SupportOutcome, type TellOutcome } from '../lib/ai/observe'
 import {
-  buildHintPrompt,
+  buildHintPromptV2,
   buildSupportPrompt,
   buildTellPrompt,
-  verifyHintJudgment,
+  verifyHintV2,
   verifySupportJudgment,
   verifyTellJudgment,
-  PROMPT_VERSION_HINT,
+  PROMPT_VERSION_HINT_V2,
   PROMPT_VERSION_SUPPORT,
   PROMPT_VERSION_SUPPORT_GENERAL,
   PROMPT_VERSION_TELL,
-  type HintVerdict,
+  type HintV2Verdict,
   type SupportDomain,
   type SupportVerdict,
   type TellVerdict,
 } from '../lib/ai/prompt'
+import { resolveHintMaterial } from '../lib/ai/hint-text'
 import { callGemini, DEFAULT_MODEL, THINKING_LEVEL } from '../lib/ai/gemini'
 import { checkGateBeforeQuota, checkRunBudget } from '../lib/ai/gate'
 import { countTodayRows, logPgError, readFlags, sumSpendTodayUsd } from '../lib/ai/flags'
@@ -300,21 +301,63 @@ function loadTellCases(): TellCase[] {
   return out
 }
 
-/** 힌트 골든(세션 45) 표본 — set B nak·no_beat 10건. passage 는 같은 항목의
- *  no_beat_answer(=bt- 문항 원문 그대로, meta 주석 참고)를 그대로 쓴다. */
+/** 힌트 v2 골든(세션 45 배선 · 세션 46 부터 v2 호출) 표본 — set B nak·no_beat
+ *  10건. passage 는 같은 항목의 no_beat_answer(=bt- 문항 원문 그대로, meta
+ *  주석 참고)를 그대로 쓴다. nak → support 기대 verdict 'none' · no_beat →
+ *  'no_beat' — v2 프롬프트가 verdict 설명 문구를 골라 쓰는 데 필요하다
+ *  (support 를 다시 부르지 않는다 — 이미 근거가 없다고 아는 표본이라
+ *  비용 절약, 세션 45 설계 그대로).
+ */
 interface HintCase {
   id: string
   kind: 'nak' | 'no_beat'
+  verdict: HintV2Verdict
   text: string
   passage: string
+  person: string
+  opponent: string
+  material: string
+}
+
+interface BtProblemMeta {
+  requireAll?: string[]
+  ai_hint_material?: string
+  forbidWords?: string[]
+}
+
+function loadBtMeta(): Map<string, BtProblemMeta> {
+  const problems = JSON.parse(
+    readFileSync(path.join(root, 'seed', 'dump', 'problems.json'), 'utf8').replace(/^﻿/, '')
+  ) as { source_key: string; scoring_config: BtProblemMeta }[]
+  const out = new Map<string, BtProblemMeta>()
+  for (const p of problems) {
+    if (!p.source_key.startsWith('bt-')) continue
+    out.set(p.source_key, p.scoring_config)
+  }
+  return out
 }
 
 function loadHintCases(): HintCase[] {
   const nakData = loadSetBNak()
+  const meta = loadBtMeta()
   const out: HintCase[] = []
   for (const item of nakData.items) {
-    out.push({ id: item.id, kind: 'nak', text: item.gold.nak_answer, passage: item.gold.no_beat_answer })
-    out.push({ id: item.id, kind: 'no_beat', text: item.gold.no_beat_answer, passage: item.gold.no_beat_answer })
+    const m = meta.get(item.id)
+    if (!m?.requireAll || m.requireAll.length < 2) continue
+    const material = resolveHintMaterial(
+      { ai_hint_material: m.ai_hint_material, forbidWords: m.forbidWords },
+      item.gold.no_beat_answer
+    )
+    if (!material) continue
+    const [person, opponent] = m.requireAll
+    out.push({
+      id: item.id, kind: 'nak', verdict: 'none', text: item.gold.nak_answer,
+      passage: item.gold.no_beat_answer, person, opponent, material,
+    })
+    out.push({
+      id: item.id, kind: 'no_beat', verdict: 'no_beat', text: item.gold.no_beat_answer,
+      passage: item.gold.no_beat_answer, person, opponent, material,
+    })
   }
   return out
 }
@@ -452,8 +495,8 @@ async function main() {
     if (hintMode) {
       const cs = loadHintCases()
       const c = cs[0]
-      console.log(`\n--- 힌트 프롬프트 한 건 (${c.id}/${c.kind}) ---`)
-      console.log(buildHintPrompt(c.text, c.passage))
+      console.log(`\n--- 힌트 v2 프롬프트 한 건 (${c.id}/${c.kind}, verdict=${c.verdict}) ---`)
+      console.log(buildHintPromptV2(c.text, c.material, c.person, c.opponent, c.verdict))
     } else if (tellMode) {
       const cs = loadTellCases()
       const c = cs[0]
@@ -522,9 +565,10 @@ async function runHintGolden(
   const cases = loadHintCases()
   const totalCalls = cases.length * reps
   const runCap = Number(arg('cap', String(totalCalls)))
-  console.log(`\n힌트 표본 ${cases.length}건(nak 5 · no_beat 5) · 반복 ${reps}회 · 모델 ${model} · 이 실행 상한 ${runCap}회`)
+  console.log(`\n힌트 v2 표본 ${cases.length}건(nak 5 · no_beat 5) · 반복 ${reps}회 · 모델 ${model} · 이 실행 상한 ${runCap}회`)
+  console.log('★ 힌트 본문을 그대로 출력한다 — 박 님이 직접 읽고 거른다(통과율은 참고 수치일 뿐).')
 
-  const results: { id: string; kind: 'nak' | 'no_beat'; rep: number; quoteReal: boolean | null; insertValid: boolean | null; verdict: HintVerdict | 'call_failed' | 'not_json' | 'bad_shape'; costUsd: number | null }[] = []
+  const results: { id: string; kind: 'nak' | 'no_beat'; rep: number; ok: boolean; reasons: string[]; text: string | null; costUsd: number | null }[] = []
   let calls = 0
 
   outer: for (const c of cases) {
@@ -535,39 +579,38 @@ async function runHintGolden(
       const budget = checkRunBudget(calls, runCap)
       if (!budget.allow) { console.log(`\n막혔다 [${budget.rule}] ${budget.detail}`); break outer }
 
-      const outcome: HintOutcome = await judgeHintWith(callGemini, c.text.trim(), c.passage, model)
+      const outcome: HintV2Outcome = await judgeHintV2With(callGemini, c.text.trim(), c.material, c.person, c.opponent, c.verdict, model)
       calls++
       if (!(await logUsage(admin, outcome))) break outer
 
-      let verdict: (typeof results)[number]['verdict']
-      let quoteReal: boolean | null = null
-      let insertValid: boolean | null = null
-      if (!outcome.ok || !outcome.observation) {
-        verdict = (outcome.error ?? 'call_failed') as (typeof results)[number]['verdict']
+      let ok = false
+      let reasons: string[] = []
+      let text: string | null = null
+      if (!outcome.ok || !outcome.text) {
+        reasons = [outcome.error ?? 'call_failed']
       } else {
-        const v = verifyHintJudgment(c.text.trim(), c.passage, outcome.observation)
-        verdict = v.verdict
-        quoteReal = v.quoteReal
-        insertValid = v.insertValid
+        text = outcome.text
+        const check = verifyHintV2(outcome.text, c.text.trim())
+        ok = check.ok
+        reasons = check.reasons
       }
-      results.push({ id: c.id, kind: c.kind, rep, quoteReal, insertValid, verdict, costUsd: outcome.costUsd })
-      console.log(`${String(calls).padStart(3)} ${c.id}/${c.kind} rep${rep}  ${verdict}  quoteReal=${quoteReal} insertValid=${insertValid}  $${outcome.costUsd ?? '-'}`)
+      results.push({ id: c.id, kind: c.kind, rep, ok, reasons, text, costUsd: outcome.costUsd })
+      console.log(`${String(calls).padStart(3)} ${c.id}/${c.kind} rep${rep} [verdict=${c.verdict}]  ${ok ? '통과' : `폐기(${reasons.join(', ')})`}  $${outcome.costUsd ?? '-'}`)
+      console.log(`     ${text ?? '(응답 없음)'}`)
 
-      if (outcome.error === 'call_failed' && calls === 1) {
+      if (!outcome.ok && outcome.error === 'call_failed' && calls === 1) {
         console.log('\n★ 첫 호출부터 못 나갔다. 설정 문제다 — 뒤를 안 돌린다.')
         break outer
       }
     }
   }
 
-  const withQuote = results.filter((r) => r.quoteReal !== null)
-  const quoteRealRate = withQuote.length > 0 ? withQuote.filter((r) => r.quoteReal).length / withQuote.length : null
-  const insertValidRate = withQuote.length > 0 ? withQuote.filter((r) => r.insertValid).length / withQuote.length : null
+  const passRate = results.length > 0 ? results.filter((r) => r.ok).length / results.length : null
   const cost = results.reduce((s, r) => s + (r.costUsd ?? 0), 0)
-  console.log(`\n[힌트] ${results.length}회 · source_quote 원문 실재율 ${quoteRealRate === null ? '-' : (quoteRealRate * 100).toFixed(1) + '%'} · insert_before 유효율 ${insertValidRate === null ? '-' : (insertValidRate * 100).toFixed(1) + '%'} · 비용 $${cost.toFixed(6)}`)
-  console.log('판정선(STATUS): 둘 다 100% 기대 — 못 미치면 프롬프트 재검토.')
+  console.log(`\n[힌트 v2] ${results.length}회 · 통과율 ${passRate === null ? '-' : (passRate * 100).toFixed(1) + '%'} · 비용 $${cost.toFixed(6)}`)
+  console.log('판정선(STATUS): 통과율은 참고일 뿐 — 박 님이 위 본문을 읽고 hint_visible 을 켤지 정한다.')
 
-  writeFileSync(out, JSON.stringify({ model, reps, results, quoteRealRate, insertValidRate, cost }, null, 2))
+  writeFileSync(out, JSON.stringify({ model, reps, promptVersion: PROMPT_VERSION_HINT_V2, results, passRate, cost }, null, 2))
   console.log(`결과를 ${out} 에 적었다.`)
 }
 

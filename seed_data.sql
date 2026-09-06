@@ -455,7 +455,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'action_turn'),
   'convert', 'auto', '아래 전투를 고쳐 쓰시오. 주원은 복싱을 배운 대학생이고 강태는 골목에서 시비를 건 덩치다. 원문은 휘두르고 막고 의성어만 반복해서 누가 왜 그 수를 두는지 없다. 주원이 강태의 주먹에서 무엇을 읽고, 무엇을 재고, 어떤 수를 고르는지가 순서대로 보이게 다시 쓰시오. 고른 수의 결과와 대가는 몸으로 보이고, 주원의 속마음이나 대사 한 줄이 들리게 하시오. 의성어는 써도 되지만 그것만으로 한 수를 대신하지 마시오.',
-  '강태가 주먹을 휘둘렀다. 퍽! 주원이 막았다. 강태가 다시 휘둘렀다. 퍽! 퍽! 주원이 뒤로 물러났다. 강태의 주먹은 강력했다. 주원은 다시 앞으로 나갔다.', null, '{"maxChars":200,"minVerbs":4,"requireAll":["주원","강태"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","그때였다","과연"],"forbidPassageCopy":true,"ai_shadow":["support","tell"]}'::jsonb,
+  '강태가 주먹을 휘둘렀다. 퍽! 주원이 막았다. 강태가 다시 휘둘렀다. 퍽! 퍽! 주원이 뒤로 물러났다. 강태의 주먹은 강력했다. 주원은 다시 앞으로 나갔다.', null, '{"maxChars":200,"minVerbs":4,"requireAll":["주원","강태"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","그때였다","과연"],"forbidPassageCopy":true,"ai_shadow":["support","tell"],"ai_hint_material":"강태는 오른손만 쓰고, 주먹을 크게 돌린다."}'::jsonb,
   'original', 'modern', 'planned',
   1, 'bt-alley-hook'
 where not exists (select 1 from problems p where p.source_key = 'bt-alley-hook');
@@ -1067,7 +1067,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'action_turn'),
   'continue', 'auto', '원문이 놓은 두 선택지 중 하나를 골라 한 턴을 이어 쓰시오. 진서는 방패를 든 탱커 헌터고 유나는 오늘 처음 던전에 들어온 신입이다. 원문은 피하면 유나가 다치고 막으면 방패가 부서지는 갈림길까지 왔다. 진서가 무엇을 고르는지, 그 대가가 몸이나 장비로 어떻게 드러나는지, 그 선택이 다음 수를 어떻게 만드는지 쓰시오. 진서의 속마음이나 대사 한 줄이 들리게 하고, 두 사람 이름이 다 나오게 하시오.',
-  '오크의 도끼가 머리 위로 올라갔다. 피하면 뒤에 선 신입 유나가 도끼를 받는다. 막으면 진서의 방패가 두 동강 난다. 둘 중 하나를 반 호흡 안에 골라야 했다.', null, '{"maxChars":200,"minVerbs":4,"requireAll":["진서","유나"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","그때였다","과연"],"forbidPassageCopy":true,"ai_shadow":["support","tell"]}'::jsonb,
+  '오크의 도끼가 머리 위로 올라갔다. 피하면 뒤에 선 신입 유나가 도끼를 받는다. 막으면 진서의 방패가 두 동강 난다. 둘 중 하나를 반 호흡 안에 골라야 했다.', null, '{"maxChars":200,"minVerbs":4,"requireAll":["진서","유나"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","그때였다","과연"],"forbidPassageCopy":true,"ai_shadow":["support","tell"],"ai_hint_material":"도끼는 내려찍은 뒤 뽑는 데 한 호흡이 걸린다."}'::jsonb,
   'original', 'fantasy', 'planned',
   2, 'bt-orc-axe'
 where not exists (select 1 from problems p where p.source_key = 'bt-orc-axe');
@@ -1283,7 +1283,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'action_turn'),
   'convert', 'auto', '아래 전투를 고쳐 쓰시오. 리온은 방패와 검을 쓰는 기사고 카엘은 화염구를 쓰는 마법사다. 원문은 충격·고통·압도적 같은 느낌 말로 결과를 대신해서 독자 눈에 아무것도 안 보인다. 첫 문장은 두고, 결과를 방패·장갑·발뒤꿈치처럼 몸과 사물로 바꾸고, 리온이 카엘에게서 읽어 낸 것 하나로 다음 수를 고르게 다시 쓰시오. 리온의 속마음이나 대사 한 줄이 들리게 하시오.',
-  '화염구가 방패에 부딪쳤다. 끔찍한 충격이었다. 리온은 엄청난 고통을 느꼈다. 상대 마법사 카엘의 힘은 압도적이었다. 리온은 두려웠지만 버텼다.', null, '{"maxChars":200,"minVerbs":4,"requireAll":["리온","카엘"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","고통","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","고통","그때였다","과연"],"forbidPassageCopy":true,"passageCopyKeep":1,"ai_shadow":["support","tell"]}'::jsonb,
+  '화염구가 방패에 부딪쳤다. 끔찍한 충격이었다. 리온은 엄청난 고통을 느꼈다. 상대 마법사 카엘의 힘은 압도적이었다. 리온은 두려웠지만 버텼다.', null, '{"maxChars":200,"minVerbs":4,"requireAll":["리온","카엘"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","고통","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","고통","그때였다","과연"],"forbidPassageCopy":true,"passageCopyKeep":1,"ai_shadow":["support","tell"],"ai_hint_material":"카엘은 같은 자리에 서서 같은 주문을 되풀이한다."}'::jsonb,
   'original', 'fantasy', 'planned',
   2, 'bt-fireball-shield'
 where not exists (select 1 from problems p where p.source_key = 'bt-fireball-shield');
@@ -1511,7 +1511,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'action_turn'),
   'continue', 'auto', '상대 쪽에서 한 턴을 쓰시오. 정후는 젊은 검객이고 백리진은 서른 해를 싸워 온 노고수다. 원문은 정후의 수(하단 자세)까지 보여 줬다. 이번 턴은 백리진의 머릿속이다 — 그가 그 자세에서 무엇을 읽고, 옛 기억으로 무엇을 재고, 어떤 수를 고르는지, 그 수가 맞았는지 틀렸는지가 몸으로 드러나게 쓰시오. 백리진의 속마음이나 대사 한 줄이 들리게 하고, 두 사람 이름이 다 나오게 하시오.',
-  '정후는 검을 낮게 늘어뜨리고 걸어 들어왔다. 상단도 중단도 아닌 하단이었다. 노고수 백리진은 그 자세를 서른 해 전에 본 적이 있었다.', null, '{"maxChars":200,"minVerbs":4,"requireAll":["정후","백리진"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","그때였다","과연"],"forbidPassageCopy":true,"ai_shadow":["support","tell"]}'::jsonb,
+  '정후는 검을 낮게 늘어뜨리고 걸어 들어왔다. 상단도 중단도 아닌 하단이었다. 노고수 백리진은 그 자세를 서른 해 전에 본 적이 있었다.', null, '{"maxChars":200,"minVerbs":4,"requireAll":["정후","백리진"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","그때였다","과연"],"forbidPassageCopy":true,"ai_shadow":["support","tell"],"ai_hint_material":"하단 자세는 보통 올려 베기의 준비 자세로 읽힌다."}'::jsonb,
   'original', 'martial', 'planned',
   2, 'bt-low-guard'
 where not exists (select 1 from problems p where p.source_key = 'bt-low-guard');
