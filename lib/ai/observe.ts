@@ -20,6 +20,7 @@ import {
   type Observation,
   type PointObservation,
   type PromptInput,
+  type SupportDomain,
   type SupportObservation,
 } from './prompt'
 import { costUsd, type TokenUsage } from './pricing'
@@ -184,10 +185,14 @@ export async function observePointWith(
 }
 
 /**
- * 결정타 빌드업 섀도(support-v2) 관측. **`observeWith` 를 안 건드리고 곁에 둔다**
- * — `observePointWith` 와 같은 이유다. `buildSupportPrompt` 는 지문 없이 답안
- * 하나만 받는다(prompt.ts 주석) — `PromptInput`(passage·lines·element)이 아니라
- * 답안 문자열 하나가 입력이다.
+ * 결정타 빌드업 섀도(support-v3, 도메인 일반화 v4 는 세션 43) 관측.
+ * **`observeWith` 를 안 건드리고 곁에 둔다** — `observePointWith` 와 같은
+ * 이유다. `buildSupportPrompt` 는 지문 없이 답안 하나만 받는다(prompt.ts
+ * 주석) — `PromptInput`(passage·lines·element)이 아니라 답안 문자열 하나가
+ * 입력이다.
+ *
+ * domain 기본값 'battle' — 안 주면 기존 호출부(route.ts)는 그대로 v3 다.
+ * 'general' 은 골든셋 하네스가 set A 를 재는 데만 쓴다 — bt- 엔 안 붙는다.
  */
 export interface SupportOutcome extends Omit<ObserveOutcome, 'observation'> {
   observation: SupportObservation | null
@@ -196,9 +201,10 @@ export interface SupportOutcome extends Omit<ObserveOutcome, 'observation'> {
 export async function judgeSupportWith(
   call: GeminiCall,
   answer: string,
-  model: string
+  model: string,
+  domain: SupportDomain = 'battle'
 ): Promise<SupportOutcome> {
-  const prompt = buildSupportPrompt(answer)
+  const prompt = buildSupportPrompt(answer, domain)
 
   let reply: GeminiReply
   try {

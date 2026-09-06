@@ -32,10 +32,14 @@
  * npx tsx scripts/support-golden.ts --check           # 마개와 쓰기만 재고 멈춘다
  * npx tsx scripts/support-golden.ts                   # 전 표본 5회 실행 (기본 안전 확인 절차)
  * npx tsx scripts/support-golden.ts --reps=1 --cap=20 # 값싸게 한 번만 훑어본다
+ * npx tsx scripts/support-golden.ts --domain general --only A  # set A 만 v4 로 재측정(세션 43)
  * ```
  *
  * 인자: `--reps`(반복 횟수, 기본 5) · `--cap`(이 실행의 자기 상한) · `--model` ·
- *       `--out` · `--dry` · `--check` · `--use-cache`
+ *       `--out` · `--dry` · `--check` · `--use-cache` ·
+ *       `--domain`(battle 기본 | general, 세션 43) · `--only`(A | B | AB 기본)
+ *       ★ `--domain general` 을 줘도 **set B(bt-)는 항상 battle 이다** — 코드가
+ *         set 으로 강제한다(사람이 --only 를 깜빡해도 bt- 캐시 키가 안 바뀐다).
  * 환경: `GEMINI_API_KEY` · `GEMINI_THINKING_LEVEL` · `AI_PROBE_USER_ID`(필요하면)
  *
  * ★ `--conditions=react-server` 가 필요하다(package.json 이 npm script 로 준다).
@@ -47,7 +51,7 @@ import { writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { readFileSync } from 'node:fs'
 import { judgeSupportWith, type SupportOutcome } from '../lib/ai/observe'
-import { verifySupportJudgment, PROMPT_VERSION_SUPPORT, type SupportVerdict } from '../lib/ai/prompt'
+import { verifySupportJudgment, PROMPT_VERSION_SUPPORT, PROMPT_VERSION_SUPPORT_GENERAL, type SupportDomain, type SupportVerdict } from '../lib/ai/prompt'
 import { callGemini, DEFAULT_MODEL, THINKING_LEVEL } from '../lib/ai/gemini'
 import { checkGateBeforeQuota, checkRunBudget } from '../lib/ai/gate'
 import { countTodayRows, logPgError, readFlags, sumSpendTodayUsd } from '../lib/ai/flags'
@@ -219,6 +223,8 @@ interface RunResult {
   verdict: SupportVerdict | 'call_failed' | 'not_json' | 'bad_shape'
   fromCache: boolean
   costUsd: number | null
+  /** 'battle' | 'general' (세션 43). set B 는 항상 'battle'. */
+  domain: SupportDomain
 }
 
 async function main() {
@@ -229,7 +235,37 @@ async function main() {
   const model = arg('model', DEFAULT_MODEL)
   const out = arg('out', `data/probe/support-golden-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.json`)
 
-  const cases = loadCases()
+  // ★ ai-probe.ts 의 --prompt 와 같은 함정 — `arg()` 는 `--name=value` 꼴만
+  //   읽는다. 공백 꼴(`--domain general`)은 조용히 기본값으로 떨어져 **엉뚱한
+  //   도메인을 재고도 모른다.** 그래서 공백 꼴을 먼저 막는다.
+  if (process.argv.includes('--domain')) {
+    console.error('★ --domain 은 등호로 쓴다: --domain=general')
+    console.error('  공백 꼴은 조용히 battle 로 떨어진다. 그러면 무엇을 쟀는지 모른다.')
+    process.exit(1)
+  }
+  if (process.argv.includes('--only')) {
+    console.error('★ --only 는 등호로 쓴다: --only=A')
+    console.error('  공백 꼴은 조용히 AB(전체)로 떨어진다.')
+    process.exit(1)
+  }
+
+  // 도메인 일반화(세션 43). set B(bt-)는 --domain 값과 무관하게 **항상 battle**
+  // 이다 — domainFor 가 강제한다. general 은 set A(ch10, 비전투 포함)만 잰다.
+  const domainArg = arg('domain', 'battle')
+  if (domainArg !== 'battle' && domainArg !== 'general') {
+    console.error(`★ --domain 은 battle · general 뿐이다. 받은 것: ${domainArg}`)
+    process.exit(1)
+  }
+  const domainFor = (c: Case): SupportDomain => (c.set === 'B' ? 'battle' : (domainArg as SupportDomain))
+  const promptVersionFor = (domain: SupportDomain) => (domain === 'general' ? PROMPT_VERSION_SUPPORT_GENERAL : PROMPT_VERSION_SUPPORT)
+
+  const only = arg('only', 'AB')
+  if (!/^(A|B|AB|BA)$/.test(only)) {
+    console.error(`★ --only 는 A · B · AB 뿐이다. 받은 것: ${only}`)
+    process.exit(1)
+  }
+
+  const cases = loadCases().filter((c) => only.includes(c.set))
   const setA = cases.filter((c) => c.set === 'A')
   const setB = cases.filter((c) => c.set === 'B')
   const totalCalls = cases.length * reps
@@ -241,6 +277,7 @@ async function main() {
       `set B(bt-) good ${countOf(setB, 'good')} · nak ${countOf(setB, 'nak')} · no_beat ${countOf(setB, 'no_beat')} · ` +
       `반복 ${reps}회 · 모델 ${model} · thinking ${THINKING_LEVEL}`
   )
+  console.log(`도메인 set A=${setA.length > 0 ? domainArg : '-'} · set B=battle(고정) · --only ${only}`)
   console.log(`캐시 ${useCache ? '사용(--use-cache)' : '우회(기본)'} · 이 실행 상한 ${runCap}회`)
   // set B nak/no_beat 의 비통제 표시(note) — 결과를 읽기 전에 먼저 보여 둔다.
   // nak·no_beat 가 같은 note 를 물려받으므로(id 짝) nak 쪽에서만 한 번 낸다.
@@ -252,9 +289,9 @@ async function main() {
 
   if (dry) {
     const c = cases[0]
-    console.log(`\n--- 프롬프트 한 건 (${c.set}/${c.itemId}/${c.kind}) ---`)
+    console.log(`\n--- 프롬프트 한 건 (${c.set}/${c.itemId}/${c.kind}, domain=${domainFor(c)}) ---`)
     const { buildSupportPrompt } = await import('../lib/ai/prompt')
-    console.log(buildSupportPrompt(c.text))
+    console.log(buildSupportPrompt(c.text, domainFor(c)))
     console.log('\n--dry 다. DB 도 Gemini 도 안 탔다. 마개까지 재려면 --check 다.')
     return
   }
@@ -310,12 +347,14 @@ async function main() {
       }
 
       const normalized = c.text.trim()
+      const domain = domainFor(c)
+      const promptVersion = promptVersionFor(domain)
       let fromCache = false
       let outcome: SupportOutcome | null = null
       let cachedVerdict: SupportVerdict | null = null
 
       if (useCache) {
-        const hash = createHash('sha256').update(`${normalized} ${c.itemId} ${PROMPT_VERSION_SUPPORT} ${model}`).digest('hex')
+        const hash = createHash('sha256').update(`${normalized} ${c.itemId} ${promptVersion} ${model}`).digest('hex')
         const { data } = await admin.from('ai_shadow_cache').select('verdict').eq('hash', hash).maybeSingle()
         if (data) {
           fromCache = true
@@ -329,7 +368,7 @@ async function main() {
       if (fromCache && cachedVerdict) {
         verdict = cachedVerdict
       } else {
-        outcome = await judgeSupportWith(callGemini, normalized, model)
+        outcome = await judgeSupportWith(callGemini, normalized, model, domain)
         calls++
         costUsd = outcome.costUsd
 
@@ -357,9 +396,9 @@ async function main() {
         }
       }
 
-      results.push({ set: c.set, itemId: c.itemId, kind: c.kind, rep, verdict, fromCache, costUsd })
+      results.push({ set: c.set, itemId: c.itemId, kind: c.kind, rep, verdict, fromCache, costUsd, domain })
       console.log(
-        `${String(calls).padStart(3)} ${c.set}/${c.itemId}/${c.kind} rep${rep}  ` +
+        `${String(calls).padStart(3)} ${c.set}/${c.itemId}/${c.kind} rep${rep} [${domain}]  ` +
           `${verdict}${fromCache ? ' (캐시)' : ''}  $${costUsd ?? '-'}`
       )
 
@@ -421,13 +460,33 @@ async function main() {
         const itemMissed = list.filter((r) => r.verdict !== 'no_beat').length
         console.log(`    no_beat '${itemId}': ${itemMissed}/${list.length}회 no_beat 아님(미검출)`)
       }
+      // standoff(세션 42/43) — 기대 verdict 가 없다. "미검출" 수 대신 5회의
+      // verdict 분포를 그대로 낸다 — no_beat 가 몇 회인지가 박 님의 판단 재료다.
+      const standoffCasesById = new Map(cases.filter((c) => c.set === 'B' && c.kind === 'standoff').map((c) => [c.itemId, c]))
+      for (const [k, list] of byItem) {
+        if (!k.endsWith(':standoff')) continue
+        const itemId = k.slice(0, -':standoff'.length)
+        const counts = new Map<string, number>()
+        for (const r of list) counts.set(r.verdict, (counts.get(r.verdict) ?? 0) + 1)
+        const dist = [...counts.entries()].map(([v, n]) => `${v} ${n}`).join(' · ')
+        const note = standoffCasesById.get(itemId)?.note
+        console.log(`    standoff '${itemId}': ${list.length}회 분포 — ${dist}${note ? ` — ★ ${note}` : ''}`)
+      }
     }
     return { set, good: good.length, falsePos, nak: nak.length, missed, noBeat: noBeat.length, noBeatMissed, standoff: standoff.length, mismatch, flips, itemCount: byItem.size, cost }
   }
   const summaryA = summarize('A')
   const summaryB = summarize('B')
 
-  writeFileSync(out, JSON.stringify({ model, reps, promptVersion: PROMPT_VERSION_SUPPORT, results, summaryA, summaryB }, null, 2))
+  // promptVersion 은 이제 domain 마다 다르다(세션 43) — 결과 파일엔 실행에
+  // 실제로 쓰인 조합을 둘 다 적는다. results 의 각 행은 domain 을 따로 갖는다.
+  writeFileSync(out, JSON.stringify({
+    model, reps, only,
+    promptVersionBattle: PROMPT_VERSION_SUPPORT,
+    promptVersionGeneral: PROMPT_VERSION_SUPPORT_GENERAL,
+    domainArg,
+    results, summaryA, summaryB,
+  }, null, 2))
   console.log(`\n결과를 ${out} 에 적었다.`)
   console.log('판정선(STATUS): set A·B 오탐 0 이고 set A 미검출이 낮으면 → 다음 세션 16(ca-) 확장.')
   console.log('두 집합이 갈리면 문체를 재는 것 — 프롬프트 재검토(3-4).')

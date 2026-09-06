@@ -54,11 +54,16 @@ interface GradeResponse {
   // 뜨는 첫 렌더에 아직 반영이 안 돼 해설이 안 나왔다(세션 28 버그). 한
   // 번의 setResult 로 원자화한다. 오답 뒤 다른 선택지를 눌러도 안 흔들린다.
   submittedChoiceIndex?: number
-  // 결정타 빌드업 섀도(support-v3, 문장 12 action_turn(bt-) 5문항). **섀도
-  // 모드다** — status·통과 판정과 무관하다. pending 이면(킬스위치·gate 닫힘·
-  // 호출 실패 포함) 카드를 안 띄운다. undefined 면 이 문항에 섀도가 없다.
+  // 결정타 빌드업 섀도(support-v3, 문장 12 action_turn(bt-) 5문항). **기본은
+  // 섀도 모드다** — status·통과 판정과 무관하다. pending 이면(킬스위치·gate
+  // 닫힘·호출 실패 포함) 카드를 안 띄운다. undefined 면 이 문항에 섀도가 없다.
   // no_beat(세션 41 후속 2) 는 승부 수 자체가 없다는 뜻 — quote 는 안 쓴다.
   shadow?: { verdict: 'buildup' | 'none' | 'support_not_before' | 'no_beat' | 'pending'; quote?: string }
+  // no_beat 부분 gating(세션 43, system_flags.shadow_gate_no_beat 가 true 일
+  // 때만) — true 면 status 는 이미 'fail' 로 왔다. 통과 카드 대신 제약 안내
+  // 문구를 보여준다. 이건 "글이 나쁘다"는 품질 판정이 아니라 "이 훈련은
+  // 결정타 한 문장을 요구한다"는 형식 제약 안내다 — 문구를 그렇게 가른다.
+  gatedNoBeat?: boolean
 }
 
 interface LoopProps {
@@ -631,10 +636,21 @@ export default function TrainClient({
               규칙 검사는 통과했습니다. 내용 심사는 아직 준비 중입니다.
             </p>
           )}
-          {/* choice: 선택지별 해설(reference_answers 재활용). 오답이면 고른 것
+          {/* no_beat 부분 gating(세션 43) — 규칙 체크리스트를 안 보여준다.
+              규칙은 전부 통과했으니(그래서 여기까지 왔다) 체크 목록을 보여주면
+              "아직 미달"이라는 위 라벨과 모순돼 보인다. 이건 규칙 위반이
+              아니라 형식 제약 안내다 — 품질 판정이 아니라는 걸 문구로 가른다. */}
+          {result.gatedNoBeat ? (
+            <div
+              className="space-y-1 p-3 text-sm"
+              style={{ background: 'var(--panel)', border: '1px solid var(--rule)', borderRadius: 6 }}
+            >
+              <p>이 훈련은 결정타 한 문장을 요구해 — 누가 어떤 수를 두는지 한 줄이 있어야 해.</p>
+            </div>
+          ) : /* choice: 선택지별 해설(reference_answers 재활용). 오답이면 고른 것
               한 줄만, 정답이면 4개 전부 + 정답 표식. 가/나(SelfCheck) 경로와
-              분리한다 — 캡션·구조가 다르다. */}
-          {problem.type === 'choice' ? (
+              분리한다 — 캡션·구조가 다르다. */
+          problem.type === 'choice' ? (
             <>
               <div>
                 {displayChecks?.map((c) => (
@@ -679,8 +695,9 @@ export default function TrainClient({
               쓰지 않는다 — 통과 판정으로 읽히면 섀도 모드가 아니게 된다.
               no_beat(세션 41 후속 2)는 승부 수 자체가 안 보인다는 뜻 — 근거
               줄 얘기(buildup·none·support_not_before)와 다른 결이라 문구를
-              따로 둔다. */}
-          {result.shadow && result.shadow.verdict !== 'pending' && (
+              따로 둔다. gatedNoBeat 일 땐 위에서 이미 같은 내용을 제약 안내로
+              보여줬으니 이 카드는 중복이라 안 띄운다(세션 43). */}
+          {result.shadow && result.shadow.verdict !== 'pending' && !result.gatedNoBeat && (
             <div
               className="space-y-1 p-3 text-sm"
               style={{ background: 'var(--panel)', border: '1px solid var(--rule)', borderRadius: 6 }}

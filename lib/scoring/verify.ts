@@ -95,7 +95,7 @@ import {
   checkRunBudget,
   type GateDecision,
 } from '../ai/gate'
-import { buildPoint2Prompt, buildPointPrompt, buildPrompt, buildSupportPrompt, elementOf, fourLines, looksLikeC4, parseObservation, parsePointObservation, parseSupportObservation, passesAt, verifySupportJudgment, PROMPT_FRAME, PROMPT_FRAME_CHARS, PROMPT_FRAME_POINT, PROMPT_FRAME_POINT2, PROMPT_FRAME_POINT2_CHARS, PROMPT_FRAME_POINT_CHARS, PROMPT_FRAME_SUPPORT, PROMPT_VERSION_SUPPORT } from '../ai/prompt'
+import { buildPoint2Prompt, buildPointPrompt, buildPrompt, buildSupportPrompt, elementOf, fourLines, looksLikeC4, parseObservation, parsePointObservation, parseSupportObservation, passesAt, verifySupportJudgment, PROMPT_FRAME, PROMPT_FRAME_CHARS, PROMPT_FRAME_POINT, PROMPT_FRAME_POINT2, PROMPT_FRAME_POINT2_CHARS, PROMPT_FRAME_POINT_CHARS, PROMPT_FRAME_SUPPORT, PROMPT_VERSION_SUPPORT, PROMPT_FRAME_SUPPORT_GENERAL, PROMPT_VERSION_SUPPORT_GENERAL } from '../ai/prompt'
 import { costUsd } from '../ai/pricing'
 import { observeWith, judgeSupportWith } from '../ai/observe'
 import { backoffMs, isRetryable, statusOf } from '../ai/retry'
@@ -7989,6 +7989,46 @@ console.log('\n[결정타 빌드업 섀도 support-v3]')
   t("v3: 출구 사유(상황 설명만 있고 아무도 수를 안 둠)", PROMPT_FRAME_SUPPORT.includes('아무도 수를 두지 않은 글이 그렇다'))
   t('v3: 출력 형식이 beat_line 도 null 을 받는다', PROMPT_FRAME_SUPPORT.includes('<1~N 또는 null>, "support_line"'))
 
+  // ── 프롬프트 v4 — 도메인 일반화(세션 43). bt- 엔 안 붙는다(코드가 강제) ──
+  t("PROMPT_VERSION_SUPPORT_GENERAL = 'support-general-v4'", PROMPT_VERSION_SUPPORT_GENERAL === 'support-general-v4')
+  t('병: general 버전 문자열이 battle 버전과 다르다(캐시 키가 안 섞인다)',
+    (PROMPT_VERSION_SUPPORT_GENERAL as string) !== (PROMPT_VERSION_SUPPORT as string))
+  t('v4: "장면"·"핵심 문장"으로 일반화됐다',
+    PROMPT_FRAME_SUPPORT_GENERAL.includes('장면이 그것을 향해 가는 핵심 문장'))
+  t('병: v4 문안에 전투 낱말(전투·승부·결정타)이 안 남았다',
+    !PROMPT_FRAME_SUPPORT_GENERAL.includes('전투') &&
+    !PROMPT_FRAME_SUPPORT_GENERAL.includes('승부') &&
+    !PROMPT_FRAME_SUPPORT_GENERAL.includes('결정타'))
+  t('v4: 근거의 네 갈래는 battle 과 글자까지 같다(상대의 버릇·약점·패턴 / 자리의 상태 / 인물의 내력 / 상대가 세운 논리)',
+    PROMPT_FRAME_SUPPORT_GENERAL.includes('상대의 버릇·약점·패턴, 자리의 상태, 인물의 내력, 상대가 세운 논리 중 하나를') &&
+    PROMPT_FRAME_SUPPORT.includes('상대의 버릇·약점·패턴, 자리의 상태, 인물의 내력, 상대가 세운 논리 중 하나를'))
+  t('v4: 대체 시험 문장도 battle 과 글자까지 같다',
+    PROMPT_FRAME_SUPPORT_GENERAL.includes('그럴 틈이 났다') && PROMPT_FRAME_SUPPORT.includes('그럴 틈이 났다'))
+  t("v4: '결정타 없음'과 대응하는 출구가 있다(핵심 문장이 없으면 null)",
+    PROMPT_FRAME_SUPPORT_GENERAL.includes('핵심 문장이 없으면 beat_line 을 null 로'))
+  {
+    const battleBuilt = buildSupportPrompt('가. 나. 다.')
+    const generalBuilt = buildSupportPrompt('가. 나. 다.', 'general')
+    const explicitBattleBuilt = buildSupportPrompt('가. 나. 다.', 'battle')
+    t('buildSupportPrompt: domain 기본값은 battle(기존 호출부 안 건드림)', battleBuilt === explicitBattleBuilt)
+    t('buildSupportPrompt: general 은 battle 과 다른 문안을 낸다', generalBuilt !== battleBuilt)
+    t("buildSupportPrompt: general 문안에 '결정타'가 없다", !generalBuilt.includes('결정타'))
+  }
+  tAsync('전 구간(v4): general 도메인으로 관측이 선다', async () => {
+    const r = await judgeSupportWith(
+      async (prompt) => {
+        // ★ 실제로 general 문안이 나갔는지 프롬프트 내용으로 확인한다 —
+        //   domain 인자를 무시하고 battle 문안을 냈어도 이 관측은 서므로,
+        //   여기서 잡지 않으면 "배선이 무시돼도 통과하는" 거짓 안전이 된다.
+        if (!prompt.includes('핵심 문장') || prompt.includes('결정타')) {
+          throw new Error('general 문안이 아니다 — domain 인자가 안 먹었다')
+        }
+        return { text: '{"beat_line":2,"support_line":1,"quote":"가"}', usage: { inputTokens: 100, cachedTokens: 0, outputTokens: 20 }, model: 'gemini-3.7-flash' }
+      },
+      '가. 나. 다.', 'gemini-3.7-flash', 'general')
+    return r.ok && r.observation !== null
+  })
+
   const threeSentence = '진은 가운데를 비워 적을 삼킨다. 나는 열린 가운데를 버렸다. 고리가 물어뜯었다.'
   const built = buildSupportPrompt(threeSentence)
   t('조립: 치환자 {lines} 가 안 남는다', !built.includes('{lines}'))
@@ -8153,12 +8193,21 @@ console.log('\n[결정타 빌드업 섀도 support-v3]')
       t(`set_b_nak.json '${item.id}': no_beat_answer 가 문항 원문(passage)과 같다`,
         item.gold.no_beat_answer === passageByKey.get(item.id))
     }
-    // standoff 자리(세션 42) — 문안은 박 님 확정 후. 지금은 전부 없어야 한다 —
-    // 있으면 harness 가 자동으로 케이스에 싣게 돼 있으니(loadCases) 이 단언이
-    // "언제 채워졌는지"를 잡아 준다.
-    t('set_b_nak.json: standoff_answer 문안이 아직 없다(자리만) — 있으면 지금 확인해라',
-      setBNak.items.every((item) => !item.gold.standoff_answer),
-      JSON.stringify(setBNak.items.filter((item) => item.gold.standoff_answer).map((item) => item.id)))
+    // standoff 자리(세션 42 자리 · 세션 43 확정 1건) — bt-spear-range 만
+    // 문안이 있고 나머지 4건은 아직 자리만이어야 한다. 늘어나거나(다른 항목에
+    // 생김) 줄면(빠지면) 이 단언이 잡는다.
+    const standoffIds = setBNak.items.filter((item) => item.gold.standoff_answer).map((item) => item.id)
+    t('set_b_nak.json: standoff_answer 는 정확히 bt-spear-range 1건뿐(나머지는 자리만)',
+      standoffIds.length === 1 && standoffIds[0] === 'bt-spear-range',
+      JSON.stringify(standoffIds))
+
+    // note 존재(세션 43 지시 1-4) — 골든셋 항목마다 판정을 사람이 읽을 근거가
+    // 있어야 한다. 빈 note 는 "설명할 게 없다"가 아니라 "아직 안 적었다"로
+    // 잘못 읽힐 여지가 있어 전부 비어 있지 않은지 문다.
+    for (const item of setBNak.items) {
+      t(`set_b_nak.json '${item.id}': note 가 비어 있지 않다`,
+        !!item.gold.note && item.gold.note.trim().length > 0)
+    }
   }
 
   // ── scripts/support-golden.ts: loadCases() 가 set_b_nak.json 을 읽어 set B 의
@@ -8179,6 +8228,16 @@ console.log('\n[결정타 빌드업 섀도 support-v3]')
       harnessSrc.includes('if (!item.gold.standoff_answer) continue'))
   t('support-golden.ts: 집계가 standoff 를 good/nak/no_beat 와 따로 센다',
     harnessSrc.includes('const standoff = rows.filter'))
+  t('support-golden.ts: standoff 는 기대값 없이 5회 verdict 분포로 낸다(세션 43)',
+    harnessSrc.includes("standoff '${itemId}': ${list.length}회 분포"))
+
+  // ── 프롬프트 v4 도메인 배선(세션 43) — set B(bt-)는 --domain 값과 무관하게
+  //    항상 battle 이어야 한다. domainFor 가 c.set 으로 강제하는지 텍스트로 문다.
+  t("support-golden.ts: domainFor 가 set B 를 항상 'battle' 로 강제한다",
+    /domainFor = \(c: Case\): SupportDomain => \(c\.set === 'B' \? 'battle'/.test(harnessSrc))
+  t('support-golden.ts: --domain·--only 공백 꼴을 막는다(ai-probe.ts 의 --prompt 함정과 같은 자리)',
+    harnessSrc.includes("process.argv.includes('--domain')") &&
+      harnessSrc.includes("process.argv.includes('--only')"))
 
   // ── seed_schema.sql: ai_shadow_cache 테이블·grant ──
   const schemaSrc = readFileSync(path.join(__dirname, '..', '..', 'seed_schema.sql'), 'utf8')
@@ -8200,29 +8259,66 @@ console.log('\n[결정타 빌드업 섀도 support-v3]')
     t(`update-action-turn-v2.sql: ${key} 대상`, updSrc.includes(`'${key}'`))
   }
 
-  // ── route.ts 텍스트 가드: 섀도가 통과 판정·submissions.insert 와 무관 ──
+  // ── route.ts 텍스트 가드: no_beat 부분 gating 배선(세션 43, 기본 off) ──
+  //
+  // 세션 42 까지의 "섀도는 절대 안 막는다" 순서(섀도가 submissions.insert
+  // **뒤**)가 이번에 뒤집혔다 — gating 이 is_passed 에 반영되려면 저장 **전**에
+  // 판정이 서야 한다. 그래서 이 절의 검사는 옛 방향이 아니라 **새 방향**을
+  // 문다: gating 조건이 정확히 'no_beat' 하나인지, 순서가 실제로 뒤집혔는지,
+  // 기본이 off 인지.
   const routeSrc2 = readFileSync(path.join(__dirname, '..', '..', 'app', 'api', 'grade', 'route.ts'), 'utf8')
-  t("route.ts: is_passed(passed)는 result.status 로만 계산한다",
-    /passed: result\.status === 'pass'/.test(routeSrc2))
-  // computeShadow( 는 함수 선언(파일 앞)과 호출부(POST 안, step 8.5) 둘 다에
-  // 나온다 — indexOf 첫 매치는 선언이다. **호출부**를 따로 찾는다.
+  t('route.ts: passed = result.status===\'pass\' && !gatedNoBeat (result.status 자체는 안 바꾼다)',
+    /const passed = result\.status === 'pass' && !gatedNoBeat/.test(routeSrc2))
+  t("★ 가드: gatedNoBeat 를 세우는 조건이 'flags.shadowGateNoBeat && shadow.verdict === \\'no_beat\\'' 딱 하나다",
+    /if \(flags\.shadowGateNoBeat && shadow\.verdict === 'no_beat'\)/.test(routeSrc2))
+  t('병: gatedNoBeat = true 대입이 파일에서 정확히 1곳뿐이다(다른 조건으로 몰래 세우는 자리가 없다)',
+    (routeSrc2.match(/gatedNoBeat = true/g) ?? []).length === 1)
+  // computeShadow( 는 함수 선언(파일 앞)과 호출부(POST 안) 둘 다에 나온다 —
+  // indexOf 첫 매치는 선언이다. **호출부**를 따로 찾는다.
   const submitInsertIdx = routeSrc2.indexOf("supabase.from('submissions').insert")
   const shadowCallIdx = routeSrc2.indexOf('await computeShadow(')
-  t('★ route.ts: 섀도 호출(await computeShadow)이 submissions.insert 보다 뒤에 나온다 — 섀도가 제출 저장을 못 막는다',
-    submitInsertIdx !== -1 && shadowCallIdx !== -1 && shadowCallIdx > submitInsertIdx,
-    `submit=${submitInsertIdx} shadowCall=${shadowCallIdx}`)
+  t('★ route.ts: 섀도 호출(await computeShadow)이 submissions.insert 보다 **앞**에 나온다(세션 43 — gating 이 저장 전에 반영돼야 한다)',
+    submitInsertIdx !== -1 && shadowCallIdx !== -1 && shadowCallIdx < submitInsertIdx,
+    `shadowCall=${shadowCallIdx} submit=${submitInsertIdx}`)
   t("route.ts: ai_shadow==='support' 이고 규칙 pass 일 때만 섀도를 잰다",
     /result\.status === 'pass' && cfg\.ai_shadow === 'support'/.test(routeSrc2))
+  t('route.ts: submissions.insert 가 passed(gating 반영값)를 쓴다 — result.status 를 직접 안 쓴다',
+    /\n\s*passed,\n\s*\}\)/.test(routeSrc2))
+  t('route.ts: auto_result 에 shadow verdict 를 적는다(세션 43 — 오판 추적용)',
+    routeSrc2.includes('...(shadow ? { shadow: shadow.verdict } : {})'))
+  t("route.ts: gating 으로 막힌 제출은 auto_result 에 no_beat_gate: true 로 표시한다",
+    routeSrc2.includes('...(gatedNoBeat ? { no_beat_gate: true } : {})'))
+  t('route.ts: 응답 status 는 gatedNoBeat 면 fail, 아니면 result.status',
+    /status: gatedNoBeat \? 'fail' : result\.status/.test(routeSrc2))
   t('route.ts: 응답에 shadow 를 싣는다(무관해도 undefined 로 실린다)',
-    /shadow,\s*\n\s*\}\)/.test(routeSrc2) || routeSrc2.includes('reference,\n    shadow,'))
+    /shadow,\s*\n\s*\.\.\.\(gatedNoBeat/.test(routeSrc2))
 
-  // ── TrainClient.tsx: 카드 문구 3종 + pending 무카드 ──
+  // ── lib/ai/flags.ts: shadowGateNoBeat 기본 off ──
+  const flagsSrc = readFileSync(path.join(__dirname, '..', '..', 'lib', 'ai', 'flags.ts'), 'utf8')
+  t('flags.ts: SystemFlags.shadowGateNoBeat 는 boolean(null 아님) — 항상 정해진 값',
+    /shadowGateNoBeat: boolean\n/.test(flagsSrc))
+  t("flags.ts: 못 읽거나 행이 없으면 shadowGateNoBeat 가 false 로 접힌다(?? false)",
+    /shadowGateNoBeat: asBoolean\(byKey\.get\('shadow_gate_no_beat'\)\) \?\? false/.test(flagsSrc) &&
+      flagsSrc.includes("shadowGateNoBeat: false }") /* 조회 자체가 에러난 분기 */)
+
+  // ── seed/update-shadow-gate-no-beat.sql: 기본 false 로 넣는다(true 로 안 켠다) ──
+  const gateFlagSql = readFileSync(path.join(__dirname, '..', '..', 'seed', 'update-shadow-gate-no-beat.sql'), 'utf8')
+  t("update-shadow-gate-no-beat.sql: 'shadow_gate_no_beat' 를 'false' 로 넣는다",
+    gateFlagSql.includes("select 'shadow_gate_no_beat', 'false'"))
+  t('병: 이 SQL 파일이 값을 true 로 켜지 않는다(주석 속 안내 문장은 예외)',
+    !/\nupdate system_flags set value = 'true'/.test(gateFlagSql.replace(/^--.*$/gm, '')))
+
+  // ── TrainClient.tsx: 카드 문구 3종 + pending 무카드 + gatedNoBeat 제약 안내 ──
   const tcSrc2 = readFileSync(path.join(__dirname, '..', '..', 'components', 'train', 'TrainClient.tsx'), 'utf8')
   t('TrainClient: "먹물이의 참고 의견 (통과와 무관)" 문구', tcSrc2.includes('먹물이의 참고 의견 (통과와 무관)'))
   t("TrainClient: buildup 문구 '결정타 앞에 근거 줄이 있어'", tcSrc2.includes('결정타 앞에 근거 줄이 있어'))
   t("TrainClient: none 문구 '근거 줄이 안 보여'", tcSrc2.includes('근거 줄이 안 보여'))
   t("TrainClient: support_not_before 문구 '결정타보다 앞으로'", tcSrc2.includes('결정타보다 앞으로'))
   t("TrainClient: no_beat 문구 '아직 승부 수가 없어'(세션 41 후속 2)", tcSrc2.includes('아직 승부 수가 없어'))
+  t("TrainClient: gatedNoBeat 제약 안내 문구(세션 43, 품질 판정 아님)",
+    tcSrc2.includes('이 훈련은 결정타 한 문장을 요구해'))
+  t('TrainClient: gatedNoBeat 이면 참고 의견 카드를 중복으로 안 띄운다',
+    /result\.shadow && result\.shadow\.verdict !== 'pending' && !result\.gatedNoBeat/.test(tcSrc2))
   t("병: pending 이면 카드를 안 그린다(verdict !== 'pending' 가드)",
     /result\.shadow && result\.shadow\.verdict !== 'pending'/.test(tcSrc2))
   // ★ 카드가 실제로 그리는 텍스트(JSX 리턴 구간)만 좁혀서 본다 — 파일 전체를

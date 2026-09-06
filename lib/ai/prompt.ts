@@ -427,18 +427,54 @@ export const PROMPT_FRAME_SUPPORT = `아래는 번호가 매겨진 전투 장면
 {"beat_line": <1~N 또는 null>, "support_line": <1~N 또는 null>, "quote": "<support_line 문장을 그대로 인용, null 이면 빈 문자열>"}`
 
 /**
+ * 프롬프트 버전 — 도메인 일반화(v4, 세션 43). battle 문안(PROMPT_FRAME_SUPPORT,
+ * support-v3)은 안 건드린다 — bt- 5문항은 계속 이 버전·이 캐시 키를 쓴다.
+ * general 은 구성 16(ca-) 확장을 전제로 만든 **별도 문안**이다. 아직 아무
+ * 문항에도 안 붙는다 — 하네스로 set A(ch10, 비전투 포함) 를 다시 재는 데만
+ * 쓴다(--domain general --only A).
+ */
+export const PROMPT_VERSION_SUPPORT_GENERAL = 'support-general-v4'
+
+/**
+ * 일반화 문안. battle 문안에서 "전투"·"승부"·"결정타"를 "장면"·"핵심
+ * 문장"으로 바꿨다 — 근거의 네 갈래(상대의 버릇·약점·패턴 / 자리의 상태 /
+ * 인물의 내력 / 상대가 세운 논리)와 대체 시험은 **글자까지 그대로**다.
+ * 세션 42 골든셋 실행에서 set A 오탐 19건 중 14건이 비전투 항목(04·06·08 —
+ * 색종이·감정은폐·내공은폐)이었다 — "결정타"·"승부" 같은 전투 낱말이
+ * 비전투 장면에서 모델을 헛돌게 한 것으로 보고, 이 문안으로 재는다.
+ */
+export const PROMPT_FRAME_SUPPORT_GENERAL = `아래는 번호가 매겨진 장면의 문장들이다. 먼저 장면이 그것을 향해 가는 핵심 문장을 하나 짚어라. 그다음, 그 핵심 문장이 성립하려면 반드시 있어야 하는 앞 문장이 있는지 답하라.
+핵심 문장이 없으면 beat_line 을 null 로 하고 support_line·quote 도 null·빈 문자열로 답하라. 상황 설명만 있고 아무 일도 일어나지 않은 글이 그렇다.
+'있어야 하는 문장'이란: 그 문장이 없으면 핵심 문장이 왜 통하는지 알 수 없게 되는 문장. 상대의 버릇·약점·패턴, 자리의 상태, 인물의 내력, 상대가 세운 논리 중 하나를 '알게 해 주는' 문장이다.
+'있어야 하는 문장'이 아닌 것: 앞 문장이 뒤 문장을 시간이나 자리로 '가능하게'만 한 것. "피했으니 틈이 났다", "굴렀으니 닿았다" 같은 것. 이런 것은 어느 장면에나 있고, 핵심 문장이 '왜 그 핵심 문장이어야 하는지'를 대지 못한다.
+시험: 그 앞 문장을 "그럴 틈이 났다"처럼 아무것도 알려주지 않는 문장으로 바꿔 본다. 핵심 문장이 그래도 같은 핵심 문장으로 읽히면 그 문장은 근거가 아니다.
+
+[답안]
+{lines}
+
+답은 JSON 으로만 낸다. 점수·평가·고쳐쓰기는 쓰지 않는다:
+{"beat_line": <1~N 또는 null>, "support_line": <1~N 또는 null>, "quote": "<support_line 문장을 그대로 인용, null 이면 빈 문자열>"}`
+
+/**
  * 답안을 문장 번호로 매긴다. **local.ts 의 splitSentences 를 그대로 쓴다**
  * (countSentences 와 같은 분할) — verifySupportJudgment 가 같은 배열을 다시
  * 만들어 대조하므로 여기서 분할이 갈리면 quote·번호 검증이 어긋난다.
  *
+ * domain 은 기본 'battle' — 기존 호출부(route.ts, 골든셋 set B)는 인자를
+ * 안 줘도 v3 문안 그대로 나간다. 'general' 은 골든셋 하네스가 set A 를
+ * 재는 용도로만 부른다(세션 43) — bt- 문항엔 안 붙인다.
+ *
  * 알려진 한계: 대사 안의 !·? 로 문장이 갈릴 수 있다(주석으로만 남긴다 —
  * splitSentences 쪽 문서 참고).
  */
-export function buildSupportPrompt(answer: string): string {
+export type SupportDomain = 'battle' | 'general'
+
+export function buildSupportPrompt(answer: string, domain: SupportDomain = 'battle'): string {
+  const frame = domain === 'general' ? PROMPT_FRAME_SUPPORT_GENERAL : PROMPT_FRAME_SUPPORT
   const numbered = splitSentences(answer)
     .map((s, i) => `${i + 1} ${s}`)
     .join('\n')
-  return PROMPT_FRAME_SUPPORT.replace('{lines}', numbered)
+  return frame.replace('{lines}', numbered)
 }
 
 export const SupportObservationSchema = z.object({

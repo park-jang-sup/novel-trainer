@@ -6,7 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { analyze } from '@/lib/scoring/remote'
 import { combine, countChars } from '@/lib/scoring'
 import type { Answer, ScoringConfig, Submission } from '@/lib/scoring/types'
-import { readFlags, sumSpendTodayUsd } from '@/lib/ai/flags'
+import { readFlags, sumSpendTodayUsd, type SystemFlags } from '@/lib/ai/flags'
 import { checkGate, DAILY_CALL_LIMIT } from '@/lib/ai/gate'
 import { consumeAiQuota } from '@/lib/quota'
 import { callGemini, DEFAULT_MODEL } from '@/lib/ai/gemini'
@@ -18,9 +18,12 @@ import { PROMPT_VERSION_SUPPORT, verifySupportJudgment, type SupportObservation,
 //   안 쓰는 섀도, 이건 통과 판정 자체를 AI 에 맡기는 자리(원칙 4 재개 전까지 보류).
 
 /**
- * 결정타 빌드업 섀도(support-v3) 판정. **섀도 모드다** — 결과가 submissions.
- * is_passed·진도에 안 실린다(세션 32 섀도 모드 원칙). 실패해도 응답은 정상
- * 반환한다: gate 가 닫혔거나 호출이 깨지면 조용히 pending 이다.
+ * 결정타 빌드업 섀도(support-v3) 판정. **기본은 섀도 모드다** — 결과가
+ * submissions.is_passed·진도에 안 실린다(세션 32 섀도 모드 원칙). 세션 43 이
+ * 그 원칙에 **정확히 한 갈래**(no_beat, system_flags.shadow_gate_no_beat 가
+ * true 일 때만) 예외를 열었다 — 호출부(POST)가 그 gating 판단을 한다, 이
+ * 함수는 판정만 낸다. 실패해도 응답은 정상 반환한다: gate 가 닫혔거나
+ * 호출이 깨지면 조용히 pending 이다.
  *
  * 순서: 캐시 조회(hash) → 없으면 gate → judgeSupportWith → verifySupportJudgment
  * → beat_mismatch·quote_mismatch 면 재시도 1회 → 그래도 안 서면 pending.
@@ -40,7 +43,8 @@ async function computeShadow(
   admin: ReturnType<typeof createAdminClient>,
   userId: string,
   problemId: string,
-  normalized: string
+  normalized: string,
+  flags: SystemFlags
 ): Promise<ShadowResult> {
   const model = DEFAULT_MODEL
   const hash = createHash('sha256')
@@ -57,7 +61,6 @@ async function computeShadow(
     return { verdict: cached.verdict as SupportVerdict, beat_line: j.beat_line, support_line: j.support_line, quote: j.quote }
   }
 
-  const flags = await readFlags()
   let quotaRemaining: number | null = null
   try {
     quotaRemaining = await consumeAiQuota(userId, DAILY_CALL_LIMIT)
@@ -204,15 +207,53 @@ export async function POST(request: NextRequest) {
     content = joined || null
   }
 
-  // 7. submissions 저장 — 실패해도 응답은 정상 반환
+  // 7. 결정타 빌드업 섀도(support-v3) — **submissions.insert 보다 앞에 온다**
+  //    (세션 43). no_beat 부분 gating 이 is_passed 에 반영되려면 저장 전에
+  //    판정이 서 있어야 한다. 규칙 판정이 pass 이고 이 문항이 ai_shadow:
+  //    'support' 를 켰을 때만 잰다.
+  //
+  //    gating 조건은 **verdict === 'no_beat' 딱 하나**다 — pending(킬스위치·
+  //    상한·키 없음·호출 실패 전부 포함)·beat_mismatch·quote_mismatch·none·
+  //    support_not_before 는 지금처럼 안 막는다. flags.shadowGateNoBeat 가
+  //    false(기본값, system_flags 행이 없어도 false)면 gating 자체가 안 선다
+  //    — "AI 가 없으면 규칙 통과를 그대로 둔다"는 원칙의 반대쪽도 같다:
+  //    이 스위치가 없어도 학습자 진도는 안 막힌다.
+  let shadow: { verdict: SupportVerdict | 'pending'; beat_line?: number | null; support_line?: number | null; quote?: string } | undefined
+  let gatedNoBeat = false
+  const cfg = (problem.scoring_config ?? {}) as ScoringConfig
+  if (result.status === 'pass' && cfg.ai_shadow === 'support' && text && text.trim()) {
+    const flags = await readFlags()
+    try {
+      shadow = await computeShadow(createAdminClient(), user.id, problemId, text.trim(), flags)
+    } catch (err) {
+      console.error('결정타 빌드업 섀도 실패(조용히 pending 취급)', err)
+      shadow = { verdict: 'pending' }
+    }
+    if (flags.shadowGateNoBeat && shadow.verdict === 'no_beat') {
+      gatedNoBeat = true
+    }
+  }
+
+  // 규칙 판정이 서고 gating 이 반영된 최종 통과 여부. combine() 의 result.status
+  // 는 안 바꾼다(순수 규칙 판정 기록으로 남긴다) — passed 만 gating 을 반영한다.
+  const passed = result.status === 'pass' && !gatedNoBeat
+
+  // 8. submissions 저장 — 실패해도 응답은 정상 반환. auto_result 에 shadow
+  //    verdict 를 적어 둔다(세션 43 — 나중에 오판 추적용) · gating 으로 막힌
+  //    제출은 no_beat_gate: true 로 표시한다.
   try {
     const { error } = await supabase.from('submissions').insert({
       user_id: user.id,
       problem_id: problemId,
       content,
       char_count: content ? countChars(content) : null,
-      auto_result: { checks: result.checks, morphAvailable: morph !== null },
-      passed: result.status === 'pass',
+      auto_result: {
+        checks: result.checks,
+        morphAvailable: morph !== null,
+        ...(shadow ? { shadow: shadow.verdict } : {}),
+        ...(gatedNoBeat ? { no_beat_gate: true } : {}),
+      },
+      passed,
     })
     if (error) {
       console.error(
@@ -228,7 +269,7 @@ export async function POST(request: NextRequest) {
     console.error('submissions insert failed', err)
   }
 
-  // 8. 모범답안을 읽어 함께 내려보낸다(stage2 자기점검이 화면에 보여줄 것).
+  // 9. 모범답안을 읽어 함께 내려보낸다(stage2 자기점검이 화면에 보여줄 것).
   //    10단계 fill 만이 아니라 비-fill 문항(1단계 reduce_adverb 등)도 모범답안이
   //    있을 수 있어 유형을 안 가리고 읽는다 — reference_answers 에 행이 없으면
   //    빈 배열이다. RLS 정책이 방금 넣은 submissions 행을 보고 통과시킨다 —
@@ -245,27 +286,15 @@ export async function POST(request: NextRequest) {
   }
   const reference: { ord: number; blank_key: string; content: string }[] = refData ?? []
 
-  // 8.5. 결정타 빌드업 섀도(support-v2) — **섀도 모드다.** 위 result.status ·
-  //      submissions.insert(passed) 는 이 블록과 무관하게 이미 끝났다. 규칙
-  //      판정이 pass 이고 이 문항이 ai_shadow: 'support' 를 켰을 때만 잰다.
-  let shadow: { verdict: SupportVerdict | 'pending'; beat_line?: number | null; support_line?: number | null; quote?: string } | undefined
-  const cfg = (problem.scoring_config ?? {}) as ScoringConfig
-  if (result.status === 'pass' && cfg.ai_shadow === 'support' && text && text.trim()) {
-    try {
-      shadow = await computeShadow(createAdminClient(), user.id, problemId, text.trim())
-    } catch (err) {
-      console.error('결정타 빌드업 섀도 실패(조용히 pending 취급)', err)
-      shadow = { verdict: 'pending' }
-    }
-  }
-
-  // 9. 응답 — checks와 status만. 정답·scoring_config는 실리지 않는다.
+  // 10. 응답. status 는 gating 이 걸리면 'fail' 로 낸다 — 화면이 통과 카드
+  //     대신 gatedNoBeat 문구를 보여줄 신호다. 정답·scoring_config는 안 싣는다.
   return Response.json({
-    status: result.status,
+    status: gatedNoBeat ? 'fail' : result.status,
     checks: result.checks,
     needsAi: result.needsAi,
     morphAvailable: morph !== null,
     reference,
     shadow,
+    ...(gatedNoBeat ? { gatedNoBeat: true } : {}),
   })
 }

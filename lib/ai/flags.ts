@@ -41,22 +41,34 @@ function asNumber(v: unknown): number | null {
 export interface SystemFlags {
   killSwitch: boolean | null
   dailySpendCapUsd: number | null
+  /**
+   * no_beat 부분 gating 스위치(세션 43). **kill_switch 와 반대 방향이다** —
+   * 못 읽거나 행이 없거나 값이 이상하면 **false**(gating 안 함)로 낸다.
+   * kill_switch 의 "못 읽으면 막는다"(AI 호출을 막아 돈이 안 새게)와, 여기의
+   * "못 읽으면 안 막는다"(학습자 진도를 안 막아 통과 위장 반대 방향의 실수를
+   * 안 만든다)는 서로 다른 사고다 — AI 가 없어도 규칙 통과는 그대로 둔다는
+   * 원칙(정한 것)의 반대쪽: **이 스위치가 없어도 학습자가 못 넘어가는 일은
+   * 없어야 한다.** null 이 아니라 boolean 으로 고정한 이유도 이것이다.
+   */
+  shadowGateNoBeat: boolean
 }
 
 /**
- * 두 깃발을 읽는다. **못 읽은 것은 null 로 낸다 — 기본값으로 채우지 않는다.**
- * 여기서 `kill_switch ?? false` 를 쓰면 조회가 죽은 날 마개가 통째로 열린다.
+ * 세 깃발을 읽는다. kill_switch·daily_spend_cap_usd 는 **못 읽은 것을 null 로
+ * 낸다 — 기본값으로 채우지 않는다.** 여기서 `kill_switch ?? false` 를 쓰면
+ * 조회가 죽은 날 마개가 통째로 열린다. shadow_gate_no_beat 는 반대 방향이라
+ * (위 주석) 항상 boolean 이고, 없거나 못 읽으면 false 로 접는다.
  */
 export async function readFlags(): Promise<SystemFlags> {
   const admin = createAdminClient()
   const { data, error } = await admin
     .from('system_flags')
     .select('key, value')
-    .in('key', ['kill_switch', 'daily_spend_cap_usd'])
+    .in('key', ['kill_switch', 'daily_spend_cap_usd', 'shadow_gate_no_beat'])
 
   if (error) {
     logPgError('system_flags select', error)
-    return { killSwitch: null, dailySpendCapUsd: null }
+    return { killSwitch: null, dailySpendCapUsd: null, shadowGateNoBeat: false }
   }
 
   const byKey = new Map((data ?? []).map((r) => [r.key as string, r.value as unknown]))
@@ -65,6 +77,7 @@ export async function readFlags(): Promise<SystemFlags> {
     dailySpendCapUsd: byKey.has('daily_spend_cap_usd')
       ? asNumber(byKey.get('daily_spend_cap_usd'))
       : null,
+    shadowGateNoBeat: asBoolean(byKey.get('shadow_gate_no_beat')) ?? false,
   }
 }
 

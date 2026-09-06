@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 42 · 커밋 `f8735f7` 위
+마지막 갱신: 세션 43 · 커밋 `5c5a578` 위
 
 ★ 활성 144 (전체 157 − 비활성 13). 언어 관문 전수 불변식(verify.ts)이 이 수를
   출력·단언한다 — 문항 증감 때마다 이 줄과 불변식을 같이 갱신한다.
@@ -43,7 +43,13 @@
   새 bt- 5건 활성(세션 37 재개), 옛 at- 8건은 is_active=false 유지 — 화면의 '준비 중'은 풀렸다
 ★ bt- 5건에 결정타 빌드업 섀도(support-v3, 세션 40 신설·세션 41 후속 2 에서
   '결정타 없음' 출구 추가) — 규칙 통과 뒤 "먹물이의 참고 의견" 카드로 뜨지만
-  통과·진도엔 안 쓴다(섀도 모드). 언어 관문(language_gate)은 자유서술형
+  통과·진도엔 안 쓴다(섀도 모드). ★ 예외 하나(세션 43, 기본 off): system_flags
+  'shadow_gate_no_beat' 를 true 로 켜면 bt- 5문항에서 verdict 가 정확히
+  'no_beat' 일 때만 is_passed=false 로 떨어뜨리고 "이 훈련은 결정타 한 문장을
+  요구해…" 제약 안내를 보인다(품질 판정이 아니라 형식 요구). pending·
+  beat_mismatch·quote_mismatch·none·support_not_before 는 안 막는다. 스위치가
+  없거나 못 읽으면 항상 false(안 막음) — kill_switch(못 읽으면 막음)와 반대
+  방향. 켜는 것은 박 님 몫(아래 "다음" 1번). 언어 관문(language_gate)은 자유서술형
   (remove·convert·continue) 전체 활성 문항에 켜졌다. forbidPassageCopy 는
   세 갈래 OR 다 — 통째 복사 · 근사 복사(원문 문장 60% 이상 그대로, 세션 41
   후속 2) · 글자 3-gram 겹침(임계 0.52, MAX_ECHO 절차로 실측, 세션 42) —
@@ -169,39 +175,37 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 ## 다음 — 순서대로. 하나가 verify 에서 물리기 전에 다음을 안 한다
 
 ```
-1  박 님 — DB → 눈검사 → 골든셋 실행   seed/update-action-turn-v3.sql(모범답안 2건) →
-                        seed/update-first-hook-v3.sql(fh-burnt-manor passageCopyKeep) →
-                        seed/update-action-turn-v4.sql(bt-fireball-shield passageCopyKeep) →
-                        seed_data.sql(멱등) → seed_check.sql — 세션 42 는 config 를 안
-                        건드려 새로 돌릴 SQL이 없다(검사 로직만 바뀌었다). bt-orc-axe·
-                        bt-low-guard 모범답안(가)이 새 문안인지 브라우저에서 눈검사
-                        (세션 41 수정분). 이어서 bt- 5문항 중 하나를 통과시켜 "먹물이의
-                        참고 의견" 카드가 뜨는지·문구가 네 갈래(빌드업 있음·없음·순서
-                        어긋남·결정타 없음)로 맞는지·pending 이면 카드가 안 뜨는지 눈검사.
-                        원문 겹침(통째·문장 60%·3-gram 세 갈래 다)은 화면엔 config 값이
-                        안 보인다 — "앞 N 줄만 정확히 남기고 나머지를 그대로 낸" 답안이나
-                        "문장 순서를 섞은" 답안으로 직접 시험해야 확인된다.
-                        그다음 npm run ai:support-golden 실행(set A 9쌍 + set B good 10 ·
-                        nak 5 · no_beat 5 — 세션 41 후속·후속 2 로 전부 하네스에 물렸다.
-                        standoff 는 아직 자리만 있고 데이터가 없어 안 돈다). 결과(오탐·
-                        미검출·뒤집힘·비용, no_beat 미검출 포함)를 채팅에 — 그 결과가
-                        아래 3번(no_beat 부분 gating) 결정의 재료다.
+1  박 님 — 하네스 재실행 → gating on 결정 → v4 확장 → 보스   순서(세션 43 지시 그대로):
+                        ① npm run ai:support-golden 재실행 — set B 는 이번 세션에 nak
+                        2건 교체(bt-alley-hook·bt-low-guard, 통제 짝 결함 수리)와
+                        bt-spear-range standoff_answer 신설이 배선됐다(코드 추가 작업
+                        없음, loadCases() 가 자동으로 싣는다). standoff 는 기대 verdict가
+                        없다 — 5회 verdict 분포만 출력된다(no_beat 몇 회인지).
+                        ② npm run ai:support-golden -- --domain=general --only=A 로 set A
+                        만 프롬프트 v4(도메인 일반화, support-general-v4)로 재측정 — 04·
+                        06·08(비전투 항목)이 buildup 으로 도는지가 통과 조건, 02(논리형
+                        근거)는 특성으로 볼 것(세션 42 해석 참고, 아래).
+                        ③ 결과를 보고 no_beat 부분 gating 을 켤지 결정. ★ 켜기 조건(박 님
+                        지시): standoff 5회 중 no_beat 가 0 이거나, 있어도 (품질 판정이
+                        아니라) 제약 안내 문구로 막기로 박 님이 정하면 켠다. 켜는 법:
+                        `update system_flags set value = 'true' where key =
+                        'shadow_gate_no_beat';`(seed/update-shadow-gate-no-beat.sql 주석
+                        참고 — 이 SQL 파일 자체는 false 로만 넣는다, 켜는 건 손으로).
+                        ④ v4(general) 결과가 좋으면 16 확장(구성 16 ca-)에 v4 를 적용할지
+                        검토 — 아래 2번과 합쳐서 본다.
+                        ⑤ 보스(아래 5번).
 2  구성 16(ca-) 확장    set A·B 오탐 0 이고 set A 미검출이 낮으면(판정선, 세션 40 정정 3-4)
                         cliffhanger_adv 5문항(ca-)에도 ai_shadow: 'support' 를 켠다. 갈리면
-                        프롬프트 재검토 — 새 문항을 늘리지 않는다.
-3  no_beat 부분 gating 결정   세션 41 후속 2 실사용에서 "규칙은 형식을 놓치고 AI 는
-                        내용을 맞혔다"(no_beat) — 지금은 섀도 모드라 이 판정이 통과를
-                        안 막는다. 골든셋(위 1번) 결과로 no_beat 판정의 신뢰도가 충분히
-                        보이면, no_beat 만 부분적으로 gating 을 켤지 박 님이 결정한다.
-                        ★ 준비만 해 뒀다 — verifySupportJudgment 는 이미 beat_line===null
-                        일 때만 'no_beat' 를 내고 pending·beat_mismatch·quote_mismatch 와
-                        안 겹친다(세션 42 가드, verify.ts 로 문다). 실제 gating 코드는
-                        아직 없다 — 이 결정이 나야 route.ts 를 고친다.
-4  골든셋 set B standoff 문안   대치형 정당 답안(결정타 없이 끝나되 빌드업은 있음) 5건.
-                        data/probe/set_b_nak.json 에 자리(gold.standoff_answer)는 있다 —
-                        박 님이 문안을 확정하면 scripts/support-golden.ts 의 loadCases()
-                        가 자동으로 싣는다(코드 추가 작업 없음).
-5  보스 문항(가칭)      ★ 로드맵 정정(박 님 결정 (a), 세션 39) — 도입 4 는 보스가 흡수하지
+                        프롬프트 재검토 — 새 문항을 늘리지 않는다. ★ 세션 42 실측: set A
+                        오탐 19 중 14 는 04·06·08(비전투 항목)의 도메인 불일치, 5 는
+                        02(논리형 근거) — 문체가 아니라 도메인·근거 정의 문제였다(세션 43
+                        해석 아래). v4(general) 로 04·06·08 이 buildup 으로 돌면 이 갈래의
+                        오탐이 해소된다는 뜻 — 위 1번 결과로 이 항목 착수 여부를 정한다.
+3  골든셋 set B standoff 문안 나머지 4건   bt-spear-range 는 세션 43 에서 확정(위 1번
+                        ①). 나머지 4건(bt-alley-hook·bt-orc-axe·bt-fireball-shield·
+                        bt-low-guard)은 아직 자리만 있고 문안이 없다 — 박 님이 확정하면
+                        자동으로 실린다(코드 추가 작업 없음).
+4  보스 문항(가칭)      ★ 로드맵 정정(박 님 결정 (a), 세션 39) — 도입 4 는 보스가 흡수하지
    (별도 슬롯)          않는다. 도입 4 start_episode 가 세션 39 로 자립 완주했다(fill 4칸,
                         AI 없이 규칙만으로 통과). 보스는 별도의 새 stages 행 — 긴 글 +
                         AI 섀도가 필요한 자리는 여기 하나로 모인다.
@@ -219,6 +223,121 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
                         설정 카드형 '다섯 줄 쓰기'(18 설계안 5번, write 유형 없어 보류됐던 것)는
                         이 보스 문항에서 다룬다 — 이때 쓸 설정 카드 형식은 도입 4 의 네 칸
                         (①재미 ②인물 ③장면 ④첫마디)을 그대로 재사용한다(세션 39 결정).
+```
+
+### 끝난 것 — 세션 43 (골든셋 수리 · no_beat gating 배선(기본 off) · 프롬프트 v4 준비)
+
+```
+경위  세션 42 골든셋 실행(박 님, support-golden-20260906.json) 결과가 왔다.
+  summaryA(set A, 18문항×5회): good 45·falsePos 19·nak 45·missed 4·noBeat 0·
+  flips 4·비용 $0.102. summaryB(set B, 20문항×5회): good 50·falsePos 10·nak 25·
+  missed 10·noBeat 25/25(전부 정답)·flips 0·비용 $0.139. 합계 190회·$0.241.
+  해석(박 님): set A 오탐 19 중 14 는 비전투 항목(S10-DECISIVE-04·06·08)의
+  도메인 불일치(good 답안인데도 전투 문안 프롬프트가 no_beat/none 으로 잘못
+  읽음) — 5 는 02(논리형 근거, "격차"류)가 특성으로 none 처리된 것. set B
+  오탐 10 은 bt-orc-axe good 10/10 이 'none' — 근거가 논리·상태형(도끼가
+  박힘)이라 모델이 '상대 읽기 줄'만 근거로 잡는 알려진 특성, 오탐 아니다.
+  set B 미검출 10 은 bt-alley-hook·bt-low-guard 의 nak 5/5 가 'buildup' 으로
+  잘못 나온 것 — 통제 짝(nak) 자체의 결함(옛 nak 이 대체 지지대 문장을 남겨
+  뒀다)으로 밝혀졌다(수리는 아래 1). no_beat 25/25 정확, 뒤집힘(flip) set B
+  0/20. 결론: 문체 문제가 아니라 도메인 정의(전투 전용 프롬프트가 비전투
+  장면에 못 맞음)·근거 정의(논리·상태형을 못 잡음) 문제 — 모델 판정 자체는
+  안정적이다. 실사용 1건("둥가둥가 놀지요")도 규칙 통과·AI no_beat 정확 —
+  세션 42 에 이은 분업(규칙=형식, AI=내용) 두 번째 실증.
+
+1. 골든셋 데이터 수리(data/probe/set_b_nak.json)
+  1-1. nak 교체 2건(통제 짝 결함 수리) — bt-alley-hook·bt-low-guard 의
+   nak_answer 를 박 님이 준 새 문안으로 교체(문안 그대로, 코드 변경 없음).
+   note 에 결함 원인을 남겼다: 옛 nak 이 근거로 기댈 수 있는 문장('가드를
+   열어 불러냈고' 류)을 그대로 남겨서 모델이 그걸 대체 지지대로 짚었다 —
+   새 nak 은 그 구절을 지웠다. beat_line·payoff_line(공유 필드, good_answer
+   기준 자기정합성 검사 대상)은 안 건드렸다 — nak 자체의 결정타 문장이 good
+   과 한 구절 다르다는 사실은 note 에만 남긴다(good_answer 문장으로 실재
+   해야 하는 기존 불변식과 충돌 없이).
+  1-2. bt-spear-range 에 standoff_answer 신설 — 대치형 정당 답안(결정타 없이
+   끝나되 빌드업은 있음). 실측: 124자·6문장·동사 14(박 님 claim 과 일치,
+   maxChars 200·minVerbs 4 여유) · passageOverlap 0.08(임계 0.52 여유) ·
+   requireAll 이름(서린·무영) 포함. 기대 verdict 없음 — 하네스가 5회 verdict
+   분포만 낸다(no_beat 몇 회인지, gating 문구를 박 님이 이걸로 정한다).
+  1-3. bt-orc-axe 가·나 note 갱신 — "논리·상태형 근거(도끼가 박힘), 모델은
+   '상대 읽기 줄'만 근거로 잡음. 알려진 특성, 오탐 아님. none 은 gating
+   대상 아님"(gating 조건이 'no_beat' 딱 하나이므로 이 none 은 애초에 안
+   막힌다 — 근거를 note 에 명시).
+  1-4. verify.ts 갱신 — standoff_answer 는 정확히 bt-spear-range 1건뿐(나머지
+   4건은 자리만)임을 단언 · 5개 골든 항목 전부 note 비어있지 않음을 단언.
+
+2. no_beat 부분 gating 배선 — 기본 off
+  lib/ai/flags.ts  SystemFlags.shadowGateNoBeat: boolean(kill_switch·
+   dailySpendCapUsd 와 달리 null 아닌 항상 boolean) 신설. readFlags() 가
+   'shadow_gate_no_beat' 행도 같이 읽는다. **방향이 kill_switch 의 반대다**
+   — 못 읽거나 행이 없거나 값이 이상하면 false(gating 안 함)로 접는다.
+   "AI 가 없으면 규칙 통과를 그대로 둔다"는 기존 원칙(정한 것)의 반대쪽:
+   이 스위치가 없어도 학습자 진도는 안 막힌다.
+  app/api/grade/route.ts  섀도 계산을 submissions.insert **앞으로** 옮겼다
+   (세션 40~42 는 뒤에 있었다 — gating 이 저장되는 is_passed 에 반영되려면
+   저장 전에 판정이 서 있어야 한다). computeShadow 가 flags 를 인자로 받아
+   (중복 DB 읽기 방지) 캐시·gating 판단에 같이 쓴다. gating 조건은
+   `flags.shadowGateNoBeat && shadow.verdict === 'no_beat'` 딱 하나 —
+   pending·beat_mismatch·quote_mismatch·none·support_not_before 는 지금처럼
+   안 막는다. `const passed = result.status === 'pass' && !gatedNoBeat` —
+   combine() 의 result.status(순수 규칙 판정)는 안 바꾸고 passed 만 gating
+   반영. submissions.insert 는 passed 를 쓰고, auto_result 에 shadow.verdict
+   와(있으면) no_beat_gate: true 를 적어 나중에 오판 추적에 쓴다. 응답
+   status 는 gatedNoBeat 면 'fail', 아니면 result.status.
+  components/train/TrainClient.tsx  GradeResponse.gatedNoBeat?: boolean 추가.
+   결과 표시 최우선 분기로 "이 훈련은 결정타 한 문장을 요구해 — 누가 어떤
+   수를 두는지 한 줄이 있어야 해."(제약 안내, 품질 판정 아님) 카드 — 기존
+   "먹물이의 참고 의견" 섀도 카드와 중복 안 뜨게 조건에 !gatedNoBeat 추가.
+  seed/update-shadow-gate-no-beat.sql(신규)  system_flags 에 'shadow_gate_
+   no_beat' 행을 'false' 로 멱등 삽입(행이 없으면만). system_flags 는
+   저장소 밖 Day1 테이블이라 유니크 제약을 가정 안 하고 where not exists 로
+   멱등을 낸다. 켜는 것(true)은 이 파일이 안 하고 주석에만 명령을 남긴다 —
+   박 님이 위 "다음" 1번 결과를 보고 직접 켠다.
+  verify.ts  gating 조건 정확히 하나(정규식 단언 + gatedNoBeat = true 대입이
+   파일에 정확히 1곳)·섀도 호출이 submissions.insert 보다 앞·ai_shadow===
+   'support' 이고 규칙 pass 일 때만 잰다·submissions.insert 가 passed(gating
+   반영값)를 쓴다·auto_result 에 shadow·no_beat_gate 를 적는다·응답 status
+   가 gatedNoBeat 면 fail·flags.ts 의 shadowGateNoBeat 가 boolean 이고 못
+   읽으면 false 로 접힌다·seed SQL 이 값을 false 로만 넣고 true 로 안 켠다·
+   TrainClient 문구·중복 방지 조건 — 전부 신설.
+
+3. 프롬프트 v4 — 도메인 일반화(bt- 에는 안 붙인다)
+  lib/ai/prompt.ts  PROMPT_VERSION_SUPPORT_GENERAL = 'support-general-v4' ·
+   PROMPT_FRAME_SUPPORT_GENERAL — "전투"·"승부"·"결정타"를 "장면이 그것을
+   향해 가는 핵심 문장"으로 바꾼 도메인 중립 문안. 근거의 네 갈래(상대의
+   버릇·약점·패턴 / 자리의 상태 / 인물의 내력 / 상대가 세운 논리)와 대체
+   시험 문안은 battle·general 사이 글자 그대로 동일 — 도메인 어휘만 갈았다.
+   buildSupportPrompt(answer, domain: 'battle'|'general' = 'battle') — 기본값
+   유지로 기존 호출부(bt-) 전부 무변경. lib/ai/observe.ts 의 judgeSupportWith
+   도 같은 domain 인자를 받아 전달.
+  scripts/support-golden.ts  --domain=general|battle · --only=A|B|AB 옵션
+   신설(등호 꼴만 받는다 — ai-probe.ts 의 --prompt 함정과 같은 자리, 공백
+   꼴은 조용히 기본값으로 떨어져 엉뚱한 걸 재고도 모른다. 두 옵션 다 공백
+   꼴 사용 시 즉시 에러로 죽는다). **domainFor() 가 set B(bt-)는 --domain
+   값과 무관하게 항상 'battle' 로 강제한다** — "bt- 에는 안 붙인다"를 운용
+   규율이 아니라 코드 불변식으로 만들었다(캐시 키도 그대로 v3 유지). set A
+   만 --domain 값을 탄다.
+  verify.ts  PROMPT_VERSION_SUPPORT_GENERAL 값·기존 v3 와 다른 상수인지·
+   도메인 어휘("전투"·"승부"·"결정타") 부재·네 갈래 근거/대체 시험 문안이
+   battle·general 사이 글자 그대로 같은지·buildSupportPrompt 기본값=battle
+   명시·domainFor 가 set B 를 강제 고정하는 정규식·--domain/--only 공백
+   가드 존재·가짜 호출로 실제 나가는 프롬프트 텍스트를 검사해 도메인이
+   진짜 라우팅됐는지(하드코딩 디폴트로 조용히 넘어가지 않는지) — 전부 신설.
+
+검증  tsc 0 · test:scoring **8001 포트** 5881/0(8000 은 안 건드림, 세션
+  끝나며 8001 만 내림) · check:numbers 0 · gen:seed 무변화(이 세션은
+  scoring_config·problems 를 안 건드렸다 — system_flags 는 seed 파이프라인
+  밖, data/probe 는 시드 대상 아님) · next build 통과 · --dry(도메인 general
+  로 set A 만 잡히고 프롬프트 문안이 실제로 갈리는 것, --only 없이 실행하면
+  set B 가 여전히 battle 로 고정되는 것 둘 다 확인). 물기(전부 확인 후
+  복원): route.ts 의 `!gatedNoBeat` 를 지워 통과 위장 재현 → 복원 · gating
+  조건을 'no_beat'||'none' 으로 넓혀 ★ 가드 fail 재현 → 복원 · computeShadow
+  호출을 submissions.insert 뒤로 옮겨 순서 가드 fail 재현 → 복원 ·
+  flags.ts 의 `?? false` 를 `?? true` 로 바꿔 기본값 가드 fail 재현 → 복원.
+★ DB 절차(박 님)  seed/update-shadow-gate-no-beat.sql(멱등, false 로 삽입) →
+  system_flags 에 'shadow_gate_no_beat' 행이 생겼는지 눈검사(값은 false).
+  이 세션은 problems·scoring_config 를 안 건드려 seed_data.sql·seed_check.sql
+  은 무변화 — 돌릴 것 없음.
 ```
 
 ### 끝난 것 — 세션 42 (원문 3-gram 겹침 검사 · 임계 실측 · 골든셋 경계 건 자리)
