@@ -546,6 +546,90 @@ export function verifySupportJudgment(
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// 절단 신호 판정(signal) — 구성 16 cliffhanger_adv(ca-) 전용 관측(세션 47).
+// **gating 없다** — support·tell 과 같은 관측 층. ca- 는 support 확장이
+// 아직 판정선(STATUS "다음" 2번)에 안 닿아 support 대신 이 새 물음을
+// 연다: 마지막 줄(절단문)을 가리고 읽어도 '무언가 온다'는 낌새가 그 앞에
+// 있는가. 세션 6 §12 "AI 는 마지막 관문이다" 의 세 번째 적용이다.
+// ─────────────────────────────────────────────────────────────────────────
+
+/** 프롬프트 버전. signal 캐시(ai_shadow_cache) 키의 일부다. */
+export const PROMPT_VERSION_SIGNAL = 'signal-v1'
+
+/** 문안(박 님 확정, 세션 47). 마지막 문장은 항상 절단문이다(고정 — 따로
+ *  찾지 않는다) — 그래서 signal_line 은 1..N-1 만 유효하다. */
+export const PROMPT_FRAME_SIGNAL = `아래는 회차 끝 장면의 문장들이다(번호). 마지막 문장은 회차를 끊는 문장이다.
+마지막 문장을 가리고 읽어도 독자가 '무언가 온다·이상하다'고 느끼게 하는 문장이 그 앞에 있는가.
+그런 문장이란: 평소와 다른 것, 있어선 안 될 것, 설명되지 않는 감각·행동·상태를 보여 주는 문장이다.
+아닌 것: 시간이나 자리만 옮기는 문장("그때 문이 열렸다", "잠시 뒤").
+있으면 가장 이른 것 하나를 그대로 인용하라. 없으면 signal_line 을 null 로, quote 도 빈 문자열로 답하라.
+
+[답안]
+{lines}
+
+답은 JSON 으로만 낸다. 점수·평가·고쳐쓰기는 쓰지 않는다:
+{"signal_line": <1~N-1 또는 null>, "quote": "<그 문장 그대로, null 이면 빈 문자열>"}`
+
+/** buildSupportPrompt·buildTellPrompt 와 같은 번호 매기기(local.ts 의 splitSentences). */
+export function buildSignalPrompt(answer: string): string {
+  const numbered = splitSentences(answer)
+    .map((s, i) => `${i + 1} ${s}`)
+    .join('\n')
+  return PROMPT_FRAME_SIGNAL.replace('{lines}', numbered)
+}
+
+export const SignalObservationSchema = z.object({
+  signal_line: z.number().int().nullable(),
+  quote: z.string(),
+})
+export type SignalObservation = z.infer<typeof SignalObservationSchema>
+
+export type SignalParseResult =
+  | { ok: true; observation: SignalObservation }
+  | { ok: false; reason: 'not_json' | 'bad_shape'; raw: string }
+
+/** parseTellObservation 과 같은 규칙 — 코드펜스는 벗기고, 꼴이 틀리면 고쳐 읽지 않는다. */
+export function parseSignalObservation(raw: string): SignalParseResult {
+  const trimmed = raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/```$/, '').trim()
+  let json: unknown
+  try {
+    json = JSON.parse(trimmed)
+  } catch {
+    return { ok: false, reason: 'not_json', raw }
+  }
+  const parsed = SignalObservationSchema.safeParse(json)
+  if (!parsed.success) return { ok: false, reason: 'bad_shape', raw }
+  return { ok: true, observation: parsed.data }
+}
+
+/**
+ * 'no_signal'(signal_line null) · 'signal'(인용이 답안의 마지막 문장 앞
+ * 문장들 — 1..N-1 — 중 하나에 실재) · 'quote_mismatch'(AI 가 지어낸 번호·
+ * 인용, 또는 마지막 문장 자체를 signal_line 으로 짚은 경우 — 절단문은
+ * 대상이 아니다. 호출부가 재시도 1회 뒤에도 안 서면 'pending' 으로 접는다).
+ * AI 호출 없는 순수 함수 — support·tell 과 같은 이유로 답안을 다시 쪼개
+ * 문자열 그대로 대조한다.
+ */
+export type SignalVerdict = 'signal' | 'no_signal' | 'quote_mismatch'
+
+export function verifySignalJudgment(
+  answer: string,
+  judgment: SignalObservation
+): { verdict: SignalVerdict } {
+  if (judgment.signal_line === null) return { verdict: 'no_signal' }
+
+  const S = splitSentences(answer)
+  const n = judgment.signal_line
+  // 마지막 문장(절단문)은 대상이 아니다 — n 은 1..N-1 안이어야 한다.
+  if (!Number.isInteger(n) || n < 1 || n > S.length - 1) return { verdict: 'quote_mismatch' }
+
+  const quote = judgment.quote.trim()
+  if (quote === '' || !S[n - 1].includes(quote)) return { verdict: 'quote_mismatch' }
+
+  return { verdict: 'signal' }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 // 느낌어 판정(tell) — 문장 12 action_turn(bt-) 관측 층(세션 45). **gating
 // 없다** — support 의 no_beat 부분 gating(세션 43)과 다른 층이다. 순수
 // 관측 하나만 낸다: 몸·사물의 변화를 느낌의 이름으로만 대신한 문장이
@@ -620,6 +704,88 @@ export function verifyTellJudgment(
   if (quote === '' || !S[n - 1].includes(quote)) return { verdict: 'quote_mismatch' }
 
   return { verdict: 'tell' }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 느낌어 판정 v2(tell-v2, 세션 47) — gating 후보 실험. **tell-v1(위)은 안
+// 건드리고 그대로 둔다** — 관측·화면 배선이 없다, 골든셋(--only=D
+// --mode=tell2)에서만 부른다. v1 은 "느낌의 이름으로 대신한 문장이 어디
+// 있는가"(문장 하나)를 묻지만, v2 는 "답안 **전체**에 몸·사물의 변화로
+// 쓴 결과가 하나도 없고, 결과가 느낌의 이름으로만 있는가"(답안 전체에
+// 대한 예/아니오)를 묻는다 — forbidWords 승격(gating) 후보를 가리기
+// 위해서다: v2 가 true 로 잡은 표본 중 forbidWords 가 이미 잡는 것의
+// 비율(겹침)을 하네스가 따로 센다(STATUS 판정선 — 겹침이 대부분이면
+// forbidWords 확장, 안 겹치는 게 있으면 그 목록으로 gating 여부를 정한다).
+// ─────────────────────────────────────────────────────────────────────────
+
+export const PROMPT_VERSION_TELL_V2 = 'tell-v2'
+
+/** 문안(세션 47). tell-v1 의 낱말(몸·사물의 변화 · 느낌의 이름)을 그대로
+ *  쓰되, 문장 하나가 아니라 답안 전체를 판정 단위로 바꾼다. */
+export const PROMPT_FRAME_TELL_V2 = `아래 답안 전체를 읽어라. 답안 전체에 몸이나 사물의 변화(맞음·다침·밀림·부서짐 같은, 독자가 볼 수 있는 것)로 쓴 결과가 하나도 없고, 결과가 느낌의 이름(충격·고통·아픔·통증·열기·두려움 같은 감각·감정을 이름 붙인 말)으로만 있는가.
+
+[답안]
+{lines}
+
+답은 JSON 으로만 낸다. 점수·평가·고쳐쓰기는 쓰지 않는다:
+{"tell_only": true 또는 false, "quote": "<느낌의 이름으로만 대신한 문장 중 하나를 그대로 인용, false 면 빈 문자열>"}`
+
+/** buildTellPrompt 와 같은 번호 매기기(local.ts 의 splitSentences). */
+export function buildTellPromptV2(answer: string): string {
+  const numbered = splitSentences(answer)
+    .map((s, i) => `${i + 1} ${s}`)
+    .join('\n')
+  return PROMPT_FRAME_TELL_V2.replace('{lines}', numbered)
+}
+
+export const TellV2ObservationSchema = z.object({
+  tell_only: z.boolean(),
+  quote: z.string(),
+})
+export type TellV2Observation = z.infer<typeof TellV2ObservationSchema>
+
+export type TellV2ParseResult =
+  | { ok: true; observation: TellV2Observation }
+  | { ok: false; reason: 'not_json' | 'bad_shape'; raw: string }
+
+/** parseTellObservation 과 같은 규칙 — 코드펜스는 벗기고, 꼴이 틀리면 고쳐 읽지 않는다. */
+export function parseTellV2Observation(raw: string): TellV2ParseResult {
+  const trimmed = raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/```$/, '').trim()
+  let json: unknown
+  try {
+    json = JSON.parse(trimmed)
+  } catch {
+    return { ok: false, reason: 'not_json', raw }
+  }
+  const parsed = TellV2ObservationSchema.safeParse(json)
+  if (!parsed.success) return { ok: false, reason: 'bad_shape', raw }
+  return { ok: true, observation: parsed.data }
+}
+
+/**
+ * 'not_tell_only'(tell_only false) · 'tell_only'(true 이고 인용이 답안
+ * 문장 어딘가에 실재) · 'quote_mismatch'(true 인데 인용이 비었거나 답안
+ * 어디에도 없음 — AI 가 지어낸 것). v1 과 달리 문장 번호가 없어(답안 전체
+ * 판정이라) 인용을 **답안 전체 문장 중 아무 데나**에서 찾는다(부분
+ * 문자열 포함) — v1 의 "S[n] 안에 실재"보다 느슨하지만, tell_only 자체가
+ * "문장 하나"가 아니라 "답안 전체"를 재는 물음이라 특정 줄에 매일 이유가
+ * 없다.
+ */
+export type TellV2Verdict = 'not_tell_only' | 'tell_only' | 'quote_mismatch'
+
+export function verifyTellV2Judgment(
+  answer: string,
+  judgment: TellV2Observation
+): { verdict: TellV2Verdict } {
+  if (!judgment.tell_only) return { verdict: 'not_tell_only' }
+
+  const quote = judgment.quote.trim()
+  if (quote === '') return { verdict: 'quote_mismatch' }
+
+  const S = splitSentences(answer)
+  if (!S.some((s) => s.includes(quote))) return { verdict: 'quote_mismatch' }
+
+  return { verdict: 'tell_only' }
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -816,6 +982,118 @@ export function verifyHintV2(text: string, answer: string): HintV2Check {
   if (/다\./.test(withoutQuote)) reasons.push("소설 문장('다.') 섞임")
 
   if (!/(야|봐|해|지|까)[.!?」]?(\s|$)/.test(text)) reasons.push('반말 종결(~야·~봐·~해·~지·~까) 없음')
+
+  return { ok: reasons.length === 0, reasons, quote }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 힌트 v3(세션 47) — v2 실사용에서 나온 두 흠을 잡는다. **hint-v2(위 buildHintPromptV2·
+// verifyHintV2)는 안 건드리고 그대로 둔다** — v1 을 v2 곁에 둔 것과 같은
+// 이유(observe.ts 관례, 묶지 않는다).
+//
+// ① 비계 용어 누출 — "재료를 보면"·"관찰해 봐"류로 AI 가 코칭 장치 자체를
+//    말해 버렸다(학습자에게는 "재료"가 없다, 사실은 네가 아는 것처럼 말해야
+//    한다). ② 메타 지시 — "질문을 던져봐"류로 스스로에게 하는 지시를 그대로
+//    출력했다. 이 둘을 문안(비계 용어·메타 지시 금지 명시)과 검증(금지어
+//    검사)으로 같이 막는다. ③ 원칙 한 줄을 프롬프트에 박는다 — "가리키되
+//    주지 않는다: 힌트를 읽고도 학습자가 써야 할 문장이 남아 있어야 한다."
+//    ④ 길이를 120→160자로, 문장 수를 2문장으로 굳힌다(짧게 자르려다 비계
+//    용어가 오히려 늘던 것을 few-shot 으로 잡는다).
+//
+// ★ JSON 을 안 쓴다 — v2 부터 이미 자유 텍스트였다. 바뀐 것은 문안(few-shot ·
+//   금지어 명시)과 제약(길이 160·금지어 검사 추가)뿐, 파싱 없음은 같다.
+// ─────────────────────────────────────────────────────────────────────────
+
+export const PROMPT_VERSION_HINT_V3 = 'hint-v3'
+
+/**
+ * 문안(세션 47). v2 의 관찰·질문 원칙은 그대로 두고 셋을 더한다 —
+ * ① 비계 용어·메타 지시 금지를 명시 ② "가리키되 주지 않는다" 원칙 한 줄
+ * ③ few-shot(좋은 예 2·나쁜 예 1, 박 님 확정). 예시는 다른 문항에서
+ * 가져온 것이라 이 답안의 인물·재료와 안 맞을 수 있다 — 문체만 보라고
+ * 명시한다.
+ */
+export const PROMPT_FRAME_HINT_V3 = `너는 글쓰기 코치 먹물이다. 학습자 답안(번호 문장)에 {verdictDesc}.
+
+[인물] {person} · [상대] {opponent}
+[관찰 재료] {material}
+
+[답안]
+{lines}
+
+학습자에게 **2문장, 160자 이내**, 반말(~야·~봐·~해·~지)로 관찰과 질문만 말해라.
+원칙: **가리키되 주지 않는다** — 힌트를 읽고도 학습자가 써야 할 문장이 남아 있어야 한다.
+하지 말 것: 학습자 문장을 고쳐 쓰기 · 소설 문장(~했다·~였다로 끝나는 서술) 만들기 · 답안 대신 써 주기 · 점수나 평가.
+비계 용어를 쓰지 마라 — "재료"·"관찰 재료"·"준비한" 같은 말로 힌트 장치 자체를 언급하지 마라. 학습자가 이미 아는 사실처럼 말해라.
+메타 지시를 쓰지 마라 — "질문을 던져봐"처럼 너 자신에게 하는 지시를 출력하지 마라. 질문은 직접 학습자에게 던져라.
+답안 문장 하나의 앞부분(15자 안팎)을 「」로 한 번 그대로 인용해라.
+
+아래는 다른 문항에서 가져온 예시다 — 문체만 참고하고, 인물·재료는 이 답안 것을 써라.
+좋은 예: "「강태의 주먹은 강력했다」처럼 설명하기보다 상대의 오른손이 어떻게 돌아가는지 눈에 보이게 짚어 봐. 주원이 그 움직임을 파악해서 승부수를 띄우는 순간은 어디에 넣으면 좋을까?"
+좋은 예: "「그 순간 틈이 났다」고 했는데, 진서가 그 틈을 어떻게 포착했는지 도끼의 특성과 연결해 보았어? 도끼를 내려찍은 뒤 뽑는 데 걸리는 한 호흡을 인물의 감각으로 어떻게 보여줄 수 있을지 떠올려 봐."
+나쁜 예(하지 마라 — 결정타 자체를 줬다): "…그 도끼가 땅에 박히는 순간을 이용해 반격할 수는 없을지 한번 생각해봐"
+
+텍스트만 낸다. JSON 도, 코드펜스도, 다른 말도 쓰지 않는다.`
+
+export function buildHintPromptV3(
+  answer: string,
+  material: string,
+  person: string,
+  opponent: string,
+  verdict: HintV2Verdict
+): string {
+  const numbered = splitSentences(answer)
+    .map((s, i) => `${i + 1} ${s}`)
+    .join('\n')
+  return PROMPT_FRAME_HINT_V3
+    .replace('{verdictDesc}', HINT_V2_VERDICT_DESC[verdict])
+    .replace('{person}', person)
+    .replace('{opponent}', opponent)
+    .replace('{material}', material)
+    .replace('{lines}', numbered)
+}
+
+/**
+ * v3 결과 검증. v2 의 네 제약 중 ①만 120→160자로 바뀌고 ②③④는 글자까지
+ * 같다 — 거기에 금지어 검사(⑤)를 더한다.
+ *
+ * ① 160자 이하(countChars — 공백 제외)
+ * ② 「」 인용이 답안 문장의 앞부분으로 실재(v2 와 같은 접두사 검사)
+ * ③ 인용 밖에 '다.'(소설 서술 종결)가 없다
+ * ④ 반말 종결(~야·~봐·~해·~지·~까)이 최소 하나
+ * ⑤ 비계 용어("재료"·"관찰 재료"·"준비한")·메타 지시("질문을 던")가 없다
+ *    — 학습자에게 코칭 장치 자체를 발설하거나, AI 가 자기 지시를 그대로
+ *    뱉으면 폐기한다.
+ */
+export interface HintV3Check {
+  ok: boolean
+  reasons: string[]
+  quote: string | null
+}
+
+const HINT_V3_BANNED_WORDS = ['재료', '관찰 재료', '준비한', '질문을 던'] as const
+
+export function verifyHintV3(text: string, answer: string): HintV3Check {
+  const reasons: string[] = []
+
+  if (countChars(text) > 160) reasons.push('160자 초과')
+
+  const quoteMatch = text.match(/「([^」]+)」/)
+  const quote = quoteMatch ? quoteMatch[1] : null
+  if (!quote) {
+    reasons.push('「」 인용 없음')
+  } else {
+    const S = splitSentences(answer)
+    if (!S.some((s) => s.startsWith(quote))) reasons.push('인용이 답안 문장 앞부분으로 실재하지 않음')
+  }
+
+  const withoutQuote = text.replace(/「[^」]*」/g, '')
+  if (/다\./.test(withoutQuote)) reasons.push("소설 문장('다.') 섞임")
+
+  if (!/(야|봐|해|지|까)[.!?」]?(\s|$)/.test(text)) reasons.push('반말 종결(~야·~봐·~해·~지·~까) 없음')
+
+  const banned = HINT_V3_BANNED_WORDS.filter((w) => text.includes(w))
+  if (banned.length > 0) reasons.push(`비계 용어·메타 지시 포함(${banned.join(', ')})`)
 
   return { ok: reasons.length === 0, reasons, quote }
 }

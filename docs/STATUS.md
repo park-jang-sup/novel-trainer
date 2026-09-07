@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 46 · 커밋 `8acb785` 위
+마지막 갱신: 세션 47 · 커밋 `8b1b7e8` 위
 
 ★ 활성 144 (전체 157 − 비활성 13). 언어 관문 전수 불변식(verify.ts)이 이 수를
   출력·단언한다 — 문항 증감 때마다 이 줄과 불변식을 같이 갱신한다.
@@ -92,6 +92,29 @@
   · 신규 4문항 전부 활성(세션 39) — 화면의 '준비 중'이 풀렸다. 로드맵 정정:
   도입 4는 AI 없이 규칙만으로 자립하고, 긴 글+AI 섀도는 보스(별도 슬롯)로 간다
   (박 님 결정 (a), 세션 39 — 세션 32·36의 "보스가 도입 4 흡수" 안은 폐기).
+★ **구성 16(ca-) 5건이 세션 47 에 처음 ai_shadow 를 켰다** — support 가 아니라
+  새 관측 signal(절단 신호): 마지막 줄(절단문)을 가리고 읽어도 '무언가
+  온다'는 낌새가 그 앞에 있는가. ai_shadow=["signal"](support·tell 과 안
+  섞는다). **gating 없다** — 관측 층. 카드: signal → "끊기 전에 신호가
+  있어 — 「…」" · no_signal → "마지막 줄이 갑자기 와. …" · pending 은 조용히
+  (buildSignalCardText, lib/ai/hint-text.ts — AI 는 지목만, 문구는 순수
+  함수가 짓는다). 골든 set C 를 재측정하며 새 nak 1건('bare_emotion',
+  ca-gate-dinner — 맨 감정어 신호가 signal 판정과 tell 원칙 사이에서
+  어떻게 나오는지 관찰용, 기대 없이 분포만)을 더했다.
+★ **힌트가 세션 47 에 v2→v3 로 갈아탔다.** v2 실사용 관찰에서 흠 둘 —
+  ① 비계 용어 누출("재료를 보면"류로 코칭 장치 자체를 말해 버림) ②
+  메타 지시("질문을 던져봐"류로 AI 가 자기 지시를 그대로 출력함). v3 는
+  문안에 비계 용어·메타 지시 금지를 명시하고 few-shot(좋은 예 2·나쁜 예 1)
+  을 더했다 — 원칙 한 줄: "가리키되 주지 않는다 — 힌트를 읽고도 학습자가
+  써야 할 문장이 남아 있어야 한다." 길이도 120→160자·2문장으로 굳혔다.
+  v2 코드는 안 지웠다(v1 을 남긴 것과 같은 이유 — computeHintV2·
+  judgeHintV2With·buildHintPromptV2·verifyHintV2 전부 그대로) — route.ts 는
+  이제 computeHintV3 를 부른다. hint_visible 은 그대로 기본 off.
+★ **tell-v2 는 gating 후보 실험 — route.ts 미배선, 골든만.** tell-v1(문장
+  하나를 지목)과 달리 "답안 **전체**에 몸·사물의 변화가 하나도 없고 결과가
+  느낌의 이름으로만 있는가"(예/아니오)를 묻는다. forbidWords 가 이미 잡는
+  것과 얼마나 겹치는지(하네스 `--only=D --mode=tell2`)를 보고 AI 승격이냐
+  forbidWords 확장이냐를 가른다 — 아직 어느 쪽도 결정 안 났다.
 ```
 
 ## 닫힌 것
@@ -211,33 +234,33 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 ## 다음 — 순서대로. 하나가 verify 에서 물리기 전에 다음을 안 한다
 
 ```
-1  박 님 — DB → 눈검사 → 하네스 3종(힌트는 본문 읽기) → 결과로 다음 세션 결정   순서:
-                        ① seed/update-action-turn-v5.sql(세션 45, 아직 안 돌렸으면 —
-                        bt- 5건 ai_shadow 를 ["support","tell"] 로 승격) → seed/update-
-                        action-turn-v6.sql(세션 46, 신규 — bt- 4건에 ai_hint_material
-                        신설, bt-spear-range 는 없음) → seed/update-hint-visible.sql
-                        (세션 46, 신규 — system_flags 'hint_visible' 행을 'false' 로
-                        멱등 삽입) → seed_data.sql → seed_check.sql.
-                        ② 브라우저 눈검사 — bt- 5문항 중 D-2 류(느낌어 동의어 우회 답안,
-                        예: "통증"·"열기") 재제출 → tell 카드("「…」는 아픈 느낌의 이름만
-                        말한 거야…", 세션 46 새 문구)가 뜨는지. no_beat 부분 gating 이
-                        켜져 있다면 그 카드 문구도 "아직 누가 이기고 지는지가 안
-                        나왔어…"로 인물·상대 이름이 들어간 새 문구인지 확인. **힌트는
-                        hint_visible 이 기본 false 라 화면에 안 뜬다** — ③에서 하네스로만
-                        본문을 확인한다(눈검사에서 힌트 카드는 안 보이는 게 정상이다).
+1  박 님 — DB → 눈검사 → 하네스 3종(signal·tell2·hint) → 결과로 다음 세션 결정   순서:
+                        ① seed/update-cliffhanger-adv-v2.sql(세션 47, 신규 — 구성 16
+                        ca- 5건에 ai_shadow 를 ["signal"] 로 신설) → seed_data.sql →
+                        seed_check.sql. (세션 45·46 의 update-action-turn-v5·v6·
+                        update-hint-visible.sql 은 이미 돌렸으면 다시 안 해도 된다 —
+                        전부 jsonb_set 멱등이다.)
+                        ② 브라우저 눈검사 — ca- 5문항 중 하나를 신호 없이 끊는 답안으로
+                        제출 → signal 카드("마지막 줄이 갑자기 와…", 세션 47 문구)가
+                        뜨는지, 신호를 심은 답안으로 다시 제출 → "끊기 전에 신호가
+                        있어 — 「…」" 카드가 뜨는지. **힌트는 hint_visible 이 기본
+                        false 라 화면에 안 뜬다** — ③에서 하네스로만 본문을 확인한다.
                         ③ 하네스 3종 실행 — `npm run ai:support-golden -- --only=C
-                        --domain=general`(구성 16 ca- 골든, good/nak 오탐·미검출 +
-                        emotion 분포) · `npm run ai:support-golden -- --only=D`(tell
-                        골든, good=show 오탐 + tell 표본 미검출 + 경계 D-4·D-6 분포) ·
-                        `npm run ai:support-golden -- --hint`(힌트 v2 골든, set B nak·
-                        no_beat 10건 — **힌트 본문 10건이 그대로 콘솔에 출력된다**, 통과/
-                        폐기 표시 + 통과율도 같이 나오지만 참고 수치일 뿐이다. 박 님이
-                        본문을 직접 읽고 hint_visible 을 켤지 정한다).
-                        ④ 결과를 채팅에 — 그 결과로 다음 세션이 정한다: 구성 16(ca-) 확장
-                        (set C 결과 + 세션 42/43 의 set A 해석, 아래 2번 참고) · tell
-                        gating 여부(good 오탐 0 이고 하드 표본 미검출 0 이면 검토) · 힌트
-                        v2 hint_visible 을 켤지(본문 10건을 읽고 판단) · bt- 재제출 비교.
-2  구성 16(ca-) 확장    set A·B·C 오탐 0 이고 미검출이 낮으면(판정선, 세션 40 정정 3-4)
+                        --mode=signal`(signal 골든, good='signal' 기대·nak='no_signal'
+                        기대 + emotion·bare_emotion 분포, 뒤집힘은 support 열과 안
+                        섞는다) · `npm run ai:support-golden -- --only=D --mode=tell2`
+                        (tell-v2 골든, good=false 기대·하드 6·경계 2 + **forbidWords
+                        겹침 비율과 안 겹치는 표본 목록**) · `npm run ai:support-golden
+                        -- --hint`(세션 47부터 **힌트 v3** — few-shot·비계 용어 금지,
+                        본문 10건이 그대로 콘솔에 출력된다. 박 님이 본문을 직접 읽고
+                        v2 대비 비계 용어 누출이 줄었는지 확인 후 hint_visible 을
+                        켤지 정한다).
+                        ④ 결과를 채팅에 — 그 결과로 다음 세션이 정한다: signal 판정선
+                        (good 오탐 0·nak 미검출 0 이면 구성 16(ca-) 실사용 검토) · tell-v2
+                        gating 여부(겹침이 대부분이면 forbidWords 확장, 안 겹치는 표본이
+                        있으면 그 목록으로 판단) · 힌트 v3 hint_visible 을 켤지(본문
+                        10건을 읽고 판단, 특히 비계 용어·메타 지시 잔존 여부).
+2  구성 16(ca-) support 확장    set A·B·C 오탐 0 이고 미검출이 낮으면(판정선, 세션 40 정정 3-4)
                         cliffhanger_adv 5문항(ca-)에도 ai_shadow 를 켠다(support 부터 —
                         tell 은 별도 판단). 갈리면 프롬프트 재검토 — 새 문항을 늘리지 않는다.
                         ★ 세션 42 실측: set A 오탐 19 중 14 는 04·06·08(비전투 항목)의
@@ -280,6 +303,118 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
                         설정 카드형 '다섯 줄 쓰기'(18 설계안 5번, write 유형 없어 보류됐던 것)는
                         이 보스 문항에서 다룬다 — 이때 쓸 설정 카드 형식은 도입 4 의 네 칸
                         (①재미 ②인물 ③장면 ④첫마디)을 그대로 재사용한다(세션 39 결정).
+```
+
+### 끝난 것 — 세션 47 (signal 질문 신설(16) · tell-v2 골든(gating 후보) · 힌트 v3(few-shot))
+
+```
+경위  세션 46 커밋(8b1b7e8) 위. 관측 층 원칙 그대로(새 판정은 gating 없음) —
+  킬스위치→캐시 순서를 새 함수(computeSignalShadow·computeHintV3)에도
+  그대로 복제했다(세션 44 순서, observe.ts 관례로 옛 버전 코드는 안 지운다).
+
+1. signal 질문 — 구성 16(ca-) 전용, 처음으로 ai_shadow 를 켰다
+  lib/ai/prompt.ts  PROMPT_VERSION_SIGNAL='signal-v1' · PROMPT_FRAME_SIGNAL —
+   "마지막 문장(절단문)을 가리고 읽어도 '무언가 온다·이상하다'고 느끼게
+   하는 문장이 그 앞에 있는가"를 묻는다. 마지막 문장은 항상 절단문이라
+   찾지 않고 고정한다 — signal_line 은 1..N-1 만 유효. buildSignalPrompt·
+   SignalObservationSchema·parseSignalObservation.
+  verifySignalJudgment — AI 호출 없는 순수 함수: null → 'no_signal' ·
+   quote 가 S[n](n<N) 안에 실재 → 'signal' · 아니면(마지막 문장 자체를
+   짚거나 인용이 안 맞으면) 'quote_mismatch'(호출부 재시도 1회 → pending).
+  lib/ai/observe.ts judgeSignalWith — judgeTellWith 와 같은 자리(observe.ts
+   관례, 안 묶는다).
+  lib/scoring/types.ts  ShadowKind 에 'signal' 추가, ai_shadow 유니온도
+   확장. shadowKinds() 는 그대로 — 배열화 로직은 안 건드렸다.
+  app/api/grade/route.ts  computeSignalShadow() 신설 — computeTellShadow()
+   와 킬스위치→캐시 순서가 글자까지 같다. **gating 없다.** POST 가
+   `kinds.includes('signal')` 일 때만 부른다(support·tell 과 독립).
+  lib/ai/hint-text.ts  buildSignalCardText(verdict, quote?) — signal →
+   "끊기 전에 신호가 있어 — 「{quote 앞 15자…}」"(buildTellCardText 와 같은
+   자르기 규칙) · no_signal → "마지막 줄이 갑자기 와. 그 앞에 '온다'는
+   낌새 한 줄 — 평소와 다른 것, 있어선 안 될 것 — 을 깔아 봐." · pending 은
+   호출부가 카드 자체를 안 만든다.
+  components/train/TrainClient.tsx  signal 카드(tell 카드와 같은 모양) —
+   verdict==='signal'|'no_signal' 이고 text 가 있을 때만 뜬다.
+  seed/update-cliffhanger-adv-v2.sql(신규) + seed/dump/problems.json 5건
+   갱신 — ca- 5건 scoring_config.ai_shadow 를 jsonb_set 으로 ["signal"] 로
+   신설(멱등). support·tell 과 안 섞는다 — ca- 는 세션 45 부터 골든셋으로만
+   재 왔고 ai_shadow 를 한 번도 켠 적이 없었다(이번이 처음).
+  data/probe/set_c_cliff.json  ca-gate-dinner 에 bare_emotion_answer 신설
+   (kind 'bare_emotion') — 신호 문장이 몸·사물의 변화 없이 맨 감정어
+   ("민재는 왠지 불안했다")로만 있을 때 signal 판정이 어떻게 나오는지
+   관찰용, good/nak/emotion 과 따로 센다(기대 없이 분포만 — tell 의 "느낌의
+   이름만 대신하면 안 된다"는 원칙과 signal 의 "낌새가 있으면 된다"는
+   원칙이 같은 문장에서 충돌하는지 보는 자리, 판정선은 박 님이 정한다).
+  scripts/support-golden.ts  `--only=C --mode=signal` 신설 — runSignalGolden
+   이 signal 프롬프트로 잰다. 뒤집힘·오탐·미검출을 **support 의 같은 열과
+   안 섞는다**(세션 47 지시 — "잰 관계가 다르다": support 는 결정타가
+   성립하려면 반드시 있어야 하는 문장을 찾는 '필요' 관계를 재고, signal 은
+   독자가 낌새를 느끼는가라는 '기대' 관계를 잰다. 같은 열에 두면 서로
+   다른 것을 재는 뒤집힘 수를 하나로 뭉개 읽게 된다).
+
+2. tell-v2 — gating 후보 실험. **route.ts 미배선, 골든 하네스 전용**
+  lib/ai/prompt.ts  PROMPT_VERSION_TELL_V2='tell-v2' · PROMPT_FRAME_TELL_V2 —
+   tell-v1(문장 하나를 지목)과 달리 "답안 **전체**에 몸·사물의 변화로 쓴
+   결과가 하나도 없고, 결과가 느낌의 이름으로만 있는가"(예/아니오)를
+   묻는다. buildTellPromptV2·TellV2ObservationSchema·parseTellV2Observation.
+  verifyTellV2Judgment — tell_only false → 'not_tell_only' · true 이고
+   인용이 답안 어딘가에 실재 → 'tell_only' · 아니면 'quote_mismatch'.
+   v1 과 달리 문장 번호가 없어(답안 전체 판정이라) 인용은 답안 문장 중
+   아무 데나에서 부분 문자열로 찾는다.
+  lib/ai/observe.ts judgeTellV2With — 같은 자리(observe.ts 관례).
+  scripts/support-golden.ts  `--only=D --mode=tell2` 신설 — runTell2Golden
+   이 tell-v2 프롬프트로 set D(good 10·하드 6·경계 2, tell 과 같은 표본)를
+   잰다. **추가 열**: tell_only 로 잡힌 표본 중 그 문항 scoring_config.
+   forbidWords 가 답안 전체에서 이미 잡는 것의 비율(겹침) · 안 겹치는
+   표본 목록을 따로 낸다(loadBtMeta 로 forbidWords 를 읽는다, hint 골든과
+   같은 재료). STATUS 판정선: 겹침이 대부분이면 forbidWords 확장으로 될
+   자리(결정적 검사가 우선), 안 겹치는 게 있으면 그 목록으로 gating 여부를
+   본다 — 아직 아무 쪽도 결정 안 났다. 이 실험은 화면·route.ts 에 안
+   붙는다 — 골든 결과만 본다.
+
+3. 힌트 v3 — few-shot · 비계 용어/메타 지시 금지
+  경위(박 님 관찰) v2 실사용에서 흠 둘 — ① 비계 용어 누출: "재료를
+   보면"·"관찰해 봐"류로 코칭 장치 자체를 학습자에게 말해 버렸다(학습자
+   에게는 "재료"라는 개념이 없다 — 사실은 네가 이미 아는 것처럼 말해야
+   한다). ② 메타 지시: "질문을 던져봐"류로 AI 가 자기 자신에게 하는
+   지시를 그대로 출력했다.
+  lib/ai/prompt.ts  PROMPT_VERSION_HINT_V3='hint-v3' · PROMPT_FRAME_HINT_V3 —
+   v2 의 관찰·질문 원칙은 그대로 두고 셋을 더한다: ① 비계 용어("재료"·
+   "관찰 재료"·"준비한")·메타 지시("질문을 던져봐" 류) 금지를 명시 ② 원칙
+   한 줄 — "가리키되 주지 않는다: 힌트를 읽고도 학습자가 써야 할 문장이
+   남아 있어야 한다." ③ few-shot(박 님 확정) — 좋은 예 2(#7·#21, 문체만
+   참고하라고 명시) · 나쁜 예 1(#30, 결정타 자체를 준 사례). 길이·문장 수도
+   120→160자·2문장으로 굳혔다. buildHintPromptV3 시그니처는 v2 와 같다.
+  verifyHintV3(text, answer) — v2 의 네 제약(① 길이 ② 「」 인용이 답안
+   문장 앞부분으로 실재 ③ 인용 밖에 '다.' 없음 ④ 반말 종결 1개 이상) 중
+   ①만 120→160자로 바꾸고 나머지는 글자까지 같다. ⑤ 금지어 검사를
+   더했다 — "재료"·"관찰 재료"·"준비한"·"질문을 던" 중 하나라도 있으면
+   폐기. 하나라도 어긋나면 캐시 안 함("인용 검증 없이는 판정 폐기" 원칙).
+  lib/ai/observe.ts judgeHintV3With — judgeHintV2With 와 시그니처가 같다
+   (자유 텍스트, JSON 파싱 없음).
+  app/api/grade/route.ts  computeHintV3() 신설 — computeHintV2() 와
+   킬스위치→캐시 순서가 글자까지 같다. **POST 는 이제 v3 를 부른다** — v2
+   함수(computeHintV2·judgeHintV2With·buildHintPromptV2·verifyHintV2)는
+   지우지 않고 그대로 둔다(v1 을 남긴 것과 같은 이유 — verify.ts 의 세션
+   46 픽스처가 계속 선다). hint_visible 은 그대로 기본 off — 노출 여부만
+   막고 계산·캐시는 항상 선다(세션 46 원칙 그대로).
+  scripts/support-golden.ts  `--hint` 가 이제 judgeHintV3With·
+   buildHintPromptV3·verifyHintV3 를 부른다(v2 아님) — 인자·표본(set B
+   nak·no_beat 10건)은 그대로.
+
+검증  tsc 0 · test:scoring 5942/0(형태소 161건 건너뜀 — 서버 없음) ·
+  check:numbers 0 · gen:seed(ca- 5건 ai_shadow 만 갱신 — 재실행해도 무변화
+  확인) · next build 통과 · --dry 로 세 새 모드(--only=C --mode=signal ·
+  --only=D --mode=tell2 · --hint)가 전부 올바른 프롬프트를 내는 것 확인
+  (힌트는 v3 few-shot·비계 용어 금지 문구가 실제로 나가는 것까지).
+  물기(전부 확인 후 복원): computeSignalShadow 의 킬스위치 확인을 캐시
+  조회 뒤로 옮겨 순서 가드 fail 재현 · verifyHintV3 의 금지어 검사(⑤)를
+  지워 비계 용어·메타 지시가 섞인 텍스트가 통과하는 것 재현 — 둘 다 새
+  픽스처가 잡는 것 확인 후 복원.
+★ DB 절차(박 님)  seed/update-cliffhanger-adv-v2.sql(신규) → seed_data.sql →
+  seed_check.sql → 브라우저 눈검사(signal 카드 새 문구) → 하네스 3종
+  (--only=C --mode=signal · --only=D --mode=tell2 · --hint, 힌트는 본문을
+  콘솔에서 읽고 거른다) → 결과를 채팅에.
 ```
 
 ### 끝난 것 — 세션 46 (힌트 v1 내림 · 카드 문구 확정 · 힌트 v2(AI 작성·제약 검증·노출 off))

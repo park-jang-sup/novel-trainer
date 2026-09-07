@@ -10,24 +10,30 @@ import { readFlags, sumSpendTodayUsd, type SystemFlags } from '@/lib/ai/flags'
 import { checkGate, DAILY_CALL_LIMIT } from '@/lib/ai/gate'
 import { consumeAiQuota } from '@/lib/quota'
 import { callGemini, DEFAULT_MODEL } from '@/lib/ai/gemini'
-import { judgeHintV2With, judgeHintWith, judgeSupportWith, judgeTellWith } from '@/lib/ai/observe'
+import { judgeHintV2With, judgeHintV3With, judgeHintWith, judgeSignalWith, judgeSupportWith, judgeTellWith } from '@/lib/ai/observe'
 import {
   PROMPT_VERSION_HINT,
   PROMPT_VERSION_HINT_V2,
+  PROMPT_VERSION_HINT_V3,
+  PROMPT_VERSION_SIGNAL,
   PROMPT_VERSION_SUPPORT,
   PROMPT_VERSION_TELL,
   verifyHintJudgment,
   verifyHintV2,
+  verifyHintV3,
+  verifySignalJudgment,
   verifySupportJudgment,
   verifyTellJudgment,
   type HintObservation,
   type HintV2Verdict,
+  type SignalObservation,
+  type SignalVerdict,
   type SupportObservation,
   type SupportVerdict,
   type TellObservation,
   type TellVerdict,
 } from '@/lib/ai/prompt'
-import { buildNoBeatGateCardText, buildTellCardText, resolveHintMaterial } from '@/lib/ai/hint-text'
+import { buildNoBeatGateCardText, buildSignalCardText, buildTellCardText, resolveHintMaterial } from '@/lib/ai/hint-text'
 
 // TODO(다음 단계): needsAi(ai/hybrid scoring_mode) 문항의 AI 채점.
 //   결정타 빌드업 섀도(ai_shadow: 'support')와는 다른 자리다 — 저건 통과에
@@ -259,6 +265,106 @@ async function computeTellShadow(
 }
 
 /**
+ * 절단 신호(signal) 관측(세션 47) — 구성 16 cliffhanger_adv(ca-) 전용.
+ * **gating 없다** — computeTellShadow() 와 순서·캐시 규칙이 글자까지
+ * 같다(세션 44 킬스위치→캐시 순서를 그대로 복제). 다른 것은 verdict
+ * 종류(signal·no_signal)와 재시도 조건(quote_mismatch 하나)뿐이다.
+ */
+interface SignalResult {
+  verdict: SignalVerdict | 'pending'
+  signal_line?: number | null
+  quote?: string
+}
+
+async function computeSignalShadow(
+  admin: ReturnType<typeof createAdminClient>,
+  userId: string,
+  problemId: string,
+  normalized: string,
+  flags: SystemFlags
+): Promise<SignalResult> {
+  const model = DEFAULT_MODEL
+
+  // ★ 킬스위치가 캐시보다 먼저다(세션 44 순서를 signal 에도 그대로 쓴다 — 세션 47).
+  if (flags.killSwitch === null || flags.killSwitch) return { verdict: 'pending' }
+
+  const hash = createHash('sha256')
+    .update(`${normalized} ${problemId} ${PROMPT_VERSION_SIGNAL} ${model}`)
+    .digest('hex')
+
+  const { data: cached } = await admin
+    .from('ai_shadow_cache')
+    .select('verdict, judgment')
+    .eq('hash', hash)
+    .maybeSingle()
+  if (cached) {
+    const j = cached.judgment as SignalObservation
+    return { verdict: cached.verdict as SignalVerdict, signal_line: j.signal_line, quote: j.quote }
+  }
+
+  let quotaRemaining: number | null = null
+  try {
+    quotaRemaining = await consumeAiQuota(userId, DAILY_CALL_LIMIT)
+  } catch {
+    quotaRemaining = null
+  }
+  const gate = checkGate({
+    hasApiKey: !!process.env.GEMINI_API_KEY,
+    killSwitch: flags.killSwitch,
+    dailySpendCapUsd: flags.dailySpendCapUsd,
+    spentTodayUsd: await sumSpendTodayUsd(),
+    quotaRemaining,
+  })
+  if (!gate.allow) return { verdict: 'pending' }
+
+  let verdict: SignalVerdict | 'pending' = 'pending'
+  let observation: SignalObservation | null = null
+
+  // 재시도 1회 — quote_mismatch 일 때만(tell 과 같은 자리).
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const outcome = await judgeSignalWith(callGemini, normalized, model)
+
+    if (outcome.usage) {
+      const { error } = await admin.from('ai_usage_log').insert({
+        user_id: userId,
+        submission_id: null,
+        model: outcome.model,
+        input_tokens: outcome.usage.inputTokens,
+        cached_tokens: outcome.usage.cachedTokens,
+        output_tokens: outcome.usage.outputTokens,
+        cost_usd: outcome.costUsd,
+      })
+      if (error) console.error('ai_usage_log insert failed(signal)', 'message=' + error.message)
+    }
+
+    if (!outcome.ok || !outcome.observation) break // pending
+
+    const v = verifySignalJudgment(normalized, outcome.observation)
+    if (v.verdict === 'quote_mismatch') continue // 재시도
+
+    verdict = v.verdict
+    observation = outcome.observation
+    break
+  }
+
+  if (observation && (verdict === 'signal' || verdict === 'no_signal')) {
+    const { error } = await admin.from('ai_shadow_cache').insert({
+      hash,
+      problem_id: problemId,
+      prompt_version: PROMPT_VERSION_SIGNAL,
+      model,
+      judgment: observation,
+      verdict,
+    })
+    if (error) console.error('ai_shadow_cache insert failed(signal)', 'message=' + error.message)
+  }
+
+  return observation
+    ? { verdict, signal_line: observation.signal_line, quote: observation.quote }
+    : { verdict: 'pending' }
+}
+
+/**
  * 힌트(hint) v1 관측 — **세션 46 부터 안 부른다.** 박 님 실사용 반려
  * 사유: 템플릿 + 인용 조립이 "사람 말이 아니다", 결함 원문 문항에선
  * "지우라고 가르치는" 문장을 재료로 짚었다. 아래 computeHintV2 가
@@ -457,6 +563,91 @@ async function computeHintV2(
   return { verdict: 'ok', text: outcome.text }
 }
 
+/**
+ * 힌트 v3(세션 47) — computeHintV2 와 킬스위치→캐시 순서가 글자까지
+ * 같다. **route.ts 는 이제 v3 를 부른다** — v2 함수는 지우지 않고 둔다
+ * (v1→v2 전환 때와 같은 이유, 박 님 지시 — 옛 버전 코드·캐시는 보존).
+ * 다른 것은 프롬프트(few-shot·비계 용어/메타 지시 금지)와 검증
+ * (verifyHintV3 — 길이 160자·금지어 검사 추가)뿐이다.
+ */
+async function computeHintV3(
+  admin: ReturnType<typeof createAdminClient>,
+  userId: string,
+  problemId: string,
+  normalized: string,
+  material: string,
+  person: string,
+  opponent: string,
+  verdict: HintV2Verdict,
+  flags: SystemFlags
+): Promise<HintV2Result> {
+  const model = DEFAULT_MODEL
+
+  // ★ 킬스위치가 캐시보다 먼저다(세션 44 순서를 힌트 v3 에도 그대로 쓴다 — 세션 47).
+  if (flags.killSwitch === null || flags.killSwitch) return { verdict: 'pending' }
+
+  const hash = createHash('sha256')
+    .update(`${normalized} ${problemId} ${PROMPT_VERSION_HINT_V3} ${model}`)
+    .digest('hex')
+
+  const { data: cached } = await admin
+    .from('ai_shadow_cache')
+    .select('verdict, judgment')
+    .eq('hash', hash)
+    .maybeSingle()
+  if (cached) {
+    const j = cached.judgment as { text: string }
+    return { verdict: 'ok', text: j.text }
+  }
+
+  let quotaRemaining: number | null = null
+  try {
+    quotaRemaining = await consumeAiQuota(userId, DAILY_CALL_LIMIT)
+  } catch {
+    quotaRemaining = null
+  }
+  const gate = checkGate({
+    hasApiKey: !!process.env.GEMINI_API_KEY,
+    killSwitch: flags.killSwitch,
+    dailySpendCapUsd: flags.dailySpendCapUsd,
+    spentTodayUsd: await sumSpendTodayUsd(),
+    quotaRemaining,
+  })
+  if (!gate.allow) return { verdict: 'pending' }
+
+  const outcome = await judgeHintV3With(callGemini, normalized, material, person, opponent, verdict, model)
+
+  if (outcome.usage) {
+    const { error } = await admin.from('ai_usage_log').insert({
+      user_id: userId,
+      submission_id: null,
+      model: outcome.model,
+      input_tokens: outcome.usage.inputTokens,
+      cached_tokens: outcome.usage.cachedTokens,
+      output_tokens: outcome.usage.outputTokens,
+      cost_usd: outcome.costUsd,
+    })
+    if (error) console.error('ai_usage_log insert failed(hint-v3)', 'message=' + error.message)
+  }
+
+  if (!outcome.ok || !outcome.text) return { verdict: 'pending' }
+
+  const check = verifyHintV3(outcome.text, normalized)
+  if (!check.ok) return { verdict: 'pending' } // 폐기 — 캐시 안 함(인용 검증 없이는 판정 폐기)
+
+  const { error } = await admin.from('ai_shadow_cache').insert({
+    hash,
+    problem_id: problemId,
+    prompt_version: PROMPT_VERSION_HINT_V3,
+    model,
+    judgment: { text: outcome.text },
+    verdict: 'ok',
+  })
+  if (error) console.error('ai_shadow_cache insert failed(hint-v3)', 'message=' + error.message)
+
+  return { verdict: 'ok', text: outcome.text }
+}
+
 const GradeRequestSchema = z.object({
   problemId: z.uuid(),
   text: z.string().max(2000).optional(),
@@ -552,20 +743,23 @@ export async function POST(request: NextRequest) {
   //    — "AI 가 없으면 규칙 통과를 그대로 둔다"는 원칙의 반대쪽도 같다:
   //    이 스위치가 없어도 학습자 진도는 안 막힌다.
   //
-  //    tell 은 **gating 이 없다** — 관측 층이다. 힌트(v2)는 support 가 실패
-  //    세 verdict(none·no_beat·support_not_before) 중 하나일 때만 별도로
-  //    부른다(buildup·pending·beat_mismatch·quote_mismatch 면 안 부른다 —
-  //    비용 절약). ★★ 힌트 v2 는 flags.hintVisible 과 무관하게 **항상**
-  //    계산·캐시된다(세션 46) — hintVisible 이 gating 하는 건 오직 응답에
-  //    싣느냐뿐이다(계산은 안 막는다, 화면 노출만 막는다). 카드 문구는
-  //    tell·gatedNoBeat 둘 다 서버가 순수 함수(lib/ai/hint-text.ts)로
-  //    짓는다 — AI 는 지목·서술만, 프로즈는 AI 가 안 쓴다는 원칙을 tell·
-  //    no_beat 카드에도 확장한다(세션 46).
+  //    tell·signal 은 **gating 이 없다** — 관측 층이다(signal 은 구성 16
+  //    ca- 전용, 세션 47). 힌트(v3, 세션 47부터 v2 대신 이걸 부른다)는
+  //    support 가 실패 세 verdict(none·no_beat·support_not_before) 중
+  //    하나일 때만 별도로 부른다(buildup·pending·beat_mismatch·quote_
+  //    mismatch 면 안 부른다 — 비용 절약). ★★ 힌트는 flags.hintVisible 과
+  //    무관하게 **항상** 계산·캐시된다(세션 46) — hintVisible 이 gating
+  //    하는 건 오직 응답에 싣느냐뿐이다(계산은 안 막는다, 화면 노출만
+  //    막는다). 카드 문구는 tell·signal·gatedNoBeat 셋 다 서버가 순수
+  //    함수(lib/ai/hint-text.ts)로 짓는다 — AI 는 지목·서술만, 프로즈는
+  //    AI 가 안 쓴다는 원칙을 tell·no_beat·signal 카드에도 확장한다.
   let shadow: ShadowResult | undefined
   let gatedNoBeat = false
   let gatedNoBeatText: string | undefined
   let tell: TellResult | undefined
   let tellText: string | undefined
+  let signal: SignalResult | undefined
+  let signalText: string | undefined
   let hintText: string | undefined
   let hintComputedOk = false
 
@@ -604,6 +798,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    if (kinds.includes('signal')) {
+      try {
+        signal = await computeSignalShadow(admin, user.id, problemId, normalized, flags)
+      } catch (err) {
+        console.error('절단 신호(signal) 판정 실패(조용히 pending 취급)', err)
+        signal = { verdict: 'pending' }
+      }
+      if (signal.verdict === 'signal' || signal.verdict === 'no_signal') {
+        signalText = buildSignalCardText(signal.verdict, signal.quote)
+      }
+    }
+
     if (
       shadow &&
       (shadow.verdict === 'none' || shadow.verdict === 'no_beat' || shadow.verdict === 'support_not_before') &&
@@ -614,13 +820,13 @@ export async function POST(request: NextRequest) {
       const material = resolveHintMaterial(cfg, problem.passage)
       if (material) {
         try {
-          const hint = await computeHintV2(admin, user.id, problemId, normalized, material, person, opponent, shadow.verdict, flags)
+          const hint = await computeHintV3(admin, user.id, problemId, normalized, material, person, opponent, shadow.verdict, flags)
           if (hint.verdict === 'ok' && hint.text) {
             hintComputedOk = true
             if (flags.hintVisible) hintText = hint.text
           }
         } catch (err) {
-          console.error('힌트 v2 실패(조용히 무시 — 1층 문구만 남는다)', err)
+          console.error('힌트 v3 실패(조용히 무시 — 1층 문구만 남는다)', err)
         }
       }
     }
@@ -647,7 +853,8 @@ export async function POST(request: NextRequest) {
         ...(shadow ? { shadow: shadow.verdict } : {}),
         ...(gatedNoBeat ? { no_beat_gate: true } : {}),
         ...(tell ? { tell: tell.verdict } : {}),
-        ...(hintComputedOk ? { hint_v2: true } : {}),
+        ...(signal ? { signal: signal.verdict } : {}),
+        ...(hintComputedOk ? { hint_v3: true } : {}),
       },
       passed,
     })
@@ -697,6 +904,7 @@ export async function POST(request: NextRequest) {
     shadow,
     ...(gatedNoBeat ? { gatedNoBeat: true, gatedNoBeatText } : {}),
     ...(tell ? { tell: { verdict: tell.verdict, text: tellText } } : {}),
+    ...(signal ? { signal: { verdict: signal.verdict, text: signalText } } : {}),
     ...(hintText ? { hint: hintText } : {}),
   })
 }

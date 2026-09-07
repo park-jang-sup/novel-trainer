@@ -90,6 +90,20 @@ export function buildNoBeatGateCardText(person: string, opponent: string): strin
   return `아직 누가 이기고 지는지가 안 나왔어. ${josaIGa(person)} ${josaEulReul(opponent)} 보고 뭘 알아챘는지 한 줄, 그걸 믿고 어떤 수를 뒀는지 한 줄, 그래서 ${josaIGa(opponent)} 어떻게 됐는지 한 줄 — 이 셋이 있어야 한 턴이야.`
 }
 
+/**
+ * 절단 신호(signal) 관측 카드(세션 47, 구성 16 ca- 전용). 'signal' 이면
+ * 인용 앞 15자로 자른다(buildTellCardText 와 같은 자르기 규칙 — 카드에
+ * 문장 전체를 옮기면 길어져 요지가 묻힌다). 'no_signal' 은 원칙만 말한다
+ * (인용할 문장이 없다). 'pending' 은 호출부가 카드 자체를 안 만든다.
+ */
+export function buildSignalCardText(verdict: 'signal' | 'no_signal', quote?: string): string {
+  if (verdict === 'no_signal') {
+    return "마지막 줄이 갑자기 와. 그 앞에 '온다'는 낌새 한 줄 — 평소와 다른 것, 있어선 안 될 것 — 을 깔아 봐."
+  }
+  const truncated = quote && quote.length > 15 ? `${quote.slice(0, 15)}…` : quote ?? ''
+  return `끊기 전에 신호가 있어 — 「${truncated}」`
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // 힌트 v2 재료 결정(세션 46)
 // ─────────────────────────────────────────────────────────────────────────

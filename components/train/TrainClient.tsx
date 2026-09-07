@@ -73,9 +73,14 @@ interface GradeResponse {
   // 서버가 buildTellCardText 로 이미 완성한 문장이다(세션 46 — 화면은
   // 그대로 보여주기만 한다).
   tell?: { verdict: 'show' | 'tell' | 'pending'; text?: string }
-  // 힌트 v2(세션 46). AI 가 직접 쓰고 verifyHintV2 로 제약을 검증한 자유
-  // 텍스트 — 서버가 완성해 보낸다. system_flags.hint_visible 이 true 일
-  // 때만 실린다(계산은 항상 서지만 노출만 막혀 있을 수 있다). gatedNoBeat
+  // 절단 신호(signal, 세션 47) — 구성 16 cliffhanger_adv(ca-) 전용 관측.
+  // **gating 없다.** verdict==='signal'|'no_signal' 일 때만 카드를 띄운다
+  // ('pending' 은 조용히). text 는 서버가 buildSignalCardText 로 이미
+  // 완성한 문장이다.
+  signal?: { verdict: 'signal' | 'no_signal' | 'pending'; text?: string }
+  // 힌트 v3(세션 47, v2 대신). AI 가 직접 쓰고 verifyHintV3 로 제약을 검증한
+  // 자유 텍스트 — 서버가 완성해 보낸다. system_flags.hint_visible 이 true
+  // 일 때만 실린다(계산은 항상 서지만 노출만 막혀 있을 수 있다). gatedNoBeat
   // 여도 뜬다("막기만 하고 길을 안 주면 안 된다").
   hint?: string
 }
@@ -758,6 +763,18 @@ export default function TrainClient({
               style={{ background: 'var(--panel)', border: '1px solid var(--rule)', borderRadius: 6 }}
             >
               <p style={{ color: 'var(--ink-soft)' }}>{result.tell.text}</p>
+            </div>
+          )}
+
+          {/* 절단 신호(signal, 세션 47) — 구성 16 ca- 전용 관측, gating 없음.
+              'signal'·'no_signal' 일 때만 뜬다 — 'pending' 은 조용히. text 는
+              서버가 buildSignalCardText 로 이미 완성한 문장이다. */}
+          {result.signal && result.signal.verdict !== 'pending' && result.signal.text && (
+            <div
+              className="space-y-1 p-3 text-sm"
+              style={{ background: 'var(--panel)', border: '1px solid var(--rule)', borderRadius: 6 }}
+            >
+              <p style={{ color: 'var(--ink-soft)' }}>{result.signal.text}</p>
             </div>
           )}
 

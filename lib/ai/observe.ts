@@ -12,24 +12,31 @@
 import {
   buildHintPrompt,
   buildHintPromptV2,
+  buildHintPromptV3,
   buildPoint2Prompt,
   buildPointPrompt,
   buildPrompt,
+  buildSignalPrompt,
   buildSupportPrompt,
   buildTellPrompt,
+  buildTellPromptV2,
   parseHintObservation,
   parseObservation,
   parsePointObservation,
+  parseSignalObservation,
   parseSupportObservation,
   parseTellObservation,
+  parseTellV2Observation,
   type HintObservation,
   type HintV2Verdict,
   type Observation,
   type PointObservation,
   type PromptInput,
+  type SignalObservation,
   type SupportDomain,
   type SupportObservation,
   type TellObservation,
+  type TellV2Observation,
 } from './prompt'
 import { costUsd, type TokenUsage } from './pricing'
 
@@ -309,6 +316,115 @@ export async function judgeTellWith(
 }
 
 /**
+ * 절단 신호(signal) 관측(세션 47) — 구성 16 ca- 전용. **`observeWith` 를
+ * 안 건드리고 곁에 둔다** — `judgeTellWith` 와 같은 이유(observe.ts 관례).
+ */
+export interface SignalOutcome extends Omit<ObserveOutcome, 'observation'> {
+  observation: SignalObservation | null
+}
+
+export async function judgeSignalWith(
+  call: GeminiCall,
+  answer: string,
+  model: string
+): Promise<SignalOutcome> {
+  const prompt = buildSignalPrompt(answer)
+
+  let reply: GeminiReply
+  try {
+    reply = await call(prompt, model)
+  } catch (e) {
+    return {
+      ok: false, observation: null, error: 'call_failed',
+      usage: null, costUsd: null, model, raw: null,
+      detail: detailOf(e),
+    }
+  }
+
+  const cost = costUsd(reply.model, reply.usage)
+  const parsed = parseSignalObservation(reply.text)
+
+  if (!parsed.ok) {
+    return {
+      ok: false,
+      observation: null,
+      error: parsed.reason,
+      usage: reply.usage,
+      costUsd: cost,
+      model: reply.model,
+      raw: parsed.raw.slice(0, 500),
+      detail: parsed.reason === 'not_json' ? 'JSON 이 아니다' : '꼴이 다르다',
+    }
+  }
+
+  return {
+    ok: true,
+    observation: parsed.observation,
+    error: null,
+    usage: reply.usage,
+    costUsd: cost,
+    model: reply.model,
+    raw: null,
+    detail: null,
+  }
+}
+
+/**
+ * 느낌어 판정 v2(tell-v2) 관측(세션 47) — gating 후보 실험, 골든셋 전용
+ * (route.ts 미배선). tell-v1 과 프롬프트·스키마만 다르고 나머지(마개·비용·
+ * 파싱 실패 처리)는 같다.
+ */
+export interface TellV2Outcome extends Omit<ObserveOutcome, 'observation'> {
+  observation: TellV2Observation | null
+}
+
+export async function judgeTellV2With(
+  call: GeminiCall,
+  answer: string,
+  model: string
+): Promise<TellV2Outcome> {
+  const prompt = buildTellPromptV2(answer)
+
+  let reply: GeminiReply
+  try {
+    reply = await call(prompt, model)
+  } catch (e) {
+    return {
+      ok: false, observation: null, error: 'call_failed',
+      usage: null, costUsd: null, model, raw: null,
+      detail: detailOf(e),
+    }
+  }
+
+  const cost = costUsd(reply.model, reply.usage)
+  const parsed = parseTellV2Observation(reply.text)
+
+  if (!parsed.ok) {
+    return {
+      ok: false,
+      observation: null,
+      error: parsed.reason,
+      usage: reply.usage,
+      costUsd: cost,
+      model: reply.model,
+      raw: parsed.raw.slice(0, 500),
+      detail: parsed.reason === 'not_json' ? 'JSON 이 아니다' : '꼴이 다르다',
+    }
+  }
+
+  return {
+    ok: true,
+    observation: parsed.observation,
+    error: null,
+    usage: reply.usage,
+    costUsd: cost,
+    model: reply.model,
+    raw: null,
+    detail: null,
+  }
+}
+
+/**
  * 힌트(hint) 관측. `buildHintPrompt` 는 답안 하나가 아니라 답안·원문
  * 둘을 받는다(prompt.ts 주석 참고) — 그래서 시그니처가 `judgeSupportWith`·
  * `judgeTellWith` 와 다르다. 나머지(마개·비용·파싱 실패 처리)는 같다.
@@ -390,6 +506,48 @@ export async function judgeHintV2With(
   model: string
 ): Promise<HintV2Outcome> {
   const prompt = buildHintPromptV2(answer, material, person, opponent, verdict)
+
+  let reply: GeminiReply
+  try {
+    reply = await call(prompt, model)
+  } catch (e) {
+    return {
+      ok: false, text: null, error: 'call_failed',
+      usage: null, costUsd: null, model, detail: detailOf(e),
+    }
+  }
+
+  const cost = costUsd(reply.model, reply.usage)
+  const text = reply.text.trim().replace(/^```(?:\w+)?\s*/i, '').replace(/```$/, '').trim()
+
+  if (!text) {
+    return {
+      ok: false, text: null, error: 'empty',
+      usage: reply.usage, costUsd: cost, model: reply.model, detail: '빈 응답',
+    }
+  }
+
+  return {
+    ok: true, text, error: null,
+    usage: reply.usage, costUsd: cost, model: reply.model, detail: null,
+  }
+}
+
+/**
+ * 힌트 v3(세션 47) 관측. v2 와 시그니처가 같다 — 프롬프트(few-shot·비계
+ * 용어/메타 지시 금지)와 검증(verifyHintV3)만 바뀌었다. `judgeHintV2With`
+ * 를 안 건드리고 곁에 둔다(observe.ts 관례).
+ */
+export async function judgeHintV3With(
+  call: GeminiCall,
+  answer: string,
+  material: string,
+  person: string,
+  opponent: string,
+  verdict: HintV2Verdict,
+  model: string
+): Promise<HintV2Outcome> {
+  const prompt = buildHintPromptV3(answer, material, person, opponent, verdict)
 
   let reply: GeminiReply
   try {

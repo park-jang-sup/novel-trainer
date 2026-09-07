@@ -4,16 +4,18 @@
     "note": "구성 16 cliffhanger_adv(ca-) 5문항의 골든셋(세션 45) — set B nak 와 같은 짜임: good 은 reference_answers 의 가·나 그대로(파일에 안 담는다, support-golden.ts 가 answers.json 에서 직접 읽는다) · nak 은 good(가)의 신호 문장만 '위치 제공형'(정보 없이 자리·순간만 주는 문장)으로 바꾼 통제 짝. ca- 는 아직 ai_shadow 가 안 켜진 단계다(세션 40 정정 3-4 판정선 미달) — 이 파일은 순수 하네스용 골든 자료이고, 문항 scoring_config 는 이 세션이 안 건드린다. 하네스는 --domain general(v4, 세션 43)로 잰다 — ca- 는 전투가 아니라서 support-v3(battle) 낱말이 안 맞는다.",
     "expected": { "good_answer": "buildup", "nak_answer": "none 또는 no_beat", "emotion_good_answer": "분포만(기대 없음)" },
     "domain_note": "set B(bt-)는 하네스가 always battle 로 강제하지만, set C(ca-)는 set A 와 같은 자리라 --domain 값을 그대로 탄다 — --only C 는 반드시 --domain=general 과 함께 쓴다(박 님 지시).",
-    "emotion_note": "ca-walk-home 에 emotion_good_answer 를 별도로 둔다(kind 'emotion', 세션 45 지시 3-1) — good/nak 집계에 안 섞는다. 감정형 신호(예진의 손끝 동작·심리)로 절단이 성립하는지를 따로 관찰한다 — 기대 verdict 없이 분포만 본다(standoff 와 같은 자리)."
+    "emotion_note": "ca-walk-home 에 emotion_good_answer 를 별도로 둔다(kind 'emotion', 세션 45 지시 3-1) — good/nak 집계에 안 섞는다. 감정형 신호(예진의 손끝 동작·심리)로 절단이 성립하는지를 따로 관찰한다 — 기대 verdict 없이 분포만 본다(standoff 와 같은 자리).",
+    "bare_emotion_note": "ca-gate-dinner 에 bare_emotion_answer 를 별도로 둔다(kind 'bare_emotion', 세션 47 1-4) — 신호 문장이 몸·사물의 변화 없이 맨 감정어(\"왠지 불안했다\")로만 있을 때 signal 판정이 어떻게 나오는지 관찰한다. good/nak/emotion 과 따로 센다 — 기대 verdict 없이 분포만 본다. tell 의 \"느낌의 이름만 대신하면 안 된다\" 원칙과 signal 의 \"낌새가 있으면 된다\" 원칙이 같은 문장에서 충돌하는지를 보는 자리 — 판정선은 박 님이 결과를 보고 정한다."
   },
   "items": [
     {
       "id": "ca-gate-dinner",
       "gold": {
         "nak_answer": "민재는 팀원들과 저녁을 먹고 있었다. 오늘 레이드는 무사히 끝났고 다들 웃었다. 민재가 물을 마시려고 컵을 들었다. 그때 식당 천장이 갈라지며 게이트가 열렸다.",
+        "bare_emotion_answer": "민재는 팀원들과 저녁을 먹고 있었다. 오늘 레이드는 무사히 끝났고 다들 웃었다. 민재는 왠지 불안했다. 식당 천장이 갈라지며 게이트가 열렸다.",
         "payoff_line": "탁자 위 물컵에 잔물결이 일었다. 지하철도 안 다니는 골목인데.",
         "beat_line": "민재가 컵을 보는 사이 식당 천장이 갈라지며 게이트가 열렸다.",
-        "note": "신호 줄(\"탁자 위 물컵에 잔물결이 일었다. 지하철도 안 다니는 골목인데.\")을 위치 줄(\"민재가 물을 마시려고 컵을 들었다.\")로 바꾼 통제 짝 — 정보(잔물결·지하철 없는 골목이라는 이상 신호) 없이 동작만 남는다."
+        "note": "신호 줄(\"탁자 위 물컵에 잔물결이 일었다. 지하철도 안 다니는 골목인데.\")을 위치 줄(\"민재가 물을 마시려고 컵을 들었다.\")로 바꾼 통제 짝 — 정보(잔물결·지하철 없는 골목이라는 이상 신호) 없이 동작만 남는다. bare_emotion_answer 는 같은 자리를 몸·사물의 변화 없이 맨 감정어(\"왠지 불안했다\")로만 바꾼 변형(kind 'bare_emotion') — good/nak 과 따로 센다."
       }
     },
     {

@@ -4393,7 +4393,8 @@
         "그때였다",
         "다음 화",
         "운명"
-      ]
+      ],
+      "ai_shadow": ["signal"]
     }
   },
   {
@@ -4429,7 +4430,8 @@
         "다음 화",
         "운명"
       ],
-      "forbidPassageCopy": true
+      "forbidPassageCopy": true,
+      "ai_shadow": ["signal"]
     }
   },
   {
@@ -4465,7 +4467,8 @@
         "다음 화",
         "운명"
       ],
-      "forbidPassageCopy": true
+      "forbidPassageCopy": true,
+      "ai_shadow": ["signal"]
     }
   },
   {
@@ -4503,7 +4506,8 @@
         "운명",
         "몰랐다"
       ],
-      "forbidPassageCopy": true
+      "forbidPassageCopy": true,
+      "ai_shadow": ["signal"]
     }
   },
   {
@@ -4539,7 +4543,8 @@
         "다음 화",
         "운명"
       ],
-      "forbidPassageCopy": true
+      "forbidPassageCopy": true,
+      "ai_shadow": ["signal"]
     }
   },
   {

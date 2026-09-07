@@ -171,8 +171,10 @@ export interface ScoringConfig {
    * 여전히 유효한 값이다(하위 호환 — 세션 40~44 의 값이 전부 문자열이었다).
    * 코드는 항상 `shadowKinds(cfg)` 로 배열화해서 읽는다 — cfg.ai_shadow 를
    * 직접 문자열 비교(=== 'support')하지 않는다.
+   * 세션 47 — 'signal'(절단 신호) 추가. 구성 16 ca- 5건 전용, ["signal"] 뿐이다
+   * (support·tell 과 안 섞는다 — ca- 는 아직 support 확장 판정선 미도달).
    */
-  ai_shadow?: 'support' | ('support' | 'tell')[]
+  ai_shadow?: 'support' | ('support' | 'tell' | 'signal')[]
   /**
    * 힌트 v2(세션 46)가 AI 에게 주는 관찰 재료 한 줄. **답이 아니라 관찰
    * 거리다** — "상대는 이런 버릇이 있다"류. 박 님이 문항마다 직접 거른다.
@@ -182,8 +184,9 @@ export interface ScoringConfig {
   ai_hint_material?: string
 }
 
-/** ai_shadow 값. 지금 둘뿐이다 — support(결정타 빌드업) · tell(느낌어 대신, 세션 45). */
-export type ShadowKind = 'support' | 'tell'
+/** ai_shadow 값. support(결정타 빌드업) · tell(느낌어 대신, 세션 45) ·
+ *  signal(절단 신호, 구성 16 ca- 전용, 세션 47). */
+export type ShadowKind = 'support' | 'tell' | 'signal'
 
 /**
  * ai_shadow 를 항상 배열로 읽는다. undefined → [] · 문자열 → [문자열] ·
