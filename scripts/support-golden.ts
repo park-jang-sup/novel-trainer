@@ -175,6 +175,9 @@ interface SetBNakItem {
 interface SetCItem {
   id: string
   gold: {
+    // 세션 48 — nak_answer 가 신호를 어떻게 지웠는지의 갈래(position·blank·
+    // reaction·baseline_removed). nak kind별 미검출 집계에 쓴다.
+    nak_kind?: string
     nak_answer: string
     // ca-walk-home 만. good/nak 과 따로 센다(kind 'emotion').
     emotion_good_answer?: string
@@ -307,23 +310,30 @@ function loadCases(): Case[] {
  *  bare_emotion 은 set_c_cliff.json. */
 interface SignalCase {
   id: string
-  kind: 'good' | 'nak' | 'emotion' | 'bare_emotion'
+  // 'good_excluded'(세션 48) — meta.excluded_good 에 실린 대조형 good. 판정선
+  // 집계(good 오탐)에서 뺀다 — 기록만 한다.
+  kind: 'good' | 'nak' | 'emotion' | 'bare_emotion' | 'good_excluded'
   text: string
   note?: string
+  // nak 전용(세션 48) — set_c_cliff.json 의 gold.nak_kind.
+  nakKind?: string
 }
 
 function loadSignalCases(): SignalCase[] {
   const out: SignalCase[] = []
   const answers = loadAnswersJson()
-  const ca = (answers.reference ?? []).filter((r) => r.source_key.startsWith('ca-'))
-  for (const r of ca) {
-    out.push({ id: `${r.source_key}:${r.ord}`, kind: 'good', text: r.content })
-  }
   const setCData = JSON.parse(
     readFileSync(path.join(root, 'data', 'probe', 'set_c_cliff.json'), 'utf8').replace(/^﻿/, '')
-  ) as { items: SetCItem[] }
+  ) as { meta: { excluded_good?: string[] }; items: SetCItem[] }
+  const excludedGood = new Set(setCData.meta.excluded_good ?? [])
+
+  const ca = (answers.reference ?? []).filter((r) => r.source_key.startsWith('ca-'))
+  for (const r of ca) {
+    const id = `${r.source_key}:${r.ord}`
+    out.push({ id, kind: excludedGood.has(id) ? 'good_excluded' : 'good', text: r.content })
+  }
   for (const item of setCData.items) {
-    out.push({ id: item.id, kind: 'nak', text: item.gold.nak_answer, note: item.gold.note?.trim() || undefined })
+    out.push({ id: item.id, kind: 'nak', text: item.gold.nak_answer, note: item.gold.note?.trim() || undefined, nakKind: item.gold.nak_kind })
     if (item.gold.emotion_good_answer) {
       out.push({ id: item.id, kind: 'emotion', text: item.gold.emotion_good_answer, note: item.gold.note?.trim() || undefined })
     }
@@ -738,16 +748,18 @@ async function runSignalGolden(
   const nak = cases.filter((c) => c.kind === 'nak')
   const emotion = cases.filter((c) => c.kind === 'emotion')
   const bareEmotion = cases.filter((c) => c.kind === 'bare_emotion')
+  const goodExcluded = cases.filter((c) => c.kind === 'good_excluded')
   console.log(
     `\nset C(signal) good(signal 기대) ${good.length} · nak(no_signal 기대) ${nak.length} · ` +
       `emotion ${emotion.length}(판정선 미정 — 분포만) · bare_emotion ${bareEmotion.length}(판정선 미정 — 분포만) · ` +
+      `good_excluded ${goodExcluded.length}(대조형 — 집계 밖, 기록만) · ` +
       `반복 ${reps}회 · 모델 ${model} · 이 실행 상한 ${runCap}회`
   )
-  for (const c of [...nak, ...emotion, ...bareEmotion]) {
+  for (const c of [...nak, ...emotion, ...bareEmotion, ...goodExcluded]) {
     if (c.note) console.log(`  ★ '${c.id}/${c.kind}': ${c.note}`)
   }
 
-  const results: { id: string; kind: SignalCase['kind']; rep: number; verdict: SignalVerdict | 'call_failed' | 'not_json' | 'bad_shape'; costUsd: number | null }[] = []
+  const results: { id: string; kind: SignalCase['kind']; rep: number; verdict: SignalVerdict | 'call_failed' | 'not_json' | 'bad_shape'; costUsd: number | null; nakKind?: string }[] = []
   let calls = 0
 
   outer: for (const c of cases) {
@@ -768,7 +780,7 @@ async function runSignalGolden(
       } else {
         verdict = verifySignalJudgment(c.text.trim(), outcome.observation).verdict
       }
-      results.push({ id: c.id, kind: c.kind, rep, verdict, costUsd: outcome.costUsd })
+      results.push({ id: c.id, kind: c.kind, rep, verdict, costUsd: outcome.costUsd, nakKind: c.nakKind })
       console.log(`${String(calls).padStart(3)} ${c.id}/${c.kind} rep${rep}  ${verdict}  $${outcome.costUsd ?? '-'}`)
 
       if (outcome.error === 'call_failed' && calls === 1) {
@@ -784,6 +796,46 @@ async function runSignalGolden(
   const nakMissed = nakRows.filter((r) => r.verdict === 'signal').length
   const cost = results.reduce((s, r) => s + (r.costUsd ?? 0), 0)
   console.log(`\n[set C signal] good ${goodRows.length}건 오탐 ${goodFalsePos} · nak ${nakRows.length}건 미검출 ${nakMissed} · 비용 $${cost.toFixed(6)}`)
+
+  // nak kind별 미검출(세션 48) — position·blank·reaction·baseline_removed.
+  const nakKinds = ['position', 'blank', 'reaction', 'baseline_removed'] as const
+  const nakMissedByKind: Record<string, { missed: number; total: number }> = {}
+  for (const k of nakKinds) {
+    const rows = nakRows.filter((r) => r.nakKind === k)
+    nakMissedByKind[k] = { missed: rows.filter((r) => r.verdict === 'signal').length, total: rows.length }
+  }
+  console.log(
+    'nak kind별 미검출: ' +
+      nakKinds.map((k) => `${k} ${nakMissedByKind[k].missed}/${nakMissedByKind[k].total}`).join(' · ')
+  )
+
+  // self_state 미검출(세션 48) — emotion·bare_emotion 은 판정선 미정이지만,
+  // verdict==='signal' 이면 "신호가 있다"고 잡은 것이라 여기서는 '미검출'
+  // 이라는 이름을 안 쓴다는 세션 지시대로 아래 줄에 '미검출' 로 낸다(속마음·
+  // 자각을 signal 로 잡으면 세션 48 의 신호 정의를 벗어난다는 뜻이라 오검출에
+  // 가깝지만, 지시 문구를 그대로 따른다).
+  const selfStateMissed: Record<string, { missed: number; total: number }> = {}
+  for (const k of ['emotion', 'bare_emotion'] as const) {
+    const rows = results.filter((r) => r.kind === k)
+    selfStateMissed[k] = { missed: rows.filter((r) => r.verdict === 'signal').length, total: rows.length }
+  }
+  console.log(
+    'self_state 미검출: ' +
+      (['emotion', 'bare_emotion'] as const).map((k) => `${k} ${selfStateMissed[k].missed}/${selfStateMissed[k].total}`).join(' · ')
+  )
+
+  // good_excluded 분포(세션 48, 대조형 — 집계 밖. 기록만).
+  const excludedRows = results.filter((r) => r.kind === 'good_excluded')
+  const excludedByItem = new Map<string, typeof results>()
+  for (const r of excludedRows) excludedByItem.set(r.id, [...(excludedByItem.get(r.id) ?? []), r])
+  const excludedDist: Record<string, Record<string, number>> = {}
+  for (const [id, list] of excludedByItem) {
+    const counts: Record<string, number> = {}
+    for (const r of list) counts[r.verdict] = (counts[r.verdict] ?? 0) + 1
+    excludedDist[id] = counts
+    const distStr = Object.entries(counts).map(([v, n]) => `${v} ${n}`).join(' · ')
+    console.log(`good_excluded(대조형, 집계 밖): ${id} — ${distStr}`)
+  }
 
   // 뒤집힘 — support-golden 과 같은 정의(같은 id+kind 의 reps 결과가 다 같지
   // 않으면 1건). set A/B/C 의 buildup 뒤집힘과 **같은 열에 안 섞는다**(세션
@@ -810,9 +862,13 @@ async function runSignalGolden(
     }
   }
 
-  writeFileSync(out, JSON.stringify({ model, reps, promptVersion: PROMPT_VERSION_SIGNAL, results, goodFalsePos, nakMissed, flips, cost }, null, 2))
+  writeFileSync(out, JSON.stringify({
+    model, reps, promptVersion: PROMPT_VERSION_SIGNAL, results,
+    goodFalsePos, nakMissed, flips, cost,
+    nakMissedByKind, selfStateMissed, excludedDist,
+  }, null, 2))
   console.log(`결과를 ${out} 에 적었다.`)
-  console.log('판정선(STATUS): good 오탐 0 이고 nak 미검출 0 이면 구성 16(ca-) 실사용으로. 판정선은 박 님이 정한다.')
+  console.log('판정선(STATUS): good 오탐 0 · nak 미검출 0 · self_state 미검출 0 이면 구성 16(ca-) signal 실사용 확장. 판정선은 박 님이 정한다.')
 }
 
 // ── tell-v2 골든(세션 47, gating 후보) ─────────────────────────────────

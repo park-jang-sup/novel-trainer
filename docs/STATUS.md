@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 47 · 커밋 `8b1b7e8` 위
+마지막 갱신: 세션 48 · 커밋 `b49b9ce` 위
 
 ★ 활성 144 (전체 157 − 비활성 13). 언어 관문 전수 불변식(verify.ts)이 이 수를
   출력·단언한다 — 문항 증감 때마다 이 줄과 불변식을 같이 갱신한다.
@@ -223,6 +223,12 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
                                 가르친다(박 님, 세션 34 — ig-ball-envelope 반려가 계기)
                               적용: ⑥·⑦은 ig-friend-text 부터. 구성 11·12·13·15 나머지는
                               전 단계 완성 후 전수 재점검 때 소급(미결 '구성 12 잔여 불만' 참고)
+구성 16(ca-)의 signal 정의(세션 48)  16 의 신호 = 독자에게 주어진 사실(감각·사물·타인 행동)이
+                              평소·기대와 어긋나는 것. 인물의 속마음·반응·자각은 신호가 아니라
+                              신호에 대한 반응(규격 6 의 '속마음 한 줄'과 별개 요구). 대조형(기준
+                              깔기)·심리 자각형은 미포함 — 필요한 문항이 나오면 별도 판정. ⑥
+                              관계 암시형도 사실형 신호로 성립(walk-home 가: 태오가 평소보다 반
+                              걸음 붙어 걸음).
 ```
 
 ## 하는 중
@@ -234,32 +240,27 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 ## 다음 — 순서대로. 하나가 verify 에서 물리기 전에 다음을 안 한다
 
 ```
-1  박 님 — DB → 눈검사 → 하네스 3종(signal·tell2·hint) → 결과로 다음 세션 결정   순서:
-                        ① seed/update-cliffhanger-adv-v2.sql(세션 47, 신규 — 구성 16
-                        ca- 5건에 ai_shadow 를 ["signal"] 로 신설) → seed_data.sql →
-                        seed_check.sql. (세션 45·46 의 update-action-turn-v5·v6·
-                        update-hint-visible.sql 은 이미 돌렸으면 다시 안 해도 된다 —
-                        전부 jsonb_set 멱등이다.)
-                        ② 브라우저 눈검사 — ca- 5문항 중 하나를 신호 없이 끊는 답안으로
-                        제출 → signal 카드("마지막 줄이 갑자기 와…", 세션 47 문구)가
-                        뜨는지, 신호를 심은 답안으로 다시 제출 → "끊기 전에 신호가
-                        있어 — 「…」" 카드가 뜨는지. **힌트는 hint_visible 이 기본
-                        false 라 화면에 안 뜬다** — ③에서 하네스로만 본문을 확인한다.
-                        ③ 하네스 3종 실행 — `npm run ai:support-golden -- --only=C
-                        --mode=signal`(signal 골든, good='signal' 기대·nak='no_signal'
-                        기대 + emotion·bare_emotion 분포, 뒤집힘은 support 열과 안
-                        섞는다) · `npm run ai:support-golden -- --only=D --mode=tell2`
-                        (tell-v2 골든, good=false 기대·하드 6·경계 2 + **forbidWords
-                        겹침 비율과 안 겹치는 표본 목록**) · `npm run ai:support-golden
-                        -- --hint`(세션 47부터 **힌트 v3** — few-shot·비계 용어 금지,
-                        본문 10건이 그대로 콘솔에 출력된다. 박 님이 본문을 직접 읽고
-                        v2 대비 비계 용어 누출이 줄었는지 확인 후 hint_visible 을
-                        켤지 정한다).
-                        ④ 결과를 채팅에 — 그 결과로 다음 세션이 정한다: signal 판정선
-                        (good 오탐 0·nak 미검출 0 이면 구성 16(ca-) 실사용 검토) · tell-v2
-                        gating 여부(겹침이 대부분이면 forbidWords 확장, 안 겹치는 표본이
-                        있으면 그 목록으로 판단) · 힌트 v3 hint_visible 을 켤지(본문
-                        10건을 읽고 판단, 특히 비계 용어·메타 지시 잔존 여부).
+1  박 님 — 눈검사 → 하네스 재측정(signal-v2) → 결과로 다음 세션 결정   순서:
+                        ★ DB 작업 없음(이 세션은 프롬프트 정의문·버전·골든 로더·집계만 바꿨다 —
+                        캐시 키에 프롬프트 버전이 들어 있어 v2 로 자연히 갈린다, route.ts 292행).
+                        세션 47 의 seed/update-cliffhanger-adv-v2.sql 은 이미 돌렸으면 다시 안
+                        해도 된다.
+                        ① 브라우저 눈검사 — ca- 5문항 중 하나를 신호 없이 끊는 답안으로
+                        제출 → signal 카드("마지막 줄이 갑자기 와…")가 뜨는지, 신호를 심은
+                        답안으로 다시 제출 → "끊기 전에 신호가 있어 — 「…」" 카드가 뜨는지.
+                        v1 시절 캐시는 프롬프트 버전이 달라 다시 안 쓰인다.
+                        ② signal 하네스만 재측정 — `npm run ai:support-golden -- --only=C
+                        --mode=signal`(signal-v2, good='signal' 기대·nak='no_signal' 기대 +
+                        **새 열(세션 48)**: nak kind별(position·blank·reaction·
+                        baseline_removed) 미검출 · self_state(emotion·bare_emotion) 미검출 ·
+                        good_excluded(ca-crystal-exam:1, 대조형 — 집계 밖, 분포만 기록). tell2·
+                        hint 는 이번 세션이 안 건드렸다 — 세션 47 결과가 그대로 유효하다(재실행
+                        불필요).
+                        ③ 결과를 채팅에 — 판정선(위 '정한 것' 구성 16(ca-)의 signal 정의):
+                        good 오탐 0 · nak 미검출 0 · self_state 미검출 0 이면 구성 16(ca-) signal
+                        실사용 확장(아래 2번). 세션 47 이 열어 둔 "signal 판정선 미달·
+                        bare_emotion 이 signal/tell 원칙과 충돌하는지"는 이번 정의 좁힘(반응·
+                        공백·자각 명시 제외)으로 닫혔다고 본다 — 이 재측정으로 실측 확인한다.
 2  구성 16(ca-) support 확장    set A·B·C 오탐 0 이고 미검출이 낮으면(판정선, 세션 40 정정 3-4)
                         cliffhanger_adv 5문항(ca-)에도 ai_shadow 를 켠다(support 부터 —
                         tell 은 별도 판단). 갈리면 프롬프트 재검토 — 새 문항을 늘리지 않는다.
@@ -303,6 +304,63 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
                         설정 카드형 '다섯 줄 쓰기'(18 설계안 5번, write 유형 없어 보류됐던 것)는
                         이 보스 문항에서 다룬다 — 이때 쓸 설정 카드 형식은 도입 4 의 네 칸
                         (①재미 ②인물 ③장면 ④첫마디)을 그대로 재사용한다(세션 39 결정).
+```
+
+### 끝난 것 — 세션 48 (signal-v2 — 신호 정의 좁힘(사실 어긋남) · set C nak_kind 집계 · crystal 가 대조형 제외)
+
+```
+경위  세션 47 커밋(b49b9ce) 위. signal 골든 재측정 전 박 님이 프롬프트를 다시 읽고, v1
+  의 '설명되지 않는 행동'이 반응형 nak(ca-inn-endroom 의 "검자루를 잡았다")을 신호로
+  읽을 여지를 봤다 — 무엇에 반응했는지가 안 주어진 채 반응 자체만으로 신호를 잡으면,
+  16 이 원래 재려는 "독자에게 주어진 사실의 어긋남"이 아니라 "인물의 낌새"를 재게
+  된다. v2 는 신호를 사실형(감각·사물·타인 행동의 어긋남)으로 좁히고, 반응·공백·자각
+  넷(①~④)을 문안에 명시로 제외한다. DB 작업 없음 — 캐시 키에 프롬프트 버전이 들어
+  있어 v2 로 자연히 갈린다(route.ts 292행). 출력 JSON 꼴·parseSignalObservation·
+  verifySignalJudgment·route.ts 배선·카드 문구는 이번 세션이 안 건드렸다.
+
+1. lib/ai/prompt.ts  PROMPT_VERSION_SIGNAL 'signal-v1' → 'signal-v2'. PROMPT_FRAME_SIGNAL
+  을 박 님 확정 문안으로 교체 — "신호인 것"(감각·사물·타인 행동의 어긋남)과 "신호가
+  아닌 것" 넷(① 인물 자신의 반응 ② 아무 일도 없다는 진술 ③ 시간·자리만 옮기는 문장
+  ④ 느낌의 이름·자각)을 명시로 가른다. {lines} 자리·출력 JSON 꼴은 그대로다.
+
+2. lib/scoring/verify.ts  8809행 단언을 `PROMPT_VERSION_SIGNAL = 'signal-v2'` 로. 다른
+  signal 단언(buildSignalPrompt·parseSignalObservation·verifySignalJudgment)은 프롬프트
+  문안이 아니라 함수 동작을 재는 것이라 안 건드리고도 그대로 선다.
+
+3. data/probe/set_c_cliff.json  각 item.gold 에 `nak_kind` 추가(ca-gate-dinner
+  'position' · ca-open-door 'blank' · ca-inn-endroom 'reaction' · ca-crystal-exam
+  'baseline_removed' · ca-walk-home 'position') — nak 이 신호를 어떻게 지웠는지의
+  갈래, golden 집계가 갈래별 미검출을 낸다. meta.excluded_good: ["ca-crystal-exam:1"]
+  신설 — "앞 사람들은 손바닥만 한 빛을 냈다"는 대조 기준 줄이 마지막에 와야 대조로
+  작동해 '가리고 읽어도'를 못 넘는다(16 의 신호 정의 밖, 문항 결함이 아니라 정의
+  경계 — 문항 수정은 안 했다). meta.expected 에 emotion_good_answer·bare_emotion_answer
+  기대를 'no_signal'로 명시(세션 47 "분포만"에서 바뀜, 박 님 결정 B·C) — 인물의
+  속마음·자각은 신호가 아니라 신호에 대한 반응이라는 이번 정의를 그대로 반영한다.
+
+4. scripts/support-golden.ts(signal 모드만)  SetCItem.gold 에 nak_kind?: string 추가.
+  SignalCase 에 nakKind?: string 필드 + kind 유니온에 'good_excluded' 추가(기존
+  good·nak·emotion·bare_emotion 넷은 안 바꿨다 — 세션 47 열과 그대로 비교된다).
+  loadSignalCases 가 answers.json 의 good 을 밀 때 id 가 set_c_cliff.json
+  meta.excluded_good 에 있으면 kind 'good_excluded'로 담고, nak 은 gold.nak_kind 를
+  실어 나른다. runSignalGolden 집계 — good 오탐은 kind 'good' 만(good_excluded
+  제외) · nak 미검출은 기존 열 그대로(kind 'nak', verdict==='signal') 두고, 새 줄
+  셋을 더했다: "nak kind별 미검출" (position·blank·reaction·baseline_removed 각
+  a/b) · "self_state 미검출"(emotion·bare_emotion 각 a/b, verdict==='signal' 이면
+  미검출) · "good_excluded(대조형, 집계 밖)"(항목별 verdict 분포, 기록만 — 판정선에
+  안 넣는다). 결과 JSON 에 nakMissedByKind·selfStateMissed·excludedDist 추가. 마지막
+  안내문을 "good 오탐 0 · nak 미검출 0 · self_state 미검출 0 이면 구성 16(ca-) signal
+  실사용 확장"으로 갱신.
+
+5. docs/STATUS.md  '정한 것'에 구성 16(ca-)의 signal 정의를 고정(위 1번 문안 요약).
+  미결(열린 관찰)에 "관계 암시형(⑥)에 심리 신호가 정말 필요한 문항이 나오는가"를
+  등재. 세션 47 이 열어 둔 "signal 판정선 미달·bare_emotion 이 signal/tell 원칙과
+  충돌하는지"는 이번 정의 좁힘으로 닫혔다고 보고(실측은 '다음' 1번), '다음' 1번을
+  signal-v2 재측정 절차로 갱신했다.
+
+검증  tsc 0 · test:scoring(8001, 활성 144 단언 그대로) · check:numbers 0 · gen:seed
+  무변화(이 세션은 DB 시드를 안 건드렸다) · next build · `npm run ai:support-golden
+  -- --dry`(--only=C --mode=signal 안 줘도 dry 는 첫 케이스 프롬프트만 찍는다 — v2
+  문안이 그대로 나가는 것 확인). 8001 만 내렸다 — 8000 은 안 건드렸다.
 ```
 
 ### 끝난 것 — 세션 47 (signal 질문 신설(16) · tell-v2 골든(gating 후보) · 힌트 v3(few-shot))
@@ -2406,6 +2464,7 @@ verify 왕복 규칙의 '간이' 절 파싱이 서술 문장의 괄호도 인물
                               승격 기준을 박 님과 다시 볼 차례이나 이번 세션
                               에선 다루지 않았다(다음 세션 후보로 남긴다).
                               원칙 5(문제 먼저)에 따라 이번에도 승격은 안 했다.
+관계 암시형(⑥)에 심리 신호가 정말 필요한 문항이 나오는가 — 열린 질문(세션 48)
 ```
 
 ## 상태 확인

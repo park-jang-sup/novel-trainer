@@ -8806,7 +8806,7 @@ console.log('\n[힌트 v1 내림 · 카드 문구 교체 · 힌트 v2 — 세션
   })
 
   // ── 절단 신호(signal, 세션 47) — 프롬프트·파싱·검증 ──────────────────
-  t("PROMPT_VERSION_SIGNAL = 'signal-v1'", PROMPT_VERSION_SIGNAL === 'signal-v1')
+  t("PROMPT_VERSION_SIGNAL = 'signal-v2'", PROMPT_VERSION_SIGNAL === 'signal-v2')
   t('buildSignalPrompt: 답안을 1..N 으로 번호 매겨 문안에 끼운다',
     (() => { const p = buildSignalPrompt('첫 문장이다. 둘째 문장이다.'); return p.includes('1 첫 문장이다') && p.includes('2 둘째 문장이다') && !p.includes('{lines}') })())
   t('parseSignalObservation: 코드펜스를 벗기고 정상 파싱한다',
