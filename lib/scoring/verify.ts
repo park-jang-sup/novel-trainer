@@ -98,7 +98,7 @@ import {
 } from '../ai/gate'
 import { buildPoint2Prompt, buildPointPrompt, buildPrompt, buildSupportPrompt, elementOf, fourLines, looksLikeC4, parseObservation, parsePointObservation, parseSupportObservation, passesAt, verifySupportJudgment, PROMPT_FRAME, PROMPT_FRAME_CHARS, PROMPT_FRAME_POINT, PROMPT_FRAME_POINT2, PROMPT_FRAME_POINT2_CHARS, PROMPT_FRAME_POINT_CHARS, PROMPT_FRAME_SUPPORT, PROMPT_VERSION_SUPPORT, PROMPT_FRAME_SUPPORT_GENERAL, PROMPT_VERSION_SUPPORT_GENERAL, buildTellPrompt, buildHintPrompt, buildHintPromptV2, parseTellObservation, parseHintObservation, verifyTellJudgment, verifyHintJudgment, verifyHintV2, PROMPT_FRAME_TELL, PROMPT_VERSION_TELL, PROMPT_FRAME_HINT, PROMPT_VERSION_HINT, PROMPT_FRAME_HINT_V2, PROMPT_VERSION_HINT_V2, buildSignalPrompt, parseSignalObservation, verifySignalJudgment, PROMPT_FRAME_SIGNAL, PROMPT_VERSION_SIGNAL, buildTellPromptV2, parseTellV2Observation, verifyTellV2Judgment, PROMPT_FRAME_TELL_V2, PROMPT_VERSION_TELL_V2, buildHintPromptV3, verifyHintV3, PROMPT_FRAME_HINT_V3, PROMPT_VERSION_HINT_V3 } from '../ai/prompt'
 import { costUsd } from '../ai/pricing'
-import { observeWith, judgeSupportWith, judgeTellWith, judgeHintWith, judgeHintV2With, judgeSignalWith, judgeTellV2With, judgeHintV3With } from '../ai/observe'
+import { observeWith, judgeSupportWith, judgeTellWith, judgeHintWith, judgeHintV2With, judgeSignalWith, judgeTellV2With, judgeHintV3With, judgeHintV3WithRetry } from '../ai/observe'
 import { buildHintCardText, buildTellCardText, buildNoBeatGateCardText, buildSignalCardText, resolveHintMaterial, josaIGa, josaEulReul } from '../ai/hint-text'
 import { backoffMs, isRetryable, statusOf } from '../ai/retry'
 
@@ -8394,6 +8394,22 @@ console.log('\n[결정타 빌드업 섀도 support-v3]')
       /if \(flags\.killSwitch === null \|\| flags\.killSwitch\) return \{ verdict: 'pending' \}/.test(fn.body))
   }
 
+  // ── route.ts: computeHintV3 재시도·discarded 캐시 정책(세션 50, 2-A) ──
+  t('route.ts: computeHintV3 가 judgeHintV3WithRetry 를 부른다(judgeHintV3With 직접 호출 아님)',
+    /const attempts = await judgeHintV3WithRetry\(/.test(hintV3Fn.body) && !/const outcome = await judgeHintV3With\(/.test(hintV3Fn.body))
+  t('route.ts: computeHintV3 캐시 조회가 discarded 를 보면 즉시 pending 으로 접는다',
+    /if \(cached\.verdict === 'discarded'\) return \{ verdict: 'pending' \}/.test(hintV3Fn.body))
+  t('route.ts: computeHintV3 가 시도마다(attempts 순회) ai_usage_log 를 남긴다',
+    /for \(const attempt of attempts\)/.test(hintV3Fn.body) && (hintV3Fn.body.match(/ai_usage_log'\)\.insert/g) ?? []).length === 1)
+  t("route.ts: computeHintV3 최종 시도가 통과하면 verdict 'ok' 로 캐시한다",
+    /if \(last\.check && last\.check\.ok\)/.test(hintV3Fn.body) &&
+      /judgment: \{ text: last\.outcome\.text \},\s*\n\s*verdict: 'ok',/.test(hintV3Fn.body))
+  t("route.ts: computeHintV3 재시도까지 실패하면 verdict 'discarded' · judgment.text 는 null · reasons 를 싣는다",
+    /judgment: \{ text: null, reasons: last\.check\?\.reasons \?\? \[\] \},\s*\n\s*verdict: 'discarded',/.test(hintV3Fn.body))
+  t("route.ts: computeHintV3 의 'ok'·'discarded' 두 insert 가 같은 hash·prompt_version 을 쓴다(캐시 키가 하나뿐)",
+    (hintV3Fn.body.match(/hash,\s*\n\s*problem_id: problemId,\s*\n\s*prompt_version: PROMPT_VERSION_HINT_V3,/g) ?? []).length === 2 &&
+      (hintV3Fn.body.match(/const hash = createHash\(/g) ?? []).length === 1)
+
   // ── lib/ai/flags.ts: shadowGateNoBeat·hintVisible 기본 off ──
   const flagsSrc = readFileSync(path.join(__dirname, '..', '..', 'lib', 'ai', 'flags.ts'), 'utf8')
   t('flags.ts: SystemFlags.shadowGateNoBeat 는 boolean(null 아님) — 항상 정해진 값',
@@ -8434,6 +8450,9 @@ console.log('\n[결정타 빌드업 섀도 support-v3]')
     /result\.shadow && result\.shadow\.verdict !== 'pending' && !result\.gatedNoBeat/.test(tcSrc2))
   t("병: pending 이면 카드를 안 그린다(verdict !== 'pending' 가드)",
     /result\.shadow && result\.shadow\.verdict !== 'pending'/.test(tcSrc2))
+  t("TrainClient: 힌트 카드는 result.hint 유무로만 그린다(verdict 를 안 본다) — pending 이 " +
+    "'준비 중'으로 그려지지 않는 전제(세션 50, computeHintV3 의 discarded→pending 이 이 조건 하나로 안전하게 숨는다)",
+    /\{result\.hint && \(/.test(tcSrc2) && !/result\.hint\.verdict/.test(tcSrc2))
   // ★ 카드가 실제로 그리는 텍스트(JSX 리턴 구간)만 좁혀서 본다 — 파일 전체를
   //   보면 이 규칙을 설명하는 주석 자신의 낱말에 걸린다.
   {
@@ -8967,6 +8986,44 @@ console.log('\n[힌트 v1 내림 · 카드 문구 교체 · 힌트 v2 — 세션
     t(`verifyHintV3: 비계 용어·메타 지시("${banned}")가 있으면 폐기`,
       !verifyHintV3(`「카엘은 같은 자리」를 ${banned} 봐야 해. 왜 그럴까?`, hintV3Answer).ok)
   }
+  // ── verifyHintV3 여섯째 제약 — 문장 번호 노출(세션 50) ────────────────
+  t("verifyHintV3: \"2번 앞에\" 포함이면 문장 번호 노출로 폐기",
+    !verifyHintV3('「카엘은 같은 자리」에서 안 움직이는 이유가 2번 앞에 어떻게 비춰주면 좋을까?', hintV3Answer).ok)
+  t("verifyHintV3: \"2번째 문장\" 이면 문장 번호 노출로 폐기",
+    !verifyHintV3('「카엘은 같은 자리」에서 안 움직인 이유를 2번째 문장에 넣어 봐.', hintV3Answer).ok)
+  t("verifyHintV3: \"두 번 읽어 봐\"는 숫자가 아니라 통과",
+    verifyHintV3('「카엘은 같은 자리」를 두 번 읽어 봐.', hintV3Answer).ok)
+  t("verifyHintV3: \"3번 문항\" 이면 문장 번호 노출로 폐기",
+    !verifyHintV3('「카엘은 같은 자리」가 3번 문항에서도 통할까?', hintV3Answer).ok)
+  t("verifyHintV3: 문장 번호 노출 사유 문구가 '문장 번호 노출(메타 지시)' 그대로다",
+    verifyHintV3('「카엘은 같은 자리」에서 안 움직이는 이유가 2번 앞에 어떻게 비춰주면 좋을까?', hintV3Answer).reasons.includes('문장 번호 노출(메타 지시)'))
+
+  // ── 문장 번호 제약이 정당한 인용을 안 문다(세션 50, 2-B) — 실측 전제를
+  //    불변식으로 박는다. 나중에 원문에 그런 표현이 들어오면 이게 먼저 문다.
+  {
+    const numberLeakPattern = /\d+\s*번(째)?/
+    const problemsForLeak = JSON.parse(
+      readFileSync(path.join(__dirname, '..', '..', 'seed', 'dump', 'problems.json'), 'utf8').replace(/^﻿/, '')
+    ) as { source_key: string; passage: string | null; instruction: string; scoring_config: unknown }[]
+    const btForLeak = problemsForLeak.filter((p) => p.source_key.startsWith('bt-'))
+    for (const p of btForLeak) {
+      t(`bt- 원문·지시문·scoring_config에 문장 번호 표현이 없다 — '${p.source_key}'(세션 50 전제)`,
+        !numberLeakPattern.test(p.passage ?? '') && !numberLeakPattern.test(p.instruction) &&
+          !numberLeakPattern.test(JSON.stringify(p.scoring_config)))
+    }
+    const answersForLeak = JSON.parse(
+      readFileSync(path.join(__dirname, '..', '..', 'seed', 'dump', 'answers.json'), 'utf8').replace(/^﻿/, '')
+    ) as { reference?: RefRow[] }
+    const btRefsForLeak = (answersForLeak.reference ?? []).filter((r) => r.source_key.startsWith('bt-'))
+    t('bt- 모범답안 10건에 문장 번호 표현이 없다(세션 50 전제)',
+      btRefsForLeak.length === 10 && btRefsForLeak.every((r) => !numberLeakPattern.test(r.content)))
+    const setBNakRaw = readFileSync(path.join(__dirname, '..', '..', 'data', 'probe', 'set_b_nak.json'), 'utf8')
+    t('data/probe/set_b_nak.json 전부에 문장 번호 표현이 없다(세션 50 — 문장 번호 제약이 정당한 인용을 폐기하지 않는 전제)',
+      !numberLeakPattern.test(setBNakRaw))
+    const setDTellRaw = readFileSync(path.join(__dirname, '..', '..', 'data', 'probe', 'set_d_tell.json'), 'utf8')
+    t('data/probe/set_d_tell.json 전부에 문장 번호 표현이 없다(세션 50 — 문장 번호 제약이 정당한 인용을 폐기하지 않는 전제)',
+      !numberLeakPattern.test(setDTellRaw))
+  }
 
   tAsync('judgeHintV3With: 정상 호출이면 텍스트가 선다', async () => {
     const r = await judgeHintV3With(
@@ -8979,7 +9036,8 @@ console.log('\n[힌트 v1 내림 · 카드 문구 교체 · 힌트 v2 — 세션
     return !r.ok && r.error === 'call_failed'
   })
 
-  // ── judgeHintV3With: JSON 껍데기 벗기기(세션 49) ─────────────────────
+  // ── judgeHintV3With: JSON 껍데기 벗기기(세션 49, 세션 50 이 키 이름과
+  //    무관하게 넓혔다 — 문자열 필드가 정확히 하나면 키가 무엇이든 벗긴다) ──
   tAsync('judgeHintV3With: {"feedback":"…"} 꼴이면 껍데기를 벗기고 본문만 남긴다 · unwrapped===true', async () => {
     const r = await judgeHintV3With(
       async () => ({ text: '{"feedback": "「카엘은 같은 자리」에서 안 움직이는 이유가 뭘까? 리온이 그걸 알아채는 순간을 넣어 봐."}', usage: { inputTokens: 100, cachedTokens: 0, outputTokens: 20 }, model: 'gemini-3.7-flash' }),
@@ -8999,11 +9057,14 @@ console.log('\n[힌트 v1 내림 · 카드 문구 교체 · 힌트 v2 — 세션
       hintV3Answer, '재료.', '리온', '카엘', 'none', 'gemini-3.7-flash')
     return r.ok && r.text === '「카엘은 같은 자리」에서 안 움직이는 이유가 뭘까? 리온이 그걸 알아채는 순간을 넣어 봐.' && r.unwrapped === false
   })
-  tAsync('judgeHintV3With: JSON 이지만 feedback 필드가 없으면 원문 그대로 · unwrapped===false(고쳐 읽지 않는다)', async () => {
+  // ★ 세션 50 — {"other":"x"} 는 문자열 필드가 하나뿐이라 이제 벗긴다.
+  //   키 이름을 안 보므로 이렇게 된다 — 의도한 결과다(세션 49 는 feedback
+  //   만 봐서 원문을 그대로 뒀었다).
+  tAsync('judgeHintV3With: {"other":"x"} 도 문자열 필드가 하나뿐이라 이제 벗긴다 · unwrapped===true(세션 50, 의도한 결과)', async () => {
     const r = await judgeHintV3With(
       async () => ({ text: '{"other": "x"}', usage: { inputTokens: 100, cachedTokens: 0, outputTokens: 5 }, model: 'gemini-3.7-flash' }),
       hintV3Answer, '재료.', '리온', '카엘', 'none', 'gemini-3.7-flash')
-    return r.ok && r.text === '{"other": "x"}' && r.unwrapped === false
+    return r.ok && r.text === 'x' && r.unwrapped === true
   })
   // 세션 49 보강(1-A) — JSON 뒤에 말이 붙어 파싱이 깨지는 경우. 이번 세션은
   // 폐기하지 않는다 — text 는 원문 그대로, unwrapped 로만 보이게 한다.
@@ -9012,6 +9073,66 @@ console.log('\n[힌트 v1 내림 · 카드 문구 교체 · 힌트 v2 — 세션
       async () => ({ text: '{"feedback": "「…」 … 봐."} 이건 참고야', usage: { inputTokens: 100, cachedTokens: 0, outputTokens: 20 }, model: 'gemini-3.7-flash' }),
       hintV3Answer, '재료.', '리온', '카엘', 'none', 'gemini-3.7-flash')
     return r.ok && r.text === '{"feedback": "「…」 … 봐."} 이건 참고야' && r.unwrapped === 'malformed_json'
+  })
+
+  // ── judgeHintV3With: 벗기기 규칙을 키 이름과 무관하게(세션 50) ────────
+  tAsync('judgeHintV3With: {"message":"…"} 도 키 이름과 무관하게 벗긴다 · unwrapped===true(세션 49 36번 재현)', async () => {
+    const r = await judgeHintV3With(
+      async () => ({ text: '{"message": "「카엘은 같은 자리」에서 안 움직이는 이유가 뭘까? 리온이 그걸 알아채는 순간을 넣어 봐."}', usage: { inputTokens: 100, cachedTokens: 0, outputTokens: 20 }, model: 'gemini-3.7-flash' }),
+      hintV3Answer, '재료.', '리온', '카엘', 'none', 'gemini-3.7-flash')
+    return r.ok && r.text === '「카엘은 같은 자리」에서 안 움직이는 이유가 뭘까? 리온이 그걸 알아채는 순간을 넣어 봐.' && r.unwrapped === true
+  })
+  tAsync("judgeHintV3With: 문자열 필드가 둘이면 뭘 벗길지 몰라 원문 그대로 · unwrapped==='malformed_json'(세션 50, 넓힌 경계가 멈추는 자리)", async () => {
+    const r = await judgeHintV3With(
+      async () => ({ text: '{"feedback": "「…」 … 봐.", "reason": "짧게 썼다."}', usage: { inputTokens: 100, cachedTokens: 0, outputTokens: 20 }, model: 'gemini-3.7-flash' }),
+      hintV3Answer, '재료.', '리온', '카엘', 'none', 'gemini-3.7-flash')
+    return r.ok && r.text === '{"feedback": "「…」 … 봐.", "reason": "짧게 썼다."}' && r.unwrapped === 'malformed_json'
+  })
+  tAsync('judgeHintV3With: 문자열 아닌 필드는 안 센다 — {"feedback":"…","score":3} 은 문자열이 하나라 벗긴다 · unwrapped===true(세션 50)', async () => {
+    const r = await judgeHintV3With(
+      async () => ({ text: '{"feedback": "「카엘은 같은 자리」에서 안 움직이는 이유가 뭘까? 리온이 그걸 알아채는 순간을 넣어 봐.", "score": 3}', usage: { inputTokens: 100, cachedTokens: 0, outputTokens: 20 }, model: 'gemini-3.7-flash' }),
+      hintV3Answer, '재료.', '리온', '카엘', 'none', 'gemini-3.7-flash')
+    return r.ok && r.text === '「카엘은 같은 자리」에서 안 움직이는 이유가 뭘까? 리온이 그걸 알아채는 순간을 넣어 봐.' && r.unwrapped === true
+  })
+  tAsync("judgeHintV3With: 배열은 객체가 아니라 원문 그대로 · unwrapped==='malformed_json'(세션 50)", async () => {
+    const r = await judgeHintV3With(
+      async () => ({ text: '["「카엘은 같은 자리」에서 안 움직이는 이유가 뭘까? 리온이 그걸 알아채는 순간을 넣어 봐."]', usage: { inputTokens: 100, cachedTokens: 0, outputTokens: 20 }, model: 'gemini-3.7-flash' }),
+      hintV3Answer, '재료.', '리온', '카엘', 'none', 'gemini-3.7-flash')
+    return r.ok && r.text === '["「카엘은 같은 자리」에서 안 움직이는 이유가 뭘까? 리온이 그걸 알아채는 순간을 넣어 봐."]' && r.unwrapped === 'malformed_json'
+  })
+
+  // ── judgeHintV3WithRetry: 재시도 루프(세션 50, 2-A) — AI 호출 없음 ────
+  const numberLeakText = '「카엘은 같은 자리」에서 안 움직이는 이유가 2번 앞에 어떻게 비춰주면 좋을까?'
+  const cleanHintText = '「카엘은 같은 자리」에서 안 움직이는 이유가 뭘까? 리온이 그걸 알아채는 순간을 넣어 봐.'
+  tAsync('judgeHintV3WithRetry: 첫 시도가 번호 누출로 실패하면 재시도하고, 둘째 본문이 최종 text 로 선다', async () => {
+    let calls = 0
+    const attempts = await judgeHintV3WithRetry(
+      async () => {
+        calls++
+        const text = calls === 1 ? numberLeakText : cleanHintText
+        return { text, usage: { inputTokens: 100, cachedTokens: 0, outputTokens: 20 }, model: 'gemini-3.7-flash' }
+      },
+      hintV3Answer, '재료.', '리온', '카엘', 'none', 'gemini-3.7-flash')
+    const last = attempts[attempts.length - 1]
+    return attempts.length === 2 && last.outcome.text === cleanHintText && last.check !== null && last.check.ok
+  })
+  tAsync("judgeHintV3WithRetry: 두 시도 다 번호 누출이면 최종 check.ok===false · reasons 에 '문장 번호 노출(메타 지시)'", async () => {
+    const attempts = await judgeHintV3WithRetry(
+      async () => ({ text: numberLeakText, usage: { inputTokens: 100, cachedTokens: 0, outputTokens: 20 }, model: 'gemini-3.7-flash' }),
+      hintV3Answer, '재료.', '리온', '카엘', 'none', 'gemini-3.7-flash')
+    const last = attempts[attempts.length - 1]
+    return attempts.length === 2 && last.check !== null && !last.check.ok &&
+      last.check.reasons.includes('문장 번호 노출(메타 지시)')
+  })
+  tAsync('judgeHintV3WithRetry: 첫 시도가 통과하면 둘째 호출이 아예 없다(값싸게 돈다)', async () => {
+    let calls = 0
+    const attempts = await judgeHintV3WithRetry(
+      async () => {
+        calls++
+        return { text: cleanHintText, usage: { inputTokens: 100, cachedTokens: 0, outputTokens: 20 }, model: 'gemini-3.7-flash' }
+      },
+      hintV3Answer, '재료.', '리온', '카엘', 'none', 'gemini-3.7-flash')
+    return attempts.length === 1 && calls === 1
   })
 
   // ── shadowKinds: 'signal' 도 배열로 읽는다(세션 47) ──

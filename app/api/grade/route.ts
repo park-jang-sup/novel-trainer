@@ -10,7 +10,7 @@ import { readFlags, sumSpendTodayUsd, type SystemFlags } from '@/lib/ai/flags'
 import { checkGate, DAILY_CALL_LIMIT } from '@/lib/ai/gate'
 import { consumeAiQuota } from '@/lib/quota'
 import { callGemini, DEFAULT_MODEL } from '@/lib/ai/gemini'
-import { judgeHintV2With, judgeHintV3With, judgeHintWith, judgeSignalWith, judgeSupportWith, judgeTellWith } from '@/lib/ai/observe'
+import { judgeHintV2With, judgeHintV3WithRetry, judgeHintWith, judgeSignalWith, judgeSupportWith, judgeTellWith } from '@/lib/ai/observe'
 import {
   PROMPT_VERSION_HINT,
   PROMPT_VERSION_HINT_V2,
@@ -20,7 +20,6 @@ import {
   PROMPT_VERSION_TELL,
   verifyHintJudgment,
   verifyHintV2,
-  verifyHintV3,
   verifySignalJudgment,
   verifySupportJudgment,
   verifyTellJudgment,
@@ -568,7 +567,25 @@ async function computeHintV2(
  * 같다. **route.ts 는 이제 v3 를 부른다** — v2 함수는 지우지 않고 둔다
  * (v1→v2 전환 때와 같은 이유, 박 님 지시 — 옛 버전 코드·캐시는 보존).
  * 다른 것은 프롬프트(few-shot·비계 용어/메타 지시 금지)와 검증
- * (verifyHintV3 — 길이 160자·금지어 검사 추가)뿐이다.
+ * (verifyHintV3 — 길이 160자·금지어·문장 번호 검사 추가)뿐이다.
+ *
+ * ★ 세션 50, 2-A — 재시도·캐시 정책을 새로 정했다("v2 와 같은 모양"이라던
+ *   세션 47 주석은 틀렸다, 박 님이 채팅에서 정정). judgeHintV3WithRetry
+ *   (observe.ts)가 검증 실패 시 1회 재시도한다 — **DB 는 여기서만 만진다**:
+ *   두 시도 다 ai_usage_log 에 정상 기록하고, 최종 시도가 통과하면 그
+ *   본문을 캐시(verdict 'ok'), 재시도까지 실패하면 캐시에 verdict
+ *   'discarded' 를 남겨(judgment: {text:null, reasons}) 같은 답안을 다시
+ *   안 부른다 — "재시도해도 안 되는 답안은 세 번째도 안 될 확률이 높다"
+ *   (박 님). 캐시 조회는 'discarded' 를 보면 즉시 pending 으로 접는다.
+ *   학습자 화면은 어느 쪽이든 같다(힌트 없이 1층 문구만) — 진도엔 무영향.
+ *   ★ discarded 캐시는 프롬프트 **버전을 올려야** 풀린다(해시에 prompt_
+ *   version 이 들어간다) — 문안만 손보고 버전을 그대로 두면 그 답안들은
+ *   계속 힌트를 못 받는다. 문안을 고칠 땐 버전을 같이 올리거나
+ *   `delete from ai_shadow_cache where verdict='discarded'` 를 같이 낸다.
+ *   ★ ai_shadow_cache 권한은 select·insert 뿐(update·upsert 없음) — 같은
+ *   해시 재삽입은 기본키 충돌이 나지만 캐시 조회가 먼저라 정상 흐름에선
+ *   안 난다. 경합으로 충돌해도 기존처럼 console.error 만 남기고 진행한다
+ *   (판정에 영향 없음).
  */
 async function computeHintV3(
   admin: ReturnType<typeof createAdminClient>,
@@ -596,6 +613,7 @@ async function computeHintV3(
     .eq('hash', hash)
     .maybeSingle()
   if (cached) {
+    if (cached.verdict === 'discarded') return { verdict: 'pending' }
     const j = cached.judgment as { text: string }
     return { verdict: 'ok', text: j.text }
   }
@@ -615,37 +633,50 @@ async function computeHintV3(
   })
   if (!gate.allow) return { verdict: 'pending' }
 
-  const outcome = await judgeHintV3With(callGemini, normalized, material, person, opponent, verdict, model)
+  const attempts = await judgeHintV3WithRetry(callGemini, normalized, material, person, opponent, verdict, model)
 
-  if (outcome.usage) {
-    const { error } = await admin.from('ai_usage_log').insert({
-      user_id: userId,
-      submission_id: null,
-      model: outcome.model,
-      input_tokens: outcome.usage.inputTokens,
-      cached_tokens: outcome.usage.cachedTokens,
-      output_tokens: outcome.usage.outputTokens,
-      cost_usd: outcome.costUsd,
-    })
-    if (error) console.error('ai_usage_log insert failed(hint-v3)', 'message=' + error.message)
+  for (const attempt of attempts) {
+    if (attempt.outcome.usage) {
+      const { error } = await admin.from('ai_usage_log').insert({
+        user_id: userId,
+        submission_id: null,
+        model: attempt.outcome.model,
+        input_tokens: attempt.outcome.usage.inputTokens,
+        cached_tokens: attempt.outcome.usage.cachedTokens,
+        output_tokens: attempt.outcome.usage.outputTokens,
+        cost_usd: attempt.outcome.costUsd,
+      })
+      if (error) console.error('ai_usage_log insert failed(hint-v3)', 'message=' + error.message)
+    }
   }
 
-  if (!outcome.ok || !outcome.text) return { verdict: 'pending' }
+  const last = attempts[attempts.length - 1]
+  if (!last.outcome.ok || !last.outcome.text) return { verdict: 'pending' }
 
-  const check = verifyHintV3(outcome.text, normalized)
-  if (!check.ok) return { verdict: 'pending' } // 폐기 — 캐시 안 함(인용 검증 없이는 판정 폐기)
+  if (last.check && last.check.ok) {
+    const { error } = await admin.from('ai_shadow_cache').insert({
+      hash,
+      problem_id: problemId,
+      prompt_version: PROMPT_VERSION_HINT_V3,
+      model,
+      judgment: { text: last.outcome.text },
+      verdict: 'ok',
+    })
+    if (error) console.error('ai_shadow_cache insert failed(hint-v3)', 'message=' + error.message)
+    return { verdict: 'ok', text: last.outcome.text }
+  }
 
+  // 재시도까지 실패 — 'discarded' 로 남겨 같은 답안을 다시 안 부른다.
   const { error } = await admin.from('ai_shadow_cache').insert({
     hash,
     problem_id: problemId,
     prompt_version: PROMPT_VERSION_HINT_V3,
     model,
-    judgment: { text: outcome.text },
-    verdict: 'ok',
+    judgment: { text: null, reasons: last.check?.reasons ?? [] },
+    verdict: 'discarded',
   })
-  if (error) console.error('ai_shadow_cache insert failed(hint-v3)', 'message=' + error.message)
-
-  return { verdict: 'ok', text: outcome.text }
+  if (error) console.error('ai_shadow_cache insert failed(hint-v3 discarded)', 'message=' + error.message)
+  return { verdict: 'pending' }
 }
 
 const GradeRequestSchema = z.object({

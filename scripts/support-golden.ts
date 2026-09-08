@@ -735,8 +735,11 @@ async function runHintGolden(
   const runCap = Number(arg('cap', String(totalCalls)))
   console.log(`\n힌트 v3 표본 ${cases.length}건(nak 5 · no_beat 5) · 반복 ${reps}회 · 모델 ${model} · 이 실행 상한 ${runCap}회`)
   console.log('★ 힌트 본문을 그대로 출력한다 — 박 님이 직접 읽고 거른다(통과율은 참고 수치일 뿐).')
+  console.log('★ 하네스는 route.ts 를 안 거친다 — judgeHintV3With 를 그대로 50번 부른다(재시도')
+  console.log('  경로를 안 탄다, 세션 50 3-A). 아래 수치는 전부 "재시도 전 1차 발생률"이다 —')
+  console.log('  실사용에서는 computeHintV3 의 재시도 1회가 이 중 일부(특히 번호 누출)를 건진다.')
 
-  const results: { id: string; kind: 'nak' | 'no_beat'; rep: number; ok: boolean; reasons: string[]; text: string | null; costUsd: number | null; unwrapped: boolean | 'malformed_json' | null; materialCopy: boolean }[] = []
+  const results: { id: string; kind: 'nak' | 'no_beat'; rep: number; ok: boolean; reasons: string[]; text: string | null; costUsd: number | null; unwrapped: boolean | 'malformed_json' | null; materialCopy: boolean; numberLeak: boolean }[] = []
   let calls = 0
 
   outer: for (const c of cases) {
@@ -765,8 +768,9 @@ async function runHintGolden(
         materialCopy = detectMaterialCopy(outcome.text, c.material)
       }
       const unwrapped = outcome.unwrapped ?? null
-      results.push({ id: c.id, kind: c.kind, rep, ok, reasons, text, costUsd: outcome.costUsd, unwrapped, materialCopy })
-      const tags = [unwrapped === true ? '벗김' : null, unwrapped === 'malformed_json' ? '깨진 껍데기' : null, materialCopy ? '재료 복사' : null].filter(Boolean)
+      const numberLeak = reasons.includes('문장 번호 노출(메타 지시)')
+      results.push({ id: c.id, kind: c.kind, rep, ok, reasons, text, costUsd: outcome.costUsd, unwrapped, materialCopy, numberLeak })
+      const tags = [unwrapped === true ? '벗김' : null, unwrapped === 'malformed_json' ? '못 벗김' : null, materialCopy ? '재료 복사' : null, numberLeak ? '번호 누출' : null].filter(Boolean)
       console.log(`${String(calls).padStart(3)} ${c.id}/${c.kind} rep${rep} [verdict=${c.verdict}]  ${ok ? '통과' : `폐기(${reasons.join(', ')})`}${tags.length > 0 ? ` [${tags.join(', ')}]` : ''}  $${outcome.costUsd ?? '-'}`)
       console.log(`     ${text ?? '(응답 없음)'}`)
 
@@ -781,12 +785,25 @@ async function runHintGolden(
   const cost = results.reduce((s, r) => s + (r.costUsd ?? 0), 0)
   console.log(`\n[힌트 v3] ${results.length}회 · 통과율 ${passRate === null ? '-' : (passRate * 100).toFixed(1) + '%'} · 비용 $${cost.toFixed(6)}`)
 
-  // 세션 49 — JSON 껍데기 벗기기 실측(폐기 사유 아님, 보이게만 한다).
+  // 세션 49 — JSON 껍데기 벗기기 실측(폐기 사유 아님, 보이게만 한다). 세션 50 —
+  // 'malformed_json' 은 "파싱 실패"가 아니라 **"벗기지 못한 JSON"**이다(파싱은
+  // 됐지만 문자열 필드가 0 개 또는 2 개 이상이라 뭘 벗겨야 할지 알 수 없는
+  // 경우도 여기 들어간다 — 세션 49 의 "깨진 껍데기 0/50"이 36번(문자열 필드
+  // 하나뿐인데 키가 feedback 이 아니었던 경우)을 못 잡은 게 그래서다).
   const unwrappedCount = results.filter((r) => r.unwrapped === true).length
   const malformedCount = results.filter((r) => r.unwrapped === 'malformed_json').length
-  console.log(`껍데기 벗김 ${unwrappedCount}/${results.length} · 깨진 껍데기 ${malformedCount}/${results.length}`)
+  console.log(`껍데기 벗김 ${unwrappedCount}/${results.length} · 벗기지 못한 JSON ${malformedCount}/${results.length}`)
 
-  // 세션 49 4-A — 재료 복사 경보(폐기 사유 아님, 계기(計器)일 뿐).
+  // 세션 50 — 문장 번호 누출(verifyHintV3 여섯째 제약).
+  const leakRows = results.filter((r) => r.numberLeak)
+  const leakByItem = new Map<string, number>()
+  for (const r of leakRows) leakByItem.set(r.id, (leakByItem.get(r.id) ?? 0) + 1)
+  const leakDetail = [...leakByItem.entries()].map(([id, n]) => `${id} ${n}`).join(' · ') || '없음'
+  console.log(`번호 누출 ${leakRows.length}/${results.length}(${leakDetail})`)
+
+  // 세션 49 4-A — 재료 복사 경보(폐기 사유 아님, 계기(計器)일 뿐). ★ 6자
+  // 연속 표현 겹침만 잰다 — 뜻이 같아도 표현이 다르면 안 걸린다(세션 49
+  // 21번이 그 한계의 실례다). 재료를 바꿔 쓰면 이 검사를 피해 간다.
   const copyRows = results.filter((r) => r.materialCopy)
   const copyByItem = new Map<string, number>()
   for (const r of copyRows) copyByItem.set(r.id, (copyByItem.get(r.id) ?? 0) + 1)
@@ -795,7 +812,7 @@ async function runHintGolden(
 
   console.log('판정선(STATUS): 통과율은 참고일 뿐 — 박 님이 위 본문을 읽고 hint_visible 을 켤지 정한다.')
 
-  writeFileSync(out, JSON.stringify({ model, reps, promptVersion: PROMPT_VERSION_HINT_V3, results, passRate, cost, unwrappedCount, malformedCount, materialCopyCount: copyRows.length }, null, 2))
+  writeFileSync(out, JSON.stringify({ model, reps, promptVersion: PROMPT_VERSION_HINT_V3, results, passRate, cost, unwrappedCount, malformedCount, numberLeakCount: leakRows.length, materialCopyCount: copyRows.length }, null, 2))
   console.log(`결과를 ${out} 에 적었다.`)
 }
 

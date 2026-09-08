@@ -1064,7 +1064,7 @@ export function buildHintPromptV3(
 
 /**
  * v3 결과 검증. v2 의 네 제약 중 ①만 120→160자로 바뀌고 ②③④는 글자까지
- * 같다 — 거기에 금지어 검사(⑤)를 더한다.
+ * 같다 — 거기에 금지어 검사(⑤)를 더한다. 세션 50 이 ⑥을 더했다.
  *
  * ① 160자 이하(countChars — 공백 제외)
  * ② 「」 인용이 답안 문장의 앞부분으로 실재(v2 와 같은 접두사 검사)
@@ -1073,6 +1073,13 @@ export function buildHintPromptV3(
  * ⑤ 비계 용어("재료"·"관찰 재료"·"준비한")·메타 지시("질문을 던")가 없다
  *    — 학습자에게 코칭 장치 자체를 발설하거나, AI 가 자기 지시를 그대로
  *    뱉으면 폐기한다.
+ * ⑥ 문장 번호(세션 50) — 학습자 화면엔 문장 번호가 없는데, 프롬프트가
+ *    답안에 매긴 번호("...2번 앞에...")가 새어 나오는 경우가 실측됐다
+ *    (세션 47 이 막으려던 메타 지시의 다른 얼굴). `/\d+\s*번(째)?/` 로
+ *    잡는다 — 숫자가 있어야 걸리므로 "두 번"·"한 번" 같은 정상 표현은
+ *    안 걸린다. bt- 원문·지시문·모범답안 전수에 이 패턴이 없다(세션 50
+ *    실측, 아래 verify 불변식 참고) — 정당한 인용을 이 제약이 폐기할
+ *    자리가 없다.
  */
 export interface HintV3Check {
   ok: boolean
@@ -1103,6 +1110,8 @@ export function verifyHintV3(text: string, answer: string): HintV3Check {
 
   const banned = HINT_V3_BANNED_WORDS.filter((w) => text.includes(w))
   if (banned.length > 0) reasons.push(`비계 용어·메타 지시 포함(${banned.join(', ')})`)
+
+  if (/\d+\s*번(째)?/.test(text)) reasons.push('문장 번호 노출(메타 지시)')
 
   return { ok: reasons.length === 0, reasons, quote }
 }

@@ -27,8 +27,10 @@ import {
   parseSupportObservation,
   parseTellObservation,
   parseTellV2Observation,
+  verifyHintV3,
   type HintObservation,
   type HintV2Verdict,
+  type HintV3Check,
   type Observation,
   type PointObservation,
   type PromptInput,
@@ -545,13 +547,24 @@ export async function judgeHintV2With(
  * 힌트 v3 가 JSON 껍데기를 쓰고 오는 경우를 벗긴다(세션 49 실측 — --hint
  * 50건 중 32건이 {"feedback":"…"} 꼴이었는데 verifyHintV3 다섯 제약을
  * 전부 통과해서 통과율만으로는 안 보였다). **고쳐 읽지 않는다** —
- * parseObservation 류의 관례와 같다: 벗긴 문자열이 JSON 으로 파싱되고
- * 객체이며 문자열 필드 feedback 이 있을 때만 그 값을 쓰고, 그 외(파싱
- * 실패·객체 아님·feedback 없음)는 원문을 그대로 둔다.
+ * parseObservation 류의 관례와 같다.
  *
- * ★ 세션 49 보강 — 파싱이 실패했는데 원문이 '{' 로 시작하면(예: JSON 뒤에
- *   말이 더 붙어 깨진 경우) 'malformed_json' 을 따로 낸다. **이번 세션은
- *   폐기하지 않는다** — text 는 원문 그대로 흘려보내고 결과에만 보이게 한다.
+ * ★ 세션 50 — 규칙을 키 이름과 무관하게 넓혔다(세션 49 실측 구멍: 36번이
+ *   {"message":"…"} 로 와서 feedback 만 보던 규칙을 피해 갔다). 이제
+ *   **키 이름을 안 본다** — JSON 으로 파싱되고 객체(배열 아님)이며 문자열
+ *   필드가 **정확히 하나**면 키가 무엇이든 그 값을 trim 해서 쓴다
+ *   (unwrapped: true). 문자열 필드가 둘 이상이거나 하나도 없으면(숫자·
+ *   객체·배열 필드는 안 센다) 어느 것을 벗겨야 할지 알 수 없다 — 원문을
+ *   그대로 두고 unwrapped: 'malformed_json'(파싱은 됐지만 못 벗긴 것).
+ *   배열·원시값처럼 애초에 객체가 아니면 같은 이유로 'malformed_json'.
+ *   ★ {"other":"x"} 는 문자열 필드가 하나뿐이라 이제 **벗긴다** — 키
+ *   이름을 안 보기로 한 규칙의 의도한 결과다(세션 49 는 feedback 만 봐서
+ *   원문을 그대로 뒀었다).
+ *
+ * ★ 세션 49 보강 — 파싱 자체가 실패했는데 원문이 '{' 로 시작하면(예: JSON
+ *   뒤에 말이 더 붙어 깨진 경우) 'malformed_json' 을 낸다. **폐기하지
+ *   않는다** — text 는 원문 그대로 흘려보내고 결과에만 보이게 한다(세션
+ *   50 도 그대로 — malformed_json 은 파싱 실패든 벗기기 실패든 같은 뜻이다).
  */
 function unwrapHintV3Feedback(text: string): { text: string; unwrapped: boolean | 'malformed_json' } {
   let parsed: unknown
@@ -560,13 +573,14 @@ function unwrapHintV3Feedback(text: string): { text: string; unwrapped: boolean 
   } catch {
     return { text, unwrapped: text.startsWith('{') ? 'malformed_json' : false }
   }
-  if (
-    parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed) &&
-    typeof (parsed as Record<string, unknown>).feedback === 'string'
-  ) {
-    return { text: ((parsed as { feedback: string }).feedback).trim(), unwrapped: true }
+  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return { text, unwrapped: 'malformed_json' }
   }
-  return { text, unwrapped: false }
+  const stringFields = Object.entries(parsed as Record<string, unknown>).filter(([, v]) => typeof v === 'string')
+  if (stringFields.length === 1) {
+    return { text: (stringFields[0][1] as string).trim(), unwrapped: true }
+  }
+  return { text, unwrapped: 'malformed_json' }
 }
 
 /**
@@ -613,4 +627,43 @@ export async function judgeHintV3With(
     usage: reply.usage, costUsd: cost, model: reply.model, detail: null,
     unwrapped,
   }
+}
+
+/** judgeHintV3WithRetry 의 한 시도. check 는 outcome 이 자체로 실패(call_failed·
+ *  empty)면 null 이다 — 검증할 텍스트가 없다. */
+export interface HintV3Attempt {
+  outcome: HintV2Outcome
+  check: HintV3Check | null
+}
+
+/**
+ * 힌트 v3 재시도 루프(세션 50, 2-A). verifyHintV3 가 실패하면(문장 번호
+ * 누출 등) 같은 프롬프트·같은 모델로 **한 번만** 다시 부른다 —
+ * "재시도해도 안 되는 답안은 세 번째도 안 될 확률이 높다"(박 님). outcome
+ * 이 자체로 실패(call_failed·empty)한 경우는 재시도하지 않는다 — 재시도
+ * 대상은 "검증 실패"뿐이다(호출 실패까지 다시 부르면 비용만 는다).
+ *
+ * ★ **DB 를 안 만진다.** 캐시 조회·insert·ai_usage_log insert 는 전부
+ *   호출부(route.ts computeHintV3) 몫이다 — 여기는 몇 번 불렀고 각 시도가
+ *   어땠는지만 순서대로 돌려준다. 그래야 verify.ts 가 가짜 call 로 재시도
+ *   횟수·최종 본문을 문다(observe.ts 관례, 세션 10 §6 물기 시험).
+ * 반환 배열은 1건(첫 시도가 통과했거나 자체로 실패) 또는 2건(첫 시도가
+ * 검증에 실패해 재시도까지 돎)이다 — 배열 길이 자체가 "재시도가 돌았는가"다.
+ */
+export async function judgeHintV3WithRetry(
+  call: GeminiCall,
+  answer: string,
+  material: string,
+  person: string,
+  opponent: string,
+  verdict: HintV2Verdict,
+  model: string
+): Promise<HintV3Attempt[]> {
+  const first = await judgeHintV3With(call, answer, material, person, opponent, verdict, model)
+  const firstCheck = first.ok && first.text ? verifyHintV3(first.text, answer) : null
+  if (!first.ok || !first.text || firstCheck!.ok) return [{ outcome: first, check: firstCheck }]
+
+  const second = await judgeHintV3With(call, answer, material, person, opponent, verdict, model)
+  const secondCheck = second.ok && second.text ? verifyHintV3(second.text, answer) : null
+  return [{ outcome: first, check: firstCheck }, { outcome: second, check: secondCheck }]
 }
