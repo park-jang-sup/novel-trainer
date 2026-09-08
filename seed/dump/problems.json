@@ -4845,7 +4845,8 @@
         "과연"
       ],
       "forbidPassageCopy": true,
-      "ai_shadow": ["support", "tell"]
+      "ai_shadow": ["support", "tell"],
+      "ai_hint_material": "창은 뒷손이 밀어야 찌르기가 나가고, 앞손이 창대를 감아쥐어야 후리기가 나간다.\n찌르기는 곧아서 반 뼘만 틀면 창끝이 몸을 스쳐 지나가고, 후리기는 둥글어서 원 안쪽이 가장 느리다."
     }
   },
   {

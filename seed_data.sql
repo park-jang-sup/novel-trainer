@@ -743,7 +743,7 @@ insert into problems
 select
   (select id from stages where skill_key = 'action_turn'),
   'continue', 'auto', '원문이 깔아 둔 상대 기술의 원리를 읽고 한 턴을 이어 쓰시오. 백서린은 검을 쓰는 여검객이고 곽무영은 창을 쓴다. 원문은 ''창은 거리 싸움''이라는 원리를 이미 보여 줬다. 원문을 읽고 다음 한 수를, 서린이 그 원리를 읽고 → 선택지를 재고 → 하나를 고르는 순서가 보이게 쓰되, 고른 수의 대가와 결과가 몸이나 사물로 드러나게 작성하시오. 서린의 속마음이나 대사 한 줄이 들리게 하고, 두 사람 이름이 다 나오게 하시오.',
-  '곽무영의 창은 세 걸음 거리를 지켰다. 백서린이 들어가면 창끝이 찌르고, 물러서면 창대가 따라와 후렸다. 세 합 만에 서린의 왼팔 소매가 갈라졌다. 창은 거리 싸움이었다.', null, '{"maxChars":200,"minVerbs":4,"requireAll":["서린","무영"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","고통","통증","아픔","지독","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","고통","통증","아픔","지독하다","그때였다","과연"],"forbidPassageCopy":true,"ai_shadow":["support","tell"]}'::jsonb,
+  '곽무영의 창은 세 걸음 거리를 지켰다. 백서린이 들어가면 창끝이 찌르고, 물러서면 창대가 따라와 후렸다. 세 합 만에 서린의 왼팔 소매가 갈라졌다. 창은 거리 싸움이었다.', null, '{"maxChars":200,"minVerbs":4,"requireAll":["서린","무영"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","고통","통증","아픔","지독","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","고통","통증","아픔","지독하다","그때였다","과연"],"forbidPassageCopy":true,"ai_shadow":["support","tell"],"ai_hint_material":"창은 뒷손이 밀어야 찌르기가 나가고, 앞손이 창대를 감아쥐어야 후리기가 나간다.\n찌르기는 곧아서 반 뼘만 틀면 창끝이 몸을 스쳐 지나가고, 후리기는 둥글어서 원 안쪽이 가장 느리다."}'::jsonb,
   'original', 'martial', 'planned',
   1, 'bt-spear-range'
 where not exists (select 1 from problems p where p.source_key = 'bt-spear-range');

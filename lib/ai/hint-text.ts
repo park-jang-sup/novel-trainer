@@ -95,10 +95,17 @@ export function buildNoBeatGateCardText(person: string, opponent: string): strin
  * 인용 앞 15자로 자른다(buildTellCardText 와 같은 자르기 규칙 — 카드에
  * 문장 전체를 옮기면 길어져 요지가 묻힌다). 'no_signal' 은 원칙만 말한다
  * (인용할 문장이 없다). 'pending' 은 호출부가 카드 자체를 안 만든다.
+ *
+ * ★ 세션 49 — no_signal 문구 끝에 한 줄을 더했다(박 님 실사용 발견,
+ *   ca-gate-dinner: 신호를 절단문 안에 융합한 답안이 no_signal 을 받고도
+ *   "그 앞에 깔아 봐"만 보여 학습자가 "썼는데?"로 읽었다). signal 은
+ *   1..N-1 만 보므로 "신호를 절단문 안에 넣었다"와 "신호를 아예 안 썼다"
+ *   를 코드로 못 가른다 — 그래서 두 경우 다 맞는 문장으로 쓴다(박 님,
+ *   세션 49): "한 줄 앞으로 빼 봐"처럼 전자만 전제하는 문장은 안 쓴다.
  */
 export function buildSignalCardText(verdict: 'signal' | 'no_signal', quote?: string): string {
   if (verdict === 'no_signal') {
-    return "마지막 줄이 갑자기 와. 그 앞에 '온다'는 낌새 한 줄 — 평소와 다른 것, 있어선 안 될 것 — 을 깔아 봐."
+    return "마지막 줄이 갑자기 와. 그 앞에 '온다'는 낌새 한 줄 — 평소와 다른 것, 있어선 안 될 것 — 을 깔아 봐. 신호는 마지막 줄이 아니라 그 앞 줄에 있어야 신호로 읽혀."
   }
   const truncated = quote && quote.length > 15 ? `${quote.slice(0, 15)}…` : quote ?? ''
   return `끊기 전에 신호가 있어 — 「${truncated}」`

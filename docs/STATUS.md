@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 48 후속 · 커밋 `d4104cd` 위
+마지막 갱신: 세션 49 · 커밋 `83bd699` 위
 
 ★ 활성 144 (전체 157 − 비활성 13). 언어 관문 전수 불변식(verify.ts)이 이 수를
   출력·단언한다 — 문항 증감 때마다 이 줄과 불변식을 같이 갱신한다.
@@ -271,10 +271,22 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
                         열기(물리적 열, 몸·사물의 변화를 그대로 서술하는 말). tell(v1, 문장
                         단위 관측)은 gating 없이 관측 층으로 그대로 둔다 — forbidWords 확장과
                         결이 다른 검사라 안 겹쳐도 된다.
-                        다음 순서: ① hint_visible 결정 — 박 님이 힌트 v3 본문 10건(세션 47
-                        골든 결과, 필요하면 `npm run ai:support-golden -- --hint` 로 재확인)을
-                        읽고 hint_visible 을 켤지 정한다. ② 재제출 비교 피드백 — 설계 미착수
-                        (다음 세션 후보, 세부 미정). ③ 보스(아래 4번).
+                        ★ 세션 48 눈검사 결과(박 님, 브라우저 6건) — crystal 카드가 화면에서
+                        사라짐(ai_shadow 제거 반영 확인) · gate-dinner 실사용 답안(세션 49
+                        real_no_signal 표본의 출처)이 골든 기대(no_signal)와 일치 · fireball
+                        답안에 '통증'을 썼을 때 forbidWords 확장이 실제로 잡음 확인 ·
+                        alley-hook 정상 답에 과차단(새 forbidWords 넷이 좋은 답을 무는 것)이
+                        없음 확인. 같은 세션
+                        --hint 재측정에서 50건 중 32건이 {"feedback": "…"} 꼴 JSON 껍데기로
+                        왔는데 verifyHintV3 다섯 제약을 전부 통과해(통과율 100%가 껍데기를
+                        안 센 수치였다) 세션 49 후속(껍데기 벗기기)의 계기가 됐다.
+                        다음 순서: ① hint_visible 결정 — 세션 49 후속이 힌트 v3 의 JSON
+                        껍데기를 벗기고(judgeHintV3With, --hint 요약에 "껍데기 벗김·깨진
+                        껍데기·재료 복사" 수를 낸다) bt-spear-range 재료를 두 줄로 늘렸다 —
+                        `npm run ai:support-golden -- --hint` 로 **재측정**해 벗긴 본문을
+                        박 님이 다시 읽고 hint_visible 을 켤지 정한다(이번 세션도 off 유지).
+                        ② 재제출 비교 피드백 — 설계 미착수(다음 세션 후보, 세부 미정).
+                        ③ 보스(아래 4번).
 2  구성 16(ca-) support 확장    set A·B·C 오탐 0 이고 미검출이 낮으면(판정선, 세션 40 정정 3-4)
                         cliffhanger_adv 5문항(ca-)에도 ai_shadow 를 켠다(support 부터 —
                         tell 은 별도 판단). 갈리면 프롬프트 재검토 — 새 문항을 늘리지 않는다.
@@ -318,6 +330,107 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
                         설정 카드형 '다섯 줄 쓰기'(18 설계안 5번, write 유형 없어 보류됐던 것)는
                         이 보스 문항에서 다룬다 — 이때 쓸 설정 카드 형식은 도입 4 의 네 칸
                         (①재미 ②인물 ③장면 ④첫마디)을 그대로 재사용한다(세션 39 결정).
+```
+
+### 끝난 것 — 세션 49 (힌트 v3 껍데기 벗기기 · spear-range 재료 신설 · no_signal 카드 한 줄 · 실사용 표본 2건)
+
+```
+경위  세션 48 후속 커밋(83bd699) 위. 박 님이 세션 48 --hint 골든 50건을 실측해 둘을
+  발견했다 — ① 32/50 이 {"feedback": "…"} 꼴 JSON 껍데기로 왔는데 verifyHintV3
+  다섯 제약을 전부 통과해 통과율 100%가 이 결함을 안 보여줬다. ② bt-spear-range
+  nak 5건의 힌트가 전부 "거리·간격"만 되풀이했다 — 원문 마지막 문장("창은 거리
+  싸움이었다")이 원리만 말할 뿐 "그 원리로 무엇을 재고 고르는지"를 안 담아서다.
+  같은 눈검사에서 signal no_signal 카드가 "그 앞에 깔아 봐"만 말해, 신호를
+  절단문 안에 넣은 실사용 답안(ca-gate-dinner)의 학습자가 "썼는데?"로 읽을
+  여지도 나왔다. hint_visible 은 이번에도 off 유지 — 켤지는 이 커밋 뒤 --hint
+  재측정 본문을 박 님이 읽고 정한다.
+
+1. 힌트 v3 JSON 껍데기 벗기기(관대하게) + 벗기기 실패를 보이게(1-A)
+  lib/ai/observe.ts  unwrapHintV3Feedback(text) 신설(모듈 내부 함수) —
+   코드펜스를 벗긴 문자열이 JSON 으로 파싱되고 객체이며 문자열 필드 feedback
+   이 있으면 그 값만 쓴다(고쳐 읽지 않는다 — parse* 관례와 같다). 파싱 실패·
+   객체 아님·feedback 없음이면 원문 그대로 둔다. 세션 49 보강(1-A) — 파싱이
+   실패했는데 원문이 '{' 로 시작하면(JSON 뒤에 말이 더 붙어 깨진 경우 등)
+   'malformed_json' 을 낸다 — **이번 세션은 폐기하지 않는다**, text 는 원문
+   그대로 흘려보내고 결과에만 보이게 한다. judgeHintV3With 가 코드펜스를
+   벗긴 뒤 이 함수를 부른다 — verifyHintV3·캐시·route.ts 는 안 건드렸다(벗긴
+   본문이 그대로 흐른다).
+  HintV2Outcome 에 unwrapped?: boolean | 'malformed_json' 선택 필드 추가 —
+   v2(judgeHintV2With)는 안 채운다, 기존 호출부 무영향.
+  verify.ts 픽스처(신규, AI 호출 없음) — {"feedback":"…"} → 본문만 남고
+   unwrapped===true · ```json 펜스 + JSON 조합도 동일 · 평문 응답은 그대로 ·
+   unwrapped===false · {"other":"x"}(feedback 없음) → 원문 그대로 ·
+   unwrapped===false(고쳐 읽지 않는다) · JSON 뒤에 말이 붙어 깨진 응답(1-A)
+   → 원문 그대로 · unwrapped==='malformed_json'.
+  scripts/support-golden.ts  --hint 요약에 "껍데기 벗김 n/50 · 깨진 껍데기
+   m/50" 한 줄 추가 — 프롬프트가 얼마나 안 지켜지는지 보이게 한다(감추지
+   않는다). 콘솔 각 행에도 [벗김]·[깨진 껍데기] 태그를 붙인다.
+
+2. bt-spear-range — ai_hint_material 신설(박 님 확정 두 줄, 글자 그대로)
+  값: "창은 뒷손이 밀어야 찌르기가 나가고, 앞손이 창대를 감아쥐어야 후리기가
+   나간다.\n찌르기는 곧아서 반 뼘만 틀면 창끝이 몸을 스쳐 지나가고, 후리기는
+   둥글어서 원 안쪽이 가장 느리다." — 다른 넷과 달리 두 줄이다. 원문이 두
+   수(찌르기·후리기)를 깔아 둔 유일한 자리라 읽기 한 줄로는 '재고 고르기'가
+   안 선다(세션 48 --hint 에서 이 문항 nak 5건이 전부 "거리·간격"만 되풀이한
+   것이 증상). 양가창법(란·나·찰)·무예도보통지 장창술 계열이 근거다. 나머지
+   넷의 재료 확장은 이 문항 재측정 뒤에 정한다.
+  seed/update-action-turn-v8.sql(신규, jsonb_set 멱등, 끝에 확인 select) +
+   seed/dump/problems.json 갱신(단일 출처).
+  verify.ts — bt- 5건 전부 ai_hint_material 이 있다(세션 46 의 "4건" 단언을
+   5건으로 갱신) · spear-range 재료가 자기 forbidWords 에 안 걸린다 ·
+   resolveHintMaterial 이 이제 원문 대체가 아니라 이 값을 그대로 돌려준다 ·
+   update-action-turn-v8.sql 존재·문안·다른 bt- 4건 미접촉 단언.
+
+3. no_signal 카드 한 줄 — 박 님 문안으로 확정(3-A 가 원안을 대체)
+  경위  ca-gate-dinner 실사용 답안이 신호(마나 기척·솜털)를 절단문 안에
+   넣어 no_signal 이 났다. 판정은 옳지만 카드가 "그 앞에 깔아 봐"만 말해
+   학습자는 "썼는데?"가 됐다. ★ 세션 49 원안("한 줄 앞으로 빼 봐")은
+   반려됐다 — "절단문 안에 넣었다"는 전제를 깔지만, no_signal 의 다수는
+   신호를 아예 안 쓴 경우다. signal 은 1..N-1 만 보므로 두 경우를 코드로
+   못 가른다 — 그래서 두 경우 다 맞는 문장으로 다시 썼다(박 님, 3-A).
+  lib/ai/hint-text.ts  buildSignalCardText 의 no_signal 문구 끝에 "신호는
+   마지막 줄이 아니라 그 앞 줄에 있어야 신호로 읽혀." 를 붙였다(글자 그대로).
+  verify.ts  문구 단언을 새 전체 문자열로 갱신.
+
+4. 재료 복사 경보(4-A, --hint 요약 줄만 — verify 제약으로는 안 넣는다)
+  scripts/support-golden.ts  detectMaterialCopy(hintText, material) 신설 —
+   재료를 줄 단위(\n)로 쪼개 각 줄에서 6자 창을 밀며, 힌트 본문(「」 인용은
+   답안 인용이라 빼고, 공백 정규화)에 그 6자가 있으면 복사로 본다. --hint
+   요약에 "재료 복사 n/50(문항별 내역)" 한 줄 추가, 콘솔 각 행에 [재료 복사]
+   태그. **폐기 사유가 아니다** — verifyHintV3 는 안 건드렸다. 재료를 두껍게
+   준 결정(spear-range 두 줄)이 #30형(수를 그냥 주는 것)을 부르는지 수치로
+   보려는 계기(計器)일 뿐 — 판단은 박 님이 본문을 읽고 한다.
+
+5. 실사용 표본 2건 골든 등재(AI 가 맞게 판정한 자산 — 회귀 검사용)
+  data/probe/set_b_nak.json  bt-alley-hook 에 real_none_answer(박 님 실사용,
+   기대 'none') + real_none_note 신설. gold.note(기존 nak_answer 사유)와는
+   별개 필드 — 같은 note 를 물려주면 뜻이 안 맞는다. meta.real_none_note 도
+   신설.
+  data/probe/set_c_cliff.json  ca-gate-dinner 에 real_no_signal_answer(박 님
+   실사용, 기대 'no_signal') + real_no_signal_note 신설(같은 이유로 별개
+   필드). meta.real_no_signal_note 도 신설.
+  scripts/support-golden.ts  Case/RunResult 의 kind 유니온에 'real_none'
+   추가(set B, support 모드) · SignalCase 의 kind 유니온에 'real_no_signal'
+   추가(set C, signal 모드). **두 kind 를 good/nak 집계에 안 섞는다**
+   (standoff·emotion 과 같은 자리) — 다만 기대 verdict 가 있으니(standoff·
+   emotion 은 없음) "미검출"이 아니라 "어긋남"으로 별도 줄에 낸다. real_none
+   은 set B summarize() 에 `real_none N건 어긋남 M`, real_no_signal 은
+   runSignalGolden() 에 `real_no_signal N건 어긋남 M` 으로 추가 — 항목별
+   내역도 각각 낸다. set B 는 support 모드에서만, set C 는 signal 모드에서만
+   돈다(다른 모드는 이 kind 를 안 싣는다).
+  verify.ts  두 파일에 각 필드가 정확히 그 문항 1건뿐인지 단언(신규).
+
+검증  tsc 0 · test:scoring(8001, 활성 144 단언 그대로 + 새 픽스처) 6155/0 ·
+  check:numbers 0 · gen:seed 재생성 후 재실행 md5 동일(무변화) · next build 통과 ·
+  `--hint --dry`(v3 문안 그대로 — 이 세션은 프롬프트 자체를 안 바꿨다, 아래
+  열린 관찰 참고). 물기(전부 확인 후 복원): unwrapHintV3Feedback 을 항상
+  {text, unwrapped:false} 로 고정해 세 픽스처가 잡는 것 확인 · buildSignalCardText
+  no_signal 문구에서 새 문장을 지워 단언이 잡는 것 확인 · problems.json 에서
+  bt-spear-range 의 ai_hint_material 을 지워 세 단언(문항 수·문안·
+  resolveHintMaterial)이 잡는 것 확인 · set_b_nak.json 의 real_none_answer ·
+  set_c_cliff.json 의 real_no_signal_answer 를 각각 지워 신설 단언이 잡는
+  것 확인 — 전부 복원 후 6155/0 재확인. 8001 만 내렸다 — 8000(박 님 별도
+  터미널)은 안 건드렸다.
 ```
 
 ### 끝난 것 — 세션 48 후속 (구성 16 signal 확정 · crystal 관측 제외 · bt- forbidWords 느낌명사 확장)
@@ -2548,6 +2661,20 @@ verify 왕복 규칙의 '간이' 절 파싱이 서술 문장의 괄호도 인물
                               원칙 5(문제 먼저)에 따라 이번에도 승격은 안 했다.
 관계 암시형(⑥)에 심리 신호가 정말 필요한 문항이 나오는가 — 열린 질문(세션 48)
 대조형(기준 깔기) 신호 판정 — 별도 질문 필요, crystal 가가 그 자리(세션 48 후속)
+재료가 읽기만 주고 대가·선택을 안 준다 — bt- 나머지 넷(fireball·alley-hook·orc-axe·
+  low-guard)도 spear-range 처럼 두 줄로 갈지 미결(세션 49). spear-range 재측정
+  (--hint 로 힌트가 여전히 "거리·간격"만 되풀이하는지, 두 수를 재고 고르는 축이
+  서는지)을 먼저 보고 정한다 — 지금은 하나만 바꿨다.
+절 단위(글자 위치 순서) 확장 — signal 이 지금 문장 단위(1..N-1)만 보는데,
+  ca-gate-dinner 실사용처럼 신호를 절단문 안에 융합한 표본(real_no_signal)이
+  나왔다. 이런 융합형 표본이 더 쌓이면 절 단위로 넓히는 걸 재검토한다 — 설계는
+  세션 48 논의에 있다(지금은 보류, 세션 49).
+hint_visible 은 재측정 뒤 결정 — 세션 49 후속이 JSON 껍데기를 벗기고 spear-range
+  재료를 두 줄로 늘렸다. 이 변경이 반영된 --hint 본문을 박 님이 다시 읽고 정한다
+  (이번 세션도 off 유지).
+힌트 v3 프롬프트에 평문 강제(JSON 금지) 추가 — 세션 49 는 일부러 안 넣었다(재료
+  변경과 같은 커밋에서 프롬프트를 바꾸면 spear-range 재측정이 뭘 잰 건지 흐려진다).
+  껍데기 n/50 · 깨진 껍데기 m/50 기준선을 확보한 뒤 다음 세션에서 넣는다.
 ```
 
 ## 상태 확인

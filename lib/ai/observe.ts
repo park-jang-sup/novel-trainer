@@ -494,6 +494,14 @@ export interface HintV2Outcome {
   costUsd: number | null
   model: string
   detail: string | null
+  /** v3 전용(세션 49). judgeHintV3With 가 JSON 껍데기를 벗겼는지 —
+   *  true: {"feedback":"…"} 에서 feedback 값만 뽑아 text 로 썼다.
+   *  false: 벗길 게 없었다(평문 그대로, 또는 JSON 이지만 feedback 이 없어
+   *  원문을 그대로 뒀다). 'malformed_json': '{' 로 시작하는데 파싱이
+   *  깨져(예: JSON 뒤에 말이 더 붙음) 벗기기를 포기했다 — 이번 세션은
+   *  이 경우도 폐기하지 않고 원문 그대로 흘려보낸다, 보이게만 한다.
+   *  v2(judgeHintV2With)는 이 필드를 안 채운다 — 기존 호출부 무영향. */
+  unwrapped?: boolean | 'malformed_json'
 }
 
 export async function judgeHintV2With(
@@ -534,9 +542,39 @@ export async function judgeHintV2With(
 }
 
 /**
+ * 힌트 v3 가 JSON 껍데기를 쓰고 오는 경우를 벗긴다(세션 49 실측 — --hint
+ * 50건 중 32건이 {"feedback":"…"} 꼴이었는데 verifyHintV3 다섯 제약을
+ * 전부 통과해서 통과율만으로는 안 보였다). **고쳐 읽지 않는다** —
+ * parseObservation 류의 관례와 같다: 벗긴 문자열이 JSON 으로 파싱되고
+ * 객체이며 문자열 필드 feedback 이 있을 때만 그 값을 쓰고, 그 외(파싱
+ * 실패·객체 아님·feedback 없음)는 원문을 그대로 둔다.
+ *
+ * ★ 세션 49 보강 — 파싱이 실패했는데 원문이 '{' 로 시작하면(예: JSON 뒤에
+ *   말이 더 붙어 깨진 경우) 'malformed_json' 을 따로 낸다. **이번 세션은
+ *   폐기하지 않는다** — text 는 원문 그대로 흘려보내고 결과에만 보이게 한다.
+ */
+function unwrapHintV3Feedback(text: string): { text: string; unwrapped: boolean | 'malformed_json' } {
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(text)
+  } catch {
+    return { text, unwrapped: text.startsWith('{') ? 'malformed_json' : false }
+  }
+  if (
+    parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed) &&
+    typeof (parsed as Record<string, unknown>).feedback === 'string'
+  ) {
+    return { text: ((parsed as { feedback: string }).feedback).trim(), unwrapped: true }
+  }
+  return { text, unwrapped: false }
+}
+
+/**
  * 힌트 v3(세션 47) 관측. v2 와 시그니처가 같다 — 프롬프트(few-shot·비계
  * 용어/메타 지시 금지)와 검증(verifyHintV3)만 바뀌었다. `judgeHintV2With`
- * 를 안 건드리고 곁에 둔다(observe.ts 관례).
+ * 를 안 건드리고 곁에 둔다(observe.ts 관례). 세션 49 — 코드펜스를 벗긴
+ * 뒤 JSON 껍데기도 벗긴다(unwrapHintV3Feedback). verifyHintV3·캐시·
+ * route.ts 는 안 고친다 — 벗긴 본문이 그대로 흐른다.
  */
 export async function judgeHintV3With(
   call: GeminiCall,
@@ -560,7 +598,8 @@ export async function judgeHintV3With(
   }
 
   const cost = costUsd(reply.model, reply.usage)
-  const text = reply.text.trim().replace(/^```(?:\w+)?\s*/i, '').replace(/```$/, '').trim()
+  const stripped = reply.text.trim().replace(/^```(?:\w+)?\s*/i, '').replace(/```$/, '').trim()
+  const { text, unwrapped } = unwrapHintV3Feedback(stripped)
 
   if (!text) {
     return {
@@ -572,5 +611,6 @@ export async function judgeHintV3With(
   return {
     ok: true, text, error: null,
     usage: reply.usage, costUsd: cost, model: reply.model, detail: null,
+    unwrapped,
   }
 }

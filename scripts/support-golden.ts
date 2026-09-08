@@ -147,12 +147,14 @@ interface Case {
   // standoff·emotion(세션 42·45) — 대치형 정당 답안(결정타 없이 끝나되
   // 빌드업은 있음) · 감정형 신호 변형. good/nak/no_beat 와 **따로 센다**
   // (summarize) — 이 갈래들은 판정선이 아직 미정이라, 다른 셋의 집계에
-  // 섞으면 오탐·미검출 수가 흐려진다.
-  kind: 'good' | 'nak' | 'no_beat' | 'standoff' | 'emotion'
+  // 섞으면 오탐·미검출 수가 흐려진다. real_none(세션 49) — 박 님 실사용
+  // 표본(bt-alley-hook). 기대 verdict('none')는 있지만 good/nak 과는 다른
+  // 자리라 안 섞는다 — 어긋남만 별도 줄로 낸다.
+  kind: 'good' | 'nak' | 'no_beat' | 'standoff' | 'emotion' | 'real_none'
   text: string
-  // set B/C nak·no_beat·standoff·emotion 전용. 통제 짝이 불완전하다는 표시
-  // (data/probe/*.json 의 gold.note). 결과 출력에 함께 낸다 — 없으면 해석이
-  // 미검출·뒤집힘을 프롬프트 결함으로 잘못 읽는다.
+  // set B/C nak·no_beat·standoff·emotion·real_none 전용. 통제 짝이 불완전
+  // 하다는 표시(data/probe/*.json 의 gold.note). 결과 출력에 함께 낸다 —
+  // 없으면 해석이 미검출·뒤집힘을 프롬프트 결함으로 잘못 읽는다.
   note?: string
 }
 
@@ -166,6 +168,11 @@ interface SetBNakItem {
     // 세션 42 — 자리만. 대치형 정당 답안(결정타 없이 끝나되 빌드업은 있음).
     // 문안은 박 님 확정 후 채운다 — 있는 항목만 loadCases() 가 케이스로 싣는다.
     standoff_answer?: string
+    // 세션 49 — 박 님 실사용 답안(AI 가 맞게 판정한 자산, 회귀 검사용).
+    // bt-alley-hook 만. 기대 verdict 'none'. note 와 별개 필드다 — note 는
+    // nak_answer 의 구성 사유라 real_none_answer 에 그대로 물려주면 뜻이 안 맞는다.
+    real_none_answer?: string
+    real_none_note?: string
     payoff_line: string
     beat_line: string
     note?: string
@@ -183,6 +190,12 @@ interface SetCItem {
     emotion_good_answer?: string
     // ca-gate-dinner 만(세션 47). good/nak/emotion 과 따로 센다(kind 'bare_emotion').
     bare_emotion_answer?: string
+    // ca-gate-dinner 만(세션 49) — 박 님 실사용 답안(AI 가 맞게 판정한 자산,
+    // 회귀 검사용). 기대 verdict 'no_signal'. good/nak/emotion/bare_emotion
+    // 과 따로 센다(kind 'real_no_signal'). note 와 별개 필드다(nak_answer 의
+    // 구성 사유와 뜻이 다르다).
+    real_no_signal_answer?: string
+    real_no_signal_note?: string
     payoff_line: string
     beat_line: string
     note?: string
@@ -279,6 +292,16 @@ function loadCases(): Case[] {
     })
   }
 
+  // set B 실사용 표본(세션 49) — bt-alley-hook 1건만 있다. 기대 verdict
+  // 'none' — good/nak 과 안 섞는다(summarize 가 별도 어긋남 줄로 낸다).
+  for (const item of nakData.items) {
+    if (!item.gold.real_none_answer) continue
+    out.push({
+      set: 'B', itemId: item.id, kind: 'real_none', text: item.gold.real_none_answer,
+      note: item.gold.real_none_note?.trim() || undefined,
+    })
+  }
+
   // set C(ca-, 세션 45) — good 은 answers.json 에서 직접(가·나, set B 와 같은
   // 방식) · nak·emotion 은 set_c_cliff.json.
   const ca = (answers.reference ?? []).filter((r) => r.source_key.startsWith('ca-'))
@@ -311,8 +334,10 @@ function loadCases(): Case[] {
 interface SignalCase {
   id: string
   // 'good_excluded'(세션 48) — meta.excluded_good 에 실린 대조형 good. 판정선
-  // 집계(good 오탐)에서 뺀다 — 기록만 한다.
-  kind: 'good' | 'nak' | 'emotion' | 'bare_emotion' | 'good_excluded'
+  // 집계(good 오탐)에서 뺀다 — 기록만 한다. 'real_no_signal'(세션 49) —
+  // 박 님 실사용 표본. 기대 verdict 'no_signal' — good/nak 과 안 섞지만
+  // 어긋남은 낸다(standoff·emotion 과 다른 자리 — 세션 49 real_none 과 같다).
+  kind: 'good' | 'nak' | 'emotion' | 'bare_emotion' | 'good_excluded' | 'real_no_signal'
   text: string
   note?: string
   // nak 전용(세션 48) — set_c_cliff.json 의 gold.nak_kind.
@@ -339,6 +364,9 @@ function loadSignalCases(): SignalCase[] {
     }
     if (item.gold.bare_emotion_answer) {
       out.push({ id: item.id, kind: 'bare_emotion', text: item.gold.bare_emotion_answer, note: item.gold.note?.trim() || undefined })
+    }
+    if (item.gold.real_no_signal_answer) {
+      out.push({ id: item.id, kind: 'real_no_signal', text: item.gold.real_no_signal_answer, note: item.gold.real_no_signal_note?.trim() || undefined })
     }
   }
   return out
@@ -498,7 +526,7 @@ async function logUsage(
 interface RunResult {
   set: 'A' | 'B' | 'C'
   itemId: string
-  kind: 'good' | 'nak' | 'no_beat' | 'standoff' | 'emotion'
+  kind: 'good' | 'nak' | 'no_beat' | 'standoff' | 'emotion' | 'real_none'
   rep: number
   verdict: SupportVerdict | 'call_failed' | 'not_json' | 'bad_shape'
   fromCache: boolean
@@ -673,6 +701,27 @@ async function main() {
   await runSupportGolden(admin, flags, reps, model, out, only, domainArg, domainFor, promptVersionFor)
 }
 
+/**
+ * 재료 복사 경보(세션 49 4-A). **폐기 사유가 아니다** — verifyHintV3 는 안
+ * 건드린다. 재료를 두껍게 준 결정(spear-range 두 줄)이 #30형(수를 그냥
+ * 주는 것)을 부르는지 수치로 보려는 계기일 뿐, 판단은 박 님이 본문을
+ * 읽고 한다.
+ *
+ * 재료를 줄 단위(\n)로 쪼개 각 줄에서 6자 창을 밀며, 힌트 본문(「」 인용은
+ * 답안 인용이라 빼고, 공백은 정규화)에 그 6자 부분 문자열이 있으면 복사로
+ * 본다.
+ */
+function detectMaterialCopy(hintText: string, material: string): boolean {
+  const hintNorm = hintText.replace(/「[^」]*」/g, '').replace(/\s+/g, '')
+  for (const line of material.split('\n')) {
+    const lineNorm = line.replace(/\s+/g, '')
+    for (let i = 0; i + 6 <= lineNorm.length; i++) {
+      if (hintNorm.includes(lineNorm.slice(i, i + 6))) return true
+    }
+  }
+  return false
+}
+
 // ── 힌트 골든(세션 45) ────────────────────────────────────────────────
 async function runHintGolden(
   admin: ReturnType<typeof createAdminClient>,
@@ -687,7 +736,7 @@ async function runHintGolden(
   console.log(`\n힌트 v3 표본 ${cases.length}건(nak 5 · no_beat 5) · 반복 ${reps}회 · 모델 ${model} · 이 실행 상한 ${runCap}회`)
   console.log('★ 힌트 본문을 그대로 출력한다 — 박 님이 직접 읽고 거른다(통과율은 참고 수치일 뿐).')
 
-  const results: { id: string; kind: 'nak' | 'no_beat'; rep: number; ok: boolean; reasons: string[]; text: string | null; costUsd: number | null }[] = []
+  const results: { id: string; kind: 'nak' | 'no_beat'; rep: number; ok: boolean; reasons: string[]; text: string | null; costUsd: number | null; unwrapped: boolean | 'malformed_json' | null; materialCopy: boolean }[] = []
   let calls = 0
 
   outer: for (const c of cases) {
@@ -705,6 +754,7 @@ async function runHintGolden(
       let ok = false
       let reasons: string[] = []
       let text: string | null = null
+      let materialCopy = false
       if (!outcome.ok || !outcome.text) {
         reasons = [outcome.error ?? 'call_failed']
       } else {
@@ -712,9 +762,12 @@ async function runHintGolden(
         const check = verifyHintV3(outcome.text, c.text.trim())
         ok = check.ok
         reasons = check.reasons
+        materialCopy = detectMaterialCopy(outcome.text, c.material)
       }
-      results.push({ id: c.id, kind: c.kind, rep, ok, reasons, text, costUsd: outcome.costUsd })
-      console.log(`${String(calls).padStart(3)} ${c.id}/${c.kind} rep${rep} [verdict=${c.verdict}]  ${ok ? '통과' : `폐기(${reasons.join(', ')})`}  $${outcome.costUsd ?? '-'}`)
+      const unwrapped = outcome.unwrapped ?? null
+      results.push({ id: c.id, kind: c.kind, rep, ok, reasons, text, costUsd: outcome.costUsd, unwrapped, materialCopy })
+      const tags = [unwrapped === true ? '벗김' : null, unwrapped === 'malformed_json' ? '깨진 껍데기' : null, materialCopy ? '재료 복사' : null].filter(Boolean)
+      console.log(`${String(calls).padStart(3)} ${c.id}/${c.kind} rep${rep} [verdict=${c.verdict}]  ${ok ? '통과' : `폐기(${reasons.join(', ')})`}${tags.length > 0 ? ` [${tags.join(', ')}]` : ''}  $${outcome.costUsd ?? '-'}`)
       console.log(`     ${text ?? '(응답 없음)'}`)
 
       if (!outcome.ok && outcome.error === 'call_failed' && calls === 1) {
@@ -727,9 +780,22 @@ async function runHintGolden(
   const passRate = results.length > 0 ? results.filter((r) => r.ok).length / results.length : null
   const cost = results.reduce((s, r) => s + (r.costUsd ?? 0), 0)
   console.log(`\n[힌트 v3] ${results.length}회 · 통과율 ${passRate === null ? '-' : (passRate * 100).toFixed(1) + '%'} · 비용 $${cost.toFixed(6)}`)
+
+  // 세션 49 — JSON 껍데기 벗기기 실측(폐기 사유 아님, 보이게만 한다).
+  const unwrappedCount = results.filter((r) => r.unwrapped === true).length
+  const malformedCount = results.filter((r) => r.unwrapped === 'malformed_json').length
+  console.log(`껍데기 벗김 ${unwrappedCount}/${results.length} · 깨진 껍데기 ${malformedCount}/${results.length}`)
+
+  // 세션 49 4-A — 재료 복사 경보(폐기 사유 아님, 계기(計器)일 뿐).
+  const copyRows = results.filter((r) => r.materialCopy)
+  const copyByItem = new Map<string, number>()
+  for (const r of copyRows) copyByItem.set(r.id, (copyByItem.get(r.id) ?? 0) + 1)
+  const copyDetail = [...copyByItem.entries()].map(([id, n]) => `${id} ${n}`).join(' · ') || '없음'
+  console.log(`재료 복사 ${copyRows.length}/${results.length}(${copyDetail})`)
+
   console.log('판정선(STATUS): 통과율은 참고일 뿐 — 박 님이 위 본문을 읽고 hint_visible 을 켤지 정한다.')
 
-  writeFileSync(out, JSON.stringify({ model, reps, promptVersion: PROMPT_VERSION_HINT_V3, results, passRate, cost }, null, 2))
+  writeFileSync(out, JSON.stringify({ model, reps, promptVersion: PROMPT_VERSION_HINT_V3, results, passRate, cost, unwrappedCount, malformedCount, materialCopyCount: copyRows.length }, null, 2))
   console.log(`결과를 ${out} 에 적었다.`)
 }
 
@@ -749,13 +815,15 @@ async function runSignalGolden(
   const emotion = cases.filter((c) => c.kind === 'emotion')
   const bareEmotion = cases.filter((c) => c.kind === 'bare_emotion')
   const goodExcluded = cases.filter((c) => c.kind === 'good_excluded')
+  const realNoSignal = cases.filter((c) => c.kind === 'real_no_signal')
   console.log(
     `\nset C(signal) good(signal 기대) ${good.length} · nak(no_signal 기대) ${nak.length} · ` +
       `emotion ${emotion.length}(판정선 미정 — 분포만) · bare_emotion ${bareEmotion.length}(판정선 미정 — 분포만) · ` +
       `good_excluded ${goodExcluded.length}(대조형 — 집계 밖, 기록만) · ` +
+      `real_no_signal(no_signal 기대) ${realNoSignal.length}(박 님 실사용) · ` +
       `반복 ${reps}회 · 모델 ${model} · 이 실행 상한 ${runCap}회`
   )
-  for (const c of [...nak, ...emotion, ...bareEmotion, ...goodExcluded]) {
+  for (const c of [...nak, ...emotion, ...bareEmotion, ...goodExcluded, ...realNoSignal]) {
     if (c.note) console.log(`  ★ '${c.id}/${c.kind}': ${c.note}`)
   }
 
@@ -795,7 +863,11 @@ async function runSignalGolden(
   const nakRows = results.filter((r) => r.kind === 'nak')
   const nakMissed = nakRows.filter((r) => r.verdict === 'signal').length
   const cost = results.reduce((s, r) => s + (r.costUsd ?? 0), 0)
-  console.log(`\n[set C signal] good ${goodRows.length}건 오탐 ${goodFalsePos} · nak ${nakRows.length}건 미검출 ${nakMissed} · 비용 $${cost.toFixed(6)}`)
+  const realNoSignalRows = results.filter((r) => r.kind === 'real_no_signal')
+  const realNoSignalMismatch = realNoSignalRows.filter((r) => r.verdict !== 'no_signal').length
+  console.log(`\n[set C signal] good ${goodRows.length}건 오탐 ${goodFalsePos} · nak ${nakRows.length}건 미검출 ${nakMissed}` +
+    (realNoSignalRows.length > 0 ? ` · real_no_signal ${realNoSignalRows.length}건 어긋남 ${realNoSignalMismatch}` : '') +
+    ` · 비용 $${cost.toFixed(6)}`)
 
   // nak kind별 미검출(세션 48) — position·blank·reaction·baseline_removed.
   const nakKinds = ['position', 'blank', 'reaction', 'baseline_removed'] as const
@@ -837,6 +909,14 @@ async function runSignalGolden(
     console.log(`good_excluded(대조형, 집계 밖): ${id} — ${distStr}`)
   }
 
+  // real_no_signal 항목별 어긋남(세션 49, 박 님 실사용 표본).
+  for (const r of realNoSignalRows.length > 0 ? [...new Set(realNoSignalRows.map((r) => r.id))] : []) {
+    const list = realNoSignalRows.filter((row) => row.id === r)
+    const itemMismatch = list.filter((row) => row.verdict !== 'no_signal').length
+    const note = realNoSignal.find((c) => c.id === r)?.note
+    console.log(`    real_no_signal '${r}': ${itemMismatch}/${list.length}회 no_signal 아님(어긋남)${note ? ` — ★ ${note}` : ''}`)
+  }
+
   // 뒤집힘 — support-golden 과 같은 정의(같은 id+kind 의 reps 결과가 다 같지
   // 않으면 1건). set A/B/C 의 buildup 뒤집힘과 **같은 열에 안 섞는다**(세션
   // 47 지시 1-4 — 잰 관계가 다르다: support 는 '필요' 관계, signal 은 '기대'
@@ -866,6 +946,7 @@ async function runSignalGolden(
     model, reps, promptVersion: PROMPT_VERSION_SIGNAL, results,
     goodFalsePos, nakMissed, flips, cost,
     nakMissedByKind, selfStateMissed, excludedDist,
+    realNoSignal: realNoSignalRows.length, realNoSignalMismatch,
   }, null, 2))
   console.log(`결과를 ${out} 에 적었다.`)
   console.log('판정선(STATUS): good 오탐 0 · nak 미검출 0 · self_state 미검출 0 이면 구성 16(ca-) signal 실사용 확장. 판정선은 박 님이 정한다.')
@@ -1151,10 +1232,14 @@ async function runSupportGolden(
     // 아직 없어(박 님 확정 전) "미검출" 수는 안 낸다 — 건수·분포만 보여준다.
     const standoff = rows.filter((r) => r.kind === 'standoff')
     const emotion = rows.filter((r) => r.kind === 'emotion')
+    // real_none(세션 49) — 박 님 실사용 표본. standoff·emotion 과 달리 기대
+    // verdict('none')가 있다 — good/nak 과는 안 섞지만 "어긋남"은 낸다.
+    const realNone = rows.filter((r) => r.kind === 'real_none')
     const falsePos = good.filter((r) => r.verdict !== 'buildup').length // 오탐: good인데 buildup 아님(no_beat 로 잘못 빠지는 것도 포함)
     const missed = nak.filter((r) => r.verdict === 'buildup').length // 미검출: nak인데 buildup
     // no_beat 미검출: 결정타가 없는 글인데 'no_beat' 가 아닌 다른 판정이 나온 것(세션 41 후속 2).
     const noBeatMissed = noBeat.filter((r) => r.verdict !== 'no_beat').length
+    const realNoneMismatch = realNone.filter((r) => r.verdict !== 'none').length
     const mismatch = rows.filter((r) => r.verdict === 'beat_mismatch' || r.verdict === 'quote_mismatch').length
     const cost = rows.reduce((s, r) => s + (r.costUsd ?? 0), 0)
 
@@ -1176,6 +1261,7 @@ async function runSupportGolden(
       (noBeat.length > 0 ? ` · no_beat ${noBeat.length}건 미검출 ${noBeatMissed}` : '') +
       (standoff.length > 0 ? ` · standoff ${standoff.length}건(판정선 미정 — 건수만)` : '') +
       (emotion.length > 0 ? ` · emotion ${emotion.length}건(판정선 미정 — 건수만)` : '') +
+      (realNone.length > 0 ? ` · real_none ${realNone.length}건 어긋남 ${realNoneMismatch}` : '') +
       ` · beat/quote 불일치 ${mismatch} · 뒤집힘(항목) ${flips}/${byItem.size} · 비용 $${cost.toFixed(6)}`)
 
     // set B/C nak/no_beat/standoff/emotion 은 항목별 미검출·note·분포를
@@ -1210,6 +1296,16 @@ async function runSupportGolden(
         const note = standoffCasesById.get(itemId)?.note
         console.log(`    standoff '${itemId}': ${list.length}회 분포 — ${dist}${note ? ` — ★ ${note}` : ''}`)
       }
+      // real_none(세션 49) — 기대 verdict 'none'. no_beat 와 같은 자리로
+      // "어긋남"(none 아님) 수를 낸다.
+      const realNoneCasesById = new Map(cases.filter((c) => c.set === 'B' && c.kind === 'real_none').map((c) => [c.itemId, c]))
+      for (const [k, list] of byItem) {
+        if (!k.endsWith(':real_none')) continue
+        const itemId = k.slice(0, -':real_none'.length)
+        const itemMismatch = list.filter((r) => r.verdict !== 'none').length
+        const note = realNoneCasesById.get(itemId)?.note
+        console.log(`    real_none '${itemId}': ${itemMismatch}/${list.length}회 none 아님(어긋남)${note ? ` — ★ ${note}` : ''}`)
+      }
     }
     if (set === 'C') {
       // emotion(세션 45) — ca-walk-home 하나뿐. 기대 verdict 없음, 분포만.
@@ -1224,7 +1320,7 @@ async function runSupportGolden(
         console.log(`    emotion '${itemId}': ${list.length}회 분포 — ${dist}${note ? ` — ★ ${note}` : ''}`)
       }
     }
-    return { set, good: good.length, falsePos, nak: nak.length, missed, noBeat: noBeat.length, noBeatMissed, standoff: standoff.length, emotion: emotion.length, mismatch, flips, itemCount: byItem.size, cost }
+    return { set, good: good.length, falsePos, nak: nak.length, missed, noBeat: noBeat.length, noBeatMissed, standoff: standoff.length, emotion: emotion.length, realNone: realNone.length, realNoneMismatch, mismatch, flips, itemCount: byItem.size, cost }
   }
   const summaryA = setA.length > 0 ? summarize('A') : null
   const summaryB = setB.length > 0 ? summarize('B') : null

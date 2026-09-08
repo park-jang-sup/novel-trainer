@@ -8175,7 +8175,7 @@ console.log('\n[결정타 빌드업 섀도 support-v3]')
   const setBNakPath = path.join(__dirname, '..', '..', 'data', 'probe', 'set_b_nak.json')
   t('data/probe/set_b_nak.json 이 존재한다', existsSync(setBNakPath))
   if (existsSync(setBNakPath)) {
-    interface SetBNakItem { id: string; gold: { good_answer: string; nak_answer: string; no_beat_answer: string; standoff_answer?: string; payoff_line: string; beat_line: string; note?: string } }
+    interface SetBNakItem { id: string; gold: { good_answer: string; nak_answer: string; no_beat_answer: string; standoff_answer?: string; real_none_answer?: string; payoff_line: string; beat_line: string; note?: string } }
     const setBNak = JSON.parse(readFileSync(setBNakPath, 'utf8').replace(/^﻿/, '')) as { items: SetBNakItem[] }
     t('set_b_nak.json: 5건', setBNak.items.length === 5, `실제=${setBNak.items.length}`)
     const nakIds = new Set(setBNak.items.map((i) => i.id))
@@ -8214,6 +8214,12 @@ console.log('\n[결정타 빌드업 섀도 support-v3]')
     t('set_b_nak.json: standoff_answer 는 정확히 bt-spear-range 1건뿐(나머지는 자리만)',
       standoffIds.length === 1 && standoffIds[0] === 'bt-spear-range',
       JSON.stringify(standoffIds))
+
+    // 실사용 표본(세션 49) — bt-alley-hook 1건뿐이어야 한다.
+    const realNoneIds = setBNak.items.filter((item) => item.gold.real_none_answer).map((item) => item.id)
+    t('set_b_nak.json: real_none_answer 는 정확히 bt-alley-hook 1건뿐(박 님 실사용 표본)',
+      realNoneIds.length === 1 && realNoneIds[0] === 'bt-alley-hook',
+      JSON.stringify(realNoneIds))
 
     // note 존재(세션 43 지시 1-4) — 골든셋 항목마다 판정을 사람이 읽을 근거가
     // 있어야 한다. 빈 note 는 "설명할 게 없다"가 아니라 "아직 안 적었다"로
@@ -8628,7 +8634,7 @@ console.log('\n[느낌어 판정(tell) · 힌트 · 골든셋 set C·D — 세�
   const setCPath = path.join(__dirname, '..', '..', 'data', 'probe', 'set_c_cliff.json')
   t('data/probe/set_c_cliff.json 이 존재한다', existsSync(setCPath))
   if (existsSync(setCPath)) {
-    interface SetCItem { id: string; gold: { nak_answer: string; emotion_good_answer?: string; payoff_line: string; beat_line: string; note?: string } }
+    interface SetCItem { id: string; gold: { nak_answer: string; emotion_good_answer?: string; real_no_signal_answer?: string; payoff_line: string; beat_line: string; note?: string } }
     const setC = JSON.parse(readFileSync(setCPath, 'utf8').replace(/^﻿/, '')) as { items: SetCItem[] }
     t('set_c_cliff.json: 5건', setC.items.length === 5, `실제=${setC.items.length}`)
     const caIds = new Set(setC.items.map((i) => i.id))
@@ -8647,6 +8653,9 @@ console.log('\n[느낌어 판정(tell) · 힌트 · 골든셋 set C·D — 세�
     const emotionIds = setC.items.filter((i) => i.gold.emotion_good_answer).map((i) => i.id)
     t("set_c_cliff.json: emotion_good_answer 는 정확히 ca-walk-home 1건뿐",
       emotionIds.length === 1 && emotionIds[0] === 'ca-walk-home', JSON.stringify(emotionIds))
+    const realNoSignalIds = setC.items.filter((i) => i.gold.real_no_signal_answer).map((i) => i.id)
+    t("set_c_cliff.json: real_no_signal_answer 는 정확히 ca-gate-dinner 1건뿐(박 님 실사용 표본, 세션 49)",
+      realNoSignalIds.length === 1 && realNoSignalIds[0] === 'ca-gate-dinner', JSON.stringify(realNoSignalIds))
   }
 
   // ── 골든셋 set D(tell, 세션 45) — 존재·6건·경계 표본 2건(D-4·D-6) ──
@@ -8844,8 +8853,8 @@ console.log('\n[힌트 v1 내림 · 카드 문구 교체 · 힌트 v2 — 세션
     return !r.ok && r.error === 'call_failed' && r.usage === null
   })
 
-  t('buildSignalCardText: no_signal 은 확정 문구 그대로(신호 없음 원칙)',
-    buildSignalCardText('no_signal') === "마지막 줄이 갑자기 와. 그 앞에 '온다'는 낌새 한 줄 — 평소와 다른 것, 있어선 안 될 것 — 을 깔아 봐.")
+  t('buildSignalCardText: no_signal 은 확정 문구 그대로(신호 없음 원칙, 세션 49 — 자리 안내 한 줄 추가)',
+    buildSignalCardText('no_signal') === "마지막 줄이 갑자기 와. 그 앞에 '온다'는 낌새 한 줄 — 평소와 다른 것, 있어선 안 될 것 — 을 깔아 봐. 신호는 마지막 줄이 아니라 그 앞 줄에 있어야 신호로 읽혀.")
   t('buildSignalCardText: signal 은 15자 이하 인용을 안 자른다',
     buildSignalCardText('signal', '짧은 인용').includes('「짧은 인용」'))
   {
@@ -8970,6 +8979,41 @@ console.log('\n[힌트 v1 내림 · 카드 문구 교체 · 힌트 v2 — 세션
     return !r.ok && r.error === 'call_failed'
   })
 
+  // ── judgeHintV3With: JSON 껍데기 벗기기(세션 49) ─────────────────────
+  tAsync('judgeHintV3With: {"feedback":"…"} 꼴이면 껍데기를 벗기고 본문만 남긴다 · unwrapped===true', async () => {
+    const r = await judgeHintV3With(
+      async () => ({ text: '{"feedback": "「카엘은 같은 자리」에서 안 움직이는 이유가 뭘까? 리온이 그걸 알아채는 순간을 넣어 봐."}', usage: { inputTokens: 100, cachedTokens: 0, outputTokens: 20 }, model: 'gemini-3.7-flash' }),
+      hintV3Answer, '재료.', '리온', '카엘', 'none', 'gemini-3.7-flash')
+    return r.ok && r.text === '「카엘은 같은 자리」에서 안 움직이는 이유가 뭘까? 리온이 그걸 알아채는 순간을 넣어 봐.' &&
+      !r.text.includes('{') && r.unwrapped === true
+  })
+  tAsync('judgeHintV3With: ```json 펜스 + JSON 조합도 벗긴다 · unwrapped===true', async () => {
+    const r = await judgeHintV3With(
+      async () => ({ text: '```json\n{"feedback": "「카엘은 같은 자리」에서 안 움직이는 이유가 뭘까? 리온이 그걸 알아채는 순간을 넣어 봐."}\n```', usage: { inputTokens: 100, cachedTokens: 0, outputTokens: 20 }, model: 'gemini-3.7-flash' }),
+      hintV3Answer, '재료.', '리온', '카엘', 'none', 'gemini-3.7-flash')
+    return r.ok && r.text === '「카엘은 같은 자리」에서 안 움직이는 이유가 뭘까? 리온이 그걸 알아채는 순간을 넣어 봐.' && r.unwrapped === true
+  })
+  tAsync('judgeHintV3With: 평문 응답은 그대로 · unwrapped===false', async () => {
+    const r = await judgeHintV3With(
+      async () => ({ text: '「카엘은 같은 자리」에서 안 움직이는 이유가 뭘까? 리온이 그걸 알아채는 순간을 넣어 봐.', usage: { inputTokens: 100, cachedTokens: 0, outputTokens: 20 }, model: 'gemini-3.7-flash' }),
+      hintV3Answer, '재료.', '리온', '카엘', 'none', 'gemini-3.7-flash')
+    return r.ok && r.text === '「카엘은 같은 자리」에서 안 움직이는 이유가 뭘까? 리온이 그걸 알아채는 순간을 넣어 봐.' && r.unwrapped === false
+  })
+  tAsync('judgeHintV3With: JSON 이지만 feedback 필드가 없으면 원문 그대로 · unwrapped===false(고쳐 읽지 않는다)', async () => {
+    const r = await judgeHintV3With(
+      async () => ({ text: '{"other": "x"}', usage: { inputTokens: 100, cachedTokens: 0, outputTokens: 5 }, model: 'gemini-3.7-flash' }),
+      hintV3Answer, '재료.', '리온', '카엘', 'none', 'gemini-3.7-flash')
+    return r.ok && r.text === '{"other": "x"}' && r.unwrapped === false
+  })
+  // 세션 49 보강(1-A) — JSON 뒤에 말이 붙어 파싱이 깨지는 경우. 이번 세션은
+  // 폐기하지 않는다 — text 는 원문 그대로, unwrapped 로만 보이게 한다.
+  tAsync("judgeHintV3With: JSON 뒤에 말이 붙어 파싱이 깨지면 원문 그대로 · unwrapped==='malformed_json'(세션 49 보강)", async () => {
+    const r = await judgeHintV3With(
+      async () => ({ text: '{"feedback": "「…」 … 봐."} 이건 참고야', usage: { inputTokens: 100, cachedTokens: 0, outputTokens: 20 }, model: 'gemini-3.7-flash' }),
+      hintV3Answer, '재료.', '리온', '카엘', 'none', 'gemini-3.7-flash')
+    return r.ok && r.text === '{"feedback": "「…」 … 봐."} 이건 참고야' && r.unwrapped === 'malformed_json'
+  })
+
   // ── shadowKinds: 'signal' 도 배열로 읽는다(세션 47) ──
   t("shadowKinds({ai_shadow:['signal']}) === ['signal']",
     JSON.stringify(shadowKinds({ ai_shadow: ['signal'] })) === JSON.stringify(['signal']))
@@ -8983,18 +9027,46 @@ console.log('\n[힌트 v1 내림 · 카드 문구 교체 · 힌트 v2 — 세션
   t('병: bt-spear-range 는 이 파일이 update 하지 않는다(재료 없음 — route.ts 가 원문 마지막 문장으로 대신한다)',
     !/where source_key = 'bt-spear-range'/.test(v6Src))
 
-  // ── seed/dump/problems.json: 4건은 ai_hint_material 이 있고 bt-spear-range 는 없다 ──
+  // ── seed/dump/problems.json: 세션 46 은 4건(bt-spear-range 는 없다) — 세션 49
+  //    후속(update-action-turn-v8.sql)이 spear-range 도 채워 이제 5건 전부 있다 ──
   interface HintMaterialProblem { source_key: string; skill_key: string; scoring_config: { ai_hint_material?: string } }
   const problemsForHintMaterial = JSON.parse(
     readFileSync(path.join(__dirname, '..', '..', 'seed', 'dump', 'problems.json'), 'utf8').replace(/^﻿/, '')
   ) as HintMaterialProblem[]
   const btForHintMaterial = problemsForHintMaterial.filter((p) => p.skill_key === 'action_turn' && p.source_key.startsWith('bt-'))
   const withMaterial = btForHintMaterial.filter((p) => p.scoring_config.ai_hint_material !== undefined)
-  t('problems.json: ai_hint_material 이 있는 bt- 는 정확히 4건(bt-spear-range 는 없다)',
-    withMaterial.length === 4 && !withMaterial.some((p) => p.source_key === 'bt-spear-range'),
+  t('problems.json: ai_hint_material 이 있는 bt- 는 5건 전부다(세션 49 후속 — bt-spear-range 도 채웠다)',
+    withMaterial.length === 5 && btForHintMaterial.length === 5,
     JSON.stringify(withMaterial.map((p) => p.source_key)))
-  t('problems.json: bt-spear-range 는 ai_hint_material 이 없다(원문 마지막 문장이 재료)',
-    btForHintMaterial.find((p) => p.source_key === 'bt-spear-range')?.scoring_config.ai_hint_material === undefined)
+  t('problems.json: bt-spear-range 의 ai_hint_material 이 박 님 확정 두 줄(\\n 로 잇는다) 그대로다(세션 49)',
+    btForHintMaterial.find((p) => p.source_key === 'bt-spear-range')?.scoring_config.ai_hint_material ===
+      '창은 뒷손이 밀어야 찌르기가 나가고, 앞손이 창대를 감아쥐어야 후리기가 나간다.\n찌르기는 곧아서 반 뼘만 틀면 창끝이 몸을 스쳐 지나가고, 후리기는 둥글어서 원 안쪽이 가장 느리다.')
+  {
+    const srMaterial = btForHintMaterial.find((p) => p.source_key === 'bt-spear-range')?.scoring_config.ai_hint_material ?? ''
+    const srForbid = (btForHintMaterial.find((p) => p.source_key === 'bt-spear-range') as unknown as { scoring_config: { forbidWords?: string[] } })?.scoring_config.forbidWords ?? []
+    t('problems.json: bt-spear-range 재료가 자기 문항 forbidWords 에 안 걸린다(세션 49)',
+      findForbidden(srMaterial, srForbid).length === 0, JSON.stringify(findForbidden(srMaterial, srForbid)))
+  }
+  {
+    // resolveHintMaterial 이 이제 spear-range 도 원문 대체가 아니라 이 값을 그대로 돌려준다.
+    const sr = btForHintMaterial.find((p) => p.source_key === 'bt-spear-range')!
+    t('resolveHintMaterial: bt-spear-range 는 이제 원문 대체가 아니라 ai_hint_material 을 그대로 돌려준다(세션 49)',
+      resolveHintMaterial(sr.scoring_config, '아무 원문.') === sr.scoring_config.ai_hint_material)
+  }
+
+  // ── seed/update-action-turn-v8.sql(세션 49): bt-spear-range 만 ai_hint_material 신설 ──
+  const v8Path = path.join(__dirname, '..', '..', 'seed', 'update-action-turn-v8.sql')
+  t('update-action-turn-v8.sql 이 존재한다', existsSync(v8Path))
+  if (existsSync(v8Path)) {
+    const v8Src = readFileSync(v8Path, 'utf8')
+    t("update-action-turn-v8.sql: bt-spear-range 에 ai_hint_material 을 jsonb_set 으로 넣는다",
+      new RegExp(`jsonb_set\\(scoring_config, '\\{ai_hint_material\\}'.*where source_key = 'bt-spear-range'`, 's').test(v8Src))
+    t('update-action-turn-v8.sql: 박 님 확정 두 줄이 문안에 그대로 있다(글자 하나도 안 바꿈)',
+      v8Src.includes('창은 뒷손이 밀어야 찌르기가 나가고, 앞손이 창대를 감아쥐어야 후리기가 나간다.') &&
+      v8Src.includes('찌르기는 곧아서 반 뼘만 틀면 창끝이 몸을 스쳐 지나가고, 후리기는 둥글어서 원 안쪽이 가장 느리다.'))
+    t('update-action-turn-v8.sql: 다른 bt- 4건은 안 건드린다',
+      !['bt-fireball-shield', 'bt-alley-hook', 'bt-orc-axe', 'bt-low-guard'].some((k) => v8Src.includes(`'${k}'`)))
+  }
 
   // ── bt- forbidWords 확장: 느낌명사 넷(고통·통증·아픔·지독) — 세션 48 후속 ──
   // 세션 45~47 tell 관측이 쌓은 실사용 동의어 우회(통증·열기·지독한 통증·아픔)를
