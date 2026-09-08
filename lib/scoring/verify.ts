@@ -5667,16 +5667,14 @@ console.log('\n[문장 12 action_turn: 재개 신규 5문항]')
     JSON.stringify(bt.map((d) => `${d.source_key}:${JSON.stringify(d.scoring_config.requireAll)}`)))
   t('5건 전부 forbidPassageCopy true', bt.every((d) => d.scoring_config.forbidPassageCopy === true))
 
-  // fireball-shield 만 느낌9 + '고통' — 나머지 4건은 느낌9 그대로(9개)
+  // 세션 45: fireball-shield 만 느낌9 + '고통'(10개) · 나머지 4건은 느낌9(9개).
+  // 세션 48 후속: 5건 전부에 느낌명사 넷(고통·통증·아픔·지독)을 더했다 — fireball
+  // 만 갖던 '고통'이 이제 다섯 다 있고, 5건 전부 13개로 같아졌다.
   {
-    const fb = bt.find((d) => d.source_key === 'bt-fireball-shield')!
-    const fw = fb.scoring_config.forbidWords as string[]
-    t("'bt-fireball-shield': forbidWords 가 느낌9 + '고통'(10개)",
-      fw.includes('고통') && fw.length === 10, JSON.stringify(fw))
-    for (const d of bt.filter((x) => x.source_key !== 'bt-fireball-shield')) {
-      const fw2 = d.scoring_config.forbidWords as string[]
-      t(`'${d.source_key}': forbidWords 가 느낌9 그대로(9개, '고통' 없음)`,
-        fw2.length === 9 && !fw2.includes('고통'), JSON.stringify(fw2))
+    for (const d of bt) {
+      const fw = d.scoring_config.forbidWords as string[]
+      t(`'${d.source_key}': forbidWords 가 느낌9 + 고통·통증·아픔·지독(13개, 세션 48 후속)`,
+        fw.length === 13 && ['고통', '통증', '아픔', '지독'].every((w) => fw.includes(w)), JSON.stringify(fw))
     }
   }
   // '강력한'(활용형)이 아니라 '강력'(어간)이 목록에 있다 — 1번 원문 "강력했다"를 잡기 위해
@@ -8157,16 +8155,21 @@ console.log('\n[결정타 빌드업 섀도 support-v3]')
       p.scoring_config.ai_shadow.includes('support') && p.scoring_config.ai_shadow.includes('tell')),
     JSON.stringify(bt2.map((p) => `${p.source_key}:${JSON.stringify(p.scoring_config.ai_shadow)}`)))
   // ★ 세션 47 — ca- 5건이 signal 로 ai_shadow 를 처음 켰다(아래 signal 절의
-  //   "problems.json: ca- 5건 전부 ai_shadow 가 ['signal']" 이 그 내용을
-  //   자세히 문다). 여기서는 bt-·ca- **딱 열 건**뿐이고 다른 단계는 안
-  //   건드렸는지만 잰다 — 이 절의 이름을 세션 45 의 'bt- 5건뿐'에서 갱신한다.
+  //   "problems.json: ca- 4건 전부 ai_shadow 가 ['signal']" 이 그 내용을
+  //   자세히 문다). 세션 48 후속 — ca-crystal-exam 은 대조형이라 ai_shadow 를
+  //   다시 뺐다(signal-v2 정의 밖, 문항 수정 아님). 그래서 켠 문항은 bt- 5 +
+  //   ca- 4 = 9건이다(세션 47 의 '10건'에서 줄었다). 여기서는 bt-·ca- 만이고
+  //   다른 단계는 안 건드렸는지만 잰다.
   const withShadow = allProblems2.filter((p) => p.scoring_config.ai_shadow !== undefined)
-  t('ai_shadow 를 켠 문항은 정확히 bt- 5건 + ca- 5건(세션 47) — 다른 단계는 안 건드린다',
-    withShadow.length === 10 && withShadow.every((p) => p.source_key.startsWith('bt-') || p.source_key.startsWith('ca-')),
+  t('ai_shadow 를 켠 문항은 정확히 bt- 5건 + ca- 4건 = 9건(세션 48 후속 — ca-crystal-exam 제외) — 다른 단계는 안 건드린다',
+    withShadow.length === 9 && withShadow.every((p) => p.source_key.startsWith('bt-') || p.source_key.startsWith('ca-')),
     JSON.stringify(withShadow.map((p) => p.source_key)))
   const ca2 = allProblems2.filter((p) => p.skill_key === 'cliffhanger_adv')
-  t('구성 16(ca-) 는 5건 전부 ai_shadow 가 있다(세션 47 — signal 신설, 세션 45 의 "없다"에서 뒤집혔다)',
-    ca2.length === 5 && ca2.every((p) => p.scoring_config.ai_shadow !== undefined))
+  t('구성 16(ca-) 중 4건(gate-dinner·open-door·inn-endroom·walk-home)은 ai_shadow [\'signal\'] · ca-crystal-exam 은 ai_shadow 없음(세션 48 — 대조형, signal-v2 정의 밖)',
+    ca2.length === 5 &&
+      ca2.filter((p) => p.source_key !== 'ca-crystal-exam').every((p) => Array.isArray(p.scoring_config.ai_shadow) && p.scoring_config.ai_shadow.length === 1 && (p.scoring_config.ai_shadow as string[])[0] === 'signal') &&
+      ca2.find((p) => p.source_key === 'ca-crystal-exam')?.scoring_config.ai_shadow === undefined,
+    JSON.stringify(ca2.map((p) => `${p.source_key}:${JSON.stringify(p.scoring_config.ai_shadow)}`)))
 
   // ── 골든셋 set B nak 데이터 파일(세션 41) — 존재·5건·id 가 bt- 5건과 일치 ──
   const setBNakPath = path.join(__dirname, '..', '..', 'data', 'probe', 'set_b_nak.json')
@@ -8860,16 +8863,33 @@ console.log('\n[힌트 v1 내림 · 카드 문구 교체 · 힌트 v2 — 세션
     t(`update-cliffhanger-adv-v2.sql: ${key} 가 where in 목록에 있다`, cliffV2Src.includes(`'${key}'`))
   }
 
-  // ── problems.json: ca- 5건 전부 ai_shadow ["signal"] ──
+  // ── problems.json: ca- 4건 ai_shadow ["signal"] · ca-crystal-exam 은 없음(세션 48 후속) ──
   interface SignalProblem { source_key: string; skill_key: string; scoring_config: { ai_shadow?: unknown } }
   const problemsForSignal = JSON.parse(
     readFileSync(path.join(__dirname, '..', '..', 'seed', 'dump', 'problems.json'), 'utf8').replace(/^﻿/, '')
   ) as SignalProblem[]
   const caProblems = problemsForSignal.filter((p) => p.skill_key === 'cliffhanger_adv' && p.source_key.startsWith('ca-'))
-  t('problems.json: ca- 5건 전부 ai_shadow 가 ["signal"](세션 47 — support·tell 과 안 섞는다)',
-    caProblems.length === 5 && caProblems.every((p) => Array.isArray(p.scoring_config.ai_shadow) &&
-      p.scoring_config.ai_shadow.length === 1 && (p.scoring_config.ai_shadow as string[])[0] === 'signal'),
+  t('problems.json: ca- 중 4건(crystal 제외)은 ai_shadow 가 ["signal"](세션 47 — support·tell 과 안 섞는다)',
+    caProblems.length === 5 &&
+      caProblems.filter((p) => p.source_key !== 'ca-crystal-exam').every((p) => Array.isArray(p.scoring_config.ai_shadow) &&
+        p.scoring_config.ai_shadow.length === 1 && (p.scoring_config.ai_shadow as string[])[0] === 'signal'),
     JSON.stringify(caProblems.map((p) => `${p.source_key}:${JSON.stringify(p.scoring_config.ai_shadow)}`)))
+  t('problems.json: ca-crystal-exam 은 ai_shadow 가 없다(세션 48 후속 — 대조형, signal-v2 정의 밖)',
+    caProblems.find((p) => p.source_key === 'ca-crystal-exam')?.scoring_config.ai_shadow === undefined)
+
+  // ── seed/update-cliffhanger-adv-v3.sql(세션 48 후속): ca-crystal-exam 만 ai_shadow 제거 ──
+  const cliffV3Path = path.join(__dirname, '..', '..', 'seed', 'update-cliffhanger-adv-v3.sql')
+  t('update-cliffhanger-adv-v3.sql 이 존재한다', existsSync(cliffV3Path))
+  if (existsSync(cliffV3Path)) {
+    const cliffV3Src = readFileSync(cliffV3Path, 'utf8')
+    t("update-cliffhanger-adv-v3.sql: scoring_config - 'ai_shadow'",
+      cliffV3Src.includes(`scoring_config = scoring_config - 'ai_shadow'`))
+    t("update-cliffhanger-adv-v3.sql: where 절이 ca-crystal-exam 하나만 가리킨다(나머지 4건은 안 건드림)",
+      cliffV3Src.includes(`where source_key = 'ca-crystal-exam'`) &&
+        !['ca-gate-dinner', 'ca-open-door', 'ca-inn-endroom', 'ca-walk-home'].some((k) => cliffV3Src.includes(`'${k}'`)))
+    t('update-cliffhanger-adv-v3.sql 이 order_no 를 안 쓴다(42703 — problems 에 없는 컬럼)',
+      !cliffV3Src.includes('order_no'))
+  }
 
   // ── 느낌어 판정 v2(tell-v2, 세션 47) — 프롬프트·파싱·검증 ────────────
   t("PROMPT_VERSION_TELL_V2 = 'tell-v2'", PROMPT_VERSION_TELL_V2 === 'tell-v2')
@@ -8975,6 +8995,62 @@ console.log('\n[힌트 v1 내림 · 카드 문구 교체 · 힌트 v2 — 세션
     JSON.stringify(withMaterial.map((p) => p.source_key)))
   t('problems.json: bt-spear-range 는 ai_hint_material 이 없다(원문 마지막 문장이 재료)',
     btForHintMaterial.find((p) => p.source_key === 'bt-spear-range')?.scoring_config.ai_hint_material === undefined)
+
+  // ── bt- forbidWords 확장: 느낌명사 넷(고통·통증·아픔·지독) — 세션 48 후속 ──
+  // 세션 45~47 tell 관측이 쌓은 실사용 동의어 우회(통증·열기·지독한 통증·아픔)를
+  // forbidWords 로 승격했다(세션 47 tell-v2 판정선 — "겹침이 대부분이면 forbidWords
+  // 확장"). AI 호출 없는 결정적 회귀 검사만 둔다.
+  interface ForbidWordsProblem { source_key: string; skill_key: string; scoring_config: { forbidWords?: string[] } }
+  const problemsForForbid = JSON.parse(
+    readFileSync(path.join(__dirname, '..', '..', 'seed', 'dump', 'problems.json'), 'utf8').replace(/^﻿/, '')
+  ) as ForbidWordsProblem[]
+  const btForbidMap = new Map(
+    problemsForForbid
+      .filter((p) => p.skill_key === 'action_turn' && p.source_key.startsWith('bt-'))
+      .map((p) => [p.source_key, p.scoring_config.forbidWords ?? []] as const)
+  )
+  t('problems.json: bt- 5건 전부 forbidWords 에 고통·통증·아픔·지독 넷을 품는다(세션 48 후속)',
+    btForbidMap.size === 5 && [...btForbidMap.values()].every((fw) => ['고통', '통증', '아픔', '지독'].every((w) => fw.includes(w))),
+    JSON.stringify([...btForbidMap.entries()]))
+
+  // ── seed/update-action-turn-v7.sql(세션 48 후속): bt- 5건 forbidWords 확장 ──
+  const v7Path = path.join(__dirname, '..', '..', 'seed', 'update-action-turn-v7.sql')
+  t('update-action-turn-v7.sql 이 존재한다', existsSync(v7Path))
+  if (existsSync(v7Path)) {
+    const v7Src = readFileSync(v7Path, 'utf8')
+    for (const key of ['bt-alley-hook', 'bt-spear-range', 'bt-orc-axe', 'bt-fireball-shield', 'bt-low-guard']) {
+      t(`update-action-turn-v7.sql: ${key} 가 forbidWords·forbidDisplay 를 jsonb_set 으로 갱신한다`,
+        new RegExp(`jsonb_set\\(scoring_config, '\\{forbidWords\\}'.*where source_key = '${key}'`, 's').test(v7Src) &&
+          new RegExp(`jsonb_set\\(scoring_config, '\\{forbidDisplay\\}'.*where source_key = '${key}'`, 's').test(v7Src))
+    }
+    t('update-action-turn-v7.sql: 새 forbidWords 넷(고통·통증·아픔·지독)이 문안에 있다',
+      ['고통', '통증', '아픔', '지독'].every((w) => v7Src.includes(`"${w}"`)))
+  }
+
+  // set_d_tell.json D-1~D-6 이 각자 source_key 의(갱신된) forbidWords 에 최소 1건
+  // 잡힌다 — D-2(통증)·D-3(통증·지독)·D-4(아픔)·D-5(고통)·D-6(아픔)은 이번 확장이
+  // 없었다면 forbidWords 로는 못 잡던 표본이다(D-1 은 확장 전에도 끔찍·고통·
+  // 압도적로 잡혔다). AI 호출 없는 결정적 회귀 검사.
+  const setDForForbid = JSON.parse(
+    readFileSync(path.join(__dirname, '..', '..', 'data', 'probe', 'set_d_tell.json'), 'utf8').replace(/^﻿/, '')
+  ) as { items: { id: string; source_key: string; tell_answer: string }[] }
+  for (const item of setDForForbid.items) {
+    const fw = btForbidMap.get(item.source_key) ?? []
+    const hits = findForbidden(item.tell_answer, fw)
+    t(`set_d_tell.json '${item.id}'(세션 48 후속): forbidWords 가 tell_answer 에서 최소 1건 잡는다`,
+      hits.length >= 1, JSON.stringify(hits))
+  }
+
+  // bt- 모범답안 10건(가·나) — 확장한 forbidWords 가 정직한 답을 안 문다.
+  // 자기목록 불변식이 이미 이걸 잡지만(전수), 이 확장 전용으로 한 줄 더 둔다 —
+  // 넷 중 하나가 나중에 또 늘어도 이 줄이 회귀를 잡는다.
+  const answersForForbid = JSON.parse(
+    readFileSync(path.join(__dirname, '..', '..', 'seed', 'dump', 'answers.json'), 'utf8').replace(/^﻿/, '')
+  ) as { reference?: RefRow[] }
+  const btRefsForForbid = (answersForForbid.reference ?? []).filter((r) => r.source_key.startsWith('bt-'))
+  t('bt- 모범답안 10건(가·나) 전부 확장된 forbidWords(고통·통증·아픔·지독)에 안 걸린다(세션 48 후속)',
+    btRefsForForbid.length === 10 && btRefsForForbid.every((r) => findForbidden(r.content, btForbidMap.get(r.source_key) ?? []).length === 0),
+    JSON.stringify(btRefsForForbid.map((r) => `${r.source_key}:${r.ord}:${JSON.stringify(findForbidden(r.content, btForbidMap.get(r.source_key) ?? []))}`)))
 }
 
 console.log('\n[docs ↔ README 대조]')

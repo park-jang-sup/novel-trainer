@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 48 · 커밋 `b49b9ce` 위
+마지막 갱신: 세션 48 후속 · 커밋 `d4104cd` 위
 
 ★ 활성 144 (전체 157 − 비활성 13). 언어 관문 전수 불변식(verify.ts)이 이 수를
   출력·단언한다 — 문항 증감 때마다 이 줄과 불변식을 같이 갱신한다.
@@ -92,14 +92,20 @@
   · 신규 4문항 전부 활성(세션 39) — 화면의 '준비 중'이 풀렸다. 로드맵 정정:
   도입 4는 AI 없이 규칙만으로 자립하고, 긴 글+AI 섀도는 보스(별도 슬롯)로 간다
   (박 님 결정 (a), 세션 39 — 세션 32·36의 "보스가 도입 4 흡수" 안은 폐기).
-★ **구성 16(ca-) 5건이 세션 47 에 처음 ai_shadow 를 켰다** — support 가 아니라
-  새 관측 signal(절단 신호): 마지막 줄(절단문)을 가리고 읽어도 '무언가
-  온다'는 낌새가 그 앞에 있는가. ai_shadow=["signal"](support·tell 과 안
-  섞는다). **gating 없다** — 관측 층. 카드: signal → "끊기 전에 신호가
-  있어 — 「…」" · no_signal → "마지막 줄이 갑자기 와. …" · pending 은 조용히
-  (buildSignalCardText, lib/ai/hint-text.ts — AI 는 지목만, 문구는 순수
-  함수가 짓는다). 골든 set C 를 재측정하며 새 nak 1건('bare_emotion',
-  ca-gate-dinner — 맨 감정어 신호가 signal 판정과 tell 원칙 사이에서
+★ **구성 16(ca-) 중 4건이 signal 관측을 켠 채 실사용 확정이다**(세션 47 에 처음
+  켰고, 세션 48 후속에서 판정선을 실측 통과해 확정 · ca-crystal-exam 은 대조형이라
+  제외 — 아래 참고) — support 가 아니라 새 관측 signal(절단 신호): 마지막 줄(절단문)
+  을 가리고 읽어도 '무언가 온다'는 낌새가 그 앞에 있는가(신호는 인물의 반응·자각이
+  아니라 독자에게 주어진 사실의 어긋남, signal-v2, 세션 48 정의). ai_shadow=["signal"]
+  (support·tell 과 안 섞는다). **gating 없다** — 관측 층. 카드: signal → "끊기 전에
+  신호가 있어 — 「…」" · no_signal → "마지막 줄이 갑자기 와. …" · pending 은 조용히
+  (buildSignalCardText, lib/ai/hint-text.ts — AI 는 지목만, 문구는 순수 함수가 짓는다).
+  ★ ca-crystal-exam 은 세션 48 후속에서 ai_shadow 를 뺐다 — 가(모범답안)의 신호가
+  대조형(기준 깔기, "앞 사람들은 손바닥만 한 빛을 냈다"는 대조 기준 줄이 마지막 줄
+  앞에 와야 대조로 작동)이라 signal-v2 정의(사실 어긋남) 밖이고, 켜 두면 잘 쓴
+  답안에 no_signal 카드가 붙는 오지도를 낳는다. 문항 수정이 아니다 — 관측만 뺐다.
+  대조형 판정은 열린 과제(미결 참고). 골든 set C 를 재측정하며 새 nak 1건
+  ('bare_emotion', ca-gate-dinner — 맨 감정어 신호가 signal 판정과 tell 원칙 사이에서
   어떻게 나오는지 관찰용, 기대 없이 분포만)을 더했다.
 ★ **힌트가 세션 47 에 v2→v3 로 갈아탔다.** v2 실사용 관찰에서 흠 둘 —
   ① 비계 용어 누출("재료를 보면"류로 코칭 장치 자체를 말해 버림) ②
@@ -110,11 +116,13 @@
   v2 코드는 안 지웠다(v1 을 남긴 것과 같은 이유 — computeHintV2·
   judgeHintV2With·buildHintPromptV2·verifyHintV2 전부 그대로) — route.ts 는
   이제 computeHintV3 를 부른다. hint_visible 은 그대로 기본 off.
-★ **tell-v2 는 gating 후보 실험 — route.ts 미배선, 골든만.** tell-v1(문장
-  하나를 지목)과 달리 "답안 **전체**에 몸·사물의 변화가 하나도 없고 결과가
-  느낌의 이름으로만 있는가"(예/아니오)를 묻는다. forbidWords 가 이미 잡는
-  것과 얼마나 겹치는지(하네스 `--only=D --mode=tell2`)를 보고 AI 승격이냐
-  forbidWords 확장이냐를 가른다 — 아직 어느 쪽도 결정 안 났다.
+★ **tell-v2 는 gating 후보 실험 — route.ts 미배선, 골든만(결론은 forbidWords 확장으로
+  났다, 아래 참고).** tell-v1(문장 하나를 지목)과 달리 "답안 **전체**에 몸·사물의
+  변화가 하나도 없고 결과가 느낌의 이름으로만 있는가"(예/아니오)를 묻는다. forbidWords
+  가 이미 잡는 것과 얼마나 겹치는지(하네스 `--only=D --mode=tell2`)를 보고 AI 승격이냐
+  forbidWords 확장이냐를 가른다 — tell_only 표본이 forbidWords 와 100% 겹쳐(세션 47
+  실측) **forbidWords 확장으로 결정**(세션 48 후속): bt- 5건에 느낌명사 넷(고통·통증·
+  아픔·지독)을 더했다. tell-v2 자체는 여전히 route.ts 미배선 — AI 승격은 안 했다.
 ```
 
 ## 닫힌 것
@@ -240,27 +248,33 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
 ## 다음 — 순서대로. 하나가 verify 에서 물리기 전에 다음을 안 한다
 
 ```
-1  박 님 — 눈검사 → 하네스 재측정(signal-v2) → 결과로 다음 세션 결정   순서:
-                        ★ DB 작업 없음(이 세션은 프롬프트 정의문·버전·골든 로더·집계만 바꿨다 —
-                        캐시 키에 프롬프트 버전이 들어 있어 v2 로 자연히 갈린다, route.ts 292행).
-                        세션 47 의 seed/update-cliffhanger-adv-v2.sql 은 이미 돌렸으면 다시 안
-                        해도 된다.
-                        ① 브라우저 눈검사 — ca- 5문항 중 하나를 신호 없이 끊는 답안으로
-                        제출 → signal 카드("마지막 줄이 갑자기 와…")가 뜨는지, 신호를 심은
-                        답안으로 다시 제출 → "끊기 전에 신호가 있어 — 「…」" 카드가 뜨는지.
-                        v1 시절 캐시는 프롬프트 버전이 달라 다시 안 쓰인다.
-                        ② signal 하네스만 재측정 — `npm run ai:support-golden -- --only=C
-                        --mode=signal`(signal-v2, good='signal' 기대·nak='no_signal' 기대 +
-                        **새 열(세션 48)**: nak kind별(position·blank·reaction·
-                        baseline_removed) 미검출 · self_state(emotion·bare_emotion) 미검출 ·
-                        good_excluded(ca-crystal-exam:1, 대조형 — 집계 밖, 분포만 기록). tell2·
-                        hint 는 이번 세션이 안 건드렸다 — 세션 47 결과가 그대로 유효하다(재실행
-                        불필요).
-                        ③ 결과를 채팅에 — 판정선(위 '정한 것' 구성 16(ca-)의 signal 정의):
-                        good 오탐 0 · nak 미검출 0 · self_state 미검출 0 이면 구성 16(ca-) signal
-                        실사용 확장(아래 2번). 세션 47 이 열어 둔 "signal 판정선 미달·
-                        bare_emotion 이 signal/tell 원칙과 충돌하는지"는 이번 정의 좁힘(반응·
-                        공백·자각 명시 제외)으로 닫혔다고 본다 — 이 재측정으로 실측 확인한다.
+1  (닫힘, 세션 48 후속) signal-v2 판정선 실측 통과 — 구성 16(ca-) signal 실사용 확정
+                        ★ 판정선 통과 기록(signal-v2): good 45 오탐 0 · nak 25(전 kind: position·
+                        blank·reaction·baseline_removed) 미검출 0 · self_state 10 no_signal ·
+                        뒤집힘 0/17 · 비용 $0.089 · 결과 data/probe/signal-golden-20260907.json.
+                        세션 47 이 연 두 미결(signal 판정선 미달 · bare_emotion 이 signal/tell
+                        원칙과 충돌하는지)이 이번 실측으로 닫혔다 — signal-v2 의 정의 좁힘(반응·
+                        공백·자각 명시 제외)이 그 자리를 해소했다.
+                        ★ ca-crystal-exam 은 제외 — 가(모범답안)의 신호가 대조형(기준 깔기,
+                        "앞 사람들은 손바닥만 한 빛을 냈다"는 대조 기준 줄이 마지막 줄 앞에
+                        와야 대조로 작동)이라 signal-v2 정의(독자에게 주어진 사실이 평소·기대와
+                        어긋나는 것 — 사실형) 밖이다. 켜 두면 잘 쓴 답안에 no_signal 카드가
+                        붙는 오지도를 낳는다 — 문항 수정이 아니라 관측(ai_shadow)만 뺐다
+                        (seed/update-cliffhanger-adv-v3.sql). 대조형 신호 판정은 열린 과제로
+                        남는다(아래 미결 참고). **구성 16(ca-) 중 4건(gate-dinner·open-door·
+                        inn-endroom·walk-home)의 signal 실사용을 확정한다.**
+                        ★ 같은 세션에서 bt- 5건 forbidWords 를 느낌명사 넷(고통·통증·아픔·지독)
+                        으로 확장했다(세션 47 tell-v2 판정선 — tell_only 가 forbidWords 와
+                        100% 겹쳐 AI 승격 대신 forbidWords 확장으로 감, seed/update-action-
+                        turn-v7.sql). 넣지 않은 것: 저릿·화끈·얼얼·따가운·시린(모범답안이 몸
+                        부위+결과 곁에 쓰는 정당한 감각어) · 뜨거운(사물 상태) · 둔탁(소리) ·
+                        열기(물리적 열, 몸·사물의 변화를 그대로 서술하는 말). tell(v1, 문장
+                        단위 관측)은 gating 없이 관측 층으로 그대로 둔다 — forbidWords 확장과
+                        결이 다른 검사라 안 겹쳐도 된다.
+                        다음 순서: ① hint_visible 결정 — 박 님이 힌트 v3 본문 10건(세션 47
+                        골든 결과, 필요하면 `npm run ai:support-golden -- --hint` 로 재확인)을
+                        읽고 hint_visible 을 켤지 정한다. ② 재제출 비교 피드백 — 설계 미착수
+                        (다음 세션 후보, 세부 미정). ③ 보스(아래 4번).
 2  구성 16(ca-) support 확장    set A·B·C 오탐 0 이고 미검출이 낮으면(판정선, 세션 40 정정 3-4)
                         cliffhanger_adv 5문항(ca-)에도 ai_shadow 를 켠다(support 부터 —
                         tell 은 별도 판단). 갈리면 프롬프트 재검토 — 새 문항을 늘리지 않는다.
@@ -304,6 +318,74 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
                         설정 카드형 '다섯 줄 쓰기'(18 설계안 5번, write 유형 없어 보류됐던 것)는
                         이 보스 문항에서 다룬다 — 이때 쓸 설정 카드 형식은 도입 4 의 네 칸
                         (①재미 ②인물 ③장면 ④첫마디)을 그대로 재사용한다(세션 39 결정).
+```
+
+### 끝난 것 — 세션 48 후속 (구성 16 signal 확정 · crystal 관측 제외 · bt- forbidWords 느낌명사 확장)
+
+```
+경위  세션 48 커밋(d4104cd) 위. 박 님이 signal-v2 골든을 실제로 재측정했다(data/probe/
+  signal-golden-20260907.json) — good 45 오탐 0 · nak 25(전 kind) 미검출 0 · self_state
+  10 no_signal · 뒤집힘 0/17 · 비용 $0.089. 세션 47 이 연 두 미결(signal 판정선 미달·
+  bare_emotion 이 signal/tell 원칙과 충돌하는지)이 이 실측으로 닫혔다 — 구성 16(ca-)
+  signal 실사용을 확정한다. 다만 골든 결과를 문항별로 다시 보니 ca-crystal-exam 가
+  (모범답안)의 신호가 대조형(기준 깔기)이라 signal-v2 정의(사실 어긋남) 밖에 있다는
+  것이 드러났다 — 이 문항만 관측을 뺀다. 같은 자리에서 세션 47 tell-v2 골든의
+  "tell_only 가 forbidWords 와 100% 겹친다"는 판정선을 따라 bt- forbidWords 를
+  확장했다.
+
+1. ca-crystal-exam — signal 관측 제외
+  seed/update-cliffhanger-adv-v3.sql(신규)  `scoring_config = scoring_config - 'ai_shadow'`
+  where source_key='ca-crystal-exam' — 멱등(jsonb 키 삭제는 이미 없는 키를 다시 지워도
+  안전). p.order_no 를 안 쓴다(problems 에 없는 컬럼, 42703) — order by 는 p.difficulty.
+  끝에 확인 select(ca- 5건의 source_key·ai_shadow — crystal 만 null, 나머지 4건
+  ["signal"]). seed/dump/problems.json 에서 crystal 의 ai_shadow 키를 직접 삭제(단일
+  출처, DB 업데이트와 같은 사실을 반영). lib/scoring/verify.ts 의 세 곳을 갱신 —
+  ① 8168행 단언을 "구성 16(ca-) 중 4건은 ai_shadow ['signal'] · ca-crystal-exam 은
+  ai_shadow 없음(세션 48 — 대조형, signal-v2 정의 밖)"으로 교체 ② "ai_shadow 를 켠
+  문항은 정확히 bt- 5건 + ca- 5건 = 10건" 단언을 "bt- 5 + ca- 4 = 9건"으로 갱신(세션
+  47 의 '10건'에서 줄었다) ③ signal 절의 "problems.json: ca- 5건 전부 ai_shadow가
+  ['signal']" 단언을 "4건은 ['signal'] · crystal 은 없음" 둘로 가르고, 새 SQL 파일
+  존재·내용(- 연산자·where 절이 crystal 하나만·order_no 미사용) 단언 셋을 더했다.
+  사유(대조형 배제) — crystal 가의 신호는 "앞 사람들은 손바닥만 한 빛을 냈다"는 대조
+  기준 줄이 마지막 줄 앞에 와야 대조로 작동한다 — signal-v2 가 재는 것은 "사실 하나가
+  평소·기대와 어긋나는가"이지 "두 사례를 비교했을 때 다른가"가 아니다. 켜 두면 잘 쓴
+  답안(가)에 no_signal 카드가 붙는 오지도를 낳는다. 문항 수정이 아니다 — 관측만 뺐다.
+  대조형 판정은 열린 과제(미결 등재).
+
+2. bt- 5건 forbidWords 확장 — 느낌의 이름(명사)만
+  대상 5건 전부(bt-alley-hook·bt-spear-range·bt-orc-axe·bt-fireball-shield·
+  bt-low-guard)의 forbidWords/forbidDisplay 에 고통·통증·아픔·지독(하다) 을 더했다 —
+  fireball 은 '고통'이 세션 45 부터 이미 있어 통증·아픔·지독 셋만 늘었고, 나머지
+  4건은 넷 다 늘었다(9개 → 13개로 통일). 새 항목은 기존 '강력(하다)' 뒤, '그때였다'
+  앞에 끼웠다 — 순서·기존 문구는 그대로.
+  넣지 않은 것 — 저릿·화끈·얼얼·따가운·시린(모범답안이 몸 부위+결과 곁에 쓰는 정당한
+  감각어 계열이라 막으면 좋은 답을 문다) · 뜨거운(사물 상태를 그대로 서술하는 말) ·
+  둔탁(소리) · 열기(물리적 열 — 몸·사물의 변화 자체를 서술하는 말이지 대신하는 말이
+  아니다).
+  근거 — 세션 45~47 tell 관측 실사용 표본 D-2(통증·열기)·D-3(지독한 통증)·D-5(고통)·
+  D-4·D-6(아픔). 세션 47 tell-v2 골든이 "tell_only 로 잡힌 표본이 forbidWords 와 100%
+  겹친다 → AI 승격 대신 forbidWords 확장"이라는 판정선을 냈다. 채팅 실측 — 네 어휘
+  모두 bt- 모범답안 10건·활성 모범답안 전수에 0건(정직한 답을 안 문다).
+  seed/update-action-turn-v7.sql(신규) — jsonb_set 으로 5건의 forbidWords·forbidDisplay
+  를 각각 갱신(멱등), 끝에 확인 select. seed/dump/problems.json 도 같이 갱신(단일 출처).
+  verify.ts 픽스처(신규, AI 호출 없는 결정적 회귀 검사) —
+  ① 기존 "느낌9(9개)"·"느낌9+고통(10개)" 단언을 "느낌9+고통·통증·아픔·지독(13개, 5건
+  전부 동일)"으로 교체(세션 45 의 fireball 만 갖던 구분이 이제 없다).
+  ② problems.json: bt- 5건 전부 forbidWords 가 네 어휘를 품는다.
+  ③ data/probe/set_d_tell.json 의 D-1~D-6 tell_answer 를 각 source_key 의(갱신된)
+  forbidWords 로 findForbidden — 전부 hit ≥ 1(D-1 은 확장 전에도 끔찍·고통·압도적로
+  잡혔다 · D-2 통증 · D-3 통증·지독 · D-4 아픔 · D-5 고통 · D-6 아픔 — 이번 확장이
+  없었다면 D-2~D-6 중 다수가 규칙으로 못 잡히던 표본).
+  ④ bt- 모범답안 10건(가·나) 전부 확장된 forbidWords 에 0건(자기목록 불변식이 전수로
+  이미 잡지만, 이 확장 전용으로 한 줄 더 — 넷이 나중에 또 늘어도 회귀를 잡는다).
+  ⑤ seed/update-action-turn-v7.sql 존재·jsonb_set 문법·새 네 어휘 포함 단언.
+
+검증  tsc 0 · test:scoring(8001, 활성 144 단언 그대로 + 새 픽스처) 6142/0 · check:numbers 0 ·
+  gen:seed 로 seed_data.sql·seed_check.sql 재생성(md5 동일 재실행 무변화 확인) · next build
+  통과. 물기(전부 확인 후 복원): ca-crystal-exam 에 ai_shadow 를 되살려 세 단언이 잡는
+  것 확인(6139/3, 위치 정확) · bt-alley-hook 의 forbidWords 에서 '통증'을 빼 새 단언과
+  기존 forbidDisplay↔forbidWords 대응 불변식이 함께 잡는 것 확인 후 원복. 8001 만
+  내렸다 — 8000 은 시작도 안 했다.
 ```
 
 ### 끝난 것 — 세션 48 (signal-v2 — 신호 정의 좁힘(사실 어긋남) · set C nak_kind 집계 · crystal 가 대조형 제외)
@@ -2465,6 +2547,7 @@ verify 왕복 규칙의 '간이' 절 파싱이 서술 문장의 괄호도 인물
                               에선 다루지 않았다(다음 세션 후보로 남긴다).
                               원칙 5(문제 먼저)에 따라 이번에도 승격은 안 했다.
 관계 암시형(⑥)에 심리 신호가 정말 필요한 문항이 나오는가 — 열린 질문(세션 48)
+대조형(기준 깔기) 신호 판정 — 별도 질문 필요, crystal 가가 그 자리(세션 48 후속)
 ```
 
 ## 상태 확인
