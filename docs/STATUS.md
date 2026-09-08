@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 51 · 커밋 `1c4b27d` 위
+마지막 갱신: 세션 52 · 커밋 `fd52dcf` 위
 
 ★ 활성 144 (전체 157 − 비활성 13). 언어 관문 전수 불변식(verify.ts)이 이 수를
   출력·단언한다 — 문항 증감 때마다 이 줄과 불변식을 같이 갱신한다.
@@ -247,6 +247,14 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
                               다만 두 줄로 늘리면 #30형(수를 그냥 주는 것) 위험이 재료 쪽에서
                               들어오므로 **확장은 별도 세션에서 --hint 재측정과 묶어서** 한다 —
                               세션 51 커밋엔 안 섞는다(박 님, 아직 착수 안 함).
+재제출 비교 피드백은 규칙 검사만 쓴다(세션 52)  결정적이라 "이번엔 근거 줄이 생겼어"가
+                              사실임을 코드가 보증한다 — AI 가 아니라 diffChecks 가 직전·이번
+                              checks 를 그대로 대조한 결과다. AI 관측(support·tell·signal) 비교는
+                              이 규칙 버전이 판정선을 넘은 뒤에 얹는다 — 지금은 안 한다. 나빠진
+                              것(pass→fail)·pending→pass(형태소 서버 재기동)는 말하지 않는다.
+                              통과했던 직전 제출은 산수로 침묵한다(combine() 이 fail 이 하나라도
+                              있어야 status 를 fail 로 놓으므로, passed 인 제출엔 fail 검사가
+                              없다 — 정책이 아니라 산수, 별도 분기 없음).
 ```
 
 ## 하는 중
@@ -332,14 +340,113 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
                         설정 카드형 '다섯 줄 쓰기'(18 설계안 5번, write 유형 없어 보류됐던 것)는
                         이 보스 문항에서 다룬다 — 이때 쓸 설정 카드 형식은 도입 4 의 네 칸
                         (①재미 ②인물 ③장면 ④첫마디)을 그대로 재사용한다(세션 39 결정).
-5  재제출 비교 피드백    (세션 51 — 위 1번의 hint_visible 절차가 끝나면 다음 우선순위) 설계
-                        미착수, 세부 미정. 미달 후 다시 낸 학습자 답안을 이전 제출과 비교해
-                        피드백하는 자리로 세션 49 부터 예고돼 왔다. ★ 착수할 때 반드시 넣을 것
-                        (세션 51 관찰) — 힌트 본문에 타박조가 드물게 섞인다(세션 48 30번 "고민만
-                        하고 멈춰 서 있으면", 세션 50 29번 "시간이 아깝지 않아?" — 50건 중 1건
-                        꼴). 힌트에선 넘기지만, 재제출 비교 피드백은 미달 뒤 다시 낸 학습자에게
-                        가는 문장이라 힌트보다 타박에 훨씬 민감한 자리다 — 이 프롬프트엔 타박조
-                        금지를 반드시 명시한다(박 님).
+5  (닫힘, 세션 52) 재제출 비교 피드백 — 규칙 검사만(AI 없음, 비용 0)
+                        lib/scoring/resubmit.ts(신규, 순수 함수) — diffChecks(prev, curr) 가
+                        직전·이번 checks 를 curr 배열 순서 그대로 훑어 같은 key 의 fail→pass
+                        만 모은다(정렬 안 함 — checks 순서 = 화면 표시 순서). resubmitLine(gained,
+                        {hasForbidLabel}) 이 앞 둘만 써서 "이번엔 X, Y." 한 줄을 짓는다 — 조각은
+                        key 로 고르는 중립 문구(길이·문장 수·넣어야 할 말·움직이는 말·원문 안
+                        기댐), forbidWords 만 예외로 Check.rule(forbidLabel)을 쓴다. 조사 회피
+                        (변수 직후에 을/를/이/가를 안 둔다) · 두 조각을 이을 때 앞 조각을
+                        연결형('…어'→'…고')으로 바꾼다.
+                        app/api/grade/route.ts — submissions insert **보다 먼저** 사용자
+                        클라이언트로 직전 제출 한 건을 읽는다(RLS 'own submissions read') →
+                        diffChecks → resubmitLine → 응답에 resubmit_line?. 통과했던 직전
+                        제출·나빠짐·pending→pass 는 산수로/규칙으로 자동 침묵(별도 분기 없음).
+                        TrainClient.tsx — 통과 문구 바로 밑(= 미달 카드 맨 위, 같은 자리) 한
+                        줄로 낸다, 별도 카드 안 만든다.
+                        열린 채로 남기는 것(아래 미결 참고) — AI 관측 비교(판정선을 넘은 뒤) ·
+                        '고쳐서 다시 내기' 버튼(재제출 비율을 재고 낮을 때) · '자주 하는 실수'
+                        집계(같은 key 가 여러 문항에서 반복 fail).
+```
+
+### 끝난 것 — 세션 52 (재제출 비교 피드백 — 규칙 검사 fail→pass 한 줄)
+
+```
+경위  세션 51 커밋(fd52dcf) 위. 세션 51 이 hint_visible 을 켜는 절차까지 준비를
+  끝내면서, STATUS "다음" 5번에 "재제출 비교 피드백"을 다음 우선순위로 올려
+  뒀다(설계 미착수). 이번 세션이 그 첫 층 — **규칙 검사만 쓴다, AI 없음,
+  비용 0** — 을 짠다. 재제출 경로는 이미 있다(미달 '건너뛰기 →' → 단계 끝
+  '건너뛴 문항으로 →') — "고쳐서 다시 내기" 버튼·오답노트는 이번 세션이 안
+  만든다(재제출 비율을 재 보고 낮을 때 검토, 아래 미결 참고).
+
+1. lib/scoring/resubmit.ts(신규, 순수 함수 — AI·DB 안 탄다)
+  diffChecks(prev, curr) — curr 를 **배열 순서 그대로** 훑으며 같은 key 의
+   prev 가 'fail' 이고 curr 가 'pass' 인 것만 모은다. 정렬하지 않는다 —
+   checks 배열 순서 = 화면 표시 순서이고, resubmitLine 이 그 순서의 "앞
+   둘"을 쓴다. pass→fail(나빠짐)·pending→pass(형태소 서버 재기동)·한쪽에만
+   있는 key·변화 없음은 전부 버린다.
+  resubmitLine(gained, {hasForbidLabel}) — 빈 배열이면 null. 앞 두 개만
+   쓴다(셋 이상이어도). 조각 문구는 key 로 고르는 **검사의 뜻에 안 기대는
+   중립 문구**(길이·문장 수·넣어야 할 말·움직이는 말·원문 안 기댐) —
+   forbidWords 만 예외로 Check.rule(forbidLabel)을 그대로 쓴다.
+  ★ 문장 조립 3곳 정정(추가 지시로 원안을 대체) —
+   ① 조사 회피(1-A): 조각을 전부 "변수 직후가 낱말"이 되게 짰다("{rule}
+   없이 썼어"·"{label} 조건을 맞췄어") — 어떤 label·rule 이 와도 조사
+   불일치로 안 깨진다(현재 forbidLabel 23종은 전부 '말'·'표현'으로 끝나
+   지금은 "…을"이 맞지만, "묘사"·"표시"로 끝나는 label 이 오면 깨진다 —
+   받침 판정 대신 변수 뒤에 조사가 안 오게 짜는 편을 택했다, 박 님).
+   ② 두 조각 잇기(1-B): 조각이 전부 '…어'로 끝나 그냥 이으면 "맞췄어,
+   넣었어"처럼 두 문장이 나란히 선다 — 앞 조각의 마지막 '어'를 '고'로
+   바꾸고 ", " 로 이어 "맞췄고, 넣었어"로 한 문장을 만든다.
+   ③ forbidLabel 유무 판정(2-A): "rule 에 ',' 가 있으면 목록"이라는
+   휴리스틱을 **안 쓴다** — forbidLabel 자체에 쉼표가 들어오면 깨진다.
+   호출부(route.ts)가 이미 쥔 cfg.forbidLabel 을 hasForbidLabel: boolean
+   으로 직접 넘긴다.
+  ★ key 'passageCopy' 는 scoring_config.forbidPassageCopy 가 켜졌을 때
+   local.ts 가 실제로 내는 Check.key 다(설정 필드명과 다르다, local.ts
+   853행) — 조각 문구 스위치는 이 실제 키로 건다.
+
+2. app/api/grade/route.ts — 직전 제출 한 건 조회
+  **submissions insert 보다 먼저** 읽는다(세션 44 "킬스위치가 캐시보다
+   먼저"와 같은 자리 — 순서가 뒤집히면 방금 낸 것이 직전으로 잡힌다).
+   사용자 클라이언트(supabase)로 읽는다 — RLS 'own submissions read'
+   (auth.uid() = user_id)가 자기 이력만 준다, admin 을 안 쓴다. prev 가
+   없거나(첫 제출) auto_result.checks 가 배열이 아니면 아무것도 안 한다.
+   조회 실패는 조용히 무시(힌트 v3 실패 처리와 같다 — 진도·판정 무영향).
+   diffChecks → resubmitLine(hasForbidLabel: !!cfg.forbidLabel) → 응답에
+   resubmit_line?: string 로 싣는다.
+  ★ 통과한 직전 제출은 자동으로 침묵한다 — combine()이 fail 검사가 하나라도
+   있어야 status 를 fail 로 놓으므로, passed 인 제출엔 fail 검사가 없다.
+   정책이 아니라 산수다 — 별도 분기를 안 만들었다. 같은 답안 재제출·통과→
+   미달도 같은 이유로 침묵한다.
+
+3. components/train/TrainClient.tsx
+  GradeResponse 에 resubmit_line?: string 추가. 통과 문구(STATUS_LABEL)
+   바로 밑 — 미달 카드 맨 위와 같은 자리다(둘 다 상태 라벨 바로 아래가
+   구조상 "카드 맨 위"라 한 곳에만 넣으면 둘 다 만족한다). 별도 카드를
+   안 만든다(통과 화면엔 이미 모범답안·자기점검·참고 의견·힌트가 있어
+   층을 안 늘린다, 박 님). resubmit_line 이 없으면 아무것도 안 그린다.
+
+4. verify.ts(전부 순수 함수 — AI·DB 안 탄다)
+  diffChecks — fail→pass 하나·둘·셋 이상(curr 순서를 따르는지, 정렬 안
+   하는지) · pass→fail(빈 배열) · pending→pass(빈 배열) · 변화 없음(빈
+   배열) · key 불일치(빈 배열) · prev 빈 배열(빈 배열).
+  resubmitLine — 조각 문구 표 각 key 한 건씩(maxChars·minChars·
+   minSentences·maxSentences·requireAll·requireAny·minVerbs·passageCopy·
+   forbidWords 둘(hasForbidLabel true/false)·그 밖) · 두 조각 잇기(연결형
+   변환, 셋 이상이어도 앞 둘만) · 조사 회피(변수 직후 을/를/이/가 없음,
+   forbidWords·그 밖 두 분기 각각) · 빈 배열이면 null.
+  route.ts 소스 정규식 — 직전 제출 조회(.select('auto_result'))가
+   submissions insert(supabase.from('submissions').insert() 보다 앞에
+   온다(문자열 인덱스 비교).
+  활성 144 문항 전수(2-A) — forbidLabel 어디에도 쉼표·가운뎃점이 없다
+   (hasForbidLabel 로 가르는 것이 안전하다는 전제, 현재 23종 0건) ·
+   실제 scoring_config 로 gradeLocal 을 돌려 나온 모든 Check 에 대해
+   resubmitLine([check], opts) 이 null 이 아니고 결과 문자열에 'undefined'
+   가 안 섞이는지 전수 단언(gradeLocal 은 빈 제출 {} 로 돌려 상태와
+   무관하게 실제 key·label·rule 조합만 훑는다).
+
+검증  tsc 0 · test:scoring(8001, 활성 144 단언 그대로 + 새 픽스처) 6223/0 ·
+  check:numbers 0 · gen:seed 무변화(이 세션은 시드·DB·프롬프트를 안
+  건드렸다) · next build 통과. 물기(전부 확인 후 복원): resubmitLine 의
+  'passageCopy' 케이스 키를 다른 문자열로 바꿔 전용 단언이 잡는 것 확인
+  (전수 단언은 '그 밖' 분기로 안전하게 빠져 통과 — 의미 퇴행은 전용
+  단언만 잡는다는 것도 확인) · diffChecks 의 status==='fail' 조건을 지워
+  pending→pass·변화 없음 두 단언이 잡는 것 확인 · route.ts 에서 직전 제출
+  조회 블록을 submissions insert 뒤로 옮겨 순서 단언이 잡는 것 확인 —
+  전부 복원 후 6223/0 재확인. 8001 만 내렸다 — 8000(박 님 별도 터미널)은
+  안 건드렸다. DB 스키마·SQL·프롬프트 변경 없음, 비용 0.
 ```
 
 ### 끝난 것 — 세션 51 (힌트 v3 문자열 껍데기 벗기기 · 옛 캐시 정리 · hint_visible ON)
@@ -2879,6 +2986,17 @@ discarded 캐시는 프롬프트 버전을 올려야 풀린다(세션 50, 2-A-3)
   세션 51 STATUS 등재) — 일일 호출 수 쿼터가 실제보다 1 적게 세어진다. 비용
   상한은 ai_usage_log 합계로 따로 재므로 지출엔 영향 없다 — 쿼터 카운팅만
   어긋난다. 지금은 감내한다(문제 되면 다음에 본다).
+재제출 비교 피드백 문구는 중립형으로 시작한다(세션 52) — 실사용에서 "이 단계는
+  이 말이 낫다"가 보이면 (skill_key, key) 행을 하나씩 얹는다(박 님). 지금은
+  resubmit.ts 의 fragmentFor 스위치가 key 하나에 문구 하나뿐이다.
+재제출 비율을 재 두고 낮으면 '고쳐서 다시 내기' 버튼을 검토한다(세션 52) —
+  재제출 경로는 이미 있다(미달 '건너뛰기 →' → 단계 끝 '건너뛴 문항으로 →').
+  버튼은 그 비율이 낮을 때만 꺼낸다:
+    select count(*) filter (where n > 1) as retried, count(*) as total
+      from (select user_id, problem_id, count(*) n from submissions group by 1,2) s;
+같은 key 가 여러 문항에서 반복해 fail 로 잡히는 것을 세면 '자주 하는 실수'가
+  된다(세션 52, 박 님 제안) — 자료는 submissions.auto_result.checks 에 이미
+  다 있다. 비교 피드백 위에 조회 하나로 얹힌다 — 아직 설계·착수 안 함.
 ```
 
 ## 상태 확인

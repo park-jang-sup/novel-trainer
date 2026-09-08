@@ -5,7 +5,8 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { analyze } from '@/lib/scoring/remote'
 import { combine, countChars } from '@/lib/scoring'
-import { shadowKinds, type Answer, type ScoringConfig, type Submission } from '@/lib/scoring/types'
+import { shadowKinds, type Answer, type Check, type ScoringConfig, type Submission } from '@/lib/scoring/types'
+import { diffChecks, resubmitLine } from '@/lib/scoring/resubmit'
 import { readFlags, sumSpendTodayUsd, type SystemFlags } from '@/lib/ai/flags'
 import { checkGate, DAILY_CALL_LIMIT } from '@/lib/ai/gate'
 import { consumeAiQuota } from '@/lib/quota'
@@ -867,6 +868,36 @@ export async function POST(request: NextRequest) {
   // 는 안 바꾼다(순수 규칙 판정 기록으로 남긴다) — passed 만 gating 을 반영한다.
   const passed = result.status === 'pass' && !gatedNoBeat
 
+  // 7.5. 재제출 비교 피드백(세션 52) — 규칙 검사만 쓴다, AI·DB 스키마 변경
+  //      없음. **submissions insert 보다 먼저 읽는다** — 순서가 뒤집히면
+  //      방금 낸 것이 직전으로 잡힌다(세션 44 "킬스위치가 캐시보다 먼저"와
+  //      같은 자리). 사용자 클라이언트(supabase)로 읽는다 — RLS 'own
+  //      submissions read'(auth.uid() = user_id)가 자기 이력만 준다,
+  //      admin 을 안 쓴다. prev 가 없거나(첫 제출) auto_result.checks 가
+  //      배열이 아니면 아무것도 안 한다. 조회 실패는 조용히 무시(힌트 v3
+  //      실패 처리와 같다 — 진도·판정에 무영향).
+  //      ★ 통과한 직전 제출은 자동으로 침묵한다 — combine()이 fail 검사가
+  //      하나라도 있으면 status 를 fail 로 놓으므로, passed 인 제출에는
+  //      fail 검사가 없다. 정책이 아니라 산수다(별도 분기 없음).
+  let resubmitLineText: string | null = null
+  try {
+    const { data: prevSub } = await supabase
+      .from('submissions')
+      .select('auto_result')
+      .eq('user_id', user.id)
+      .eq('problem_id', problemId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    const prevChecks = (prevSub?.auto_result as { checks?: unknown } | null)?.checks
+    if (Array.isArray(prevChecks)) {
+      const gained = diffChecks(prevChecks as Check[], result.checks)
+      resubmitLineText = resubmitLine(gained, { hasForbidLabel: !!cfg.forbidLabel })
+    }
+  } catch (err) {
+    console.error('재제출 비교 피드백 실패(조용히 무시)', err)
+  }
+
   // 8. submissions 저장 — 실패해도 응답은 정상 반환. auto_result 에 shadow·
   //    tell verdict 를 적어 둔다(세션 43·45 — 나중에 오판 추적용) · gating
   //    으로 막힌 제출은 no_beat_gate: true 로 표시한다. 힌트는 hintVisible
@@ -937,5 +968,6 @@ export async function POST(request: NextRequest) {
     ...(tell ? { tell: { verdict: tell.verdict, text: tellText } } : {}),
     ...(signal ? { signal: { verdict: signal.verdict, text: signalText } } : {}),
     ...(hintText ? { hint: hintText } : {}),
+    ...(resubmitLineText ? { resubmit_line: resubmitLineText } : {}),
   })
 }

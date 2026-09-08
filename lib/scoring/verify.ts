@@ -15,6 +15,7 @@ import { cycleNextProblemKey, nextProblemKey, nextStageId, stageProgress } from 
 import type { Answer, Check, CheckStatus, MorphResult, Problem, ProblemType, ScoringConfig, ScoringMode } from './types'
 import { shadowKinds } from './types'
 import { buildMarks } from '../../components/train/marks'
+import { diffChecks, resubmitLine } from './resubmit'
 import { CONVERT_SEEDS } from './fixtures/convert-seeds'
 import {
   SENSORY_BYPASS,
@@ -9306,6 +9307,145 @@ console.log('\n[힌트 v1 내림 · 카드 문구 교체 · 힌트 v2 — 세션
   t('bt- 모범답안 10건(가·나) 전부 확장된 forbidWords(고통·통증·아픔·지독)에 안 걸린다(세션 48 후속)',
     btRefsForForbid.length === 10 && btRefsForForbid.every((r) => findForbidden(r.content, btForbidMap.get(r.source_key) ?? []).length === 0),
     JSON.stringify(btRefsForForbid.map((r) => `${r.source_key}:${r.ord}:${JSON.stringify(findForbidden(r.content, btForbidMap.get(r.source_key) ?? []))}`)))
+}
+
+console.log('\n[재제출 비교 피드백: diffChecks · resubmitLine — 세션 52]')
+{
+  function mkCheck(key: string, status: CheckStatus, rule = '규칙', label = '라벨'): Check {
+    return { key, label, status, detail: '', rule }
+  }
+
+  // ── diffChecks ────────────────────────────────────────────────────
+  t('diffChecks: fail→pass 하나만 있으면 그 하나를 담는다',
+    JSON.stringify(diffChecks([mkCheck('a', 'fail')], [mkCheck('a', 'pass')]).map((c) => c.key)) === JSON.stringify(['a']))
+  t('diffChecks: fail→pass 둘이면 둘 다 curr 순서대로 담는다',
+    JSON.stringify(diffChecks(
+      [mkCheck('a', 'fail'), mkCheck('b', 'fail')],
+      [mkCheck('a', 'pass'), mkCheck('b', 'pass')]
+    ).map((c) => c.key)) === JSON.stringify(['a', 'b']))
+  t('diffChecks: 셋 이상이면 전부 담되 curr 배열 순서를 따른다(정렬 안 함 — key 알파벳순이 아니다)',
+    JSON.stringify(diffChecks(
+      [mkCheck('z', 'fail'), mkCheck('a', 'fail'), mkCheck('m', 'fail')],
+      [mkCheck('z', 'pass'), mkCheck('a', 'pass'), mkCheck('m', 'pass')]
+    ).map((c) => c.key)) === JSON.stringify(['z', 'a', 'm']))
+  t('diffChecks: pass→fail(나빠짐)은 안 담는다 — 미달 목록에 이미 보인다',
+    diffChecks([mkCheck('a', 'pass')], [mkCheck('a', 'fail')]).length === 0)
+  t('diffChecks: pending→pass 는 안 담는다 — 형태소 서버 재기동이지 학습자가 고친 게 아니다',
+    diffChecks([mkCheck('a', 'pending')], [mkCheck('a', 'pass')]).length === 0)
+  t('diffChecks: 상태 변화 없음(fail→fail·pass→pass)은 안 담는다',
+    diffChecks(
+      [mkCheck('a', 'fail'), mkCheck('b', 'pass')],
+      [mkCheck('a', 'fail'), mkCheck('b', 'pass')]
+    ).length === 0)
+  t('diffChecks: 한쪽에만 있는 key(문항 설정이 바뀐 경우)는 안 담는다',
+    diffChecks([mkCheck('old', 'fail')], [mkCheck('new', 'pass')]).length === 0)
+  t('diffChecks: prev 가 빈 배열(첫 제출 취급)이면 안 담는다',
+    diffChecks([], [mkCheck('a', 'pass')]).length === 0)
+
+  // ── resubmitLine — 조각 문구 표 ──────────────────────────────────
+  t('resubmitLine: gained 이 비어 있으면 null', resubmitLine([], { hasForbidLabel: false }) === null)
+  t("resubmitLine: maxChars → '이번엔 길이를 맞췄어.'",
+    resubmitLine([mkCheck('maxChars', 'pass')], { hasForbidLabel: false }) === '이번엔 길이를 맞췄어.')
+  t('resubmitLine: minChars → 같은 문구(길이)',
+    resubmitLine([mkCheck('minChars', 'pass')], { hasForbidLabel: false }) === '이번엔 길이를 맞췄어.')
+  t("resubmitLine: minSentences → '이번엔 문장 수를 맞췄어.'",
+    resubmitLine([mkCheck('minSentences', 'pass')], { hasForbidLabel: false }) === '이번엔 문장 수를 맞췄어.')
+  t('resubmitLine: maxSentences → 같은 문구(문장 수)',
+    resubmitLine([mkCheck('maxSentences', 'pass')], { hasForbidLabel: false }) === '이번엔 문장 수를 맞췄어.')
+  t("resubmitLine: requireAll → '이번엔 넣어야 할 말을 다 넣었어.'",
+    resubmitLine([mkCheck('requireAll', 'pass')], { hasForbidLabel: false }) === '이번엔 넣어야 할 말을 다 넣었어.')
+  t('resubmitLine: requireAny → 같은 문구(넣어야 할 말)',
+    resubmitLine([mkCheck('requireAny', 'pass')], { hasForbidLabel: false }) === '이번엔 넣어야 할 말을 다 넣었어.')
+  t("resubmitLine: minVerbs → '이번엔 움직이는 말이 늘었어.'",
+    resubmitLine([mkCheck('minVerbs', 'pass')], { hasForbidLabel: false }) === '이번엔 움직이는 말이 늘었어.')
+  t("resubmitLine: passageCopy → '이번엔 원문에 안 기댔어.'(local.ts 가 forbidPassageCopy 설정에 실제로 내는 Check.key)",
+    resubmitLine([mkCheck('passageCopy', 'pass')], { hasForbidLabel: false }) === '이번엔 원문에 안 기댔어.')
+  t("resubmitLine: forbidWords + hasForbidLabel true → '{rule} 없이 썼어'",
+    resubmitLine([mkCheck('forbidWords', 'pass', '서술자가 미리 말해 주거나 억지로 끊는 표현')], { hasForbidLabel: true }) ===
+      '이번엔 서술자가 미리 말해 주거나 억지로 끊는 표현 없이 썼어.')
+  t("resubmitLine: forbidWords + hasForbidLabel false → 중립 문구('쓰지 말라는 말을 안 썼어')",
+    resubmitLine([mkCheck('forbidWords', 'pass', '쓰지 않음: 끔찍, 고통')], { hasForbidLabel: false }) ===
+      '이번엔 쓰지 말라는 말을 안 썼어.')
+  t("resubmitLine: 그 밖 key → '{label} 조건을 맞췄어'",
+    resubmitLine([mkCheck('language_gate', 'pass', '규칙', '한국어 문장')], { hasForbidLabel: false }) ===
+      '이번엔 한국어 문장 조건을 맞췄어.')
+
+  // ── resubmitLine — 두 조각 잇기(세션 52 1-B) ──────────────────────
+  t('resubmitLine: 둘이면 앞 조각을 연결형(어→고)으로 이어 한 문장으로 낸다',
+    resubmitLine([mkCheck('maxChars', 'pass'), mkCheck('requireAll', 'pass')], { hasForbidLabel: false }) ===
+      '이번엔 길이를 맞췄고, 넣어야 할 말을 다 넣었어.')
+  t('resubmitLine: 셋 이상이어도 앞 둘만 쓰고 같은 규칙으로 잇는다',
+    resubmitLine(
+      [mkCheck('maxChars', 'pass'), mkCheck('requireAll', 'pass'), mkCheck('minVerbs', 'pass')],
+      { hasForbidLabel: false }
+    ) === '이번엔 길이를 맞췄고, 넣어야 할 말을 다 넣었어.')
+
+  // ── resubmitLine — 조사 회피(세션 52 1-A) ─────────────────────────
+  {
+    const testRule = '아무 말이나 왔다가감'
+    const testLabel = '아무 라벨'
+    const forbidLine = resubmitLine([mkCheck('forbidWords', 'pass', testRule)], { hasForbidLabel: true })!
+    const defaultLine = resubmitLine([mkCheck('weirdKey', 'pass', '규칙', testLabel)], { hasForbidLabel: false })!
+    t('resubmitLine: forbidWords(label 있음) — 변수(rule) 직후에 조사(을/를/이/가)가 안 붙는다',
+      forbidLine.includes(`${testRule} `) && !new RegExp(`${testRule}(을|를|이|가)`).test(forbidLine))
+    t('resubmitLine: 그 밖 분기 — 변수(label) 직후에 조사(을/를/이/가)가 안 붙는다',
+      defaultLine.includes(`${testLabel} `) && !new RegExp(`${testLabel}(을|를|이|가)`).test(defaultLine))
+  }
+
+  // ── route.ts: 직전 제출 조회가 submissions insert 보다 앞에 온다 ──
+  const routeSrcResubmit = readFileSync(path.join(__dirname, '..', '..', 'app', 'api', 'grade', 'route.ts'), 'utf8')
+  const prevSelectIdx = routeSrcResubmit.indexOf(".select('auto_result')")
+  const submissionsInsertIdx = routeSrcResubmit.indexOf("supabase.from('submissions').insert(")
+  t('route.ts: 재제출 비교 피드백의 직전 제출 조회가 submissions insert 보다 앞에 온다(세션 44 순서와 같은 자리)',
+    prevSelectIdx !== -1 && submissionsInsertIdx !== -1 && prevSelectIdx < submissionsInsertIdx)
+
+  // ── 활성 144 문항 전수(세션 52 2-A) ────────────────────────────────
+  const seedDirRs = path.join(__dirname, '..', '..', 'seed', 'dump')
+  const readDumpRs = <T,>(f: string): T =>
+    JSON.parse(readFileSync(path.join(seedDirRs, f), 'utf8').replace(/^﻿/, '')) as T
+  interface RsProblem {
+    source_key: string
+    type: ProblemType
+    scoring_mode: ScoringMode
+    scoring_config: ScoringConfig
+    passage: string | null
+  }
+  const allProblemsRs = readDumpRs<RsProblem[]>('problems.json')
+  const deactivateRs = readDumpRs<{ source_keys: string[] }>('deactivate.json')
+  const deadKeysRs = new Set(deactivateRs.source_keys)
+  const activeRs = allProblemsRs.filter((p) => !deadKeysRs.has(p.source_key))
+  t('활성 144 문항: forbidLabel 어디에도 쉼표(,)·가운뎃점(·)이 없다(2-A — hasForbidLabel 로 가르는 전제, 쉼표 든 label 이 들어오면 이 단언이 먼저 문다)',
+    activeRs.every((p) => {
+      const lbl = p.scoring_config.forbidLabel
+      return !lbl || (!lbl.includes(',') && !lbl.includes('·'))
+    }),
+    JSON.stringify(activeRs.filter((p) => {
+      const lbl = p.scoring_config.forbidLabel
+      return lbl && (lbl.includes(',') || lbl.includes('·'))
+    }).map((p) => p.source_key)))
+
+  let resubmitCheckedCount = 0
+  const resubmitBadLines: string[] = []
+  for (const p of activeRs) {
+    const problem: Problem = { id: p.source_key, type: p.type, scoring_mode: p.scoring_mode, scoring_config: p.scoring_config }
+    let checks: Check[]
+    try {
+      checks = gradeLocal(problem, {}, undefined, p.passage ?? undefined)
+    } catch (e) {
+      resubmitBadLines.push(`${p.source_key}: gradeLocal 실패 — ${String(e)}`)
+      continue
+    }
+    const hasForbidLabel = !!p.scoring_config.forbidLabel
+    for (const c of checks) {
+      resubmitCheckedCount++
+      const line = resubmitLine([c], { hasForbidLabel })
+      if (line === null || line.includes('undefined')) {
+        resubmitBadLines.push(`${p.source_key}/${c.key}: ${JSON.stringify(line)}`)
+      }
+    }
+  }
+  t(`활성 144 문항 전수(검사 ${resubmitCheckedCount}건) — resubmitLine 이 모든 실제 key 에 문구를 내고 '{label}' 자리에 undefined 가 안 들어간다`,
+    resubmitBadLines.length === 0, JSON.stringify(resubmitBadLines.slice(0, 20)))
 }
 
 console.log('\n[docs ↔ README 대조]')

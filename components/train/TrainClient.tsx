@@ -83,6 +83,11 @@ interface GradeResponse {
   // 일 때만 실린다(계산은 항상 서지만 노출만 막혀 있을 수 있다). gatedNoBeat
   // 여도 뜬다("막기만 하고 길을 안 주면 안 된다").
   hint?: string
+  // 재제출 비교 피드백(세션 52). 규칙 검사(checks)만 쓴 결정적 비교 — 직전
+  // 제출 대비 fail→pass 로 바뀐 검사가 있을 때만 온다(없으면 undefined,
+  // 첫 제출·나빠짐·pending→pass 도 안 온다). 서버가 순수 함수(resubmitLine,
+  // lib/scoring/resubmit.ts)로 이미 완성한 문장이다.
+  resubmit_line?: string
 }
 
 interface LoopProps {
@@ -634,6 +639,14 @@ export default function TrainClient({
           <p style={{ color: STATUS_COLOR[result.status], fontWeight: 700 }}>
             {STATUS_LABEL[result.status]}
           </p>
+          {/* 재제출 비교 피드백(세션 52) — 통과 문구 바로 밑, 미달 카드 맨
+              위. 다른 카드보다 먼저 온다(재제출 직후 가장 먼저 볼 것이다) —
+              별도 카드를 만들지 않는다(통과 화면엔 이미 모범답안·자기점검·
+              참고 의견·힌트가 있어 층을 늘리지 않는다, 박 님). 없으면
+              아무것도 안 그린다. */}
+          {result.resubmit_line && (
+            <p className="text-sm" style={{ color: 'var(--ink-soft)' }}>{result.resubmit_line}</p>
+          )}
           {/* morphAvailable이 아니라 pending 유무로 띄운다. 형태소 서버가 없는
               동안 morph는 항상 null이라 morphAvailable만 보면 이 문구가 모든
               문항에 뜬다 — 선택형 · 순서형, 7단계 개행처럼 형태소 검사가 하나도
