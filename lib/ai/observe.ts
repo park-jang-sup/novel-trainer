@@ -550,28 +550,36 @@ export async function judgeHintV2With(
  * parseObservation 류의 관례와 같다.
  *
  * ★ 세션 50 — 규칙을 키 이름과 무관하게 넓혔다(세션 49 실측 구멍: 36번이
- *   {"message":"…"} 로 와서 feedback 만 보던 규칙을 피해 갔다). 이제
- *   **키 이름을 안 본다** — JSON 으로 파싱되고 객체(배열 아님)이며 문자열
- *   필드가 **정확히 하나**면 키가 무엇이든 그 값을 trim 해서 쓴다
- *   (unwrapped: true). 문자열 필드가 둘 이상이거나 하나도 없으면(숫자·
- *   객체·배열 필드는 안 센다) 어느 것을 벗겨야 할지 알 수 없다 — 원문을
- *   그대로 두고 unwrapped: 'malformed_json'(파싱은 됐지만 못 벗긴 것).
- *   배열·원시값처럼 애초에 객체가 아니면 같은 이유로 'malformed_json'.
- *   ★ {"other":"x"} 는 문자열 필드가 하나뿐이라 이제 **벗긴다** — 키
- *   이름을 안 보기로 한 규칙의 의도한 결과다(세션 49 는 feedback 만 봐서
- *   원문을 그대로 뒀었다).
+ *   {"message":"…"} 로 와서 feedback 만 보던 규칙을 피해 갔다). **키 이름을
+ *   안 본다** — JSON 으로 파싱되고 객체(배열 아님)이며 문자열 필드가
+ *   **정확히 하나**면 키가 무엇이든 그 값을 trim 해서 쓴다(unwrapped: true).
+ *   문자열 필드가 둘 이상이거나 하나도 없으면(숫자·객체·배열 필드는 안 센다)
+ *   어느 것을 벗겨야 할지 알 수 없다 — 원문을 그대로 두고 unwrapped:
+ *   'malformed_json'(파싱은 됐지만 못 벗긴 것). ★ {"other":"x"} 는 문자열
+ *   필드가 하나뿐이라 이제 벗긴다 — 키 이름을 안 보기로 한 규칙의 의도한
+ *   결과다(세션 49 는 feedback 만 봐서 원문을 그대로 뒀었다).
  *
- * ★ 세션 49 보강 — 파싱 자체가 실패했는데 원문이 '{' 로 시작하면(예: JSON
- *   뒤에 말이 더 붙어 깨진 경우) 'malformed_json' 을 낸다. **폐기하지
- *   않는다** — text 는 원문 그대로 흘려보내고 결과에만 보이게 한다(세션
- *   50 도 그대로 — malformed_json 은 파싱 실패든 벗기기 실패든 같은 뜻이다).
+ * ★ 세션 51 — 세션 50 재측정에서 "벗기지 못한 JSON 8/50"이 전부 bare
+ *   string(`"「…」 … 봐."`)이었다. JSON 에서 문자열도 유효한 값이라
+ *   JSON.parse 는 성공하는데, 객체 분기 앞에서 걸러지지 않아 원문(따옴표
+ *   포함)이 그대로 남았다 — **문자열이면 객체 분기보다 먼저 벗긴다.**
+ *   숫자·불리언·null 같은 다른 스칼라와 배열은 여전히 원문 유지·
+ *   'malformed_json'(벗길 대상이 아니다).
+ *   ★ 파싱 자체가 실패했을 때의 'malformed_json' 판정도 넓혔다 — 원문이
+ *   '{' 뿐 아니라 **'"' 로 시작할 때도** 건다(따옴표가 하나만 남거나 안쪽
+ *   이스케이프가 깨진 응답 — 세션 49 "깨진 껍데기 0/50"과 같은 계열의
+ *   거짓 안심을 막는다). **폐기하지 않는다** — text 는 원문 그대로
+ *   흘려보내고 결과에만 보이게 한다.
  */
 function unwrapHintV3Feedback(text: string): { text: string; unwrapped: boolean | 'malformed_json' } {
   let parsed: unknown
   try {
     parsed = JSON.parse(text)
   } catch {
-    return { text, unwrapped: text.startsWith('{') ? 'malformed_json' : false }
+    return { text, unwrapped: text.startsWith('{') || text.startsWith('"') ? 'malformed_json' : false }
+  }
+  if (typeof parsed === 'string') {
+    return { text: parsed.trim(), unwrapped: true }
   }
   if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
     return { text, unwrapped: 'malformed_json' }

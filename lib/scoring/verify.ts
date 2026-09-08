@@ -8437,6 +8437,42 @@ console.log('\n[결정타 빌드업 섀도 support-v3]')
   t('병: 이 SQL 파일이 값을 true 로 켜지 않는다(주석 속 안내 문장은 예외)',
     !/\nupdate system_flags set value = 'true'/.test(hintVisibleSql.replace(/^--.*$/gm, '')))
 
+  // ── seed/update-hint-visible-on.sql(세션 51): hint_visible 을 켠다 — 유일하게 true 로 켜는 파일 ──
+  const hintVisibleOnPath = path.join(__dirname, '..', '..', 'seed', 'update-hint-visible-on.sql')
+  t('update-hint-visible-on.sql 이 존재한다', existsSync(hintVisibleOnPath))
+  if (existsSync(hintVisibleOnPath)) {
+    const hintVisibleOnSql = readFileSync(hintVisibleOnPath, 'utf8')
+    const bodyOn = hintVisibleOnSql.replace(/^--.*$/gm, '')
+    t("update-hint-visible-on.sql: 'hint_visible' 을 'true' 로 켠다(주석 밖 실행문에)",
+      /\nupdate system_flags set value = 'true' where key = 'hint_visible';/.test(bodyOn))
+    t('update-hint-visible-on.sql: ::jsonb 캐스팅을 안 쓴다(value 는 문자열, 기존 파일 문법 그대로)',
+      !bodyOn.includes('::jsonb'))
+    t('update-hint-visible-on.sql: 되돌리기 안내(false 로) 가 주석에 있다',
+      hintVisibleOnSql.includes("set value = 'false' where key = 'hint_visible'"))
+  }
+
+  // ── seed/check-hint-v3-live.sql · seed/clean-hint-v3-cache.sql(세션 51) ──
+  // 옛 힌트 v3 캐시(세션 49 벗기기 신설 전 — route.ts 를 거쳐 껍데기째 저장됨)
+  // 를 조회·삭제하는 짝 — 두 파일의 where 절이 글자까지 같아야 "0건 확인"이
+  // 실제로 화면 안전을 뜻한다.
+  const checkHintLivePath = path.join(__dirname, '..', '..', 'seed', 'check-hint-v3-live.sql')
+  const cleanHintCachePath = path.join(__dirname, '..', '..', 'seed', 'clean-hint-v3-cache.sql')
+  t('check-hint-v3-live.sql 이 존재한다', existsSync(checkHintLivePath))
+  t('clean-hint-v3-cache.sql 이 존재한다', existsSync(cleanHintCachePath))
+  if (existsSync(checkHintLivePath) && existsSync(cleanHintCachePath)) {
+    const checkSrc = readFileSync(checkHintLivePath, 'utf8')
+    const cleanSrc = readFileSync(cleanHintCachePath, 'utf8')
+    const shellCondition = `(ltrim(judgment->>'text') like '{%' or ltrim(judgment->>'text') like '"%')`
+    t('check-hint-v3-live.sql: 읽기 전용이다(delete 없음)', !/\bdelete\b/i.test(checkSrc))
+    t('check-hint-v3-live.sql: 껍데기 조건이 ltrim 형태다', checkSrc.includes(shellCondition))
+    t("check-hint-v3-live.sql: prompt_version = 'hint-v3' 를 쓴다(PROMPT_VERSION_HINT_V3 값 그대로)",
+      checkSrc.includes("prompt_version = 'hint-v3'") && (PROMPT_VERSION_HINT_V3 as string) === 'hint-v3')
+    t("clean-hint-v3-cache.sql: prompt_version = 'hint-v3' 조건으로 delete 한다(다른 캐시 안 건드림)",
+      /delete from ai_shadow_cache\s*\n\s*where prompt_version = 'hint-v3'/.test(cleanSrc))
+    t('clean-hint-v3-cache.sql: 껍데기 조건이 check-hint-v3-live.sql 과 글자까지 같다(같은 리터럴 문자열을 공유)',
+      cleanSrc.includes(shellCondition) && checkSrc.includes(shellCondition))
+  }
+
   // ── TrainClient.tsx: 카드 문구 3종 + pending 무카드 + gatedNoBeat 제약 안내 ──
   const tcSrc2 = readFileSync(path.join(__dirname, '..', '..', 'components', 'train', 'TrainClient.tsx'), 'utf8')
   t('TrainClient: "먹물이의 참고 의견 (통과와 무관)" 문구', tcSrc2.includes('먹물이의 참고 의견 (통과와 무관)'))
@@ -9099,6 +9135,32 @@ console.log('\n[힌트 v1 내림 · 카드 문구 교체 · 힌트 v2 — 세션
       async () => ({ text: '["「카엘은 같은 자리」에서 안 움직이는 이유가 뭘까? 리온이 그걸 알아채는 순간을 넣어 봐."]', usage: { inputTokens: 100, cachedTokens: 0, outputTokens: 20 }, model: 'gemini-3.7-flash' }),
       hintV3Answer, '재료.', '리온', '카엘', 'none', 'gemini-3.7-flash')
     return r.ok && r.text === '["「카엘은 같은 자리」에서 안 움직이는 이유가 뭘까? 리온이 그걸 알아채는 순간을 넣어 봐."]' && r.unwrapped === 'malformed_json'
+  })
+
+  // ── judgeHintV3With: bare string 도 벗긴다(세션 51 — 세션 50 재측정 "벗기지
+  //    못한 JSON 8/50"이 전부 이 꼴이었다) ─────────────────────────────
+  tAsync('judgeHintV3With: bare string("「…」 … 봐.")도 벗긴다 · 따옴표 없는 본문 · unwrapped===true(세션 51)', async () => {
+    const r = await judgeHintV3With(
+      async () => ({ text: '"「카엘은 같은 자리」에서 안 움직이는 이유가 뭘까? 리온이 그걸 알아채는 순간을 넣어 봐."', usage: { inputTokens: 100, cachedTokens: 0, outputTokens: 20 }, model: 'gemini-3.7-flash' }),
+      hintV3Answer, '재료.', '리온', '카엘', 'none', 'gemini-3.7-flash')
+    return r.ok && r.text === '「카엘은 같은 자리」에서 안 움직이는 이유가 뭘까? 리온이 그걸 알아채는 순간을 넣어 봐.' &&
+      !r.text.startsWith('"') && r.unwrapped === true
+  })
+  tAsync("judgeHintV3With: 닫는 따옴표가 없어 파싱이 깨지면 원문 그대로 · unwrapped==='malformed_json'(세션 51 — '\"' 로 시작하는 파싱 실패도 넓힌 규칙)", async () => {
+    const r = await judgeHintV3With(
+      async () => ({ text: '"「카엘은 같은 자리」에서 안 움직이는 이유가 뭘까? 리온이 그걸 알아채는 순간을 넣어 봐.', usage: { inputTokens: 100, cachedTokens: 0, outputTokens: 20 }, model: 'gemini-3.7-flash' }),
+      hintV3Answer, '재료.', '리온', '카엘', 'none', 'gemini-3.7-flash')
+    return r.ok && r.text === '"「카엘은 같은 자리」에서 안 움직이는 이유가 뭘까? 리온이 그걸 알아채는 순간을 넣어 봐.' && r.unwrapped === 'malformed_json'
+  })
+  tAsync("judgeHintV3With: 숫자·불리언 같은 스칼라는 벗길 대상이 아니라 원문 그대로 · unwrapped==='malformed_json'(세션 51)", async () => {
+    const r1 = await judgeHintV3With(
+      async () => ({ text: '42', usage: { inputTokens: 100, cachedTokens: 0, outputTokens: 5 }, model: 'gemini-3.7-flash' }),
+      hintV3Answer, '재료.', '리온', '카엘', 'none', 'gemini-3.7-flash')
+    const r2 = await judgeHintV3With(
+      async () => ({ text: 'true', usage: { inputTokens: 100, cachedTokens: 0, outputTokens: 5 }, model: 'gemini-3.7-flash' }),
+      hintV3Answer, '재료.', '리온', '카엘', 'none', 'gemini-3.7-flash')
+    return r1.ok && r1.text === '42' && r1.unwrapped === 'malformed_json' &&
+      r2.ok && r2.text === 'true' && r2.unwrapped === 'malformed_json'
   })
 
   // ── judgeHintV3WithRetry: 재시도 루프(세션 50, 2-A) — AI 호출 없음 ────
