@@ -14,13 +14,20 @@ import type { Check } from './types'
  * curr 를 **배열 순서 그대로** 훑으며, 같은 key 의 prev 가 'fail' 이고
  * curr 가 'pass' 인 것만 모은다. 정렬하지 않는다 — checks 배열 순서가
  * 화면 표시 순서이고, resubmitLine 이 그 순서의 "앞 둘"을 쓴다(박 님).
+ *
+ * ★ 세션 53 — key 가 같아도 **rule 이 같아야** 짝짓는다. submissions.
+ *   auto_result 는 제출 시점의 판정이라 문항 설정이 바뀌면 과거 기록과
+ *   현재 기준이 어긋난다(실측 — maxChars fail 45건 중 rp-kongjwi-jar
+ *   11건이 34자 시절 기록인데 현재 설정은 68자다). rule 이 다르면 학습자가
+ *   고쳐서 통과한 게 아니라 기준이 바뀐 것이므로 침묵한다. 이 대조는
+ *   나중에 '자주 하는 실수'에도 그대로 필요하다(박 님).
  */
 export function diffChecks(prev: Check[], curr: Check[]): Check[] {
   const prevByKey = new Map(prev.map((c) => [c.key, c]))
   const gained: Check[] = []
   for (const c of curr) {
     const p = prevByKey.get(c.key)
-    if (p && p.status === 'fail' && c.status === 'pass') gained.push(c)
+    if (p && p.rule === c.rule && p.status === 'fail' && c.status === 'pass') gained.push(c)
   }
   return gained
 }

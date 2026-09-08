@@ -26,6 +26,11 @@ begin;
 
 alter table problems add column if not exists tone_tag   text;
 alter table problems add column if not exists source_key text;
+-- 미검토 문항 표시(세션 53). 초기값은 전부 false — 세션 이력으로 추정하지
+-- 않는다(급히 넘어간 신설분도, 그 전에 전수로 본 것도 섞여 있다). 박 님이
+-- 눈으로 본 문항만 true 로 올린다. 전체 157건 전부에 붙는다(활성·비활성
+-- 안 가린다) — "박 님이 봤는가"는 활성 여부와 다른 축이다.
+alter table problems add column if not exists reviewed boolean not null default false;
 
 create unique index if not exists problems_source_key_uniq
   on problems (source_key) where source_key is not null;

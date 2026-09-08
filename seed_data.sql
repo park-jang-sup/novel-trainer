@@ -451,1885 +451,1885 @@ on conflict (skill_key) do update set
 -- bt-alley-hook (order_no 1, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'action_turn'),
   'convert', 'auto', '아래 전투를 고쳐 쓰시오. 주원은 복싱을 배운 대학생이고 강태는 골목에서 시비를 건 덩치다. 원문은 휘두르고 막고 의성어만 반복해서 누가 왜 그 수를 두는지 없다. 주원이 강태의 주먹에서 무엇을 읽고, 무엇을 재고, 어떤 수를 고르는지가 순서대로 보이게 다시 쓰시오. 고른 수의 결과와 대가는 몸으로 보이고, 주원의 속마음이나 대사 한 줄이 들리게 하시오. 의성어는 써도 되지만 그것만으로 한 수를 대신하지 마시오.',
-  '강태가 주먹을 휘둘렀다. 퍽! 주원이 막았다. 강태가 다시 휘둘렀다. 퍽! 퍽! 주원이 뒤로 물러났다. 강태의 주먹은 강력했다. 주원은 다시 앞으로 나갔다.', null, '{"maxChars":200,"minVerbs":4,"requireAll":["주원","강태"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","고통","통증","아픔","지독","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","고통","통증","아픔","지독하다","그때였다","과연"],"forbidPassageCopy":true,"ai_shadow":["support","tell"],"ai_hint_material":"강태는 오른손만 쓰고, 주먹을 크게 돌린다."}'::jsonb,
+  '강태가 주먹을 휘둘렀다. 퍽! 주원이 막았다. 강태가 다시 휘둘렀다. 퍽! 퍽! 주원이 뒤로 물러났다. 강태의 주먹은 강력했다. 주원은 다시 앞으로 나갔다.', null, '{"maxChars":200,"minVerbs":4,"requireAll":["주원","강태"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","고통","통증","아픔","지독","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","고통","통증","아픔","지독하다","그때였다","과연"],"forbidPassageCopy":true,"ai_shadow":["support","tell"],"ai_hint_material":"주먹은 뻗는 동안 그쪽 몸이 열린 채로 있다.\n열리는 자리는 뻗은 팔이 지나간 아래쪽이고, 주먹이 돌아오기 전까지 그대로 있다."}'::jsonb,
   'original', 'modern', 'planned',
-  1, 'bt-alley-hook'
+  1, 'bt-alley-hook', false
 where not exists (select 1 from problems p where p.source_key = 'bt-alley-hook');
 
 -- ca-gate-dinner (order_no 1, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'cliffhanger_adv'),
   'convert', 'auto', '아래 회차 끝을 고쳐 쓰시오. 민재는 레이드를 마치고 팀원들과 저녁을 먹는 헌터다. 원문은 신호 없이 ''그때였다''로 덜컥 끊어서 독자가 놀라는 게 아니라 어리둥절해진다. 마지막 줄(게이트가 열렸다)은 그대로 두고, 그 앞에 ''온다''는 신호 한 줄을 심어 다시 쓰시오. 민재의 속마음이나 대사 한 줄이 들리게 하시오.',
   '민재는 팀원들과 저녁을 먹고 있었다. 오늘 레이드는 무사히 끝났고 다들 웃고 있었다. 그때였다. 식당 천장이 갈라지며 게이트가 열렸다.', null, '{"maxChars":120,"minVerbs":3,"forbidLabel":"서술자가 미리 말해 주거나 억지로 끊는 표현","forbidWords":["훗날","될 줄","과연","그때였다","다음 화","운명"],"forbidDisplay":["훗날","될 줄은","과연","그때였다","다음 화","운명"],"ai_shadow":["signal"]}'::jsonb,
   'original', 'fantasy', 'planned',
-  1, 'ca-gate-dinner'
+  1, 'ca-gate-dinner', false
 where not exists (select 1 from problems p where p.source_key = 'ca-gate-dinner');
 
 -- cc-report-credit (order_no 1, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'contrast_char'),
   'convert', 'auto', '김하준과 서담을 대비시키시오. 김하준은 제 공을 앞세우고 싶어 하는 대리, 서담은 제 공을 남에게 돌리는 대리다. 아래 장면에서 두 사람은 똑같이 움직인다. 다시 써서, 같은 일에 두 사람이 서로 다르게 반응하게 하시오.',
   '결과 발표가 끝났다. 두 대리는 나란히 자리로 돌아와 다음 업무를 열었다.', null, '{"maxChars":60,"minVerbs":2,"requireAll":["김하준","서담"]}'::jsonb,
   'original', 'modern', 'planned',
-  1, 'cc-report-credit'
+  1, 'cc-report-credit', false
 where not exists (select 1 from problems p where p.source_key = 'cc-report-credit');
 
 -- cf-return-crisis (order_no 1, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'cliffhanger'),
   'continue', 'auto', '아래 장면의 마지막 줄을 ''위기''로 끊으시오. 도윤은 던전을 닫고 돌아가는 헌터다. 원문은 아무 일 없이 끝나 독자가 다음 화를 누를 이유가 없다. 원문 뒤에 한두 문장을 이어, 앞으로 무슨 일이 터질 것 같은 위기로 회차를 끝내시오. 서술자가 ''그때였다''·''과연''으로 억지로 끊지 마시오.',
   '던전을 닫고 나온 도윤은 협회 차 뒷자리에 올랐다. 팀원들은 타자마자 잠들었다. 창밖으로 도시 불빛이 천천히 지나갔다.', null, '{"maxChars":80,"minVerbs":1,"forbidLabel":"서술자가 미리 말해 주거나 억지로 끊는 표현","forbidWords":["훗날","될 줄","과연","그때였다","다음 화","운명"],"forbidDisplay":["훗날","될 줄은","과연","그때였다","다음 화","운명"],"forbidPassageCopy":true}'::jsonb,
   'original', 'fantasy', 'planned',
-  1, 'cf-return-crisis'
+  1, 'cf-return-crisis', false
 where not exists (select 1 from problems p where p.source_key = 'cf-return-crisis');
 
 -- ep-regress-card (order_no 1, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'start_episode'),
   'fill', 'auto', '설정 카드를 읽고 1화를 네 줄로 쥐시오. 아직 소설을 쓰는 게 아니다 — 쓰기 전에 작가 손에 있어야 할 메모 네 줄이다. ① 이 이야기를 독자가 왜 볼지 한 가지, ② 주인공이 어떤 사람인지(겉과 속이 어떻게 붙는지) 한 줄, ③ 1화가 시작되는 장면(장소·시각·하는 일) 한 줄, ④ 주인공의 첫마디 한 줄. 라벨 줄을 그대로 옮겨 적지 말고, ''재밌다''는 말로 재미를 대신하지 마시오.',
   E'[설정] 최약체로 죽고 십 년 전으로 돌아온 헌터 강도윤. 이번엔 남보다 먼저 강해진다.\n\n이 이야기의 재미는 —\n①\n주인공은 —\n②\n1화는 이 장면에서 시작한다 —\n③\n주인공의 첫마디 —\n④', null, '{"blanks":[{"key":"①","label":"이 이야기를 왜 볼까 — 독자가 기대할 한 가지","minSentences":1,"maxSentences":1,"maxChars":50},{"key":"②","label":"주인공은 어떤 사람인가 — 겉과 속이 어떻게 붙는지","minSentences":1,"maxSentences":1,"maxChars":60},{"key":"③","label":"1화는 어느 장면에서 시작하나 — 장소·시각·하는 일","minSentences":1,"maxSentences":1,"maxChars":50},{"key":"④","label":"주인공의 첫 대사 한 줄 (큰따옴표 안에)","minSentences":1,"maxSentences":2,"maxChars":30,"minChars":4}],"forbidLabel":"재미를 말로 대신하거나 세계부터 설명하는 표현","forbidWords":["재밌","재미있","흥미진진","제국력","이 세계","프롤로그","[설정]"],"forbidDisplay":["재밌다","흥미진진","제국력","이 세계는","프롤로그"],"forbidCopyOfFixedLines":true,"fixedLines":["이 이야기의 재미는 —","주인공은 —","1화는 이 장면에서 시작한다 —","주인공의 첫마디 —"]}'::jsonb,
   'original', 'fantasy', 'planned',
-  1, 'ep-regress-card'
+  1, 'ep-regress-card', false
 where not exists (select 1 from problems p where p.source_key = 'ep-regress-card');
 
 -- fh-villainess-mirror (order_no 1, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'first_hook'),
   'convert', 'auto', '아래 다섯 줄을 고쳐 쓰시오. 카리엘은 원작에서 삼 년 뒤 처형당하는 악녀의 몸에 들어온 사람으로, 겁을 먹기보다 남은 시간을 계산하는 성격이다. 원문은 세계와 가문부터 설명해서 다섯 줄이 끝나도록 카리엘이 아무것도 하지 않는다. 같은 정보(공작가와 왕실의 대립·악녀의 악명·처형·빙의)를 카리엘의 행동에 실어 다섯 줄로 다시 쓰시오. 이 이야기가 어디로 가는지, 왜 이 사람인지, 어떻게 헤쳐 갈지가 그 다섯 줄에 들어가야 하고, 카리엘의 속마음이나 대사 한 줄이 들리게 하시오.',
   '제국력 412년, 아르덴 왕국의 공작가는 오래전부터 왕실과 대립해 왔다. 공작가의 외동딸 카리엘은 사교계에서 악녀로 불렸다. 왕실은 그 악명을 빌미로 공작가를 칠 기회를 노리고 있었다. 그녀는 원작 소설에서 삼 년 뒤 반역죄로 처형당한다. 그리고 지금, 그 몸에 다른 영혼이 들어와 있었다.', null, '{"maxChars":200,"minVerbs":4,"requireAny":["카리엘"],"forbidLabel":"세계부터 설명하는 표현","forbidWords":["제국력","이 세계","옛날 옛적","프롤로그","오래전부터"],"forbidDisplay":["제국력","이 세계는","옛날 옛적","프롤로그","오래전부터"]}'::jsonb,
   'original', 'romance', 'planned',
-  1, 'fh-villainess-mirror'
+  1, 'fh-villainess-mirror', false
 where not exists (select 1 from problems p where p.source_key = 'fh-villainess-mirror');
 
 -- ig-gate-wait (order_no 1, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'info_gap'),
   'convert', 'auto', '아래 장면을 고쳐 쓰시오. 에린은 영주에게 청원할 일이 있어 성문 앞을 떠나지 못하는 견습 기사다. 원문은 에린도 독자도 아무것도 모른 채 기다리기만 해서 답답하기만 하다. 독자에게만 사실 하나를 먼저 준 뒤(영주가 왜 문을 열지 않는지), 에린은 그것을 모른 채 같은 행동을 하게 다시 쓰시오. 서술자가 ''몰랐다''고 말해 주지는 마시오.',
   '에린은 성문 앞에서 사흘째 기다렸다. 영주는 문을 열어 주지 않았다. 아무도 이유를 말하지 않았다. 에린은 다시 문을 두드렸다.', null, '{"maxChars":100,"minVerbs":3,"forbidLabel":"서술자가 사실을 말해 주는 표현","forbidWords":["몰랐","알지 못","모르고 있","눈치채지 못","알 리 없","훗날"],"forbidDisplay":["몰랐다","알지 못했다","눈치채지 못했다","훗날"]}'::jsonb,
   'original', 'fantasy', 'planned',
-  1, 'ig-gate-wait'
+  1, 'ig-gate-wait', false
 where not exists (select 1 from problems p where p.source_key = 'ig-gate-wait');
 
 -- lk-desk-nine (order_no 1, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'lack'),
   'convert', 'auto', '김하준에게 인정 욕구를 얹으시오. 김하준은 기획팀 3년 차 대리다. 아래는 아무 결핍도 없는 무난한 장면이다. 다시 써서, 인정받고 싶다는 말 없이 행동과 버릇만으로 그 마음이 드러나게 하시오.',
   '기획팀 3년 차 대리는 오늘도 아홉 시 정각에 자리에 앉았다. 컴퓨터를 켜고 메일함을 열었다.', null, '{"maxChars":60,"minVerbs":2,"forbidLabel":"인정 욕구를 직접 말하는 표현","forbidWords":["인정","칭찬","알아주"],"forbidDisplay":["인정","칭찬","알아주다"],"requireAny":["김하준","하준"],"forbidPassageCopy":true}'::jsonb,
   'original', 'modern', 'planned',
-  1, 'lk-desk-nine'
+  1, 'lk-desk-nine', false
 where not exists (select 1 from problems p where p.source_key = 'lk-desk-nine');
 
 -- lk2-broken-sword (order_no 1, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'likability'),
   'continue', 'auto', '읽는 사람이 한시우를 응원하고 싶게 만드시오. 한시우는 재능 있는 동료들 사이에서 훈련량 하나로 버티는 B급 헌터다. 남의 성적을 제 채점표처럼 읽어 속이 쓰리지만, 그래서 노력하는 사람만은 깎아내리지 못한다. 원문을 읽고 다음에 올 장면을, ''착하다''는 말 없이 한시우가 손해 보는 선택 하나가 행동으로 보이게 작성하시오.',
   '보상 명단이 붙었다. 한시우의 이름은 이번에도 없었다. 훈련장 구석에서 후배가 부러진 검을 내려다보고 있었다. 다음 달 심사까지 새 검을 구할 길이 없다고 했다. 한시우의 등에는 그 심사에 쓰려고 반년을 아껴 산 검이 걸려 있었다.', null, '{"maxChars":100,"minVerbs":3,"forbidLabel":"인물을 평가하는 말","forbidWords":["착하","착한","따뜻","다정","친절","배려","좋은 사람","마음씨","인심"],"forbidDisplay":["착하다","따뜻하다","다정하다","친절하다","배려하다"],"forbidPassageCopy":true}'::jsonb,
   'original', 'modern', 'planned',
-  1, 'lk2-broken-sword'
+  1, 'lk2-broken-sword', false
 where not exists (select 1 from problems p where p.source_key = 'lk2-broken-sword');
 
 -- rm-axe-pond (order_no 1, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'reduce_adverb'),
   'remove', 'auto', '꾸미는 말을 걷어내고 다시 쓰시오. 도끼가 물에 빠지는 순간만 남길 것. 여기서는 일부러 부사를 전부 막습니다. 실제 소설에서는 쓰셔도 됩니다 — 언제 쓰는지는 뒤에서 다룹니다.',
   '나무꾼은 힘껏 도끼를 휘둘렀다. 자루가 갑자기 빠졌고, 도끼는 빠르게 연못으로 떨어졌다.', null, '{"maxChars":36,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb,
   'folktale', 'fantasy', 'planned',
-  1, 'rm-axe-pond'
+  1, 'rm-axe-pond', false
 where not exists (select 1 from problems p where p.source_key = 'rm-axe-pond');
 
 -- rm-heungbu-swallow (order_no 1, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'reduce_adverb'),
   'remove', 'auto', '꾸미는 말을 걷어내고 다시 쓰시오. 뜻은 그대로 두되, 동작으로 대신할 것. 여기서는 일부러 부사를 전부 막습니다. 실제 소설에서는 쓰셔도 됩니다 — 언제 쓰는지는 뒤에서 다룹니다.',
   '흥부는 조심스럽게 제비의 다리를 감쌌다. 그는 간절하게 제비가 얼른 낫기를 바랐다.', null, '{"maxChars":34,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":2}'::jsonb,
   'folktale', 'fantasy', 'planned',
-  1, 'rm-heungbu-swallow'
+  1, 'rm-heungbu-swallow', false
 where not exists (select 1 from problems p where p.source_key = 'rm-heungbu-swallow');
 
 -- rm-kongjwi-jar (order_no 1, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'reduce_adverb'),
   'remove', 'auto', '꾸미는 말을 걷어내고 다시 쓰시오. 깨진 독은 그대로 두고, 콩쥐가 무엇을 하는지만 보이게 할 것. 여기서는 일부러 부사를 전부 막습니다. 실제 소설에서는 쓰셔도 됩니다 — 언제 쓰는지는 뒤에서 다룹니다.',
   '콩쥐는 깨진 독에 열심히 물을 부었지만 물은 계속 빠르게 새어 나갔다. 그녀는 몹시 지친 얼굴로 천천히 주저앉았다.', null, '{"maxChars":39,"minVerbs":4,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":2}'::jsonb,
   'folktale', 'modern', 'planned',
-  1, 'rm-kongjwi-jar'
+  1, 'rm-kongjwi-jar', false
 where not exists (select 1 from problems p where p.source_key = 'rm-kongjwi-jar');
 
 -- rm-simcheong-deck (order_no 1, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'reduce_adverb'),
   'remove', 'auto', '꾸미는 말을 걷어내고 다시 쓰시오. 여기서는 일부러 부사를 전부 막습니다. 실제 소설에서는 쓰셔도 됩니다 — 언제 쓰는지는 뒤에서 다룹니다.',
   '심청은 천천히 뱃전으로 걸어갔다. 사람들은 안타깝게 그녀를 바라보았고, 뱃사공은 무겁게 고개를 돌렸다.', null, '{"maxChars":40,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb,
   'folktale', 'modern', 'planned',
-  1, 'rm-simcheong-deck'
+  1, 'rm-simcheong-deck', false
 where not exists (select 1 from problems p where p.source_key = 'rm-simcheong-deck');
 
 -- sc-broken-vow (order_no 1, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'start_choose'),
   'choice', 'auto', '주인공은 결혼식 한 달 전 파혼을 통보받은 하은수다. 1화의 첫 문장으로, 독자를 주인공에게 붙드는 것을 고르시오.',
   null, '["하은수는 청첩장 견본을 반으로 접어 쓰레기통에 밀어 넣었다.","결혼이란 예로부터 두 집안이 맺는 가장 큰 거래였다.","웨딩홀의 김 실장은 오늘도 예약 장부를 한 장씩 넘기고 있었다.","무겁게 가라앉은 공기 속, 어딘지 서글픈 기운이 도는 오후였다."]'::jsonb, '{}'::jsonb,
   'original', 'romance', 'planned',
-  1, 'sc-broken-vow'
+  1, 'sc-broken-vow', false
 where not exists (select 1 from problems p where p.source_key = 'sc-broken-vow');
 
 -- sc-hunter-status (order_no 1, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'start_choose'),
   'choice', 'auto', '주인공은 최약체에서 회귀한 헌터 강도윤이다. 1화의 첫 문장으로, 독자를 주인공에게 붙드는 것을 고르시오.',
   null, '["대격변 이후 삼십 년, 게이트는 인류의 일상이 되었다.","강도윤은 손바닥에 떠오른 붉은 상태창을 천천히 문질러 보았다.","협회장 박무진은 아침부터 회의실 문을 박차고 들어섰다.","어딘가 불길하고 낯선 기운이 감도는 아침이었다."]'::jsonb, '{}'::jsonb,
   'original', 'modern', 'planned',
-  1, 'sc-hunter-status'
+  1, 'sc-hunter-status', false
 where not exists (select 1 from problems p where p.source_key = 'sc-hunter-status');
 
 -- sc-sword-ruin (order_no 1, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'start_choose'),
   'choice', 'auto', '주인공은 하룻밤에 멸문한 가문의 소년 진운이다. 1화의 첫 문장으로, 독자를 주인공에게 붙드는 것을 고르시오.',
   null, '["강호에는 오래전부터 다섯 세가가 천하를 나누어 다스려 왔다.","객잔 주인은 새벽부터 국솥을 걸며 콧노래를 흥얼거렸다.","부러진 검 자루를 끌어안은 채, 진운은 잿더미 속에서 눈을 떴다.","불타 버린 장원에는 말로 다 못 할 스산한 기운이 감돌았다."]'::jsonb, '{}'::jsonb,
   'original', 'martial', 'planned',
-  1, 'sc-sword-ruin'
+  1, 'sc-sword-ruin', false
 where not exists (select 1 from problems p where p.source_key = 'sc-sword-ruin');
 
 -- se-hunter-gate (order_no 1, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'start_extend'),
   'continue', 'auto', '강도윤이 나오게 이어 쓰시오. 주인공은 최약체에서 회귀한 헌터 강도윤이다. 아래 문장은 세상 설명만 하고 아직 아무도 보여주지 않는다. 이어지는 한두 문장을 써서, 강도윤이 나타나 움직이게 하시오.',
   '대격변 이후 삼십 년, 게이트는 인류의 일상이 되었다.', null, '{"maxChars":60,"minVerbs":1,"requireAny":["강도윤","도윤"]}'::jsonb,
   'original', 'modern', 'planned',
-  1, 'se-hunter-gate'
+  1, 'se-hunter-gate', false
 where not exists (select 1 from problems p where p.source_key = 'se-hunter-gate');
 
 -- sw-hunter-dawn (order_no 1, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'start_write'),
   'convert', 'auto', '강도윤의 1화 첫 문장을 쓰시오. 주인공은 최약체에서 회귀한 헌터 강도윤이다. 아래는 분위기만 말하고 아무것도 보여주지 못한 잘못된 첫 문장이다. 저렇게 쓰지 말고, 강도윤이 보고 듣고 만지는 것 하나에서 시작하는 첫 문장을 새로 쓰시오.',
   '어딘가 불길하고 낯선 기운이 감도는 아침이었다.', null, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","불길","기류","아우라","기색","낌새","기미"],"forbidLemmas":["오라/NNG"],"forbidDisplay":["기운","느낌","분위기","불길하다","기류","오라","아우라","기색","낌새","기미"],"requireAny":["강도윤","도윤"]}'::jsonb,
   'original', 'modern', 'planned',
-  1, 'sw-hunter-dawn'
+  1, 'sw-hunter-dawn', false
 where not exists (select 1 from problems p where p.source_key = 'sw-hunter-dawn');
 
 -- rm-magpie-bridge (order_no 1, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'reduce_adverb'),
   'remove', 'auto', '꾸미는 말을 걷어내고 다시 쓰시오. 까치들이 다리를 만드는 장면만 남길 것. 여기서는 일부러 부사를 전부 막습니다. 실제 소설에서는 쓰셔도 됩니다 — 언제 쓰는지는 뒤에서 다룹니다.',
   '까치들은 부지런하게 날아와 아주 촘촘하게 몸을 이었다. 견우는 조심스럽게 그 위에 발을 얹었다.', null, '{"maxChars":34,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb,
   'folktale', 'romance', 'planned',
-  2, 'rm-magpie-bridge'
+  2, 'rm-magpie-bridge', false
 where not exists (select 1 from problems p where p.source_key = 'rm-magpie-bridge');
 
 -- rm-rabbit-court (order_no 1, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'reduce_adverb'),
   'remove', 'auto', '꾸미는 말을 걷어내고 다시 쓰시오. 여기서는 일부러 부사를 전부 막습니다. 실제 소설에서는 쓰셔도 됩니다 — 언제 쓰는지는 뒤에서 다룹니다.',
   '토끼는 태연하게 웃으며 말했다. 용왕은 다급하게 몸을 일으켰고, 신하들은 어리둥절한 표정으로 서로를 바라보았다.', null, '{"maxChars":40,"minVerbs":3,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb,
   'folktale', 'martial', 'impulsive',
-  2, 'rm-rabbit-court'
+  2, 'rm-rabbit-court', false
 where not exists (select 1 from problems p where p.source_key = 'rm-rabbit-court');
 
 -- rm-siblings-tree (order_no 1, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'reduce_adverb'),
   'remove', 'auto', '꾸미는 말을 걷어내고 다시 쓰시오. 여기서는 일부러 부사를 전부 막습니다. 실제 소설에서는 쓰셔도 됩니다 — 언제 쓰는지는 뒤에서 다룹니다.',
   '오누이는 급하게 나무 위로 올라갔다. 호랑이는 아래에서 계속 사납게 나무를 흔들었고, 아이들은 몹시 세게 가지를 붙잡았다.', null, '{"maxChars":44,"minVerbs":2,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":1}'::jsonb,
   'folktale', 'fantasy', 'impulsive',
-  2, 'rm-siblings-tree'
+  2, 'rm-siblings-tree', false
 where not exists (select 1 from problems p where p.source_key = 'rm-siblings-tree');
 
 -- sc-boss-mirror (order_no 1, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'start_choose'),
   'choice', 'auto', '주인공 이재하는 자신이 만든 게임 속 중간보스의 몸에서 깨어났다. 1화의 첫 문장으로, 독자를 주인공에게 붙드는 것을 고르시오.',
   null, '["가상현실 게임 아르카디아는 출시 십 년 만에 대륙 전체를 삼켰다.","이재하는 거울 속 뿔 두 개 달린 낯선 얼굴과 눈을 맞췄다.","성채 아래에서는 병사들이 아침 점호로 분주하게 오가고 있었다.","무언가 단단히 잘못되었다는 느낌이 서늘하게 온몸을 감쌌다."]'::jsonb, '{}'::jsonb,
   'original', 'fantasy', 'planned',
-  2, 'sc-boss-mirror'
+  2, 'sc-boss-mirror', false
 where not exists (select 1 from problems p where p.source_key = 'sc-boss-mirror');
 
 -- sc-villainess-chains (order_no 1, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'start_choose'),
   'choice', 'auto', '주인공은 소설 속 처형당하는 악녀 카리엘의 몸에서 깨어났다. 1화의 첫 문장으로, 독자를 주인공에게 붙드는 것을 고르시오.',
   null, '["제국력 사백팔십일 년, 황실은 건국 이래 가장 깊은 혼란에 빠져 있었다.","재판장을 맡은 대신관은 판결문을 펴기 전 길게 헛기침을 했다.","처형장에는 무어라 형언할 수 없는 팽팽한 긴장감이 흐르고 있었다.","카리엘은 제 목에 감긴 차가운 쇠사슬을 두 손으로 더듬었다."]'::jsonb, '{}'::jsonb,
   'original', 'fantasy', 'planned',
-  2, 'sc-villainess-chains'
+  2, 'sc-villainess-chains', false
 where not exists (select 1 from problems p where p.source_key = 'sc-villainess-chains');
 
 -- rm-goblin-club (order_no 1, difficulty 3)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'reduce_adverb'),
   'remove', 'auto', '꾸미는 말을 걷어내고 다시 쓰시오. 남는 문장은 두 개 이하로. 여기서는 일부러 부사를 전부 막습니다. 실제 소설에서는 쓰셔도 됩니다 — 언제 쓰는지는 뒤에서 다룹니다.',
   '나무꾼은 조심스럽게 방망이를 들었다. 그는 몹시 떨리는 손으로 천천히 그것을 내리쳤고, 곡식이 갑자기 쏟아져 나왔다.', null, '{"maxChars":42,"minVerbs":3,"maxRepeat":2,"maxAdverbs":1,"maxModifiers":2}'::jsonb,
   'folktale', 'fantasy', 'impulsive',
-  3, 'rm-goblin-club'
+  3, 'rm-goblin-club', false
 where not exists (select 1 from problems p where p.source_key = 'rm-goblin-club');
 
 -- bt-spear-range (order_no 2, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'action_turn'),
   'continue', 'auto', '원문이 깔아 둔 상대 기술의 원리를 읽고 한 턴을 이어 쓰시오. 백서린은 검을 쓰는 여검객이고 곽무영은 창을 쓴다. 원문은 ''창은 거리 싸움''이라는 원리를 이미 보여 줬다. 원문을 읽고 다음 한 수를, 서린이 그 원리를 읽고 → 선택지를 재고 → 하나를 고르는 순서가 보이게 쓰되, 고른 수의 대가와 결과가 몸이나 사물로 드러나게 작성하시오. 서린의 속마음이나 대사 한 줄이 들리게 하고, 두 사람 이름이 다 나오게 하시오.',
   '곽무영의 창은 세 걸음 거리를 지켰다. 백서린이 들어가면 창끝이 찌르고, 물러서면 창대가 따라와 후렸다. 세 합 만에 서린의 왼팔 소매가 갈라졌다. 창은 거리 싸움이었다.', null, '{"maxChars":200,"minVerbs":4,"requireAll":["서린","무영"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","고통","통증","아픔","지독","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","고통","통증","아픔","지독하다","그때였다","과연"],"forbidPassageCopy":true,"ai_shadow":["support","tell"],"ai_hint_material":"창은 뒷손이 밀어야 찌르기가 나가고, 앞손이 창대를 감아쥐어야 후리기가 나간다.\n찌르기는 곧아서 반 뼘만 틀면 창끝이 몸을 스쳐 지나가고, 후리기는 둥글어서 원 안쪽이 가장 느리다."}'::jsonb,
   'original', 'martial', 'planned',
-  1, 'bt-spear-range'
+  1, 'bt-spear-range', false
 where not exists (select 1 from problems p where p.source_key = 'bt-spear-range');
 
 -- ca-open-door (order_no 2, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'cliffhanger_adv'),
   'continue', 'auto', '원문이 깔아 둔 신호를 받아 회차를 끊으시오. 정우는 혼자 사는 회사원으로, 겁이 많지 않아 이상한 일도 일단 제 눈으로 확인하는 사람이다. 원문은 ''열려 있어선 안 되는 문''이라는 신호를 이미 깔았다. 원문을 읽고 다음에 올 장면을, 정우의 속마음이나 대사 한 줄이 들리게 하고, 그 신호가 커지다가 마지막 줄에서 끊기게 작성하시오. 서술자가 앞일을 말해 주거나 ''그때였다''로 덜컥 끊지 마시오.',
   '정우는 야근을 마치고 자정이 넘어 집에 왔다. 현관 비밀번호를 누르려다 손을 멈췄다. 문이 손가락 하나만큼 열려 있었다. 아침에 잠근 걸 확인하고 나간 문이었다.', null, '{"maxChars":120,"minVerbs":3,"forbidLabel":"서술자가 미리 말해 주거나 억지로 끊는 표현","forbidWords":["훗날","될 줄","과연","그때였다","다음 화","운명"],"forbidDisplay":["훗날","될 줄은","과연","그때였다","다음 화","운명"],"forbidPassageCopy":true,"ai_shadow":["signal"]}'::jsonb,
   'original', 'modern', 'planned',
-  1, 'ca-open-door'
+  1, 'ca-open-door', false
 where not exists (select 1 from problems p where p.source_key = 'ca-open-door');
 
 -- cc-street-night (order_no 2, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'contrast_char'),
   'convert', 'auto', '윤소민과 하늘을 대비시키시오. 윤소민은 곁을 그리는 사람, 하늘은 혼자가 편한 사람이다. 아래 장면에서 두 사람은 똑같이 움직인다. 다시 써서, 같은 일에 두 사람이 서로 다르게 반응하게 하시오.',
   '모임이 끝나고 두 사람은 각자 집으로 향했다. 거리에는 저녁 불이 켜지고 있었다.', null, '{"maxChars":60,"minVerbs":2,"requireAll":["윤소민","하늘"]}'::jsonb,
   'original', 'romance', 'planned',
-  1, 'cc-street-night'
+  1, 'cc-street-night', false
 where not exists (select 1 from problems p where p.source_key = 'cc-street-night');
 
 -- cf-return-newcomer (order_no 2, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'cliffhanger'),
   'continue', 'auto', '아래 장면의 마지막 줄을 ''새 인물이나 사건의 등장''으로 끊으시오. 도윤은 던전을 닫고 돌아가는 헌터다. 던전은 끝났지만 회차는 끝나면 안 된다 — 원문 뒤에 한두 문장을 이어, 해결된 줄 알았더니 다른 사람이나 다른 일이 나타나는 것으로 끝내시오. 서술자가 ''그때였다''로 억지로 끊지 마시오.',
   '던전을 닫고 나온 도윤은 협회 차 뒷자리에 올랐다. 팀원들은 타자마자 잠들었다. 창밖으로 도시 불빛이 천천히 지나갔다.', null, '{"maxChars":80,"minVerbs":1,"forbidLabel":"서술자가 미리 말해 주거나 억지로 끊는 표현","forbidWords":["훗날","될 줄","과연","그때였다","다음 화","운명"],"forbidDisplay":["훗날","될 줄은","과연","그때였다","다음 화","운명"],"forbidPassageCopy":true}'::jsonb,
   'original', 'fantasy', 'planned',
-  1, 'cf-return-newcomer'
+  1, 'cf-return-newcomer', false
 where not exists (select 1 from problems p where p.source_key = 'cf-return-newcomer');
 
 -- ep-villainess-card (order_no 2, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'start_episode'),
   'fill', 'auto', '설정 카드를 읽고 1화를 네 줄로 쥐시오. 아직 소설을 쓰는 게 아니다 — 쓰기 전에 작가 손에 있어야 할 메모 네 줄이다. ① 이 이야기를 독자가 왜 볼지 한 가지, ② 주인공이 어떤 사람인지(겉과 속이 어떻게 붙는지) 한 줄, ③ 1화가 시작되는 장면(장소·시각·하는 일) 한 줄, ④ 주인공의 첫마디 한 줄. 라벨 줄을 그대로 옮겨 적지 말고, ''재밌다''는 말로 재미를 대신하지 마시오.',
   E'[설정] 원작에서 삼 년 뒤 처형당하는 악녀 카리엘의 몸에 들어온 사람. 처형을 피한다.\n\n이 이야기의 재미는 —\n①\n주인공은 —\n②\n1화는 이 장면에서 시작한다 —\n③\n주인공의 첫마디 —\n④', null, '{"blanks":[{"key":"①","label":"이 이야기를 왜 볼까 — 독자가 기대할 한 가지","minSentences":1,"maxSentences":1,"maxChars":50},{"key":"②","label":"주인공은 어떤 사람인가 — 겉과 속이 어떻게 붙는지","minSentences":1,"maxSentences":1,"maxChars":60},{"key":"③","label":"1화는 어느 장면에서 시작하나 — 장소·시각·하는 일","minSentences":1,"maxSentences":1,"maxChars":50},{"key":"④","label":"주인공의 첫 대사 한 줄 (큰따옴표 안에)","minSentences":1,"maxSentences":2,"maxChars":30,"minChars":4}],"forbidLabel":"재미를 말로 대신하거나 세계부터 설명하는 표현","forbidWords":["재밌","재미있","흥미진진","제국력","이 세계","프롤로그","[설정]"],"forbidDisplay":["재밌다","흥미진진","제국력","이 세계는","프롤로그"],"forbidCopyOfFixedLines":true,"fixedLines":["이 이야기의 재미는 —","주인공은 —","1화는 이 장면에서 시작한다 —","주인공의 첫마디 —"]}'::jsonb,
   'original', 'romance', 'planned',
-  1, 'ep-villainess-card'
+  1, 'ep-villainess-card', false
 where not exists (select 1 from problems p where p.source_key = 'ep-villainess-card');
 
 -- fh-release-ball (order_no 2, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'first_hook'),
   'convert', 'auto', '아래 다섯 줄을 고쳐 쓰시오. 서준혁은 열 시즌을 던진 팀에서 방출된 투수로, 다른 팀에서라도 던질 생각인 사람이다. 원문은 이야기가 어디로 가는지(재기)는 보이지만 준혁이 당하기만 해서 왜 이 사람을 따라가야 하는지가 없다. 방향은 그대로 두고, 준혁이 무엇을 하는 사람인지 보이는 행동 하나를 넣어 다섯 줄로 다시 쓰시오. 준혁의 속마음이나 대사 한 줄이 들리게 하시오.',
   '서준혁은 구단 사무실에서 방출 통보를 받았다. 열 시즌을 던진 팀이었다. 단장은 미안하다는 말도 없이 서류를 내밀었다. 준혁은 사인을 하고 나왔다. 독립리그에서라도 한 시즌은 더 던질 생각이었다.', null, '{"maxChars":200,"minVerbs":4,"requireAny":["서준혁","준혁"],"forbidLabel":"인물을 평가하는 말","forbidWords":["착하","착한","따뜻","다정","친절","배려","좋은 사람","마음씨","인심","불쌍"],"forbidDisplay":["착하다","따뜻하다","다정하다","친절하다","배려하다","불쌍하다"]}'::jsonb,
   'original', 'modern', 'planned',
-  1, 'fh-release-ball'
+  1, 'fh-release-ball', false
 where not exists (select 1 from problems p where p.source_key = 'fh-release-ball');
 
 -- heungbu-joy (order_no 2, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'emotion_action'),
   'convert', 'hybrid', '''흥부는 기뻤다''를 감정어 없이 쓰시오.',
   '박이 갈라지고 안에서 금은보화가 쏟아졌다. 흥부는 기뻤다.', null, '{"maxChars":60,"minVerbs":2,"maxAdverbs":1,"forbidWords":["기뻤","기쁘","기뻐","기쁨","행복","신났","신나","즐거","좋았"],"maxModifiers":2,"forbidLabel":"기쁨을 직접 말하는 표현","forbidDisplay":["기쁘다","기쁨","행복하다","신나다","좋다","즐거워하다"]}'::jsonb,
   'folktale', 'fantasy', 'planned',
-  1, 'heungbu-joy'
+  1, 'heungbu-joy', false
 where not exists (select 1 from problems p where p.source_key = 'heungbu-joy');
 
 -- ig-left-cup (order_no 2, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'info_gap'),
   'continue', 'auto', '독자는 알고 위강은 모르는 채로 장면을 이어 쓰시오. 위강은 표국 일을 마치고 돌아오는 길에 객잔에 든 검객으로, 제 실력을 믿어 남을 의심할 줄 모른다. 원문에서 독자는 왼쪽 잔에 가루가 들어가는 것을 보았지만 위강은 보지 못했다. 원문을 읽고 다음에 올 장면을, 위강이 그 사실을 모른 채 잔을 두고 움직이고 주인이 그것에 반응하되, ''몰랐다''처럼 서술자가 사실을 말해 주지 않게 작성하시오.',
   '객잔 주인이 술 두 잔을 내오다 등을 돌린 채 왼쪽 잔에 가루를 털어 넣었다. 창가의 고양이만 그쪽을 보고 있었다. 위강은 자리에 앉아 왼쪽 잔을 제 앞으로 끌어당겼다. 주인은 마주 앉아 오른쪽 잔을 들었다.', null, '{"maxChars":100,"minVerbs":3,"forbidLabel":"서술자가 사실을 말해 주는 표현","forbidWords":["몰랐","알지 못","모르고 있","눈치채지 못","알 리 없","훗날"],"forbidLemmas":["독/NNG"],"forbidDisplay":["몰랐다","알지 못했다","눈치채지 못했다","훗날","독"],"forbidPassageCopy":true}'::jsonb,
   'original', 'martial', 'planned',
-  1, 'ig-left-cup'
+  1, 'ig-left-cup', false
 where not exists (select 1 from problems p where p.source_key = 'ig-left-cup');
 
 -- lk-cafe-wait (order_no 2, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'lack'),
   'convert', 'auto', '윤소민에게 애정 결핍을 얹으시오. 윤소민은 카페에서 친구를 기다리는 중이다. 아래는 아무 결핍도 없는 무난한 장면이다. 다시 써서, 외롭다는 말 없이 행동과 버릇만으로 그 마음이 드러나게 하시오.',
   '카페 창가 자리에서 친구를 기다렸다. 창밖으로 오후의 사람들이 지나갔다.', null, '{"maxChars":60,"minVerbs":2,"forbidLabel":"외로움을 직접 말하는 표현","forbidWords":["사랑","애정","외로","쓸쓸","관심"],"forbidDisplay":["사랑","애정","외롭다","쓸쓸하다","관심"],"requireAny":["윤소민","소민"],"forbidPassageCopy":true}'::jsonb,
   'original', 'romance', 'planned',
-  1, 'lk-cafe-wait'
+  1, 'lk-cafe-wait', false
 where not exists (select 1 from problems p where p.source_key = 'lk-cafe-wait');
 
 -- lk2-deal-credit (order_no 2, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'likability'),
   'convert', 'auto', '아래 장면을 고쳐 쓰시오. 문지호의 능력은 원문이 이미 다 보여 준다. 하지만 강한 사람을 독자는 기대할 뿐 응원하지는 않는다. 능력 서술은 한 문장으로 줄이고, 문지호가 정유나를 위해 손해 보는 선택 하나를 행동으로 보이게 다시 쓰시오.',
   '문지호가 발표를 마쳤다. 클라이언트는 그 자리에서 계약서에 서명했다. 입사 오 년 만에 팀 최고 수주 기록이었고, 그는 사내 표창을 연달아 받은 사람이었다. 자료를 밤새 만든 후배 정유나는 회의실 구석에 서 있었다.', null, '{"maxChars":100,"minVerbs":3,"forbidLabel":"능력을 늘어놓거나 인물을 평가하는 말","forbidWords":["최고","표창","기록","착하","착한","따뜻","다정","친절","배려","좋은 사람","마음씨"],"forbidDisplay":["최고","표창","기록","착하다","따뜻하다","다정하다","친절하다"],"forbidPassageCopy":true}'::jsonb,
   'original', 'modern', 'planned',
-  1, 'lk2-deal-credit'
+  1, 'lk2-deal-credit', false
 where not exists (select 1 from problems p where p.source_key = 'lk2-deal-credit');
 
 -- se-sword-five (order_no 2, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'start_extend'),
   'continue', 'auto', '진운이 나오게 이어 쓰시오. 주인공은 하룻밤에 멸문한 가문의 소년 진운이다. 아래 문장은 세상 설명만 하고 아직 아무도 보여주지 않는다. 이어지는 한두 문장을 써서, 진운이 나타나 움직이게 하시오.',
   '강호에는 오래전부터 다섯 세가가 천하를 나누어 다스려 왔다.', null, '{"maxChars":60,"minVerbs":1,"requireAny":["진운"]}'::jsonb,
   'original', 'martial', 'planned',
-  1, 'se-sword-five'
+  1, 'se-sword-five', false
 where not exists (select 1 from problems p where p.source_key = 'se-sword-five');
 
 -- sim-cheong-fear (order_no 2, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'emotion_action'),
   'convert', 'hybrid', '''심청은 두려웠다''를 감정어 없이 쓰시오. 신체 동작만으로 두려움이 보이게 할 것.',
   '뱃사람들이 뱃전에 모여 그녀를 불렀다. 심청은 두려웠다.', null, '{"maxChars":60,"minVerbs":1,"maxAdverbs":1,"forbidWords":["두려","두렵","무서","겁먹","떨렸","공포","질렸"],"maxModifiers":2,"forbidLabel":"두려움을 직접 말하는 표현","forbidDisplay":["두렵다","무서워하다","겁먹다","떨다","공포"]}'::jsonb,
   'folktale', 'modern', 'planned',
-  1, 'sim-cheong-fear'
+  1, 'sim-cheong-fear', false
 where not exists (select 1 from problems p where p.source_key = 'sim-cheong-fear');
 
 -- sw-ruin-ash (order_no 2, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'start_write'),
   'convert', 'auto', '진운의 1화 첫 문장을 쓰시오. 주인공은 하룻밤에 멸문한 가문의 소년 진운이다. 아래는 분위기만 말하고 아무것도 보여주지 못한 잘못된 첫 문장이다. 저렇게 쓰지 말고, 진운이 보고 듣고 만지는 것 하나에서 시작하는 첫 문장을 새로 쓰시오.',
   '불타 버린 장원에는 말로 다 못 할 스산한 기운이 감돌았다.', null, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","스산","기류","아우라","기색","낌새","기미"],"forbidLemmas":["오라/NNG"],"forbidDisplay":["기운","느낌","분위기","스산하다","기류","오라","아우라","기색","낌새","기미"],"requireAny":["진운"]}'::jsonb,
   'original', 'martial', 'planned',
-  1, 'sw-ruin-ash'
+  1, 'sw-ruin-ash', false
 where not exists (select 1 from problems p where p.source_key = 'sw-ruin-ash');
 
 -- dragon-king-anger (order_no 2, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'emotion_action'),
   'convert', 'hybrid', '''용왕은 화가 났다''를 감정어 없이 쓰시오.',
   '토끼가 간을 두고 왔다고 말했다. 용왕은 화가 났다.', null, '{"maxChars":60,"minVerbs":2,"maxAdverbs":1,"forbidWords":["화났","화가 났","화가 나서","화가 치밀","분노","노여","성났","격분","짜증","치밀어","치밀었"],"maxModifiers":2,"forbidLabel":"분노를 직접 말하는 표현","forbidDisplay":["화나다","분노","짜증","치밀다","성나다","격분","노여워하다"]}'::jsonb,
   'folktale', 'martial', 'planned',
-  2, 'dragon-king-anger'
+  2, 'dragon-king-anger', false
 where not exists (select 1 from problems p where p.source_key = 'dragon-king-anger');
 
 -- kongjwi-grief (order_no 2, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'emotion_action'),
   'convert', 'hybrid', '''콩쥐는 서러웠다''를 감정어 없이 쓰시오. 울음을 직접 쓰지 말 것.',
   '식구들은 잔치에 가고 마당에는 깨진 독만 남았다. 콩쥐는 서러웠다.', null, '{"maxChars":70,"minVerbs":2,"maxAdverbs":1,"forbidWords":["서러","서럽","슬프","슬펐","슬픔","눈물","흐느","비참","원망"],"maxModifiers":2,"forbidLabel":"서러움을 직접 말하는 표현","forbidDisplay":["서럽다","슬프다","눈물","흐느끼다","비참하다","원망"]}'::jsonb,
   'folktale', 'modern', 'planned',
-  2, 'kongjwi-grief'
+  2, 'kongjwi-grief', false
 where not exists (select 1 from problems p where p.source_key = 'kongjwi-grief');
 
 -- gyeonu-longing (order_no 2, difficulty 3)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'emotion_action'),
   'convert', 'hybrid', '''견우는 그리웠다''를 감정어 없이 쓰시오. 직녀를 등장시키지 말 것.',
   '일 년에 한 번 다리가 놓이는 날이 아직 멀었다. 견우는 그리웠다.', null, '{"maxChars":70,"minVerbs":2,"maxAdverbs":1,"forbidWords":["그리웠","그리워","그리움","그립","보고 싶","외로","쓸쓸","사무치","애틋"],"maxModifiers":2,"forbidLabel":"그리움을 직접 말하는 표현","forbidDisplay":["그립다","그리움","보고 싶다","쓸쓸하다","사무치다","애틋하다"]}'::jsonb,
   'folktale', 'romance', 'planned',
-  3, 'gyeonu-longing'
+  3, 'gyeonu-longing', false
 where not exists (select 1 from problems p where p.source_key = 'gyeonu-longing');
 
 -- woodcutter-shame (order_no 2, difficulty 3)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'emotion_action'),
   'convert', 'hybrid', '''나무꾼은 부끄러웠다''를 감정어 없이 쓰시오.',
   '산신령이 금도끼와 은도끼를 나란히 들어 보였다. 나무꾼은 부끄러웠다.', null, '{"maxChars":65,"minVerbs":2,"maxAdverbs":1,"forbidWords":["부끄","창피","민망","수치스","낯뜨거","뻘개"],"maxModifiers":2,"forbidLabel":"부끄러움을 직접 말하는 표현","forbidDisplay":["부끄럽다","창피하다","민망하다","수치스럽다"]}'::jsonb,
   'folktale', 'fantasy', 'planned',
-  3, 'woodcutter-shame'
+  3, 'woodcutter-shame', false
 where not exists (select 1 from problems p where p.source_key = 'woodcutter-shame');
 
 -- cc-first-pay (order_no 3, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'contrast_char'),
   'continue', 'auto', '조평과 유겸을 대비시키시오. 조평은 배곯던 시절이 몸에 남아 제 것엔 인색해도 남의 끼니엔 아깝지 않은 호위다. 유겸은 신세를 지면 도련님 취급이 진짜가 될까 밥값부터 제가 내는 젊은 용병이다. 원문을 읽고 다음에 올 장면을, 같은 삯 앞에서 두 사람이 서로 다르게 움직이게 작성하시오.',
   '상단이 첫 삯을 나눠 주었다. 두 호위는 주머니를 받아 들고 숙소로 돌아갔다.', null, '{"maxChars":100,"minVerbs":3,"requireAll":["조평","유겸"],"forbidPassageCopy":true}'::jsonb,
   'original', 'martial', 'planned',
-  1, 'cc-first-pay'
+  1, 'cc-first-pay', false
 where not exists (select 1 from problems p where p.source_key = 'cc-first-pay');
 
 -- cf-return-reversal (order_no 3, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'cliffhanger'),
   'continue', 'auto', '아래 장면의 마지막 줄을 ''반전 행동''으로 끊으시오. 도윤은 던전을 닫고 돌아가는 헌터다. 원문 뒤에 한두 문장을 이어, 독자가 예상하지 못한 행동을 도윤이 하는 것으로 끝내시오 — 왜 그러는지는 설명하지 말고 행동만 보이시오.',
   '던전을 닫고 나온 도윤은 협회 차 뒷자리에 올랐다. 팀원들은 타자마자 잠들었다. 창밖으로 도시 불빛이 천천히 지나갔다.', null, '{"maxChars":80,"minVerbs":1,"forbidLabel":"서술자가 미리 말해 주거나 억지로 끊는 표현","forbidWords":["훗날","될 줄","과연","그때였다","다음 화","운명"],"forbidDisplay":["훗날","될 줄은","과연","그때였다","다음 화","운명"],"forbidPassageCopy":true}'::jsonb,
   'original', 'fantasy', 'planned',
-  1, 'cf-return-reversal'
+  1, 'cf-return-reversal', false
 where not exists (select 1 from problems p where p.source_key = 'cf-return-reversal');
 
 -- ep-engagement-card (order_no 3, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'start_episode'),
   'fill', 'auto', '설정 카드를 읽고 1화를 네 줄로 쥐시오. 아직 소설을 쓰는 게 아니다 — 쓰기 전에 작가 손에 있어야 할 메모 네 줄이다. ① 이 이야기를 독자가 왜 볼지 한 가지, ② 주인공이 어떤 사람인지(겉과 속이 어떻게 붙는지) 한 줄, ③ 1화가 시작되는 장면(장소·시각·하는 일) 한 줄, ④ 주인공의 첫마디 한 줄. 라벨 줄을 그대로 옮겨 적지 말고, ''재밌다''는 말로 재미를 대신하지 마시오.',
   E'[설정] 결혼식 한 달 전에 파혼당한 회사원 하은수. 다음 날 첫 출근한 회사의 대표가 전 약혼자의 형이다.\n\n이 이야기의 재미는 —\n①\n주인공은 —\n②\n1화는 이 장면에서 시작한다 —\n③\n주인공의 첫마디 —\n④', null, '{"blanks":[{"key":"①","label":"이 이야기를 왜 볼까 — 독자가 기대할 한 가지","minSentences":1,"maxSentences":1,"maxChars":50},{"key":"②","label":"주인공은 어떤 사람인가 — 겉과 속이 어떻게 붙는지","minSentences":1,"maxSentences":1,"maxChars":60},{"key":"③","label":"1화는 어느 장면에서 시작하나 — 장소·시각·하는 일","minSentences":1,"maxSentences":1,"maxChars":50},{"key":"④","label":"주인공의 첫 대사 한 줄 (큰따옴표 안에)","minSentences":1,"maxSentences":2,"maxChars":30,"minChars":4}],"forbidLabel":"재미를 말로 대신하거나 세계부터 설명하는 표현","forbidWords":["재밌","재미있","흥미진진","제국력","이 세계","프롤로그","[설정]"],"forbidDisplay":["재밌다","흥미진진","제국력","이 세계는","프롤로그"],"forbidCopyOfFixedLines":true,"fixedLines":["이 이야기의 재미는 —","주인공은 —","1화는 이 장면에서 시작한다 —","주인공의 첫마디 —"]}'::jsonb,
   'original', 'romance', 'planned',
-  1, 'ep-engagement-card'
+  1, 'ep-engagement-card', false
 where not exists (select 1 from problems p where p.source_key = 'ep-engagement-card');
 
 -- lk-guard-dawn (order_no 3, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'lack'),
   'convert', 'auto', '조평에게 가난의 기억을 얹으시오. 조평은 상단의 호위 무사다. 아래는 아무 결핍도 없는 무난한 장면이다. 다시 써서, 가난했다는 말 없이 행동과 버릇만으로 그 기억이 드러나게 하시오.',
   '상단의 호위 무사는 새벽같이 일어나 검을 손질했다. 마당을 한 바퀴 돌고 아침상을 받았다.', null, '{"maxChars":60,"minVerbs":2,"forbidLabel":"가난을 직접 말하는 표현","forbidWords":["가난","굶","궁핍"],"forbidDisplay":["가난","굶다","궁핍"],"requireAny":["조평"],"forbidPassageCopy":true}'::jsonb,
   'original', 'martial', 'planned',
-  1, 'lk-guard-dawn'
+  1, 'lk-guard-dawn', false
 where not exists (select 1 from problems p where p.source_key = 'lk-guard-dawn');
 
 -- lk2-night-shift-bill (order_no 3, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'likability'),
   'convert', 'auto', '아래 장면을 고쳐 쓰시오. 고은재는 편의점 야간 근무로 아버지 병원비를 대는 사람이다. 상황이 힘든 것은 독자가 봐줄 수 있지만, 태도까지 힘들면 응원할 자리가 없어진다. 야간 근무와 모자란 병원비는 그대로 두고, 은재가 그 상황에서 하는 행동으로 태도만 바꿔 다시 쓰시오.',
   '고은재는 편의점 야간 근무를 마치고 병원비 고지서를 꺼냈다. 이번 달도 모자랐다. 왜 나만 이렇게 사나 싶어 눈물이 났다. 세상이 다 미웠다.', null, '{"maxChars":100,"minVerbs":3,"forbidLabel":"불행한 태도를 말하는 표현","forbidWords":["미웠","미워","싫었","싫어","왜 나만","한숨","눈물","울었","울며","불쌍","억울","지긋지긋","원망"],"forbidDisplay":["밉다","싫다","한숨","눈물","울다","억울하다","원망하다"],"forbidPassageCopy":true}'::jsonb,
   'original', 'modern', 'planned',
-  1, 'lk2-night-shift-bill'
+  1, 'lk2-night-shift-bill', false
 where not exists (select 1 from problems p where p.source_key = 'lk2-night-shift-bill');
 
 -- se-vow-deal (order_no 3, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'start_extend'),
   'continue', 'auto', '하은수가 나오게 이어 쓰시오. 주인공은 결혼식 한 달 전 파혼을 통보받은 하은수다. 아래 문장은 세상 설명만 하고 아직 아무도 보여주지 않는다. 이어지는 한두 문장을 써서, 하은수가 나타나 움직이게 하시오.',
   '결혼이란 예로부터 두 집안이 맺는 가장 큰 거래였다.', null, '{"maxChars":60,"minVerbs":1,"requireAny":["하은수","은수"]}'::jsonb,
   'original', 'romance', 'planned',
-  1, 'se-vow-deal'
+  1, 'se-vow-deal', false
 where not exists (select 1 from problems p where p.source_key = 'se-vow-deal');
 
 -- sw-vow-afternoon (order_no 3, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'start_write'),
   'convert', 'auto', '하은수의 1화 첫 문장을 쓰시오. 주인공은 결혼식 한 달 전 파혼을 통보받은 하은수다. 아래는 분위기만 말하고 아무것도 보여주지 못한 잘못된 첫 문장이다. 저렇게 쓰지 말고, 하은수가 보고 듣고 만지는 것 하나에서 시작하는 첫 문장을 새로 쓰시오.',
   '무겁게 가라앉은 공기 속, 어딘지 서글픈 기운이 도는 오후였다.', null, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","서글","기류","아우라","기색","낌새","기미"],"forbidLemmas":["오라/NNG"],"forbidDisplay":["기운","느낌","분위기","서글프다","기류","오라","아우라","기색","낌새","기미"],"requireAny":["하은수","은수"]}'::jsonb,
   'original', 'romance', 'planned',
-  1, 'sw-vow-afternoon'
+  1, 'sw-vow-afternoon', false
 where not exists (select 1 from problems p where p.source_key = 'sw-vow-afternoon');
 
 -- tp-axe-water (order_no 3, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'trim_padding'),
   'remove', 'auto', '이야기가 멈추는 문장을 지우고 다시 쓰시오. 남길 것: 인물이 무엇을 하는 문장(사건). 지울 것: 장소나 사물을 설명하는 문장, 몰라도 되는 정보. 새로 쓰지 말고, 원문에서 문장째 지우기만 하십시오. 나무꾼이 손을 넣는 동작까지 남길 것.',
   '나무꾼은 연못가에 앉았다. 연못은 산 아래의 깊은 물이었다. 그날은 바람 한 점 없이 잔잔했다. 도끼는 물속에 보이지 않았다. 그는 소매를 걷고 물에 손을 넣었다.', null, '{"maxChars":42,"minVerbs":3,"maxRepeat":2}'::jsonb,
   'folktale', 'fantasy', 'planned',
-  1, 'tp-axe-water'
+  1, 'tp-axe-water', false
 where not exists (select 1 from problems p where p.source_key = 'tp-axe-water');
 
 -- tp-heungbu-yard (order_no 3, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'trim_padding'),
   'remove', 'auto', '이야기가 멈추는 문장을 지우고 다시 쓰시오. 남길 것: 인물이 무엇을 하는 문장(사건). 지울 것: 장소나 사물을 설명하는 문장, 몰라도 되는 정보. 새로 쓰지 말고, 원문에서 문장째 지우기만 하십시오. 인물이 하는 동작은 하나도 빼지 말 것.',
   '흥부는 마당에 나갔다. 마당은 좁고 흙바닥이라 늘 먼지투성이였다. 제비 한 마리가 떨어져 있었다. 제비는 봄의 새다. 흥부는 제비를 두 손으로 들어 올렸다.', null, '{"maxChars":41,"minVerbs":3,"maxRepeat":2}'::jsonb,
   'folktale', 'fantasy', 'planned',
-  1, 'tp-heungbu-yard'
+  1, 'tp-heungbu-yard', false
 where not exists (select 1 from problems p where p.source_key = 'tp-heungbu-yard');
 
 -- tp-simcheong-rail (order_no 3, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'trim_padding'),
   'remove', 'auto', '이야기가 멈추는 문장을 지우고 다시 쓰시오. 남길 것: 인물이 무엇을 하는 문장(사건). 지울 것: 장소나 사물을 설명하는 문장, 몰라도 되는 정보. 새로 쓰지 말고, 원문에서 문장째 지우기만 하십시오.',
   '심청은 뱃전에 섰다. 그 배는 마을에서 가장 큰 배였다. 공양미 삼백 석이 이 배에 실려 있었다. 바다는 넓고 깊었다. 심청은 치마를 걷어쥐었다.', null, '{"maxChars":39,"minVerbs":3,"maxRepeat":2}'::jsonb,
   'folktale', 'modern', 'planned',
-  1, 'tp-simcheong-rail'
+  1, 'tp-simcheong-rail', false
 where not exists (select 1 from problems p where p.source_key = 'tp-simcheong-rail');
 
 -- bt-orc-axe (order_no 3, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'action_turn'),
   'continue', 'auto', '원문이 놓은 두 선택지 중 하나를 골라 한 턴을 이어 쓰시오. 진서는 방패를 든 탱커 헌터고 유나는 오늘 처음 던전에 들어온 신입이다. 원문은 피하면 유나가 다치고 막으면 방패가 부서지는 갈림길까지 왔다. 진서가 무엇을 고르는지, 그 대가가 몸이나 장비로 어떻게 드러나는지, 그 선택이 다음 수를 어떻게 만드는지 쓰시오. 진서의 속마음이나 대사 한 줄이 들리게 하고, 두 사람 이름이 다 나오게 하시오.',
-  '오크의 도끼가 머리 위로 올라갔다. 피하면 뒤에 선 신입 유나가 도끼를 받는다. 막으면 진서의 방패가 두 동강 난다. 둘 중 하나를 반 호흡 안에 골라야 했다.', null, '{"maxChars":200,"minVerbs":4,"requireAll":["진서","유나"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","고통","통증","아픔","지독","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","고통","통증","아픔","지독하다","그때였다","과연"],"forbidPassageCopy":true,"ai_shadow":["support","tell"],"ai_hint_material":"도끼는 내려찍은 뒤 뽑는 데 한 호흡이 걸린다."}'::jsonb,
+  '오크의 도끼가 머리 위로 올라갔다. 피하면 뒤에 선 신입 유나가 도끼를 받는다. 막으면 진서의 방패가 두 동강 난다. 둘 중 하나를 반 호흡 안에 골라야 했다.', null, '{"maxChars":200,"minVerbs":4,"requireAll":["진서","유나"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","고통","통증","아픔","지독","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","고통","통증","아픔","지독하다","그때였다","과연"],"forbidPassageCopy":true,"ai_shadow":["support","tell"],"ai_hint_material":"도끼는 내려찍은 뒤 뽑는 데 한 호흡이 걸린다.\n그 한 호흡은 도끼가 어딘가에 박혀야 생기고, 빗나간 도끼는 땅에 박힌다."}'::jsonb,
   'original', 'fantasy', 'planned',
-  2, 'bt-orc-axe'
+  2, 'bt-orc-axe', false
 where not exists (select 1 from problems p where p.source_key = 'bt-orc-axe');
 
 -- ca-inn-endroom (order_no 3, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'cliffhanger_adv'),
   'continue', 'auto', '안전한 줄 알았던 장면을 누군가의 존재로 끊으시오. 소하는 사흘을 쫓긴 여자 검객으로, 지쳤어도 몸이 먼저 위험을 알아채는 사람이다. 원문은 ''손님이 하나뿐인데 굳이 끝방을 권하는 주인''이라는 신호를 이미 깔았다. 원문을 읽고 다음에 올 장면을, 소하의 속마음이나 대사 한 줄이 들리게 하고, 그 신호가 살기나 냄새로 커지다가 마지막 줄에서 끊기게 작성하시오.',
   '사흘을 쫓긴 소하는 관도 끝 객잔에 들었다. 손님은 소하뿐인데 주인은 이층 끝방 열쇠를 내밀며 가장 조용한 방이라고 했다. 소하는 방문을 걸고 검을 머리맡에 세웠다. 사흘 만에 처음 눕는 침상이었다.', null, '{"maxChars":120,"minVerbs":3,"forbidLabel":"서술자가 미리 말해 주거나 억지로 끊는 표현","forbidWords":["훗날","될 줄","과연","그때였다","다음 화","운명"],"forbidDisplay":["훗날","될 줄은","과연","그때였다","다음 화","운명"],"forbidPassageCopy":true,"ai_shadow":["signal"]}'::jsonb,
   'original', 'martial', 'planned',
-  2, 'ca-inn-endroom'
+  2, 'ca-inn-endroom', false
 where not exists (select 1 from problems p where p.source_key = 'ca-inn-endroom');
 
 -- fh-burnt-manor (order_no 3, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'first_hook'),
   'convert', 'auto', '아래 다섯 줄을 고쳐 쓰시오. 진운은 하룻밤에 사문이 몰살당하고 혼자 살아남은 소년이다. 원문은 어디로 가는지(복수)와 왜 이 사람인지(혼자 남아 검을 주웠다)는 있지만, 마지막 두 줄이 다짐뿐이라 어떻게 헤쳐 갈지가 없다. 앞 세 줄은 두고, 마지막 두 줄을 진운이 무엇부터 할지 보이는 행동으로 바꿔 다섯 줄로 다시 쓰시오. 진운의 속마음이나 대사 한 줄이 들리게 하시오.',
   '진운은 불탄 장원 앞에 섰다. 사문 백여 명이 하룻밤에 죽었고, 심부름으로 산을 내려갔던 진운 혼자 살아남았다. 그는 아버지의 부러진 검을 주워 들었다. 반드시 갚아 줄 것이다. 언젠가는, 어떻게든.', null, '{"maxChars":200,"minVerbs":4,"requireAny":["진운"],"forbidLabel":"방법 없이 다짐만 하는 말","forbidWords":["어떻게든","반드시","언젠가","기필코"],"forbidDisplay":["어떻게든","반드시","언젠가","기필코"],"forbidPassageCopy":true,"passageCopyKeep":3}'::jsonb,
   'original', 'martial', 'planned',
-  2, 'fh-burnt-manor'
+  2, 'fh-burnt-manor', false
 where not exists (select 1 from problems p where p.source_key = 'fh-burnt-manor');
 
 -- ig-umbrella-walnut (order_no 3, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'info_gap'),
   'continue', 'auto', '독자만 둘 다 알고 두 사람은 서로 모르는 채로 이어 쓰시오. 소민은 서운해도 말 대신 그 사람이 좋아하는 걸 사 들고 먼저 찾아가는 사람이고, 하늘은 아끼는 사람일수록 말은 짧고 우산·약 같은 실질적인 것만 말없이 두고 가는 사람이다. 원문에서 독자는 둘이 서로를 챙긴 것을 보았지만 두 사람은 상대가 저를 귀찮아한다고 여기고 있다. 원문을 읽고 다음에 올 장면을, 둘 다 헛짚은 채 행동하되 마음을 말하거나 풀어 주지 않게 작성하시오.',
   '장마 예보가 뜬 아침, 하늘은 소민의 가방에 접이식 우산을 넣어 두고 아무 말 없이 먼저 나갔다. 소민은 하늘이 좋아하는 호두과자를 사 들고 하늘의 집 앞까지 갔다가 불 꺼진 창을 보고 돌아섰다. 그날 밤 둘의 대화창은 조용했다.', null, '{"maxChars":100,"minVerbs":3,"requireAll":["소민","하늘"],"forbidLabel":"서술자가 사실을 말해 주거나 풀어 주는 표현","forbidWords":["몰랐","알지 못","모르고 있","눈치채지 못","알 리 없","훗날","사실은","고백","털어놓","알고 보니","오해였"],"forbidDisplay":["몰랐다","알지 못했다","훗날","사실은","고백하다","털어놓다","알고 보니"],"forbidPassageCopy":true}'::jsonb,
   'original', 'modern', 'planned',
-  2, 'ig-umbrella-walnut'
+  2, 'ig-umbrella-walnut', false
 where not exists (select 1 from problems p where p.source_key = 'ig-umbrella-walnut');
 
 -- tp-gyeonu-river (order_no 3, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'trim_padding'),
   'remove', 'auto', '이야기가 멈추는 문장을 지우고 다시 쓰시오. 남길 것: 인물이 무엇을 하는 문장(사건). 지울 것: 장소나 사물을 설명하는 문장, 몰라도 되는 정보. 새로 쓰지 말고, 원문에서 문장째 지우기만 하십시오.',
   '견우는 강가에 나왔다. 강은 일 년 내내 소리 없이 그대로였다. 까치들이 하늘을 덮었다. 까치는 검고 흰, 아주 흔한 새다. 견우는 강물에 발을 담갔다.', null, '{"maxChars":35,"minVerbs":2,"maxRepeat":2}'::jsonb,
   'folktale', 'romance', 'planned',
-  2, 'tp-gyeonu-river'
+  2, 'tp-gyeonu-river', false
 where not exists (select 1 from problems p where p.source_key = 'tp-gyeonu-river');
 
 -- tp-kongjwi-crack (order_no 3, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'trim_padding'),
   'remove', 'auto', '이야기가 멈추는 문장을 지우고 다시 쓰시오. 남길 것: 인물이 무엇을 하는 문장(사건). 지울 것: 장소나 사물을 설명하는 문장, 몰라도 되는 정보. 새로 쓰지 말고, 원문에서 문장째 지우기만 하십시오. 독의 상태와 콩쥐의 동작만 남길 것.',
   '콩쥐는 독 앞에 앉았다. 독은 마당 한가운데의 커다란 물건이었다. 바닥에 금이 가 있었다. 금은 손가락 하나 굵기였다. 콩쥐는 손바닥으로 그 자리를 눌렀다.', null, '{"maxChars":38,"minVerbs":2,"maxRepeat":2}'::jsonb,
   'folktale', 'modern', 'planned',
-  2, 'tp-kongjwi-crack'
+  2, 'tp-kongjwi-crack', false
 where not exists (select 1 from problems p where p.source_key = 'tp-kongjwi-crack');
 
 -- tp-rabbit-gate (order_no 3, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'trim_padding'),
   'remove', 'auto', '이야기가 멈추는 문장을 지우고 다시 쓰시오. 남길 것: 인물이 무엇을 하는 문장(사건). 지울 것: 장소나 사물을 설명하는 문장, 몰라도 되는 정보. 새로 쓰지 말고, 원문에서 문장째 지우기만 하십시오.',
   '토끼는 용궁 문 앞에 섰다. 용궁은 바다 밑의 깊은 곳이었다. 문지기가 창을 내렸다. 문지기의 창은 길고 무거웠다. 토끼는 웃으며 한 걸음 나섰다.', null, '{"maxChars":36,"minVerbs":3,"maxRepeat":2}'::jsonb,
   'folktale', 'martial', 'impulsive',
-  2, 'tp-rabbit-gate'
+  2, 'tp-rabbit-gate', false
 where not exists (select 1 from problems p where p.source_key = 'tp-rabbit-gate');
 
 -- tp-siblings-floor (order_no 3, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'trim_padding'),
   'remove', 'auto', '이야기가 멈추는 문장을 지우고 다시 쓰시오. 남길 것: 인물이 무엇을 하는 문장(사건). 지울 것: 장소나 사물을 설명하는 문장, 몰라도 되는 정보. 새로 쓰지 말고, 원문에서 문장째 지우기만 하십시오.',
   '오누이는 마루 밑에 숨었다. 그 집은 마을에서 가장 낡은 초가집이었다. 문밖에서 발소리가 났다. 문밖은 달도 없이 어두웠다. 오라비가 동생의 입을 막았다.', null, '{"maxChars":38,"minVerbs":2,"maxRepeat":2}'::jsonb,
   'folktale', 'fantasy', 'impulsive',
-  2, 'tp-siblings-floor'
+  2, 'tp-siblings-floor', false
 where not exists (select 1 from problems p where p.source_key = 'tp-siblings-floor');
 
 -- tp-goblin-mark (order_no 3, difficulty 3)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'trim_padding'),
   'remove', 'auto', '이야기가 멈추는 문장을 지우고 다시 쓰시오. 남길 것: 인물이 무엇을 하는 문장(사건). 지울 것: 장소나 사물을 설명하는 문장, 몰라도 되는 정보. 새로 쓰지 말고, 원문에서 문장째 지우기만 하십시오. 남는 문장은 세 개 이하로.',
   '나무꾼은 방망이를 상 위에 올렸다. 상은 다리 하나가 짧은 낡은 것이었다. 집 안은 조용했다. 방망이에 검은 자국이 남아 있었다. 그는 그것을 다시 집어 들었다.', null, '{"maxChars":45,"minVerbs":3,"maxRepeat":2}'::jsonb,
   'folktale', 'fantasy', 'impulsive',
-  3, 'tp-goblin-mark'
+  3, 'tp-goblin-mark', false
 where not exists (select 1 from problems p where p.source_key = 'tp-goblin-mark');
 
 -- cc-raid-reward (order_no 4, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'contrast_char'),
   'convert', 'auto', '한시우와 도현을 대비시키시오. 한시우는 동기를 곁눈질하는 B급 헌터, 도현은 앞만 보는 S급 헌터다. 아래 장면에서 두 사람은 똑같이 움직인다. 다시 써서, 같은 일에 두 사람이 서로 다르게 반응하게 하시오.',
   '공략이 끝나고 보상이 분배되었다. 두 헌터는 장비를 정리해 게이트를 나섰다.', null, '{"maxChars":60,"minVerbs":2,"requireAll":["한시우","도현"]}'::jsonb,
   'original', 'modern', 'planned',
-  1, 'cc-raid-reward'
+  1, 'cc-raid-reward', false
 where not exists (select 1 from problems p where p.source_key = 'cc-raid-reward');
 
 -- cf-doorstep-glance (order_no 4, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'cliffhanger'),
   'continue', 'auto', '아래 장면의 마지막 줄을 ''관계가 달라질 암시''로 끊으시오. 지호와 예린은 같은 팀 동료다. 원문 뒤에 한두 문장을 이어, 고백이나 스킨십 없이 두 사람 사이가 지금과 달라질 것 같은 행동 하나로 끝내시오.',
   '회식이 끝나고 지호는 예린을 집 앞까지 데려다주었다. 예린이 손을 흔들고 계단을 올라갔다. 골목엔 둘밖에 없었다.', null, '{"maxChars":80,"minVerbs":1,"forbidLabel":"서술자가 미리 말해 주거나 억지로 끊는 표현","forbidWords":["훗날","될 줄","과연","그때였다","다음 화","운명","고백","사랑"],"forbidDisplay":["훗날","될 줄은","과연","그때였다","다음 화","운명","고백","사랑"],"forbidPassageCopy":true}'::jsonb,
   'original', 'romance', 'planned',
-  1, 'cf-doorstep-glance'
+  1, 'cf-doorstep-glance', false
 where not exists (select 1 from problems p where p.source_key = 'cf-doorstep-glance');
 
 -- ep-manor-card (order_no 4, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'start_episode'),
   'fill', 'auto', '설정 카드를 읽고 1화를 네 줄로 쥐시오. 아직 소설을 쓰는 게 아니다 — 쓰기 전에 작가 손에 있어야 할 메모 네 줄이다. ① 이 이야기를 독자가 왜 볼지 한 가지, ② 주인공이 어떤 사람인지(겉과 속이 어떻게 붙는지) 한 줄, ③ 1화가 시작되는 장면(장소·시각·하는 일) 한 줄, ④ 주인공의 첫마디 한 줄. 라벨 줄을 그대로 옮겨 적지 말고, ''재밌다''는 말로 재미를 대신하지 마시오.',
   E'[설정] 하룻밤에 사문이 몰살당하고 혼자 살아남은 소년 진운. 힘을 길러 갚는다.\n\n이 이야기의 재미는 —\n①\n주인공은 —\n②\n1화는 이 장면에서 시작한다 —\n③\n주인공의 첫마디 —\n④', null, '{"blanks":[{"key":"①","label":"이 이야기를 왜 볼까 — 독자가 기대할 한 가지","minSentences":1,"maxSentences":1,"maxChars":50},{"key":"②","label":"주인공은 어떤 사람인가 — 겉과 속이 어떻게 붙는지","minSentences":1,"maxSentences":1,"maxChars":60},{"key":"③","label":"1화는 어느 장면에서 시작하나 — 장소·시각·하는 일","minSentences":1,"maxSentences":1,"maxChars":50},{"key":"④","label":"주인공의 첫 대사 한 줄 (큰따옴표 안에)","minSentences":1,"maxSentences":2,"maxChars":30,"minChars":4}],"forbidLabel":"재미를 말로 대신하거나 세계부터 설명하는 표현","forbidWords":["재밌","재미있","흥미진진","제국력","이 세계","프롤로그","[설정]"],"forbidDisplay":["재밌다","흥미진진","제국력","이 세계는","프롤로그"],"forbidCopyOfFixedLines":true,"fixedLines":["이 이야기의 재미는 —","주인공은 —","1화는 이 장면에서 시작한다 —","주인공의 첫마디 —"]}'::jsonb,
   'original', 'martial', 'planned',
-  1, 'ep-manor-card'
+  1, 'ep-manor-card', false
 where not exists (select 1 from problems p where p.source_key = 'ep-manor-card');
 
 -- lk-board-rank (order_no 4, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'lack'),
   'convert', 'auto', '한시우에게 열등감을 얹으시오. 한시우는 B급 헌터다. 아래는 아무 결핍도 없는 무난한 장면이다. 다시 써서, 부럽다는 말 없이 행동과 버릇만으로 그 마음이 드러나게 하시오.',
   'B급 헌터는 아침 훈련을 마치고 협회 게시판 앞을 지나쳤다. 오늘의 의뢰 목록이 붙어 있었다.', null, '{"maxChars":60,"minVerbs":2,"forbidLabel":"열등감을 직접 말하는 표현","forbidWords":["열등","부럽","부러워","질투","뒤처"],"forbidDisplay":["열등감","부럽다","질투","뒤처지다"],"requireAny":["한시우","시우"],"forbidPassageCopy":true}'::jsonb,
   'original', 'modern', 'planned',
-  1, 'lk-board-rank'
+  1, 'lk-board-rank', false
 where not exists (select 1 from problems p where p.source_key = 'lk-board-rank');
 
 -- rp-axe-gold (order_no 4, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'reduce_repeat'),
   'remove', 'auto', '같은 말이 겹치는 곳을 찾아 다시 쓰시오.',
   '산신령이 번쩍이는 금도끼를 들어 보였다. "이 도끼가 네 도끼냐?" 나무꾼은 고개를 저었다. "그 도끼는 제 도끼가 아닙니다." 산신령은 이번에는 은도끼를 들어 보였다. 나무꾼은 이번에도 고개를 저었다.', null, '{"maxChars":88,"minVerbs":3,"maxRepeat":2,"repeatTargets":[{"word":"도끼","max":2},{"word":"나무꾼","max":2},{"word":"산신령","max":1}]}'::jsonb,
   'folktale', 'fantasy', 'planned',
-  1, 'rp-axe-gold'
+  1, 'rp-axe-gold', false
 where not exists (select 1 from problems p where p.source_key = 'rp-axe-gold');
 
 -- rp-heungbu-gourd (order_no 4, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'reduce_repeat'),
   'remove', 'auto', '같은 말이 겹치는 곳을 찾아 다시 쓰시오. 일어나는 일은 하나도 빼지 말 것.',
   '흥부는 박을 반으로 갈랐다. 박 속에서 쌀이 쏟아졌다. "여보, 박에서 쌀이 나와요!" 흥부는 두 번째 박도 갈랐다. 그 박에서는 비단이 쏟아져 나왔다.', null, '{"maxChars":64,"minVerbs":3,"maxRepeat":2,"repeatTargets":[{"word":"박","max":2},{"word":"흥부","max":1}]}'::jsonb,
   'folktale', 'fantasy', 'planned',
-  1, 'rp-heungbu-gourd'
+  1, 'rp-heungbu-gourd', false
 where not exists (select 1 from problems p where p.source_key = 'rp-heungbu-gourd');
 
 -- rp-simcheong-sea (order_no 4, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'reduce_repeat'),
   'remove', 'auto', '같은 말이 겹치는 곳을 찾아 다시 쓰시오.',
   '심청은 뱃전에서 바다를 내려다보았다. 바다는 검은 물결로 일렁였다. 뱃사람들이 바다를 향해 북을 울렸다. 심청은 바다 앞에서 눈을 감았다. "아버지, 부디 눈을 뜨세요." 심청은 바다로 몸을 던졌다.', null, '{"maxChars":86,"minVerbs":3,"maxRepeat":2,"repeatTargets":[{"word":"바다","max":2},{"word":"심청","max":2}]}'::jsonb,
   'folktale', 'modern', 'planned',
-  1, 'rp-simcheong-sea'
+  1, 'rp-simcheong-sea', false
 where not exists (select 1 from problems p where p.source_key = 'rp-simcheong-sea');
 
 -- se-rose-heir (order_no 4, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'start_extend'),
   'continue', 'auto', '에스텔이 나오게 이어 쓰시오. 주인공은 몰락한 은빛 장미 가문의 마지막 후계 에스텔이다. 아래 문장은 세상 설명만 하고 아직 아무도 보여주지 않는다. 이어지는 한두 문장을 써서, 에스텔이 나타나 움직이게 하시오.',
   '왕국력 삼백 년, 은빛 장미 가문은 대대로 황실의 검을 맡아 왔다.', null, '{"maxChars":60,"minVerbs":1,"requireAny":["에스텔"]}'::jsonb,
   'original', 'fantasy', 'planned',
-  1, 'se-rose-heir'
+  1, 'se-rose-heir', false
 where not exists (select 1 from problems p where p.source_key = 'se-rose-heir');
 
 -- sw-scaffold-morning (order_no 4, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'start_write'),
   'convert', 'auto', '카리엘의 1화 첫 문장을 쓰시오. 주인공은 소설 속 처형당하는 악녀 카리엘의 몸에서 깨어났다. 아래는 분위기만 말하고 아무것도 보여주지 못한 잘못된 첫 문장이다. 저렇게 쓰지 말고, 카리엘이 보고 듣고 만지는 것 하나에서 시작하는 첫 문장을 새로 쓰시오.',
   '처형장에는 무어라 형언할 수 없는 팽팽한 긴장감이 흐르고 있었다.', null, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","긴장","형언","기류","아우라","기색","낌새","기미"],"forbidLemmas":["오라/NNG"],"forbidDisplay":["기운","느낌","분위기","긴장감","형언하다","기류","오라","아우라","기색","낌새","기미"],"requireAny":["카리엘"]}'::jsonb,
   'original', 'fantasy', 'planned',
-  1, 'sw-scaffold-morning'
+  1, 'sw-scaffold-morning', false
 where not exists (select 1 from problems p where p.source_key = 'sw-scaffold-morning');
 
 -- bt-fireball-shield (order_no 4, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'action_turn'),
   'convert', 'auto', '아래 전투를 고쳐 쓰시오. 리온은 방패와 검을 쓰는 기사고 카엘은 화염구를 쓰는 마법사다. 원문은 충격·고통·압도적 같은 느낌 말로 결과를 대신해서 독자 눈에 아무것도 안 보인다. 첫 문장은 두고, 결과를 방패·장갑·발뒤꿈치처럼 몸과 사물로 바꾸고, 리온이 카엘에게서 읽어 낸 것 하나로 다음 수를 고르게 다시 쓰시오. 리온의 속마음이나 대사 한 줄이 들리게 하시오.',
-  '화염구가 방패에 부딪쳤다. 끔찍한 충격이었다. 리온은 엄청난 고통을 느꼈다. 상대 마법사 카엘의 힘은 압도적이었다. 리온은 두려웠지만 버텼다.', null, '{"maxChars":200,"minVerbs":4,"requireAll":["리온","카엘"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","고통","통증","아픔","지독","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","고통","통증","아픔","지독하다","그때였다","과연"],"forbidPassageCopy":true,"passageCopyKeep":1,"ai_shadow":["support","tell"],"ai_hint_material":"카엘은 같은 자리에 서서 같은 주문을 되풀이한다."}'::jsonb,
+  '화염구가 방패에 부딪쳤다. 끔찍한 충격이었다. 리온은 엄청난 고통을 느꼈다. 상대 마법사 카엘의 힘은 압도적이었다. 리온은 두려웠지만 버텼다.', null, '{"maxChars":200,"minVerbs":4,"requireAll":["리온","카엘"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","고통","통증","아픔","지독","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","고통","통증","아픔","지독하다","그때였다","과연"],"forbidPassageCopy":true,"passageCopyKeep":1,"ai_shadow":["support","tell"],"ai_hint_material":"화염구는 빚는 데 시간이 걸리고, 빚는 동안 카엘의 두 손은 그 자리에 묶인다.\n막을 때마다 방패는 타들어 가지만 카엘은 한 발도 물러서지 않는다."}'::jsonb,
   'original', 'fantasy', 'planned',
-  2, 'bt-fireball-shield'
+  2, 'bt-fireball-shield', false
 where not exists (select 1 from problems p where p.source_key = 'bt-fireball-shield');
 
 -- ca-crystal-exam (order_no 4, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'cliffhanger_adv'),
   'convert', 'auto', '아래 회차 끝을 고쳐 쓰시오. 리안은 스승을 잃고 홀로 마탑 시험을 보러 온 견습생이다. 원문은 서술자가 ''될 줄은 몰랐다''·''훗날''로 앞일을 미리 말해 버려 독자가 스스로 예감할 자리가 없다. 서술자의 예언 문장을 지우고, 그 자리에 수정구의 빛에서 드러나는 신호 하나를 심어 마지막 줄에서 끊기게 다시 쓰시오. 리안의 속마음이나 대사 한 줄이 들리게 하시오.',
   '리안은 마력 측정 수정구 앞에 섰다. 그것이 마탑을 뒤집을 시험이 될 줄은 그때의 리안은 몰랐다. 시험관이 손을 올리라고 했다. 훗날 사람들은 이날을 리안의 첫날이라 불렀다.', null, '{"maxChars":120,"minVerbs":3,"forbidLabel":"서술자가 미리 말해 주거나 억지로 끊는 표현","forbidWords":["훗날","될 줄","과연","그때였다","다음 화","운명","몰랐"],"forbidDisplay":["훗날","될 줄은","과연","그때였다","다음 화","운명","몰랐다"],"forbidPassageCopy":true}'::jsonb,
   'original', 'fantasy', 'planned',
-  2, 'ca-crystal-exam'
+  2, 'ca-crystal-exam', false
 where not exists (select 1 from problems p where p.source_key = 'ca-crystal-exam');
 
 -- fh-regress-date (order_no 4, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'first_hook'),
   'continue', 'auto', '두 줄 뒤에 세 줄을 이어 다섯 줄을 완성하시오. 강도윤은 최약체로 죽었다가 십 년 전으로 돌아온 헌터로, 후회보다 계산이 먼저인 사람이다. 원문 두 줄은 도윤이 깨어난 것까지만 보여 준다. 이어지는 세 줄 안에 이 이야기가 어디로 가는지, 왜 이 사람인지, 어떻게 헤쳐 갈지가 들어가게 작성하시오. 도윤의 속마음이나 대사 한 줄이 들리게 하시오.',
   '강도윤은 눈을 떴다. 머리맡 휴대폰에 뜬 날짜가 십 년 전 그날이었다.', null, '{"maxChars":200,"minVerbs":3,"requireAny":["강도윤","도윤"],"forbidLabel":"세계부터 설명하는 표현","forbidWords":["제국력","이 세계","옛날 옛적","프롤로그","오래전부터"],"forbidDisplay":["제국력","이 세계는","옛날 옛적","프롤로그","오래전부터"],"forbidPassageCopy":true}'::jsonb,
   'original', 'fantasy', 'planned',
-  2, 'fh-regress-date'
+  2, 'fh-regress-date', false
 where not exists (select 1 from problems p where p.source_key = 'fh-regress-date');
 
 -- ig-cafe-scar (order_no 4, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'info_gap'),
   'convert', 'auto', '아래 장면을 고쳐 쓰시오. 박형사는 사흘째 한 남자를 쫓는 강력반 형사고, 원문의 구석 자리 남자가 그 사람이다. 원문은 서술자가 ''몰랐다''·''훗날''로 사실을 말해 버려 독자가 알아챌 재미가 없다. 서술자 문장을 지우고, 독자가 스스로 알아채도록 사물이나 행동 하나를 장면에 두어 다시 쓰시오. 박형사는 끝까지 알아채지 못한 채여야 한다.',
   '박형사는 카페 구석 자리의 남자를 지나쳐 창가에 앉았다. 그 남자가 사흘째 쫓던 용의자라는 걸 그는 몰랐다. 훗날 그는 이 순간을 두고두고 곱씹게 된다. 남자는 커피를 마시며 신문을 넘겼다.', null, '{"maxChars":100,"minVerbs":3,"forbidLabel":"서술자가 사실을 말해 주는 표현","forbidWords":["몰랐","알지 못","모르고 있","눈치채지 못","알 리 없","훗날","용의자"],"forbidDisplay":["몰랐다","알지 못했다","눈치채지 못했다","훗날","용의자"],"forbidPassageCopy":true}'::jsonb,
   'original', 'modern', 'planned',
-  2, 'ig-cafe-scar'
+  2, 'ig-cafe-scar', false
 where not exists (select 1 from problems p where p.source_key = 'ig-cafe-scar');
 
 -- lk2-night-raid (order_no 4, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'likability'),
   'continue', 'auto', '노아를 지켜보던 카일의 태도가 바뀌게 하시오. 노아는 말수 없이 시킨 일만 하는 신입이라 겁쟁이로 보이지만, 남이 안 보는 데서 먼저 움직이는 사람이다. 카일은 신입을 믿지 않는 부단장이다. 원문을 읽고 다음에 올 장면을, 노아가 손해 보는 선택 하나를 하고 그것을 본 카일이 행동 하나로 반응하게 작성하시오.',
   '야습이었다. 카일이 후퇴를 외쳤고 용병들이 숲으로 흩어졌다. 신입 노아는 대열 맨 뒤에서 뛰고 있었다. 그 뒤로 다리를 다친 병사 하나가 처졌다. 카일은 신입은 보름을 못 넘긴다고 말하고 다니는 부단장이었다.', null, '{"maxChars":100,"minVerbs":3,"requireAll":["노아","카일"],"forbidLabel":"인물을 평가하는 말","forbidWords":["착하","착한","따뜻","다정","친절","배려","좋은 사람","마음씨","인심","마음에 들"],"forbidDisplay":["착하다","따뜻하다","다정하다","친절하다","배려하다","마음에 들다"],"forbidPassageCopy":true}'::jsonb,
   'original', 'fantasy', 'planned',
-  2, 'lk2-night-raid'
+  2, 'lk2-night-raid', false
 where not exists (select 1 from problems p where p.source_key = 'lk2-night-raid');
 
 -- rp-kongjwi-jar (order_no 4, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'reduce_repeat'),
   'remove', 'auto', '같은 말이 겹치는 곳을 찾아 다시 쓰시오.',
   '콩쥐는 우물에서 물을 길어 왔다. 콩쥐가 물을 부으면 물은 독 밑으로 새어 나갔다. 물을 채워도 채워도 독은 차지 않았다. 콩쥐는 항아리를 안은 채 주저앉아 울었다.', null, '{"maxChars":68,"minVerbs":3,"maxRepeat":2,"repeatTargets":[{"word":"물","max":2},{"word":"콩쥐","max":2}]}'::jsonb,
   'folktale', 'modern', 'planned',
-  2, 'rp-kongjwi-jar'
+  2, 'rp-kongjwi-jar', false
 where not exists (select 1 from problems p where p.source_key = 'rp-kongjwi-jar');
 
 -- rp-magpie-bridge (order_no 4, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'reduce_repeat'),
   'remove', 'auto', '같은 말이 겹치는 곳을 찾아 다시 쓰시오.',
   '까치들이 은하수 위로 다리를 놓았다. 다리는 강 건너까지 길게 이어졌다. 견우는 떨리는 발로 다리에 올랐다. 다리가 출렁일 때마다 까치들이 날개를 퍼덕였다. "직녀님!" 견우는 다리 위를 내달렸다.', null, '{"maxChars":85,"minVerbs":3,"maxRepeat":2,"repeatTargets":[{"word":"다리","max":2}]}'::jsonb,
   'folktale', 'romance', 'planned',
-  2, 'rp-magpie-bridge'
+  2, 'rp-magpie-bridge', false
 where not exists (select 1 from problems p where p.source_key = 'rp-magpie-bridge');
 
 -- rp-rabbit-liver (order_no 4, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'reduce_repeat'),
   'remove', 'auto', '같은 말이 겹치는 곳을 찾아 다시 쓰시오.',
   '용왕이 토끼의 간을 내놓으라고 명했다. 토끼는 침착하게 대답했다. "제 간은 워낙 귀한 간이라, 깊은 산속에 감추어 두고 왔습니다." 신하들이 웅성거렸다. 간도 없이 다니는 토끼가 어디 있느냐고 다그쳤지만, 토끼는 태연히 웃기만 했다.', null, '{"maxChars":101,"minVerbs":5,"maxRepeat":2,"repeatTargets":[{"word":"간","max":2},{"word":"토끼","max":2}]}'::jsonb,
   'folktale', 'martial', 'impulsive',
-  2, 'rp-rabbit-liver'
+  2, 'rp-rabbit-liver', false
 where not exists (select 1 from problems p where p.source_key = 'rp-rabbit-liver');
 
 -- rp-siblings-rope (order_no 4, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'reduce_repeat'),
   'remove', 'auto', '같은 말이 겹치는 곳을 찾아 다시 쓰시오. 동아줄이 튼튼하다는 것은 남길 것.',
   '오누이는 나무 꼭대기에서 두 손을 모아 빌었다. "하느님, 저희에게 튼튼한 동아줄을 내려 주세요." 하늘에서 동아줄이 스르르 내려왔다. 오누이는 동아줄을 꽉 잡았다. 동아줄은 오누이를 매단 채 하늘로 올라갔다.', null, '{"maxChars":91,"minVerbs":3,"maxRepeat":2,"repeatTargets":[{"word":"동아줄","max":2},{"word":"오누이","max":2}]}'::jsonb,
   'folktale', 'fantasy', 'impulsive',
-  2, 'rp-siblings-rope'
+  2, 'rp-siblings-rope', false
 where not exists (select 1 from problems p where p.source_key = 'rp-siblings-rope');
 
 -- rp-goblin-club (order_no 4, difficulty 3)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'reduce_repeat'),
   'remove', 'auto', '같은 말이 겹치는 곳을 찾아 다시 쓰시오. 방망이가 멈추지 않는다는 것을 남길 것.',
   '도깨비들이 방망이를 휘두르며 외쳤다. "은 나와라, 뚝딱!" 방망이에서 은돈이 쏟아졌다. 도깨비들이 방망이를 다시 휘둘렀다. "금 나와라, 뚝딱!" 방망이는 멈추지 않고 보물을 쏟아 냈다.', null, '{"maxChars":83,"minVerbs":4,"maxRepeat":2,"repeatTargets":[{"word":"방망이","max":2},{"word":"도깨비","max":1}]}'::jsonb,
   'folktale', 'fantasy', 'impulsive',
-  3, 'rp-goblin-club'
+  3, 'rp-goblin-club', false
 where not exists (select 1 from problems p where p.source_key = 'rp-goblin-club');
 
 -- ae-gyeonu-bridge (order_no 5, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'adverb_exception'),
   'choice', 'auto', '뒤 문장의 부사가 앞 문장 덕분에 값을 얻는 것을 고르시오. 부사가 없거나, 부사가 앞에서 혼자 일하고 있으면 답이 아니다.',
   '까치 다리가 놓인 날이다.', '["까치들이 강 위로 몸을 이어 다리를 놓았다. 견우는 조심스럽게 첫 발을 얹었다.","까치들이 강 위로 몸을 이어 다리를 놓았다. 견우는 첫 발을 얹었다.","견우는 조심스럽게 강가에 나왔다. 까치들이 하늘을 덮었다.","강물이 아주 깊었다. 견우는 매우 두려웠다."]'::jsonb, '{}'::jsonb,
   'folktale', 'fantasy', 'planned',
-  1, 'ae-gyeonu-bridge'
+  1, 'ae-gyeonu-bridge', false
 where not exists (select 1 from problems p where p.source_key = 'ae-gyeonu-bridge');
 
 -- ae-rabbit-gate (order_no 5, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'adverb_exception'),
   'choice', 'auto', '뒤 문장의 부사가 앞 문장 덕분에 값을 얻는 것을 고르시오. 부사가 없거나, 부사가 앞에서 혼자 일하고 있으면 답이 아니다.',
   '토끼가 용궁 문 앞에 섰다.', '["문지기의 창끝이 토끼의 목 앞에서 멈췄다. 토끼는 천천히 한 걸음 나섰다.","문지기의 창끝이 토끼의 목 앞에서 멈췄다. 토끼는 한 걸음 나섰다.","토끼는 정말 용감하게 걸었다. 문지기가 창을 내렸다.","용궁 문이 열렸다. 토끼는 몹시 두려웠다."]'::jsonb, '{}'::jsonb,
   'folktale', 'fantasy', 'planned',
-  1, 'ae-rabbit-gate'
+  1, 'ae-rabbit-gate', false
 where not exists (select 1 from problems p where p.source_key = 'ae-rabbit-gate');
 
 -- cc-relic-box (order_no 5, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'contrast_char'),
   'convert', 'auto', '리안과 셀라를 대비시키시오. 리안은 스승의 유품을 못 놓는 견습, 셀라는 쓸모부터 따지는 견습이다. 아래 장면에서 두 사람은 똑같이 움직인다. 다시 써서, 같은 일에 두 사람이 서로 다르게 반응하게 하시오.',
   '서고 정리 중에 낡은 상자가 나왔다. 두 견습은 상자를 탁자로 옮겨 두었다.', null, '{"maxChars":60,"minVerbs":2,"requireAll":["리안","셀라"]}'::jsonb,
   'original', 'fantasy', 'planned',
-  1, 'cc-relic-box'
+  1, 'cc-relic-box', false
 where not exists (select 1 from problems p where p.source_key = 'cc-relic-box');
 
 -- cf-gym-glow (order_no 5, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'cliffhanger'),
   'continue', 'auto', '아래 장면의 마지막 줄을 ''기대감''으로 끊으시오. 시우는 등급이 오르지 않는 헌터다. 원문 뒤에 한두 문장을 이어, 앞으로 시우가 달라질 것 같은 조짐 하나가 보이는 것으로 끝내시오. 무엇인지 다 말하지 말고 조짐만 보이시오.',
   '훈련장에 혼자 남은 시우는 마지막 세트를 마쳤다. 손바닥이 갈라져 피가 배어 있었다. 오늘도 등급은 그대로였다.', null, '{"maxChars":80,"minVerbs":1,"forbidLabel":"서술자가 미리 말해 주거나 억지로 끊는 표현","forbidWords":["훗날","될 줄","과연","그때였다","다음 화","운명"],"forbidDisplay":["훗날","될 줄은","과연","그때였다","다음 화","운명"],"forbidPassageCopy":true}'::jsonb,
   'original', 'fantasy', 'planned',
-  1, 'cf-gym-glow'
+  1, 'cf-gym-glow', false
 where not exists (select 1 from problems p where p.source_key = 'cf-gym-glow');
 
 -- lk-tower-shelf (order_no 5, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'lack'),
   'convert', 'auto', '리안에게 그리움을 얹으시오. 리안은 스승을 잃은 마탑의 견습 마법사다. 아래는 아무 결핍도 없는 무난한 장면이다. 다시 써서, 그립다는 말 없이 행동과 버릇만으로 그 마음이 드러나게 하시오.',
   '마탑의 견습 마법사는 도서관에서 주문서를 정리했다. 서가 사이로 오후 햇살이 들었다.', null, '{"maxChars":60,"minVerbs":2,"forbidLabel":"그리움을 직접 말하는 표현","forbidWords":["그립","그리워"],"forbidDisplay":["그립다","그리워하다"],"requireAny":["리안"],"forbidPassageCopy":true}'::jsonb,
   'original', 'fantasy', 'planned',
-  1, 'lk-tower-shelf'
+  1, 'lk-tower-shelf', false
 where not exists (select 1 from problems p where p.source_key = 'lk-tower-shelf');
 
 -- se-phoenix-mound (order_no 5, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'start_extend'),
   'continue', 'auto', '서준혁이 나오게 이어 쓰시오. 주인공은 방출 통보를 받은 서울 피닉스의 투수 서준혁이다. 아래 문장은 세상 설명만 하고 아직 아무도 보여주지 않는다. 이어지는 한두 문장을 써서, 서준혁이 나타나 움직이게 하시오.',
   '프로야구 최하위 구단 서울 피닉스는 창단 이후 우승이 없었다.', null, '{"maxChars":60,"minVerbs":1,"requireAny":["서준혁","준혁"]}'::jsonb,
   'original', 'modern', 'planned',
-  1, 'se-phoenix-mound'
+  1, 'se-phoenix-mound', false
 where not exists (select 1 from problems p where p.source_key = 'se-phoenix-mound');
 
 -- sw-boss-wake (order_no 5, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'start_write'),
   'convert', 'auto', '이재하의 1화 첫 문장을 쓰시오. 주인공 이재하는 자신이 만든 게임 속 중간보스의 몸에서 깨어났다. 아래는 분위기만 말하고 아무것도 보여주지 못한 잘못된 첫 문장이다. 저렇게 쓰지 말고, 이재하가 보고 듣고 만지는 것 하나에서 시작하는 첫 문장을 새로 쓰시오.',
   '무언가 단단히 잘못되었다는 느낌이 서늘하게 온몸을 감쌌다.', null, '{"maxChars":60,"minVerbs":1,"forbidLabel":"분위기를 직접 말하는 표현","forbidWords":["기운","느낌","분위기","기류","아우라","기색","낌새","기미"],"forbidLemmas":["오라/NNG"],"forbidDisplay":["기운","느낌","분위기","기류","오라","아우라","기색","낌새","기미"],"requireAny":["이재하","재하"]}'::jsonb,
   'original', 'fantasy', 'planned',
-  1, 'sw-boss-wake'
+  1, 'sw-boss-wake', false
 where not exists (select 1 from problems p where p.source_key = 'sw-boss-wake');
 
 -- ae-axe-drop (order_no 5, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'adverb_exception'),
   'choice', 'auto', '부사가 동사에 얹혀 제 일을 하는 것을 고르시오. 부사가 없거나, 동사가 이미 품은 뜻을 되풀이하거나, 동사 대신 감정을 서술하고 있으면 답이 아니다.',
   null, '["나무꾼은 도끼를 물속으로 조심스럽게 내려놓았다.","나무꾼은 연못가로 황급히 내달렸다.","나무꾼은 몹시 안타깝게 연못을 바라보고 있었다.","나무꾼은 도끼를 물속으로 내려놓았다."]'::jsonb, '{}'::jsonb,
   'folktale', 'modern', 'planned',
-  2, 'ae-axe-drop'
+  2, 'ae-axe-drop', false
 where not exists (select 1 from problems p where p.source_key = 'ae-axe-drop');
 
 -- ae-kongjwi-jar (order_no 5, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'adverb_exception'),
   'choice', 'auto', '한 장면에 부사를 하나만 쓴다. 값이 가장 큰 자리에 놓은 것을 고르시오.',
   null, '["콩쥐는 독에 천천히 물을 부었다. 물이 바닥으로 새어 나갔다. 콩쥐는 물을 길어 왔다.","콩쥐는 독에 물을 부었다. 물이 바닥으로 빠르게 새어 나갔다. 콩쥐는 물을 길어 왔다.","콩쥐는 독에 물을 부었다. 물이 바닥으로 새어 나갔다. 콩쥐는 말없이 물을 길어 왔다.","콩쥐는 몹시 힘들게 독에 물을 부었다. 물이 바닥으로 새어 나갔다. 콩쥐는 물을 길어 왔다."]'::jsonb, '{}'::jsonb,
   'folktale', 'fantasy', 'planned',
-  2, 'ae-kongjwi-jar'
+  2, 'ae-kongjwi-jar', false
 where not exists (select 1 from problems p where p.source_key = 'ae-kongjwi-jar');
 
 -- bt-low-guard (order_no 5, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'action_turn'),
   'continue', 'auto', '상대 쪽에서 한 턴을 쓰시오. 정후는 젊은 검객이고 백리진은 서른 해를 싸워 온 노고수다. 원문은 정후의 수(하단 자세)까지 보여 줬다. 이번 턴은 백리진의 머릿속이다 — 그가 그 자세에서 무엇을 읽고, 옛 기억으로 무엇을 재고, 어떤 수를 고르는지, 그 수가 맞았는지 틀렸는지가 몸으로 드러나게 쓰시오. 백리진의 속마음이나 대사 한 줄이 들리게 하고, 두 사람 이름이 다 나오게 하시오.',
   '정후는 검을 낮게 늘어뜨리고 걸어 들어왔다. 상단도 중단도 아닌 하단이었다. 노고수 백리진은 그 자세를 서른 해 전에 본 적이 있었다.', null, '{"maxChars":200,"minVerbs":4,"requireAll":["정후","백리진"],"forbidLabel":"느낌을 말로 대신하는 표현","forbidWords":["끔찍","무서웠","두려웠","압도적","굉장","엄청난","강력","고통","통증","아픔","지독","그때였다","과연"],"forbidDisplay":["끔찍하다","무섭다","두렵다","압도적","굉장하다","엄청나다","강력하다","고통","통증","아픔","지독하다","그때였다","과연"],"forbidPassageCopy":true,"ai_shadow":["support","tell"],"ai_hint_material":"하단 자세는 보통 올려 베기의 준비 자세로 읽힌다."}'::jsonb,
   'original', 'martial', 'planned',
-  2, 'bt-low-guard'
+  2, 'bt-low-guard', false
 where not exists (select 1 from problems p where p.source_key = 'bt-low-guard');
 
 -- ca-walk-home (order_no 5, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'cliffhanger_adv'),
   'continue', 'auto', '관계가 달라질 것을 암시하며 끊으시오. 예진과 태오는 야근이 잦은 같은 팀 동기로, 서로를 편한 동료라고만 말해 온 사이다. 원문은 ''늘 잡아 주던 택시를 오늘은 잡지 않았다''는 신호를 이미 깔았다. 원문을 읽고 다음에 올 장면을, 예진의 속마음이나 대사 한 줄이 들리게 하고, 고백이나 스킨십 없이 그 신호가 커지다가 마지막 줄에서 끊기게 작성하시오.',
   '야근을 마친 열한 시, 회사 앞이었다. 늘 예진의 택시부터 잡아 주던 태오가 오늘은 잡지 않고 말했다. "좀 걷자." 예진의 집까지는 걸어서 사십 분이었다.', null, '{"maxChars":120,"minVerbs":3,"forbidLabel":"서술자가 미리 말해 주거나 억지로 끊는 표현","forbidWords":["훗날","될 줄","과연","그때였다","다음 화","운명"],"forbidDisplay":["훗날","될 줄은","과연","그때였다","다음 화","운명"],"forbidPassageCopy":true,"ai_shadow":["signal"]}'::jsonb,
   'original', 'romance', 'planned',
-  2, 'ca-walk-home'
+  2, 'ca-walk-home', false
 where not exists (select 1 from problems p where p.source_key = 'ca-walk-home');
 
 -- fh-broken-engagement (order_no 5, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'first_hook'),
   'convert', 'auto', '아래 다섯 줄을 고쳐 쓰시오. 하은수는 결혼식 한 달 전에 파혼당한 회사원이고, 파혼 다음 날 첫 출근한 회사의 대표가 전 약혼자의 형이다. 원문은 아침 일과만 나열해서 어디로 가는지도, 왜 이 사람인지도, 어떻게 헤쳐 갈지도 없다. 이 설정으로 그 셋이 다 들어가는 다섯 줄을 새로 쓰시오. 은수의 속마음이나 대사 한 줄이 들리게 하시오.',
   '하은수는 아침 일곱 시에 일어났다. 세수를 하고 커피를 내렸다. 회사에 갈 준비를 했다. 휴대폰을 확인했다. 오늘은 월요일이었다.', null, '{"maxChars":200,"minVerbs":4,"requireAny":["하은수","은수"],"forbidLabel":"세계부터 설명하는 표현","forbidWords":["제국력","이 세계","옛날 옛적","프롤로그","오래전부터"],"forbidDisplay":["제국력","이 세계는","옛날 옛적","프롤로그","오래전부터"],"forbidPassageCopy":true}'::jsonb,
   'original', 'romance', 'planned',
-  2, 'fh-broken-engagement'
+  2, 'fh-broken-engagement', false
 where not exists (select 1 from problems p where p.source_key = 'fh-broken-engagement');
 
 -- ig-ball-envelope (order_no 5, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'info_gap'),
   'continue', 'auto', '오해를 만들되 풀지 마시오. 이레나는 카시안에게 마음이 있으면서 먼저 묻지는 못하는 영애고, 카시안은 이레나의 오빠 부탁으로 심부름을 하는 중이다. 원문에서 독자는 그 입맞춤이 청혼 편지 심부름이라는 것을 알지만 이레나는 모른다. 원문을 읽고 다음에 올 장면을, 오해가 굳어지되 언젠가 풀릴 실마리 하나(봉투·답장·오빠)를 장면 안에 두고 지금은 풀지 않게 작성하시오.',
   '무도회에서 이레나는 카시안이 다른 영애의 손등에 입을 맞추는 것을 보았다. 카시안은 그 영애에게 이레나의 오빠가 보낸 청혼 편지를 전하는 중이었고, 답장은 오빠에게 돌아갈 것이었다. 이레나는 부채를 접고 발코니로 나갔다.', null, '{"maxChars":100,"minVerbs":3,"forbidLabel":"서술자가 사실을 말해 주거나 풀어 주는 표현","forbidWords":["몰랐","알지 못","모르고 있","눈치채지 못","알 리 없","훗날","사실은","고백","털어놓","알고 보니","오해였","해명"],"forbidDisplay":["몰랐다","알지 못했다","훗날","사실은","고백하다","털어놓다","알고 보니","해명하다"],"forbidPassageCopy":true}'::jsonb,
   'original', 'romance', 'planned',
-  2, 'ig-ball-envelope'
+  2, 'ig-ball-envelope', false
 where not exists (select 1 from problems p where p.source_key = 'ig-ball-envelope');
 
 -- ig-friend-text (order_no 5, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'info_gap'),
   'continue', 'auto', '오해를 만들되 풀지 마시오. 서윤은 지훈과 사귄 지 한 달 된 회사원으로, 마음이 상해도 먼저 묻지는 못하는 사람이다. 원문에서 독자는 친구가 본 여자가 지훈의 여동생이라는 것을 알지만 서윤은 모른다. 원문을 읽고 다음에 올 장면을, 서윤의 속마음이나 대사 한 줄이 들리게 하고, 오해가 굳어지되 언젠가 풀릴 실마리 하나(동생·선물·향수)를 장면 안에 두고 지금은 풀지 않게 작성하시오.',
   '토요일 낮, 지훈은 서울에 올라온 여동생 지아와 백화점을 돌았다. 저녁에 서윤에게 줄 선물을 고르는데 지아가 오빠 팔짱을 끼고 매장마다 끌고 다녔다. 그날 저녁 서윤의 휴대폰에 친구의 문자가 떴다. "너 남친 아까 백화점에서 어떤 여자랑 팔짱 끼고 있던데? 내가 잘못 봤나."', null, '{"maxChars":100,"minVerbs":3,"forbidLabel":"서술자가 사실을 말해 주거나 풀어 주는 표현","forbidWords":["몰랐","알지 못","모르고 있","눈치채지 못","알 리 없","훗날","사실은","고백","털어놓","알고 보니","오해였","해명"],"forbidDisplay":["몰랐다","알지 못했다","훗날","사실은","고백하다","털어놓다","알고 보니","해명하다"],"forbidPassageCopy":true}'::jsonb,
   'original', 'romance', 'planned',
-  2, 'ig-friend-text'
+  2, 'ig-friend-text', false
 where not exists (select 1 from problems p where p.source_key = 'ig-friend-text');
 
 -- cc-praise-callout (order_no 6, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'contrast_char'),
   'continue', 'auto', '서담의 겉과 속을 한 장면에 담으시오. 서담은 칭찬을 받으면 손부터 내젓는 조용한 대리다. 하지만 싫어서가 아니다 — 그 칭찬을 누구보다 오래 마음에 담아 두는 사람이다. 원문을 읽고 다음에 올 장면을, 사양하는 겉과 좋아하는 속이 둘 다 행동으로 보이게 작성하시오.',
   '월례 회의에서 이달의 우수 사원이 발표되었다. 호명된 대리는 앞으로 나가 상을 받았다.', null, '{"maxChars":100,"minVerbs":3,"forbidLabel":"속마음을 직접 말하는 표현","forbidWords":["좋아","기쁘","기뻤","뿌듯"],"forbidDisplay":["좋아하다","기쁘다","뿌듯하다"],"forbidPassageCopy":true}'::jsonb,
   'original', 'modern', 'planned',
-  1, 'cc-praise-callout'
+  1, 'cc-praise-callout', false
 where not exists (select 1 from problems p where p.source_key = 'cc-praise-callout');
 
 -- sn-axe-pond (order_no 6, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'sensory'),
   'convert', 'auto', '연못 바닥에 손을 넣은 상태다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색·시선·시야·모습·얼굴·그림자·어둠·캄캄·깜깜·컴컴·흐릿·뚜렷·선명·투명·반짝·어른어른이 들어간 말은 전부 막습니다. 보다 계열(보이다·바라보다·살펴보다 등), 밝기와 색(밝다·어둡다·붉다·푸르다·하얗다·검다·노랗다·흐리다·훤하다), 빛의 움직임(빛나다·번쩍이다·반짝이다·어른거리다)도 막습니다.',
   '물빛이 탁해 아무것도 보이지 않았다. 나무꾼은 손끝을 살펴보았다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"],"forbidLabel":"눈에 기대는 표현","forbidDisplay":["눈","빛","색","시선","모습","그림자","어둠","보다","보이다","바라보다","쳐다보다","살펴보다","밝다","어둡다","붉다","푸르다","하얗다","검다","빛나다","번쩍이다","반짝이다"]}'::jsonb,
   'folktale', 'modern', 'planned',
-  2, 'sn-axe-pond'
+  2, 'sn-axe-pond', false
 where not exists (select 1 from problems p where p.source_key = 'sn-axe-pond');
 
 -- sn-heungbu-barn (order_no 6, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'sensory'),
   'convert', 'auto', '빛이 들지 않는 헛간 안이다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색·시선·시야·모습·얼굴·그림자·어둠·캄캄·깜깜·컴컴·흐릿·뚜렷·선명·투명·반짝·어른어른이 들어간 말은 전부 막습니다. 보다 계열(보이다·바라보다·살펴보다 등), 밝기와 색(밝다·어둡다·붉다·푸르다·하얗다·검다·노랗다·흐리다·훤하다), 빛의 움직임(빛나다·번쩍이다·반짝이다·어른거리다)도 막습니다.',
   '아무것도 보이지 않았다. 어둠 속에서 제비의 흰 배가 어렴풋이 눈에 띄었다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"],"forbidLabel":"눈에 기대는 표현","forbidDisplay":["눈","빛","색","시선","모습","그림자","어둠","보다","보이다","바라보다","쳐다보다","살펴보다","밝다","어둡다","붉다","푸르다","하얗다","검다","빛나다","번쩍이다","반짝이다"]}'::jsonb,
   'folktale', 'fantasy', 'planned',
-  2, 'sn-heungbu-barn'
+  2, 'sn-heungbu-barn', false
 where not exists (select 1 from problems p where p.source_key = 'sn-heungbu-barn');
 
 -- sn-kongjwi-night (order_no 6, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'sensory'),
   'convert', 'auto', '달도 없는 밤의 마당이다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색·시선·시야·모습·얼굴·그림자·어둠·캄캄·깜깜·컴컴·흐릿·뚜렷·선명·투명·반짝·어른어른이 들어간 말은 전부 막습니다. 보다 계열(보이다·바라보다·살펴보다 등), 밝기와 색(밝다·어둡다·붉다·푸르다·하얗다·검다·노랗다·흐리다·훤하다), 빛의 움직임(빛나다·번쩍이다·반짝이다·어른거리다)도 막습니다.',
   '깨진 독이 검게 보였다. 물이 흘러나온 자리가 어둡게 번들거렸다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"],"forbidLabel":"눈에 기대는 표현","forbidDisplay":["눈","빛","색","시선","모습","그림자","어둠","보다","보이다","바라보다","쳐다보다","살펴보다","밝다","어둡다","붉다","푸르다","하얗다","검다","빛나다","번쩍이다","반짝이다"]}'::jsonb,
   'folktale', 'modern', 'planned',
-  2, 'sn-kongjwi-night'
+  2, 'sn-kongjwi-night', false
 where not exists (select 1 from problems p where p.source_key = 'sn-kongjwi-night');
 
 -- sn-simcheong-water (order_no 6, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'sensory'),
   'convert', 'auto', '물에 잠긴 직후다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색·시선·시야·모습·얼굴·그림자·어둠·캄캄·깜깜·컴컴·흐릿·뚜렷·선명·투명·반짝·어른어른이 들어간 말은 전부 막습니다. 보다 계열(보이다·바라보다·살펴보다 등), 밝기와 색(밝다·어둡다·붉다·푸르다·하얗다·검다·노랗다·흐리다·훤하다), 빛의 움직임(빛나다·번쩍이다·반짝이다·어른거리다)도 막습니다.',
   '푸른 물빛이 눈앞을 가득 채웠다. 뱃사람들의 모습이 점점 멀어지는 것이 보였다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"],"forbidLabel":"눈에 기대는 표현","forbidDisplay":["눈","빛","색","시선","모습","그림자","어둠","보다","보이다","바라보다","쳐다보다","살펴보다","밝다","어둡다","붉다","푸르다","하얗다","검다","빛나다","번쩍이다","반짝이다"]}'::jsonb,
   'folktale', 'fantasy', 'planned',
-  2, 'sn-simcheong-water'
+  2, 'sn-simcheong-water', false
 where not exists (select 1 from problems p where p.source_key = 'sn-simcheong-water');
 
 -- sn-goblin-club (order_no 6, difficulty 3)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'sensory'),
   'convert', 'auto', '도깨비들이 방망이를 두드린다. 등을 돌리고 있어 앞이 분간되지 않는다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색·시선·시야·모습·얼굴·그림자·어둠·캄캄·깜깜·컴컴·흐릿·뚜렷·선명·투명·반짝·어른어른이 들어간 말은 전부 막습니다. 보다 계열(보이다·바라보다·살펴보다 등), 밝기와 색(밝다·어둡다·붉다·푸르다·하얗다·검다·노랗다·흐리다·훤하다), 빛의 움직임(빛나다·번쩍이다·반짝이다·어른거리다)도 막습니다.',
   '도깨비의 모습이 어둠 속에서 어른거렸다. 방망이가 붉게 빛났다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"],"forbidLabel":"눈에 기대는 표현","forbidDisplay":["눈","빛","색","시선","모습","그림자","어둠","보다","보이다","바라보다","쳐다보다","살펴보다","밝다","어둡다","붉다","푸르다","하얗다","검다","빛나다","번쩍이다","반짝이다"]}'::jsonb,
   'folktale', 'martial', 'planned',
-  3, 'sn-goblin-club'
+  3, 'sn-goblin-club', false
 where not exists (select 1 from problems p where p.source_key = 'sn-goblin-club');
 
 -- sn-gyeonu-bridge (order_no 6, difficulty 3)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'sensory'),
   'convert', 'auto', '까치 다리 위다. 발밑이 분간되지 않는다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색·시선·시야·모습·얼굴·그림자·어둠·캄캄·깜깜·컴컴·흐릿·뚜렷·선명·투명·반짝·어른어른이 들어간 말은 전부 막습니다. 보다 계열(보이다·바라보다·살펴보다 등), 밝기와 색(밝다·어둡다·붉다·푸르다·하얗다·검다·노랗다·흐리다·훤하다), 빛의 움직임(빛나다·번쩍이다·반짝이다·어른거리다)도 막습니다.',
   '까치들의 검은 모습이 눈앞에 가득했다. 견우는 발밑을 내려다보았다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"],"forbidLabel":"눈에 기대는 표현","forbidDisplay":["눈","빛","색","시선","모습","그림자","어둠","보다","보이다","바라보다","쳐다보다","살펴보다","밝다","어둡다","붉다","푸르다","하얗다","검다","빛나다","번쩍이다","반짝이다"]}'::jsonb,
   'folktale', 'fantasy', 'planned',
-  3, 'sn-gyeonu-bridge'
+  3, 'sn-gyeonu-bridge', false
 where not exists (select 1 from problems p where p.source_key = 'sn-gyeonu-bridge');
 
 -- sn-rabbit-hall (order_no 6, difficulty 3)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'sensory'),
   'convert', 'auto', '용궁 복도에서 등불이 꺼졌다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색·시선·시야·모습·얼굴·그림자·어둠·캄캄·깜깜·컴컴·흐릿·뚜렷·선명·투명·반짝·어른어른이 들어간 말은 전부 막습니다. 보다 계열(보이다·바라보다·살펴보다 등), 밝기와 색(밝다·어둡다·붉다·푸르다·하얗다·검다·노랗다·흐리다·훤하다), 빛의 움직임(빛나다·번쩍이다·반짝이다·어른거리다)도 막습니다.',
   '붉은 기둥들이 어둠 속에 잠겨 보이지 않았다. 토끼는 앞을 바라보았다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"],"forbidLabel":"눈에 기대는 표현","forbidDisplay":["눈","빛","색","시선","모습","그림자","어둠","보다","보이다","바라보다","쳐다보다","살펴보다","밝다","어둡다","붉다","푸르다","하얗다","검다","빛나다","번쩍이다","반짝이다"]}'::jsonb,
   'folktale', 'fantasy', 'planned',
-  3, 'sn-rabbit-hall'
+  3, 'sn-rabbit-hall', false
 where not exists (select 1 from problems p where p.source_key = 'sn-rabbit-hall');
 
 -- sn-siblings-tree (order_no 6, difficulty 3)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'sensory'),
   'convert', 'auto', '나무 위다. 아래는 아무것도 분간되지 않는다. 눈에 기대는 말을 걷어내고 다른 감각으로 다시 쓰시오. 눈·빛·색·시선·시야·모습·얼굴·그림자·어둠·캄캄·깜깜·컴컴·흐릿·뚜렷·선명·투명·반짝·어른어른이 들어간 말은 전부 막습니다. 보다 계열(보이다·바라보다·살펴보다 등), 밝기와 색(밝다·어둡다·붉다·푸르다·하얗다·검다·노랗다·흐리다·훤하다), 빛의 움직임(빛나다·번쩍이다·반짝이다·어른거리다)도 막습니다.',
   '호랑이의 모습이 밑동 쪽에서 어른거렸다. 오누이는 아래를 내려다보았다.', null, '{"maxChars":70,"forbidWords":["눈","빛","색","시선","모습","그림자","어둠","캄캄","깜깜","컴컴","흐릿","뚜렷","얼굴","시야","선명","투명","반짝","어른어른"],"forbidLemmas":["보/VV","보이/VV","바라보/VV","쳐다보/VV","내려다보/VV","올려다보/VV","둘러보/VV","살펴보/VV","띄/VV","비치/VV","빛나/VV","번쩍이/VV","반짝이/VV","어른거리/VV","밝/VA","어둡/VA","붉/VA","푸르/VA","하얗/VA","희/VA","환하/VA","검/VA","노랗/VA","누렇/VA","하얘지/VV","흐리/VA","훤하/VA","훤/XR"],"forbidLabel":"눈에 기대는 표현","forbidDisplay":["눈","빛","색","시선","모습","그림자","어둠","보다","보이다","바라보다","쳐다보다","살펴보다","밝다","어둡다","붉다","푸르다","하얗다","검다","빛나다","번쩍이다","반짝이다"]}'::jsonb,
   'folktale', 'fantasy', 'planned',
-  3, 'sn-siblings-tree'
+  3, 'sn-siblings-tree', false
 where not exists (select 1 from problems p where p.source_key = 'sn-siblings-tree');
 
 -- cc-ace-siren (order_no 7, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'contrast_char'),
   'continue', 'auto', '도현의 겉과 속을 한 장면에 담으시오. 도현은 누구에게나 똑같이 친절해 보이지만, 쉽게 곁을 주지 않는 S급 헌터다. 그가 진짜 마음을 준 사람은 몇 없고, 그 몇 사람 앞에서만 목석 같은 행동도 무너진다. 무전 속 부상자가 바로 그중 하나다. 원문을 읽고 다음에 올 장면을 친절한 겉과 무너지는 속이 둘 다 행동으로 보이게 작성하시오.',
   '레이드 중에 부상자가 나왔다는 무전이 들어왔다. 에이스는 예정된 인터뷰 장소로 이동하는 중이었다.', null, '{"maxChars":100,"minVerbs":3,"forbidLabel":"속마음을 직접 말하는 표현","forbidWords":["걱정","불안","초조"],"forbidDisplay":["걱정","불안","초조"],"forbidPassageCopy":true}'::jsonb,
   'original', 'modern', 'planned',
-  1, 'cc-ace-siren'
+  1, 'cc-ace-siren', false
 where not exists (select 1 from problems p where p.source_key = 'cc-ace-siren');
 
 -- rh-axe-pond (order_no 7, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'rhythm'),
   'convert', 'auto', '한 덩어리로 붙은 글을 끊어 읽히게 다시 쓰시오. 내용은 그대로 두고 줄만 나눕니다. 문장이 길어서 문장 단위로만 끊으면 줄이 넘칩니다. 문장 안에서도 끊으십시오. 7~13줄로 나누고, 한 줄은 18자를 넘기지 마십시오. 같은 줄을 되풀이해 채우지 마십시오. 분량은 111~131자로 유지합니다. 덜어내는 훈련이 아닙니다. ''나무꾼''는 반드시 남깁니다.',
   '나무꾼이 연못가에 주저앉자, 방금까지 흔들리던 물낯이 거짓말처럼 잔잔해져 있었다. 도끼는 이미 바닥까지 가라앉아 어디쯤 놓여 있는지 짐작조차 되지 않았다. 그가 소매를 팔꿈치까지 걷고 진흙 속을 더듬자, 손끝에 단단한 것이 걸렸다. 끌어올린 손바닥에 찬 기운이 오래 남아 있었다.', null, '{"maxChars":131,"maxLines":13,"minChars":111,"minLines":7,"requireAny":["나무꾼"],"maxLineChars":18,"maxDuplicateLines":2}'::jsonb,
   'folktale', 'fantasy', 'planned',
-  1, 'rh-axe-pond'
+  1, 'rh-axe-pond', false
 where not exists (select 1 from problems p where p.source_key = 'rh-axe-pond');
 
 -- rh-heungbu-yard (order_no 7, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'rhythm'),
   'convert', 'auto', '한 덩어리로 붙은 글을 끊어 읽히게 다시 쓰시오. 내용은 그대로 두고 줄만 나눕니다. 문장이 길어서 문장 단위로만 끊으면 줄이 넘칩니다. 문장 안에서도 끊으십시오. 7~13줄로 나누고, 한 줄은 18자를 넘기지 마십시오. 같은 줄을 되풀이해 채우지 마십시오. 분량은 111~131자로 유지합니다. 덜어내는 훈련이 아닙니다. ''제비''는 반드시 남깁니다.',
   '흥부가 마당으로 나서자, 밤새 내린 비에 땅이 질척거리고 있었다. 담장 아래에는 다리가 꺾인 채 깃털이 흠뻑 젖은 제비 한 마리가 떨어져 있었다. 흥부가 조심스럽게 두 손으로 제비를 들어 올리자, 손바닥 위에서 작은 몸이 파르르 떨렸다. 그는 제비를 감쌀 헝겊을 찾으려고 서둘러 방으로 들어갔다.', null, '{"maxChars":131,"maxLines":13,"minChars":111,"minLines":7,"requireAny":["제비"],"maxLineChars":18,"maxDuplicateLines":2}'::jsonb,
   'folktale', 'fantasy', 'planned',
-  1, 'rh-heungbu-yard'
+  1, 'rh-heungbu-yard', false
 where not exists (select 1 from problems p where p.source_key = 'rh-heungbu-yard');
 
 -- rh-kongjwi-jar (order_no 7, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'rhythm'),
   'convert', 'auto', '한 덩어리로 붙은 글을 끊어 읽히게 다시 쓰시오. 내용은 그대로 두고 줄만 나눕니다. 문장이 길어서 문장 단위로만 끊으면 줄이 넘칩니다. 문장 안에서도 끊으십시오. 7~13줄로 나누고, 한 줄은 18자를 넘기지 마십시오. 같은 줄을 되풀이해 채우지 마십시오. 분량은 111~131자로 유지합니다. 덜어내는 훈련이 아닙니다. ''물동이''는 반드시 남깁니다.',
   '콩쥐가 물동이를 내려놓자, 독 바닥에 난 금 사이로 물이 소리 없이 새어 나가고 있었다. 부으면 부은 만큼 빠져나가는데도 마당에는 도와줄 사람이 아무도 없었다. 콩쥐가 손바닥으로 금을 눌러 보았지만, 물은 손가락 사이로 그대로 흘러내렸다. 해가 담장 위로 올라올 무렵 콩쥐는 다시 우물 쪽으로 걸어갔다.', null, '{"maxChars":131,"maxLines":13,"minChars":111,"minLines":7,"requireAny":["물동이"],"maxLineChars":18,"maxDuplicateLines":2}'::jsonb,
   'folktale', 'modern', 'planned',
-  1, 'rh-kongjwi-jar'
+  1, 'rh-kongjwi-jar', false
 where not exists (select 1 from problems p where p.source_key = 'rh-kongjwi-jar');
 
 -- rh-simcheong-deck (order_no 7, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'rhythm'),
   'convert', 'auto', '한 덩어리로 붙은 글을 끊어 읽히게 다시 쓰시오. 내용은 그대로 두고 줄만 나눕니다. 문장이 길어서 문장 단위로만 끊으면 줄이 넘칩니다. 문장 안에서도 끊으십시오. 7~13줄로 나누고, 한 줄은 18자를 넘기지 마십시오. 같은 줄을 되풀이해 채우지 마십시오. 분량은 111~131자로 유지합니다. 덜어내는 훈련이 아닙니다. ''공양미''는 반드시 남깁니다.',
   '심청이 뱃전에 올라서자, 노를 젓던 뱃사람들이 하나둘 손을 멈추었다. 갑판 한쪽에는 아버지의 눈을 뜨게 해 줄 공양미 삼백 석이 그대로 쌓여 있었다. 심청이 아버지의 이름을 한 번 부르고 치마를 걷어쥐자, 바람이 돛을 크게 밀었다. 발밑에서 검은 물결이 소리 없이 갈라지고 있었다.', null, '{"maxChars":131,"maxLines":13,"minChars":111,"minLines":7,"requireAny":["공양미"],"maxLineChars":18,"maxDuplicateLines":2}'::jsonb,
   'folktale', 'modern', 'planned',
-  1, 'rh-simcheong-deck'
+  1, 'rh-simcheong-deck', false
 where not exists (select 1 from problems p where p.source_key = 'rh-simcheong-deck');
 
 -- rh-goblin-club (order_no 7, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'rhythm'),
   'convert', 'auto', '한 덩어리로 붙은 글을 끊어 읽히게 다시 쓰시오. 내용은 그대로 두고 줄만 나눕니다. 문장이 길어서 문장 단위로만 끊으면 줄이 넘칩니다. 문장 안에서도 끊으십시오. 7~13줄로 나누고, 한 줄은 18자를 넘기지 마십시오. 같은 줄을 되풀이해 채우지 마십시오. 분량은 111~131자로 유지합니다. 덜어내는 훈련이 아닙니다. ''방망이''는 반드시 남깁니다.',
   '도깨비들이 마루에 둘러앉아 상 위에 놓인 방망이를 하나씩 돌려 가며 두드리기 시작했다. 방망이가 바닥을 칠 때마다 마루 위로 쌀이 한 무더기씩 쏟아져 내렸다. 기둥 뒤에 몸을 붙인 나무꾼이 숨을 죽이는 사이 발밑에서 마루가 삐걱 소리를 냈다. 도깨비들이 한꺼번에 고개를 돌렸다.', null, '{"maxChars":131,"maxLines":13,"minChars":111,"minLines":7,"requireAny":["방망이"],"maxLineChars":18,"maxDuplicateLines":2}'::jsonb,
   'folktale', 'fantasy', 'impulsive',
-  2, 'rh-goblin-club'
+  2, 'rh-goblin-club', false
 where not exists (select 1 from problems p where p.source_key = 'rh-goblin-club');
 
 -- rh-gyeonu-bridge (order_no 7, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'rhythm'),
   'convert', 'auto', '한 덩어리로 붙은 글을 끊어 읽히게 다시 쓰시오. 내용은 그대로 두고 줄만 나눕니다. 문장이 길어서 문장 단위로만 끊으면 줄이 넘칩니다. 문장 안에서도 끊으십시오. 7~13줄로 나누고, 한 줄은 18자를 넘기지 마십시오. 같은 줄을 되풀이해 채우지 마십시오. 분량은 111~131자로 유지합니다. 덜어내는 훈련이 아닙니다. ''까치들''는 반드시 남깁니다.',
   '견우가 강가에 나와 선 밤에도 물소리는 그치지 않고 밤새 이어졌다. 하늘이 검은 새떼로 뒤덮이더니 까치들이 서로 몸을 이어 강 위에 다리를 놓기 시작했다. 견우가 첫 발을 얹자 다리는 발밑에서 위태롭게 흔들렸지만 그는 걸음을 멈추지 않았다. 발밑에서 깃털 스치는 소리가 계속 올라왔다.', null, '{"maxChars":131,"maxLines":13,"minChars":111,"minLines":7,"requireAny":["까치들"],"maxLineChars":18,"maxDuplicateLines":2}'::jsonb,
   'folktale', 'romance', 'planned',
-  2, 'rh-gyeonu-bridge'
+  2, 'rh-gyeonu-bridge', false
 where not exists (select 1 from problems p where p.source_key = 'rh-gyeonu-bridge');
 
 -- rh-rabbit-gate (order_no 7, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'rhythm'),
   'convert', 'auto', '한 덩어리로 붙은 글을 끊어 읽히게 다시 쓰시오. 내용은 그대로 두고 줄만 나눕니다. 문장이 길어서 문장 단위로만 끊으면 줄이 넘칩니다. 문장 안에서도 끊으십시오. 7~13줄로 나누고, 한 줄은 18자를 넘기지 마십시오. 같은 줄을 되풀이해 채우지 마십시오. 분량은 111~131자로 유지합니다. 덜어내는 훈련이 아닙니다. ''문지기''는 반드시 남깁니다.',
   '토끼가 용궁 문 앞에 서자마자 문지기가 내린 창끝이 목 앞에서 아슬아슬하게 멈추었다. 토끼는 웃음을 거두지 않은 채 오히려 한 걸음을 더 내디뎠다. 안쪽에서 문이 천천히 열리며 복도 끝의 발소리가 점점 가까워졌다. 소매 속에 감춘 주먹만이 저도 모르게 단단히 쥐어지고 있었다.', null, '{"maxChars":131,"maxLines":13,"minChars":111,"minLines":7,"requireAny":["문지기"],"maxLineChars":18,"maxDuplicateLines":2}'::jsonb,
   'folktale', 'martial', 'impulsive',
-  2, 'rh-rabbit-gate'
+  2, 'rh-rabbit-gate', false
 where not exists (select 1 from problems p where p.source_key = 'rh-rabbit-gate');
 
 -- rh-siblings-tree (order_no 7, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'rhythm'),
   'convert', 'auto', '한 덩어리로 붙은 글을 끊어 읽히게 다시 쓰시오. 내용은 그대로 두고 줄만 나눕니다. 문장이 길어서 문장 단위로만 끊으면 줄이 넘칩니다. 문장 안에서도 끊으십시오. 7~13줄로 나누고, 한 줄은 18자를 넘기지 마십시오. 같은 줄을 되풀이해 채우지 마십시오. 분량은 111~131자로 유지합니다. 덜어내는 훈련이 아닙니다. ''오라비''는 반드시 남깁니다.',
   '오누이가 나무 꼭대기까지 올라간 뒤에도 호랑이는 밑동을 긁으며 좀처럼 물러가지 않았다. 가지가 크게 흔들릴 때마다 동생은 울음을 삼키며 오라비의 소매를 붙잡았다. 오라비가 하늘을 향해 두 손을 뻗어 무언가를 빌자 낡은 밧줄 하나가 소리 없이 내려왔다. 두 아이는 그것을 함께 붙잡았다.', null, '{"maxChars":131,"maxLines":13,"minChars":111,"minLines":7,"requireAny":["오라비"],"maxLineChars":18,"maxDuplicateLines":2}'::jsonb,
   'folktale', 'fantasy', 'impulsive',
-  2, 'rh-siblings-tree'
+  2, 'rh-siblings-tree', false
 where not exists (select 1 from problems p where p.source_key = 'rh-siblings-tree');
 
 -- cc-night-shift (order_no 8, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'contrast_char'),
   'continue', 'auto', '유겸의 겉과 속을 한 장면에 담으시오. 유겸은 부잣집에서 나와 제 힘을 시험하러 나선 젊은 용병이다. 이번에는 상단 호위 의뢰를 맡았다. 도련님 소리가 제일 싫어서, 실력을 의심받으면 웃는 얼굴로 제일 험한 일을 자원한다. 원문을 읽고 다음에 올 장면을, 웃는 겉과 이를 무는 속이 둘 다 행동으로 보이게 작성하시오.',
   '밤길 호위 순번을 정하는 자리였다. 가장 험한 새벽 구간은 아무도 맡으려 하지 않았다.', null, '{"maxChars":100,"minVerbs":3,"forbidLabel":"속마음을 직접 말하는 표현","forbidWords":["불안","자존심","증명"],"forbidDisplay":["불안","자존심","증명하다"],"forbidPassageCopy":true}'::jsonb,
   'original', 'martial', 'planned',
-  1, 'cc-night-shift'
+  1, 'cc-night-shift', false
 where not exists (select 1 from problems p where p.source_key = 'cc-night-shift');
 
 -- mo-axe-pond (order_no 8, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'dialogue_ratio'),
   'convert', 'auto', E'대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.\n\n  사공이 노를 놓고 물끄러미 강 건너를 보았다.\n  "오늘은 배를 안 띄우려 하오."\n  ''이 물살이면 반도 못 가서 뒤집힌다.''\n  "삯은 이미 받으셨잖습니까."\n  "받은 것은 내일 돌려드리리다."\n\n원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다.',
   E'산신이 물속에서 금도끼를 건져 올려 나무꾼 앞에 놓았다.\n"네가 빠뜨린 것이 이것이냐."\n"아닙니다. 제 것은 낡은 쇠도끼입니다."\n"그 말이 참이면 셋을 다 가져가거라."', null, '{"maxChars":200,"minChars":75,"requireAny":["쇠도끼"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
   'folktale', 'fantasy', 'planned',
-  1, 'mo-axe-pond'
+  1, 'mo-axe-pond', false
 where not exists (select 1 from problems p where p.source_key = 'mo-axe-pond');
 
 -- mo-heungbu-swallow (order_no 8, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'dialogue_ratio'),
   'convert', 'auto', E'대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.\n\n  사공이 노를 놓고 물끄러미 강 건너를 보았다.\n  "오늘은 배를 안 띄우려 하오."\n  ''이 물살이면 반도 못 가서 뒤집힌다.''\n  "삯은 이미 받으셨잖습니까."\n  "받은 것은 내일 돌려드리리다."\n\n원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다.',
   E'흥부가 마당으로 나서자 담장 아래 제비 한 마리가 떨어져 있었다.\n"다리가 부러졌소. 데려다 거둡시다."\n"아이들 먹일 것도 없어요."\n"그래도 눈앞에서 죽게 둘 수야 없지."', null, '{"maxChars":200,"minChars":75,"requireAny":["제비"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
   'folktale', 'fantasy', 'planned',
-  1, 'mo-heungbu-swallow'
+  1, 'mo-heungbu-swallow', false
 where not exists (select 1 from problems p where p.source_key = 'mo-heungbu-swallow');
 
 -- mo-kongjwi-shoe (order_no 8, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'dialogue_ratio'),
   'convert', 'auto', E'대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.\n\n  사공이 노를 놓고 물끄러미 강 건너를 보았다.\n  "오늘은 배를 안 띄우려 하오."\n  ''이 물살이면 반도 못 가서 뒤집힌다.''\n  "삯은 이미 받으셨잖습니까."\n  "받은 것은 내일 돌려드리리다."\n\n원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다.',
   E'원님이 뜰에 놓인 신 한 짝을 턱으로 가리켰다.\n"저것이 네 것이냐."\n"제 것이 맞습니다."\n"신어 보아라. 발이 맞지 않으면 도둑으로 다스린다."', null, '{"maxChars":200,"minChars":75,"requireAny":["도둑"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
   'folktale', 'modern', 'impulsive',
-  1, 'mo-kongjwi-shoe'
+  1, 'mo-kongjwi-shoe', false
 where not exists (select 1 from problems p where p.source_key = 'mo-kongjwi-shoe');
 
 -- mo-simcheong-rice (order_no 8, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'dialogue_ratio'),
   'convert', 'auto', E'대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.\n\n  사공이 노를 놓고 물끄러미 강 건너를 보았다.\n  "오늘은 배를 안 띄우려 하오."\n  ''이 물살이면 반도 못 가서 뒤집힌다.''\n  "삯은 이미 받으셨잖습니까."\n  "받은 것은 내일 돌려드리리다."\n\n원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다.',
   E'심청이 아버지 앞에 무릎을 접고 앉았다.\n"공양미 삼백 석이면 눈을 뜨신다 합니다."\n"그 많은 쌀을 어디서 구한단 말이냐."\n"이미 마련해 두었으니 묻지 마십시오."', null, '{"maxChars":200,"minChars":75,"requireAny":["공양미"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
   'folktale', 'modern', 'planned',
-  1, 'mo-simcheong-rice'
+  1, 'mo-simcheong-rice', false
 where not exists (select 1 from problems p where p.source_key = 'mo-simcheong-rice');
 
 -- mo-goblin-club (order_no 8, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'dialogue_ratio'),
   'convert', 'auto', E'대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.\n\n  사공이 노를 놓고 물끄러미 강 건너를 보았다.\n  "오늘은 배를 안 띄우려 하오."\n  ''이 물살이면 반도 못 가서 뒤집힌다.''\n  "삯은 이미 받으셨잖습니까."\n  "받은 것은 내일 돌려드리리다."\n\n원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다.',
   E'도깨비들이 방망이를 두드리다 말고 노인 쪽으로 고개를 돌렸다.\n"그 고운 노래가 어디서 나오느냐."\n"이 혹에서 나옵니다."\n"거짓이면 저 방망이로 다스리겠다."', null, '{"maxChars":200,"minChars":75,"requireAny":["방망이"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
   'folktale', 'fantasy', 'impulsive',
-  2, 'mo-goblin-club'
+  2, 'mo-goblin-club', false
 where not exists (select 1 from problems p where p.source_key = 'mo-goblin-club');
 
 -- mo-gyeonu-bridge (order_no 8, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'dialogue_ratio'),
   'convert', 'auto', E'대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.\n\n  사공이 노를 놓고 물끄러미 강 건너를 보았다.\n  "오늘은 배를 안 띄우려 하오."\n  ''이 물살이면 반도 못 가서 뒤집힌다.''\n  "삯은 이미 받으셨잖습니까."\n  "받은 것은 내일 돌려드리리다."\n\n원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다.',
   E'까치들이 은하 위로 몰려들었으나 다리는 좀처럼 이어지지 않았다.\n"올해는 비가 늦게 그쳤습니다."\n"그러면 만날 날이 하루 줄어들겠군요."\n"줄어든 하루는 내년에 갚으면 되오."', null, '{"maxChars":200,"minChars":75,"requireAny":["까치"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
   'folktale', 'romance', 'planned',
-  2, 'mo-gyeonu-bridge'
+  2, 'mo-gyeonu-bridge', false
 where not exists (select 1 from problems p where p.source_key = 'mo-gyeonu-bridge');
 
 -- mo-rabbit-gate (order_no 8, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'dialogue_ratio'),
   'convert', 'auto', E'대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.\n\n  사공이 노를 놓고 물끄러미 강 건너를 보았다.\n  "오늘은 배를 안 띄우려 하오."\n  ''이 물살이면 반도 못 가서 뒤집힌다.''\n  "삯은 이미 받으셨잖습니까."\n  "받은 것은 내일 돌려드리리다."\n\n원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다.',
   E'용왕이 옥좌에서 몸을 앞으로 기울였다.\n"네 간이 어디에 있느냐."\n"뭍에 두고 왔사옵니다."\n"용궁까지 온 놈의 혀를 어찌 믿으시렵니까."', null, '{"maxChars":200,"minChars":75,"requireAny":["용궁"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
   'folktale', 'martial', 'planned',
-  2, 'mo-rabbit-gate'
+  2, 'mo-rabbit-gate', false
 where not exists (select 1 from problems p where p.source_key = 'mo-rabbit-gate');
 
 -- mo-siblings-rope (order_no 8, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'dialogue_ratio'),
   'convert', 'auto', E'대사 사이에 속마음을 한 줄 끼워 넣으시오. 이렇게 됩니다.\n\n  사공이 노를 놓고 물끄러미 강 건너를 보았다.\n  "오늘은 배를 안 띄우려 하오."\n  ''이 물살이면 반도 못 가서 뒤집힌다.''\n  "삯은 이미 받으셨잖습니까."\n  "받은 것은 내일 돌려드리리다."\n\n원래 서술과 대사는 그대로 둡니다. 속마음은 작은따옴표로 감쌉니다.',
   E'문 밖에서 발소리가 멎고 낮은 목소리가 들려왔다.\n"얘들아, 문을 열어라. 밖이 몹시 춥구나."\n"어머니 목소리가 아니야."\n"손을 들이밀어 보라고 해."', null, '{"maxChars":200,"minChars":75,"requireAny":["어머니"],"minSpeeches":3,"minMonologues":1,"maxDuplicateLines":0,"maxLineWordRepeat":6,"maxNarrationLines":3,"minMonologueChars":8,"requireMonologueBetween":true}'::jsonb,
   'folktale', 'fantasy', 'impulsive',
-  2, 'mo-siblings-rope'
+  2, 'mo-siblings-rope', false
 where not exists (select 1 from problems p where p.source_key = 'mo-siblings-rope');
 
 -- cc-junk-dealer (order_no 9, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'contrast_char'),
   'continue', 'auto', '셀라의 겉과 속을 한 장면에 담으시오. 셀라는 저잣거리에서 만물상을 하는 젊은 상인이다. 뭐든 값부터 매기는 차가운 사람이지만, 그 계산은 욕심이 아니다 — 제값을 받아야 물건도 사람도 함부로 다뤄지지 않는다고 믿는다. 원문을 읽고 다음에 올 장면을, 값을 깎아 주지 않는 차가운 겉과 물건을 아끼는 속이 둘 다 행동으로 보이게 작성하시오.',
   '손님이 낡은 은시계 값을 반으로 후려쳤다. 상인은 물건을 도로 거둘 채비를 했다.', null, '{"maxChars":100,"minVerbs":3,"forbidLabel":"속마음을 직접 말하는 표현","forbidWords":["소중","다정"],"forbidDisplay":["소중하다","다정하다"],"forbidPassageCopy":true}'::jsonb,
   'original', 'fantasy', 'planned',
-  1, 'cc-junk-dealer'
+  1, 'cc-junk-dealer', false
 where not exists (select 1 from problems p where p.source_key = 'cc-junk-dealer');
 
 -- pv-broken-gate (order_no 9, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'pov_lock'),
   'convert', 'auto', E'한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.\n\n  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.\n  덕수는 둑 위에 서 있었다.\n\n  ↓\n\n  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.\n  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.\n\n1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
   E'멀찍이 무너진 성문 앞에 병사 열이 창을 세우고 늘어섰고, 깨진 돌이 길을 반쯤 막고 있었다.\n규담은 마른 도랑에 엎드려 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","병사 열이","길을 반쯤 막고"],"requireAny":["규담"]}'::jsonb,
   'original', 'fantasy', 'planned',
-  1, 'pv-broken-gate'
+  1, 'pv-broken-gate', false
 where not exists (select 1 from problems p where p.source_key = 'pv-broken-gate');
 
 -- pv-drill-yard (order_no 9, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'pov_lock'),
   'convert', 'auto', E'한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.\n\n  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.\n  덕수는 둑 위에 서 있었다.\n\n  ↓\n\n  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.\n  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.\n\n1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
   E'저 멀리 연무장에서는 제자 스물이 목검을 휘둘렀고, 흙먼지가 담장 위로 피어올랐다.\n무결은 회랑 기둥에 기대 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","제자 스물","흙먼지가 담장 위로"],"requireAny":["무결"]}'::jsonb,
   'original', 'martial', 'impulsive',
-  1, 'pv-drill-yard'
+  1, 'pv-drill-yard', false
 where not exists (select 1 from problems p where p.source_key = 'pv-drill-yard');
 
 -- pv-guild-desk (order_no 9, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'pov_lock'),
   'convert', 'auto', E'한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.\n\n  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.\n  덕수는 둑 위에 서 있었다.\n\n  ↓\n\n  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.\n  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.\n\n1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
   E'저쪽 길드 사무실에는 모험가 열둘이 모여 있었고, 벽에는 의뢰서가 빼곡히 붙어 있었다.\n하람은 문턱에 서 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","모험가 열둘","의뢰서가 빼곡히"],"requireAny":["하람"]}'::jsonb,
   'original', 'fantasy', 'planned',
-  1, 'pv-guild-desk'
+  1, 'pv-guild-desk', false
 where not exists (select 1 from problems p where p.source_key = 'pv-guild-desk');
 
 -- pv-star-field (order_no 9, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'pov_lock'),
   'convert', 'auto', E'한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.\n\n  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.\n  덕수는 둑 위에 서 있었다.\n\n  ↓\n\n  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.\n  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.\n\n1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
   E'저기 하늘에 별이 떠 있고, 남자 둘 여자 하나가 지나가며 이야기를 나누고 있었다.\n태윤은 담장 아래 서 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","남자 둘 여자 하나","이야기를 나누고"],"requireAny":["태윤"]}'::jsonb,
   'original', 'modern', 'planned',
-  1, 'pv-star-field'
+  1, 'pv-star-field', false
 where not exists (select 1 from problems p where p.source_key = 'pv-star-field');
 
 -- pv-banquet-hall (order_no 9, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'pov_lock'),
   'convert', 'auto', E'한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.\n\n  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.\n  덕수는 둑 위에 서 있었다.\n\n  ↓\n\n  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.\n  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.\n\n1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
   E'저 위 연회장에는 촛대 열둘이 타올랐고, 귀족 예닐곱이 잔을 든 채 낮은 말을 주고받았다.\n유안은 계단 아래 그늘에 서 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","촛대 열둘","귀족 예닐곱이"],"requireAny":["유안"]}'::jsonb,
   'original', 'fantasy', 'planned',
-  2, 'pv-banquet-hall'
+  2, 'pv-banquet-hall', false
 where not exists (select 1 from problems p where p.source_key = 'pv-banquet-hall');
 
 -- pv-dawn-market (order_no 9, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'pov_lock'),
   'convert', 'auto', E'한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.\n\n  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.\n  덕수는 둑 위에 서 있었다.\n\n  ↓\n\n  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.\n  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.\n\n1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
   E'저 앞 시장에는 좌판 여덟이 늘어섰고, 짐꾼 셋이 상자를 나르며 고함을 주고받고 있었다.\n정순은 골목 어귀에 서 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","좌판 여덟","짐꾼 셋이"],"requireAny":["정순"]}'::jsonb,
   'original', 'modern', 'impulsive',
-  2, 'pv-dawn-market'
+  2, 'pv-dawn-market', false
 where not exists (select 1 from problems p where p.source_key = 'pv-dawn-market');
 
 -- pv-frozen-lake (order_no 9, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'pov_lock'),
   'convert', 'auto', E'한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.\n\n  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.\n  덕수는 둑 위에 서 있었다.\n\n  ↓\n\n  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.\n  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.\n\n1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
   E'저기 얼어붙은 호수에는 낚시 구멍 열넷이 뚫려 있었고, 아이 셋이 얼음을 지치며 소리를 질렀다.\n연희는 비탈 위 바위에 앉아 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","낚시 구멍 열넷","아이 셋이"],"requireAny":["연희"]}'::jsonb,
   'original', 'fantasy', 'impulsive',
-  2, 'pv-frozen-lake'
+  2, 'pv-frozen-lake', false
 where not exists (select 1 from problems p where p.source_key = 'pv-frozen-lake');
 
 -- pv-lantern-night (order_no 9, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'pov_lock'),
   'convert', 'auto', E'한 사람의 눈에 든 것만 남기고 다시 쓰시오. 이렇게 됩니다.\n\n  저 앞 나루에는 배 세 척이 묶여 있었고, 사공 둘이 그물을 손질하고 있었다.\n  덕수는 둑 위에 서 있었다.\n\n  ↓\n\n  덕수가 둑을 내려서자 젖은 밧줄 냄새가 먼저 올라왔다.\n  발치에서 물이 뱃전을 두드렸고, 등 뒤에서 그물 터는 소리가 났다.\n\n1인칭으로 바꾸지 않습니다. 그 사람이 못 본 것은 쓰지 않습니다.',
   E'저 너머 강가에는 등불 스무 개가 떠갔고, 다리 위에서 연인 넷이 난간에 기대 웃고 있었다.\n소하는 버드나무 그늘에 서 있었다.', null, '{"minChars":20,"maxChars":130,"forbidWords":["저기","저쪽","저 멀리","저 너머","저 위","저 앞","멀찍이","등불 스무 개","연인 넷이"],"requireAny":["소하"]}'::jsonb,
   'original', 'romance', 'planned',
-  2, 'pv-lantern-night'
+  2, 'pv-lantern-night', false
 where not exists (select 1 from problems p where p.source_key = 'pv-lantern-night');
 
 -- ar-cracked-ice (order_no 10, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'action_reason'),
   'fill', 'auto', E'고정된 줄 사이에 뚫린 빈칸을 채우시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  사내는 앞서 오른쪽 다리를 절뚝였습니다.\n\n  사내가 어깨를 들이밀며 다가왔다.\n  ①\n  덕수는 왼발을 반 보 뒤로 뺐다.\n  ②\n  덕수의 발이 사내의 절뚝인 걸음을 걸어 넘겼다.\n\n  ↓\n\n  ①  주먹을 쥐어 봐야 힘에서 진다. 덕수는 다른 것을 보기로 했다.\n  ②  사내는 걸음마다 오른쪽이 반 박자 늦었다. 덕수는 그것을 세 번 세었다.\n\n빈칸마다 한 문장에서 두 문장으로 씁니다.\n앞뒤 줄을 그대로 옮겨 적지 않습니다.\n무엇을 했는지가 아니라 왜 그렇게 했는지를 씁니다.\n[상황]·[복선]·[결정타]는 힌트일 뿐이고, 답에 그 대괄호를 쓰지 않습니다.',
   E'[상황] 도경이 얼어붙은 강을 건너다 늑대 무리에 둘러싸인다. 강 한가운데는 물살이 빨라 얼음이 얇고 색이 검다. 도경은 그 자리를 지나왔다. 늑대는 여섯이고, 무리로 붙어 몰아붙인다.\n[복선] 지나오며 발밑에서 들은 금 가는 소리\n[결정타] 갈라진 얼음\n\n늑대 여섯이 원을 좁혀 왔다.\n①\n도경은 강 한가운데로 물러섰다.\n②\n갈라진 얼음이 늑대를 삼켰다.', null, '{"blanks":[{"key":"①","label":"도경이 물러설 곳을 어떻게 골랐는지","minSentences":1,"maxSentences":2,"maxChars":60},{"key":"②","label":"늑대가 왜 따라 들어왔는지","minSentences":1,"maxSentences":2,"maxChars":60}],"forbidWords":["[상황]","[복선]","[결정타]"],"forbidCopyOfFixedLines":true,"fixedLines":["늑대 여섯이 원을 좁혀 왔다.","도경은 강 한가운데로 물러섰다.","갈라진 얼음이 늑대를 삼켰다."]}'::jsonb,
   'original', 'fantasy', 'impulsive',
-  1, 'ar-cracked-ice'
+  1, 'ar-cracked-ice', false
 where not exists (select 1 from problems p where p.source_key = 'ar-cracked-ice');
 
 -- ar-dragon-jaw (order_no 10, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'action_reason'),
   'fill', 'auto', E'고정된 줄 사이에 뚫린 빈칸을 채우시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  사내는 앞서 오른쪽 다리를 절뚝였습니다.\n\n  사내가 어깨를 들이밀며 다가왔다.\n  ①\n  덕수는 왼발을 반 보 뒤로 뺐다.\n  ②\n  덕수의 발이 사내의 절뚝인 걸음을 걸어 넘겼다.\n\n  ↓\n\n  ①  주먹을 쥐어 봐야 힘에서 진다. 덕수는 다른 것을 보기로 했다.\n  ②  사내는 걸음마다 오른쪽이 반 박자 늦었다. 덕수는 그것을 세 번 세었다.\n\n빈칸마다 한 문장에서 두 문장으로 씁니다.\n앞뒤 줄을 그대로 옮겨 적지 않습니다.\n무엇을 했는지가 아니라 왜 그렇게 했는지를 씁니다.\n[상황]·[복선]·[결정타]는 힌트일 뿐이고, 답에 그 대괄호를 쓰지 않습니다.',
   E'[상황] 각성자 태윤이 던전에서 용의 형상을 한 괴물과 마주친다. 괴물은 크고 팔이 길어 정면에서는 닿지 않는다. 태윤의 각성 등급으로는 한 방을 제대로 넣어야 끝난다.\n[복선] 괴물이 팔을 휘두를 때마다 턱이 앞으로 나오는 것\n[결정타] 턱\n\n괴물이 팔을 휘두르며 덮쳐 왔다.\n①\n태윤은 고개를 숙여 그 아래로 들어갔다.\n②\n주먹이 괴물의 턱에 꽂혔다.', null, '{"blanks":[{"key":"①","label":"태윤이 이 순간 무엇을 하는지","minSentences":1,"maxSentences":2,"maxChars":60,"optional":true},{"key":"②","label":"태윤이 무엇을 보고 턱을 노렸는지","minSentences":1,"maxSentences":2,"maxChars":60}],"forbidWords":["[상황]","[복선]","[결정타]"],"forbidCopyOfFixedLines":true,"fixedLines":["괴물이 팔을 휘두르며 덮쳐 왔다.","태윤은 고개를 숙여 그 아래로 들어갔다.","주먹이 괴물의 턱에 꽂혔다."]}'::jsonb,
   'original', 'modern', 'planned',
-  1, 'ar-dragon-jaw'
+  1, 'ar-dragon-jaw', false
 where not exists (select 1 from problems p where p.source_key = 'ar-dragon-jaw');
 
 -- ar-dull-blade (order_no 10, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'action_reason'),
   'fill', 'auto', E'고정된 줄 사이에 뚫린 빈칸을 채우시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  사내는 앞서 오른쪽 다리를 절뚝였습니다.\n\n  사내가 어깨를 들이밀며 다가왔다.\n  ①\n  덕수는 왼발을 반 보 뒤로 뺐다.\n  ②\n  덕수의 발이 사내의 절뚝인 걸음을 걸어 넘겼다.\n\n  ↓\n\n  ①  주먹을 쥐어 봐야 힘에서 진다. 덕수는 다른 것을 보기로 했다.\n  ②  사내는 걸음마다 오른쪽이 반 박자 늦었다. 덕수는 그것을 세 번 세었다.\n\n빈칸마다 한 문장에서 두 문장으로 씁니다.\n앞뒤 줄을 그대로 옮겨 적지 않습니다.\n무엇을 했는지가 아니라 왜 그렇게 했는지를 씁니다.\n[상황]·[복선]·[결정타]는 힌트일 뿐이고, 답에 그 대괄호를 쓰지 않습니다.',
   E'[상황] 무결이 사부와 대련한다. 사부는 중검을 쓴다. 빠르지 않고 무겁기만 한 검이다. 무결은 그 느린 검을 막을 수 있다고 생각했다.\n[복선] 막을 수 있다는 생각\n[결정타] 목젖 — 사부의 검이 닿는다\n\n중검의 묘리를 담은 칼이 천천히 위에서 아래로 떨어졌다.\n①\n무결은 검을 들어 받아쳤다.\n②\n사부의 검이 무결의 목젖 위에 있었다.', null, '{"blanks":[{"key":"①","label":"무결이 무엇을 하기로 했는지","minSentences":1,"maxSentences":2,"maxChars":60},{"key":"②","label":"받아친 뒤에 무엇이 일어났는지","minSentences":1,"maxSentences":2,"maxChars":60}],"forbidWords":["[상황]","[복선]","[결정타]"],"forbidCopyOfFixedLines":true,"fixedLines":["중검의 묘리를 담은 칼이 천천히 위에서 아래로 떨어졌다.","무결은 검을 들어 받아쳤다.","사부의 검이 무결의 목젖 위에 있었다."]}'::jsonb,
   'original', 'martial', 'planned',
-  1, 'ar-dull-blade'
+  1, 'ar-dull-blade', false
 where not exists (select 1 from problems p where p.source_key = 'ar-dull-blade');
 
 -- ar-left-feeler (order_no 10, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'action_reason'),
   'fill', 'auto', E'고정된 줄 사이에 뚫린 빈칸을 채우시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  사내는 앞서 오른쪽 다리를 절뚝였습니다.\n\n  사내가 어깨를 들이밀며 다가왔다.\n  ①\n  덕수는 왼발을 반 보 뒤로 뺐다.\n  ②\n  덕수의 발이 사내의 절뚝인 걸음을 걸어 넘겼다.\n\n  ↓\n\n  ①  주먹을 쥐어 봐야 힘에서 진다. 덕수는 다른 것을 보기로 했다.\n  ②  사내는 걸음마다 오른쪽이 반 박자 늦었다. 덕수는 그것을 세 번 세었다.\n\n빈칸마다 한 문장에서 두 문장으로 씁니다.\n앞뒤 줄을 그대로 옮겨 적지 않습니다.\n무엇을 했는지가 아니라 왜 그렇게 했는지를 씁니다.\n[상황]·[복선]·[결정타]는 힌트일 뿐이고, 답에 그 대괄호를 쓰지 않습니다.',
   E'[상황] 연희가 좁은 갱도에서 마수와 마주친다. 갱도는 등불 하나뿐이라 어둡다. 마수는 눈이 퇴화했고 머리 양옆의 더듬이로 공기의 흔들림을 읽는다. 연희는 광부라 그 짐승을 안다.\n[복선] 앞서 마수가 오른쪽 벽만 훑고 지나간 것\n[결정타] 곡괭이로 잘라 낸 왼쪽 더듬이\n\n마수가 머리를 흔들며 갱도를 좁혀 왔다.\n①\n연희는 등불을 오른쪽 벽으로 던졌다.\n②\n곡괭이가 왼쪽 더듬이를 잘라 냈다.', null, '{"blanks":[{"key":"①","label":"연희가 어느 쪽으로 붙을지 어떻게 정했는지","minSentences":1,"maxSentences":2,"maxChars":60},{"key":"②","label":"등불을 던진 것이 무엇을 만들었는지","minSentences":1,"maxSentences":2,"maxChars":60}],"forbidWords":["[상황]","[복선]","[결정타]"],"forbidCopyOfFixedLines":true,"fixedLines":["마수가 머리를 흔들며 갱도를 좁혀 왔다.","연희는 등불을 오른쪽 벽으로 던졌다.","곡괭이가 왼쪽 더듬이를 잘라 냈다."]}'::jsonb,
   'original', 'fantasy', 'impulsive',
-  1, 'ar-left-feeler'
+  1, 'ar-left-feeler', false
 where not exists (select 1 from problems p where p.source_key = 'ar-left-feeler');
 
 -- at-cracked-ice (order_no 10, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'action_turn'),
   'convert', 'auto', E'빌드업 세 줄 뒤에 결정타 한 줄을 쓰시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  결정타로 쓸 것은 사내가 앞서 절뚝인 걸음입니다.\n\n  ↓\n\n  덕수는 주먹을 쥐지 않았다.\n  사내가 걸음을 옮길 때마다 오른쪽이 반 박자 늦었다.\n  덕수는 그것을 세 번 세었다.\n  덕수의 발이 그 절뚝인 걸음을 걸어 넘겼다.\n\n네 줄로 씁니다. [결정타] 요소는 마지막 줄에 옵니다.\n동작을 낱낱이 늘어놓지 않습니다.\n무엇을 했는지보다 왜 그렇게 했는지가 빌드업입니다.',
   E'[상황] 도경이 얼어붙은 강 위에서 늑대 무리에 둘러싸인다.\n[결정타] 발밑에서 갈라진 얼음', null, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["갈라진 얼음"],"requireInLastLine":["갈라진 얼음"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb,
   'original', 'fantasy', 'impulsive',
-  1, 'at-cracked-ice'
+  1, 'at-cracked-ice', false
 where not exists (select 1 from problems p where p.source_key = 'at-cracked-ice');
 
 -- at-left-feeler (order_no 10, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'action_turn'),
   'convert', 'auto', E'빌드업 세 줄 뒤에 결정타 한 줄을 쓰시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  결정타로 쓸 것은 사내가 앞서 절뚝인 걸음입니다.\n\n  ↓\n\n  덕수는 주먹을 쥐지 않았다.\n  사내가 걸음을 옮길 때마다 오른쪽이 반 박자 늦었다.\n  덕수는 그것을 세 번 세었다.\n  덕수의 발이 그 절뚝인 걸음을 걸어 넘겼다.\n\n네 줄로 씁니다. [결정타] 요소는 마지막 줄에 옵니다.\n동작을 낱낱이 늘어놓지 않습니다.\n무엇을 했는지보다 왜 그렇게 했는지가 빌드업입니다.',
   E'[상황] 연희가 좁은 갱도에서 마수와 갑자기 마주친다.\n[결정타] 움직임을 읽는 마수의 왼쪽 더듬이', null, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["왼쪽 더듬이"],"requireInLastLine":["왼쪽 더듬이"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb,
   'original', 'fantasy', 'impulsive',
-  1, 'at-left-feeler'
+  1, 'at-left-feeler', false
 where not exists (select 1 from problems p where p.source_key = 'at-left-feeler');
 
 -- at-left-feint (order_no 10, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'action_turn'),
   'convert', 'auto', E'빌드업 세 줄 뒤에 결정타 한 줄을 쓰시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  결정타로 쓸 것은 사내가 앞서 절뚝인 걸음입니다.\n\n  ↓\n\n  덕수는 주먹을 쥐지 않았다.\n  사내가 걸음을 옮길 때마다 오른쪽이 반 박자 늦었다.\n  덕수는 그것을 세 번 세었다.\n  덕수의 발이 그 절뚝인 걸음을 걸어 넘겼다.\n\n네 줄로 씁니다. [결정타] 요소는 마지막 줄에 옵니다.\n동작을 낱낱이 늘어놓지 않습니다.\n무엇을 했는지보다 왜 그렇게 했는지가 빌드업입니다.',
   E'[상황] 태윤이 자신보다 머리 하나 큰 상대와 맞붙는다.\n[결정타] 상대가 앞서 한 번 보인 왼발 페인트', null, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["왼발 페인트"],"requireInLastLine":["왼발 페인트"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb,
   'original', 'modern', 'planned',
-  1, 'at-left-feint'
+  1, 'at-left-feint', false
 where not exists (select 1 from problems p where p.source_key = 'at-left-feint');
 
 -- at-look-back (order_no 10, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'action_turn'),
   'convert', 'auto', E'빌드업 세 줄 뒤에 결정타 한 줄을 쓰시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  결정타로 쓸 것은 사내가 앞서 절뚝인 걸음입니다.\n\n  ↓\n\n  덕수는 주먹을 쥐지 않았다.\n  사내가 걸음을 옮길 때마다 오른쪽이 반 박자 늦었다.\n  덕수는 그것을 세 번 세었다.\n  덕수의 발이 그 절뚝인 걸음을 걸어 넘겼다.\n\n네 줄로 씁니다. [결정타] 요소는 마지막 줄에 옵니다.\n동작을 낱낱이 늘어놓지 않습니다.\n무엇을 했는지보다 왜 그렇게 했는지가 빌드업입니다.',
   E'[상황] 수하가 저승 문턱에서 자신을 돌려보내려는 문지기와 마주 선다.\n[결정타] 뒤를 돌아보지 않겠다는 말', null, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["돌아보지 않겠다"],"requireInLastLine":["돌아보지 않겠다"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb,
   'original', 'romance', 'planned',
-  1, 'at-look-back'
+  1, 'at-look-back', false
 where not exists (select 1 from problems p where p.source_key = 'at-look-back');
 
 -- ar-bell-rope (order_no 10, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'action_reason'),
   'fill', 'auto', E'고정된 줄 사이에 뚫린 빈칸을 채우시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  사내는 앞서 오른쪽 다리를 절뚝였습니다.\n\n  사내가 어깨를 들이밀며 다가왔다.\n  ①\n  덕수는 왼발을 반 보 뒤로 뺐다.\n  ②\n  덕수의 발이 사내의 절뚝인 걸음을 걸어 넘겼다.\n\n  ↓\n\n  ①  주먹을 쥐어 봐야 힘에서 진다. 덕수는 다른 것을 보기로 했다.\n  ②  사내는 걸음마다 오른쪽이 반 박자 늦었다. 덕수는 그것을 세 번 세었다.\n\n빈칸마다 한 문장에서 두 문장으로 씁니다.\n앞뒤 줄을 그대로 옮겨 적지 않습니다.\n무엇을 했는지가 아니라 왜 그렇게 했는지를 씁니다.\n[상황]·[복선]·[결정타]는 힌트일 뿐이고, 답에 그 대괄호를 쓰지 않습니다.',
   E'[상황] 서린이 종탑 꼭대기에서 추격자와 마주 선다. 추격자의 이마에는 검은 표식이 있다. 누이를 죽인 자다. 이 마을에는 오래된 설화가 있다. 종이 울리면 마을의 수호신이 내려와 성 안의 부정한 것을 거둔다. 서린과 누이는 어릴 적부터 그 종탑에 공물을 올렸다. 아무도 그 설화를 믿지 않는다. 서린도 믿지 않았다.\n[복선] 누이와 함께 종탑에 공물을 올리던 일\n[결정타] 종줄\n\n추격자가 등 뒤로 바짝 쫓아오고 있다.\n①\n칼끝이 서린의 볼을 스치고 벽에 부딪쳤다.\n②\n서린은 뒤로 물러서며 막다른 벽에 등을 붙였다.\n③\n종줄이 당겨지고 종이 울렸다.', null, '{"blanks":[{"key":"①","label":"서린이 이 순간 무엇을 하는지","minSentences":1,"maxSentences":3,"maxChars":60},{"key":"②","label":"볼을 베인 서린이 무엇을 느끼거나 깨닫는지","minSentences":1,"maxSentences":3,"maxChars":60},{"key":"③","label":"서린의 손이 무엇에 닿았는지","minSentences":1,"maxSentences":3,"maxChars":60}],"forbidWords":["[상황]","[복선]","[결정타]"],"forbidCopyOfFixedLines":true,"fixedLines":["추격자가 등 뒤로 바짝 쫓아오고 있다.","칼끝이 서린의 볼을 스치고 벽에 부딪쳤다.","서린은 뒤로 물러서며 막다른 벽에 등을 붙였다.","종줄이 당겨지고 종이 울렸다."]}'::jsonb,
   'original', 'fantasy', 'impulsive',
-  2, 'ar-bell-rope'
+  2, 'ar-bell-rope', false
 where not exists (select 1 from problems p where p.source_key = 'ar-bell-rope');
 
 -- ar-broken-gate (order_no 10, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'action_reason'),
   'fill', 'auto', E'고정된 줄 사이에 뚫린 빈칸을 채우시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  사내는 앞서 오른쪽 다리를 절뚝였습니다.\n\n  사내가 어깨를 들이밀며 다가왔다.\n  ①\n  덕수는 왼발을 반 보 뒤로 뺐다.\n  ②\n  덕수의 발이 사내의 절뚝인 걸음을 걸어 넘겼다.\n\n  ↓\n\n  ①  주먹을 쥐어 봐야 힘에서 진다. 덕수는 다른 것을 보기로 했다.\n  ②  사내는 걸음마다 오른쪽이 반 박자 늦었다. 덕수는 그것을 세 번 세었다.\n\n빈칸마다 한 문장에서 두 문장으로 씁니다.\n앞뒤 줄을 그대로 옮겨 적지 않습니다.\n무엇을 했는지가 아니라 왜 그렇게 했는지를 씁니다.\n[상황]·[복선]·[결정타]는 힌트일 뿐이고, 답에 그 대괄호를 쓰지 않습니다.',
   E'[상황] 세연이 무너진 성문 아래서 마수와 마주친다. 그 마수가 지나간 자리에는 번개 모양 자국이 남는다. 작년 동생의 시신 옆 나무에도 그 자국이 있었다. 세연은 숲 어귀에서 같은 자국을 찾아 사흘을 따라 들어왔다.\n[복선] 사흘을 따라온 번개 모양 자국\n[결정타] 목 — 비늘 사이의 역린\n\n마수의 앞발이 세연을 성문 잔해로 밀어붙였다.\n①\n세연은 부러진 창끝을 두 손으로 고쳐 쥐었다.\n마수가 몸을 낮추고 머리를 들이밀었다.\n②\n창끝이 마수의 목을 찔렀다.', null, '{"blanks":[{"key":"①","label":"세연이 이 순간 무엇을 하는지","minSentences":1,"maxSentences":2,"maxChars":60,"optional":true},{"key":"②","label":"세연이 무엇을 보고 목을 노리기로 했는지","minSentences":1,"maxSentences":2,"maxChars":60}],"forbidWords":["[상황]","[복선]","[결정타]"],"forbidCopyOfFixedLines":true,"fixedLines":["마수의 앞발이 세연을 성문 잔해로 밀어붙였다.","세연은 부러진 창끝을 두 손으로 고쳐 쥐었다.","마수가 몸을 낮추고 머리를 들이밀었다.","창끝이 마수의 목을 찔렀다."]}'::jsonb,
   'original', 'martial', 'planned',
-  2, 'ar-broken-gate'
+  2, 'ar-broken-gate', false
 where not exists (select 1 from problems p where p.source_key = 'ar-broken-gate');
 
 -- ar-left-draw (order_no 10, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'action_reason'),
   'fill', 'auto', E'고정된 줄 사이에 뚫린 빈칸을 채우시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  사내는 앞서 오른쪽 다리를 절뚝였습니다.\n\n  사내가 어깨를 들이밀며 다가왔다.\n  ①\n  덕수는 왼발을 반 보 뒤로 뺐다.\n  ②\n  덕수의 발이 사내의 절뚝인 걸음을 걸어 넘겼다.\n\n  ↓\n\n  ①  주먹을 쥐어 봐야 힘에서 진다. 덕수는 다른 것을 보기로 했다.\n  ②  사내는 걸음마다 오른쪽이 반 박자 늦었다. 덕수는 그것을 세 번 세었다.\n\n빈칸마다 한 문장에서 두 문장으로 씁니다.\n앞뒤 줄을 그대로 옮겨 적지 않습니다.\n무엇을 했는지가 아니라 왜 그렇게 했는지를 씁니다.\n[상황]·[복선]·[결정타]는 힌트일 뿐이고, 답에 그 대괄호를 쓰지 않습니다.',
   E'[상황] 무결이 저번 싸움에서 자신을 벤 상대와 다시 마주한다. 그때 오른팔 힘줄이 끊겼다. 검은 왼손에 있다. 상대도 그것을 안다.\n[복선] 힘이 안 들어가는 오른팔\n[결정타] 왼손이 목을 찌른다\n\n상대가 무결의 오른쪽으로 크게 돌아 들어왔다.\n①\n무결은 오른팔을 들어 올렸다.\n②\n왼손의 검이 상대의 목으로 들어갔다.', null, '{"blanks":[{"key":"①","label":"무결이 오른쪽으로 도는 상대를 보고 무엇을 생각하는지","minSentences":1,"maxSentences":2,"maxChars":60},{"key":"②","label":"오른팔이 이 순간 무엇을 하는지","minSentences":1,"maxSentences":2,"maxChars":60}],"forbidWords":["[상황]","[복선]","[결정타]"],"forbidCopyOfFixedLines":true,"fixedLines":["상대가 무결의 오른쪽으로 크게 돌아 들어왔다.","무결은 오른팔을 들어 올렸다.","왼손의 검이 상대의 목으로 들어갔다."]}'::jsonb,
   'original', 'martial', 'planned',
-  2, 'ar-left-draw'
+  2, 'ar-left-draw', false
 where not exists (select 1 from problems p where p.source_key = 'ar-left-draw');
 
 -- ar-wind-gate (order_no 10, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'action_reason'),
   'fill', 'auto', E'고정된 줄 사이에 뚫린 빈칸을 채우시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  사내는 앞서 오른쪽 다리를 절뚝였습니다.\n\n  사내가 어깨를 들이밀며 다가왔다.\n  ①\n  덕수는 왼발을 반 보 뒤로 뺐다.\n  ②\n  덕수의 발이 사내의 절뚝인 걸음을 걸어 넘겼다.\n\n  ↓\n\n  ①  주먹을 쥐어 봐야 힘에서 진다. 덕수는 다른 것을 보기로 했다.\n  ②  사내는 걸음마다 오른쪽이 반 박자 늦었다. 덕수는 그것을 세 번 세었다.\n\n빈칸마다 한 문장에서 두 문장으로 씁니다.\n앞뒤 줄을 그대로 옮겨 적지 않습니다.\n무엇을 했는지가 아니라 왜 그렇게 했는지를 씁니다.\n[상황]·[복선]·[결정타]는 힌트일 뿐이고, 답에 그 대괄호를 쓰지 않습니다.',
   E'[상황] 마법사 연희가 아군이 밀리는 전장에 선다. 적은 성문 뒤에 진을 치고 화살을 쏟아붓는다. 성문을 뚫지 못하면 아군이 오늘 안에 무너진다.\n[복선] 적의 진형이 성문 앞에 몰려 있는 것\n[결정타] 성문\n\n화살이 아군 머리 위로 쏟아졌다.\n①\n바람의 칼날이 적의 진형을 갈랐다.\n②\n압축한 바람이 성문을 뚫었다.', null, '{"blanks":[{"key":"①","label":"연희가 먼저 무엇을 했는지","minSentences":1,"maxSentences":2,"maxChars":60},{"key":"②","label":"진형이 무너진 것이 무엇을 만들었는지","minSentences":1,"maxSentences":2,"maxChars":60}],"forbidWords":["[상황]","[복선]","[결정타]"],"forbidCopyOfFixedLines":true,"fixedLines":["화살이 아군 머리 위로 쏟아졌다.","바람의 칼날이 적의 진형을 갈랐다.","압축한 바람이 성문을 뚫었다."]}'::jsonb,
   'original', 'fantasy', 'planned',
-  2, 'ar-wind-gate'
+  2, 'ar-wind-gate', false
 where not exists (select 1 from problems p where p.source_key = 'ar-wind-gate');
 
 -- at-bell-rope (order_no 10, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'action_turn'),
   'convert', 'auto', E'빌드업 세 줄 뒤에 결정타 한 줄을 쓰시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  앞서 깔린 것은 지난겨울 덕수의 짐을 엎은 손입니다.\n  결정타로 쓸 것은 사내가 앞서 절뚝인 걸음입니다.\n\n  ↓\n\n  덕수는 그 손을 알아보았다. 지난겨울 자기 짐을 엎은 손이었다.\n  사내는 걸음마다 오른쪽이 반 박자 늦었다.\n  덕수는 그것을 세 번 세었다.\n  덕수의 발이 그 절뚝인 걸음을 걸어 넘겼다.\n\n네 줄로 씁니다. [결정타] 요소는 마지막 줄에, [복선]은 그 앞 어딘가에 옵니다.\n동작을 낱낱이 늘어놓지 않습니다.\n이 싸움을 왜 봐야 하는지가 [복선]에 있습니다.',
   E'[상황] 서린이 종탑 꼭대기에서 추격자와 마주 선다.\n[복선] 추격자가 죽인 누이\n[결정타] 마지막 층의 종줄', null, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["종줄"],"requireInLastLine":["종줄"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb,
   'original', 'fantasy', 'planned',
-  2, 'at-bell-rope'
+  2, 'at-bell-rope', false
 where not exists (select 1 from problems p where p.source_key = 'at-bell-rope');
 
 -- at-broken-gate (order_no 10, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'action_turn'),
   'convert', 'auto', E'빌드업 세 줄 뒤에 결정타 한 줄을 쓰시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  앞서 깔린 것은 지난겨울 덕수의 짐을 엎은 손입니다.\n  결정타로 쓸 것은 사내가 앞서 절뚝인 걸음입니다.\n\n  ↓\n\n  덕수는 그 손을 알아보았다. 지난겨울 자기 짐을 엎은 손이었다.\n  사내는 걸음마다 오른쪽이 반 박자 늦었다.\n  덕수는 그것을 세 번 세었다.\n  덕수의 발이 그 절뚝인 걸음을 걸어 넘겼다.\n\n네 줄로 씁니다. [결정타] 요소는 마지막 줄에, [복선]은 그 앞 어딘가에 옵니다.\n동작을 낱낱이 늘어놓지 않습니다.\n이 싸움을 왜 봐야 하는지가 [복선]에 있습니다.',
   E'[상황] 세연이 무너진 성문 아래서 마수와 갑자기 마주친다.\n[복선] 작년에 동생을 문 이빨\n[결정타] 잔해에서 주운 부러진 창끝', null, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["창끝"],"requireInLastLine":["창끝"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb,
   'original', 'fantasy', 'impulsive',
-  2, 'at-broken-gate'
+  2, 'at-broken-gate', false
 where not exists (select 1 from problems p where p.source_key = 'at-broken-gate');
 
 -- at-edit-log (order_no 10, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'action_turn'),
   'convert', 'auto', E'빌드업 세 줄 뒤에 결정타 한 줄을 쓰시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  앞서 깔린 것은 지난겨울 덕수의 짐을 엎은 손입니다.\n  결정타로 쓸 것은 사내가 앞서 절뚝인 걸음입니다.\n\n  ↓\n\n  덕수는 그 손을 알아보았다. 지난겨울 자기 짐을 엎은 손이었다.\n  사내는 걸음마다 오른쪽이 반 박자 늦었다.\n  덕수는 그것을 세 번 세었다.\n  덕수의 발이 그 절뚝인 걸음을 걸어 넘겼다.\n\n네 줄로 씁니다. [결정타] 요소는 마지막 줄에, [복선]은 그 앞 어딘가에 옵니다.\n동작을 낱낱이 늘어놓지 않습니다.\n이 싸움을 왜 봐야 하는지가 [복선]에 있습니다.',
   E'[상황] 민재가 기획안을 가로챈 팀장과 마주 앉는다.\n[복선] 회의 전에 공유해 둔 초안\n[결정타] 초안에 남은 수정 기록', null, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["수정 기록"],"requireInLastLine":["수정 기록"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb,
   'original', 'modern', 'planned',
-  2, 'at-edit-log'
+  2, 'at-edit-log', false
 where not exists (select 1 from problems p where p.source_key = 'at-edit-log');
 
 -- at-left-draw (order_no 10, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'action_turn'),
   'convert', 'auto', E'빌드업 세 줄 뒤에 결정타 한 줄을 쓰시오. 이렇게 됩니다.\n\n  덕수가 장터에서 자신을 밀친 사내와 맞붙습니다.\n  앞서 깔린 것은 지난겨울 덕수의 짐을 엎은 손입니다.\n  결정타로 쓸 것은 사내가 앞서 절뚝인 걸음입니다.\n\n  ↓\n\n  덕수는 그 손을 알아보았다. 지난겨울 자기 짐을 엎은 손이었다.\n  사내는 걸음마다 오른쪽이 반 박자 늦었다.\n  덕수는 그것을 세 번 세었다.\n  덕수의 발이 그 절뚝인 걸음을 걸어 넘겼다.\n\n네 줄로 씁니다. [결정타] 요소는 마지막 줄에, [복선]은 그 앞 어딘가에 옵니다.\n동작을 낱낱이 늘어놓지 않습니다.\n이 싸움을 왜 봐야 하는지가 [복선]에 있습니다.',
   E'[상황] 무결이 지난달 자신을 벤 상대와 다시 마주한다.\n[복선] 그때 부러진 오른팔\n[결정타] 한 달을 감춘 왼손 발도', null, '{"minLines":4,"maxLines":4,"maxLineChars":30,"requireAny":["왼손 발도"],"requireInLastLine":["왼손 발도"],"forbidWords":["[상황]","[복선]","[결정타]"]}'::jsonb,
   'original', 'martial', 'planned',
-  2, 'at-left-draw'
+  2, 'at-left-draw', false
 where not exists (select 1 from problems p where p.source_key = 'at-left-draw');
 
 -- cc-flash-crowd (order_no 10, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'contrast_char'),
   'continue', 'auto', '군중과 한시우를 갈라 세우시오. 한시우는 재능 대신 훈련량으로 버티는 B급 헌터다. 카메라보다 다음 훈련이 급한 사람이다. 원문을 읽고 다음에 올 장면을, 모두가 몰려가는 쪽과 한시우가 가는 쪽이 갈라지게 작성하시오.',
   '게이트 공략이 끝나고 취재진이 몰려들었다. 헌터들이 카메라 앞으로 모여들었다.', null, '{"maxChars":100,"minVerbs":3,"requireAny":["한시우","시우"],"forbidPassageCopy":true}'::jsonb,
   'original', 'modern', 'planned',
-  2, 'cc-flash-crowd'
+  2, 'cc-flash-crowd', false
 where not exists (select 1 from problems p where p.source_key = 'cc-flash-crowd');
 
 -- ch-village-approval (order_no 14, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'off_track'),
   'choice', 'auto', '이 장면의 목적은 ''주인공이 마을 사람들에게 처음으로 인정받는 것''이다. 목적에 기여하지 않는 문장을 고르시오.',
   null, '["촌장이 지팡이를 내려놓고 그에게 자리를 내주었다.","이 마을은 삼백 년 전 소금 장수들이 터를 잡으며 생겨났다.","뒷줄에 섰던 아이들이 앞으로 몰려나와 그의 소매를 잡았다.","우물가에 모인 아낙들이 서로를 돌아보며 고개를 끄덕였다."]'::jsonb, '{}'::jsonb,
   'original', 'fantasy', 'planned',
-  1, 'ch-village-approval'
+  1, 'ch-village-approval', false
 where not exists (select 1 from problems p where p.source_key = 'ch-village-approval');
 
 -- ch-cursed-sword (order_no 14, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'off_track'),
   'choice', 'auto', '이 장면의 목적은 ''주인공이 이 검이 위험하다는 것을 알아채는 것''이다. 목적에 기여하지 않는 문장을 고르시오.',
   null, '["검을 쥔 손등의 핏줄이 검은빛으로 부풀었다.","앞서 이 검을 들었던 자들의 이름이 칼자루에 새겨져 있었다.","무기점 주인은 사흘 전 아들을 장에 보냈다고 했다.","검을 내려놓자 손끝의 저림이 그대로 남았다."]'::jsonb, '{}'::jsonb,
   'original', 'martial', 'planned',
-  2, 'ch-cursed-sword'
+  2, 'ch-cursed-sword', false
 where not exists (select 1 from problems p where p.source_key = 'ch-cursed-sword');
 
 -- ch-misunderstanding (order_no 14, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'off_track'),
   'choice', 'auto', '이 장면의 목적은 ''두 사람이 서로를 오해하게 만드는 것''이다. 목적에 기여하지 않는 문장을 고르시오.',
   null, '["그가 문을 나서는 순간 그녀가 뒤돌아 다른 이름을 불렀다.","편지는 봉투째 서랍에 들어갔고 그는 그것을 보지 못했다.","창밖에는 사흘째 눈이 내려 처마 끝에 고드름이 자랐다.","그녀는 대답을 기다렸지만 그는 이미 계단을 내려가고 있었다."]'::jsonb, '{}'::jsonb,
   'original', 'romance', 'planned',
-  2, 'ch-misunderstanding'
+  2, 'ch-misunderstanding', false
 where not exists (select 1 from problems p where p.source_key = 'ch-misunderstanding');
 
 -- ch-sinking-ship (order_no 14, difficulty 3)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'off_track'),
   'choice', 'auto', '이 장면의 목적은 ''독자에게 주인공의 배가 곧 침몰한다는 예감을 주는 것''이다. 목적에 기여하지 않는 문장을 고르시오.',
   null, '["갑판 아래에서 나무가 갈라지는 소리가 두 번 울렸다.","선장은 아무 말 없이 나침반을 주머니에 넣었다.","항구를 떠나던 날 아침에는 갈매기가 유난히 많았다.","선원들이 서로의 눈을 피하며 밧줄 쪽으로 움직였다."]'::jsonb, '{}'::jsonb,
   'original', 'modern', 'planned',
-  3, 'ch-sinking-ship'
+  3, 'ch-sinking-ship', false
 where not exists (select 1 from problems p where p.source_key = 'ch-sinking-ship');
 
 -- od-mountain-sword (order_no 17, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'reverse_design'),
   'order', 'auto', '결말에서 거꾸로 짚어 순서를 세우시오. 맨 위가 최종 목표, 아래로 갈수록 먼저 일어나는 일이다.',
   null, null, '{"cards":["노인의 잃어버린 소를 찾아준다","산신에게 검을 받는다","장터에서 소 발자국을 알아본다","산신의 사당 위치를 노인에게 듣는다"]}'::jsonb,
   'original', 'fantasy', 'planned',
-  1, 'od-mountain-sword'
+  1, 'od-mountain-sword', false
 where not exists (select 1 from problems p where p.source_key = 'od-mountain-sword');
 
 -- od-apology (order_no 17, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'reverse_design'),
   'order', 'auto', '결말에서 거꾸로 짚어 순서를 세우시오.',
   null, null, '{"cards":["그녀의 빈 책상을 본다","출근길에 그녀의 우산을 챙긴다","그가 먼저 사과한다","그녀가 떠났다는 것을 알게 된다"]}'::jsonb,
   'original', 'romance', 'planned',
-  2, 'od-apology'
+  2, 'od-apology', false
 where not exists (select 1 from problems p where p.source_key = 'od-apology');
 
 -- od-open-gate (order_no 17, difficulty 3)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'reverse_design'),
   'order', 'auto', '결말에서 거꾸로 짚어 순서를 세우시오. 각 단계는 다음 단계의 조건이 되어야 한다.',
   null, null, '{"cards":["전날 밤 주방 아이를 도와준다","보초의 교대 시각을 안다","성문을 안에서 연다","주방 심부름꾼으로 들어간다"]}'::jsonb,
   'original', 'modern', 'planned',
-  3, 'od-open-gate'
+  3, 'od-open-gate', false
 where not exists (select 1 from problems p where p.source_key = 'od-open-gate');
 
 -- cg-lightning-sword (order_no 19, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'genre_coinage'),
   'coinage', 'auto', '번개를 다루는 검법의 이름을 셋 지으시오. 조건: 각 두 자에서 넉 자, 서로 다른 글자로 시작할 것. 한 줄에 하나씩.',
   '무협의 이름은 자연현상과 움직임을 한자어로 붙여 만든다. 뇌·풍·염에 류·격·참을 붙이는 식이다.', null, '{"count":3,"maxLen":4,"minLen":2,"distinctInitial":true}'::jsonb,
   'original', 'martial', 'planned',
-  1, 'cg-lightning-sword'
+  1, 'cg-lightning-sword', false
 where not exists (select 1 from problems p where p.source_key = 'cg-lightning-sword');
 
 -- cg-ice-magic (order_no 19, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'genre_coinage'),
   'coinage', 'auto', '얼음을 다루는 마법의 이름을 셋 지으시오. 조건: 각 세 자에서 여섯 자, 서로 다른 글자로 시작할 것.',
   '정통 판타지는 외래어 음차나 속성과 현상을 붙이는 구조를 쓴다. 등급은 숫자로, 이름은 현상으로 부른다.', null, '{"count":3,"maxLen":6,"minLen":3,"distinctInitial":true}'::jsonb,
   'original', 'fantasy', 'planned',
-  2, 'cg-ice-magic'
+  2, 'cg-ice-magic', false
 where not exists (select 1 from problems p where p.source_key = 'cg-ice-magic');
 
 -- cn-romance-70 (order_no 20, difficulty 1)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'branch_estimate'),
   'count', 'auto', '현대 로맨스 70화 분량을 목표로 한다. 분기점 개수와 첫 분기점까지 걸리는 화수를 정하시오.',
   '반드시 일어나야 하는 핵심 사건을 분기점이라 한다. 분기점 개수와 도달 화수를 곱하면 전체 분량이 나온다.', null, '{"op":"multiply","inputs":[{"key":"branchCount","max":15,"min":3,"label":"분기점 개수"},{"key":"chaptersToFirst","max":40,"min":5,"label":"첫 분기점까지 화수"}]}'::jsonb,
   'original', 'romance', 'planned',
-  1, 'cn-romance-70'
+  1, 'cn-romance-70', false
 where not exists (select 1 from problems p where p.source_key = 'cn-romance-70');
 
 -- cn-fantasy-200 (order_no 20, difficulty 2)
 insert into problems
   (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,
-   source_tag, genre_tag, tone_tag, difficulty, source_key)
+   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)
 select
   (select id from stages where skill_key = 'branch_estimate'),
   'count', 'auto', '남성향 장편 200화 분량을 목표로 한다. 분기점 개수와 첫 분기점까지 걸리는 화수를 정하시오.',
   '분량이 커지면 분기점 사이 간격도 길어진다. 첫 분기점이 너무 늦으면 초반 이탈이 생긴다.', null, '{"op":"multiply","inputs":[{"key":"branchCount","max":15,"min":3,"label":"분기점 개수"},{"key":"chaptersToFirst","max":40,"min":5,"label":"첫 분기점까지 화수"}]}'::jsonb,
   'original', 'fantasy', 'planned',
-  2, 'cn-fantasy-200'
+  2, 'cn-fantasy-200', false
 where not exists (select 1 from problems p where p.source_key = 'cn-fantasy-200');
 
 -- ── 정답 ────────────────────────────────────────────────────────────

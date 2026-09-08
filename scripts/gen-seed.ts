@@ -53,6 +53,9 @@ interface DumpProblem {
   instruction: string
   scoring_mode: string
   scoring_config: Record<string, unknown>
+  // 미검토 문항 표시(세션 53). 덤프의 초기값은 전부 false — 박 님이 DB 에서
+  // 직접 눈으로 본 문항만 true 로 올린다(이 파이프라인을 거치지 않는다).
+  reviewed: boolean
 }
 
 interface DumpAnswer {
@@ -269,13 +272,13 @@ for (const p of problemsSorted) {
   out.push(
     'insert into problems',
     '  (stage_id, type, scoring_mode, instruction, passage, choices, scoring_config,',
-    '   source_tag, genre_tag, tone_tag, difficulty, source_key)',
+    '   source_tag, genre_tag, tone_tag, difficulty, source_key, reviewed)',
     'select',
     `  (select id from stages where skill_key = ${sqlStr(p.skill_key)}),`,
     `  ${sqlStr(p.type)}, ${sqlStr(p.scoring_mode)}, ${sqlStr(p.instruction)},`,
     `  ${sqlStr(p.passage)}, ${sqlJsonb(p.choices)}, ${sqlJsonb(p.scoring_config)},`,
     `  ${sqlStr(p.source_tag)}, ${sqlStr(p.genre_tag)}, ${sqlStr(p.tone_tag)},`,
-    `  ${sqlInt(p.difficulty)}, ${sqlStr(p.source_key)}`,
+    `  ${sqlInt(p.difficulty)}, ${sqlStr(p.source_key)}, ${sqlBool(p.reviewed)}`,
     `where not exists (select 1 from problems p where p.source_key = ${sqlStr(p.source_key)});`,
     ''
   )
@@ -537,6 +540,10 @@ checkOut.push(
   'end $$;',
   '',
   'drop table expect;',
+  '',
+  '-- 미검토 문항 건수(세션 53). reviewed 가 전부 false 인 동안은 참고용 —',
+  '-- 박 님이 검토 표시를 올리기 시작하면 이 수가 갈린다.',
+  'select reviewed, count(*) from problems group by 1;',
   '',
   "select '덤프 ↔ DB 대조 통과' as 결과, count(*) as 문항수 from problems;",
   ''

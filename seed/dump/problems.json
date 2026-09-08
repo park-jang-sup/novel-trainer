@@ -18,7 +18,8 @@
       "maxRepeat": 2,
       "maxAdverbs": 1,
       "maxModifiers": 1
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "remove",
@@ -39,7 +40,8 @@
       "maxRepeat": 2,
       "maxAdverbs": 1,
       "maxModifiers": 2
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "remove",
@@ -60,7 +62,8 @@
       "maxRepeat": 2,
       "maxAdverbs": 1,
       "maxModifiers": 2
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "remove",
@@ -81,7 +84,8 @@
       "maxRepeat": 2,
       "maxAdverbs": 1,
       "maxModifiers": 1
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "remove",
@@ -102,7 +106,8 @@
       "maxRepeat": 2,
       "maxAdverbs": 1,
       "maxModifiers": 1
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "remove",
@@ -123,7 +128,8 @@
       "maxRepeat": 2,
       "maxAdverbs": 1,
       "maxModifiers": 1
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "remove",
@@ -144,7 +150,8 @@
       "maxRepeat": 2,
       "maxAdverbs": 1,
       "maxModifiers": 1
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "remove",
@@ -165,7 +172,8 @@
       "maxRepeat": 2,
       "maxAdverbs": 1,
       "maxModifiers": 2
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "choice",
@@ -185,7 +193,8 @@
     "source_tag": "original",
     "instruction": "이 장면의 목적은 '주인공이 마을 사람들에게 처음으로 인정받는 것'이다. 목적에 기여하지 않는 문장을 고르시오.",
     "scoring_mode": "auto",
-    "scoring_config": {}
+    "scoring_config": {},
+    "reviewed": false
   },
   {
     "type": "choice",
@@ -205,7 +214,8 @@
     "source_tag": "original",
     "instruction": "이 장면의 목적은 '주인공이 이 검이 위험하다는 것을 알아채는 것'이다. 목적에 기여하지 않는 문장을 고르시오.",
     "scoring_mode": "auto",
-    "scoring_config": {}
+    "scoring_config": {},
+    "reviewed": false
   },
   {
     "type": "choice",
@@ -225,7 +235,8 @@
     "source_tag": "original",
     "instruction": "이 장면의 목적은 '두 사람이 서로를 오해하게 만드는 것'이다. 목적에 기여하지 않는 문장을 고르시오.",
     "scoring_mode": "auto",
-    "scoring_config": {}
+    "scoring_config": {},
+    "reviewed": false
   },
   {
     "type": "choice",
@@ -245,7 +256,8 @@
     "source_tag": "original",
     "instruction": "이 장면의 목적은 '독자에게 주인공의 배가 곧 침몰한다는 예감을 주는 것'이다. 목적에 기여하지 않는 문장을 고르시오.",
     "scoring_mode": "auto",
-    "scoring_config": {}
+    "scoring_config": {},
+    "reviewed": false
   },
   {
     "type": "order",
@@ -267,7 +279,8 @@
         "장터에서 소 발자국을 알아본다",
         "산신의 사당 위치를 노인에게 듣는다"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "order",
@@ -289,7 +302,8 @@
         "그가 먼저 사과한다",
         "그녀가 떠났다는 것을 알게 된다"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "order",
@@ -311,7 +325,8 @@
         "성문을 안에서 연다",
         "주방 심부름꾼으로 들어간다"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "coinage",
@@ -331,7 +346,8 @@
       "maxLen": 4,
       "minLen": 2,
       "distinctInitial": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "coinage",
@@ -351,7 +367,8 @@
       "maxLen": 6,
       "minLen": 3,
       "distinctInitial": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -391,7 +408,8 @@
         "좋다",
         "즐거워하다"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -428,7 +446,8 @@
         "떨다",
         "공포"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -471,7 +490,8 @@
         "격분",
         "노여워하다"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -511,7 +531,8 @@
         "비참하다",
         "원망"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -551,7 +572,8 @@
         "사무치다",
         "애틋하다"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -586,7 +608,8 @@
         "민망하다",
         "수치스럽다"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "count",
@@ -617,7 +640,8 @@
           "label": "첫 분기점까지 화수"
         }
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "count",
@@ -648,7 +672,8 @@
           "label": "첫 분기점까지 화수"
         }
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "remove",
@@ -667,7 +692,8 @@
       "maxChars": 42,
       "minVerbs": 3,
       "maxRepeat": 2
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "remove",
@@ -686,7 +712,8 @@
       "maxChars": 41,
       "minVerbs": 3,
       "maxRepeat": 2
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "remove",
@@ -705,7 +732,8 @@
       "maxChars": 39,
       "minVerbs": 3,
       "maxRepeat": 2
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "remove",
@@ -724,7 +752,8 @@
       "maxChars": 35,
       "minVerbs": 2,
       "maxRepeat": 2
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "remove",
@@ -743,7 +772,8 @@
       "maxChars": 38,
       "minVerbs": 2,
       "maxRepeat": 2
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "remove",
@@ -762,7 +792,8 @@
       "maxChars": 36,
       "minVerbs": 3,
       "maxRepeat": 2
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "remove",
@@ -781,7 +812,8 @@
       "maxChars": 38,
       "minVerbs": 2,
       "maxRepeat": 2
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "remove",
@@ -800,7 +832,8 @@
       "maxChars": 45,
       "minVerbs": 3,
       "maxRepeat": 2
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "remove",
@@ -833,7 +866,8 @@
           "max": 1
         }
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "remove",
@@ -862,7 +896,8 @@
           "max": 1
         }
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "remove",
@@ -891,7 +926,8 @@
           "max": 2
         }
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "remove",
@@ -920,7 +956,8 @@
           "max": 2
         }
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "remove",
@@ -945,7 +982,8 @@
           "max": 2
         }
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "remove",
@@ -974,7 +1012,8 @@
           "max": 2
         }
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "remove",
@@ -1003,7 +1042,8 @@
           "max": 2
         }
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "remove",
@@ -1032,7 +1072,8 @@
           "max": 1
         }
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "choice",
@@ -1052,7 +1093,8 @@
     "source_tag": "folktale",
     "instruction": "뒤 문장의 부사가 앞 문장 덕분에 값을 얻는 것을 고르시오. 부사가 없거나, 부사가 앞에서 혼자 일하고 있으면 답이 아니다.",
     "scoring_mode": "auto",
-    "scoring_config": {}
+    "scoring_config": {},
+    "reviewed": false
   },
   {
     "type": "choice",
@@ -1072,7 +1114,8 @@
     "source_tag": "folktale",
     "instruction": "뒤 문장의 부사가 앞 문장 덕분에 값을 얻는 것을 고르시오. 부사가 없거나, 부사가 앞에서 혼자 일하고 있으면 답이 아니다.",
     "scoring_mode": "auto",
-    "scoring_config": {}
+    "scoring_config": {},
+    "reviewed": false
   },
   {
     "type": "choice",
@@ -1092,7 +1135,8 @@
     "source_tag": "folktale",
     "instruction": "부사가 동사에 얹혀 제 일을 하는 것을 고르시오. 부사가 없거나, 동사가 이미 품은 뜻을 되풀이하거나, 동사 대신 감정을 서술하고 있으면 답이 아니다.",
     "scoring_mode": "auto",
-    "scoring_config": {}
+    "scoring_config": {},
+    "reviewed": false
   },
   {
     "type": "choice",
@@ -1112,7 +1156,8 @@
     "source_tag": "folktale",
     "instruction": "한 장면에 부사를 하나만 쓴다. 값이 가장 큰 자리에 놓은 것을 고르시오.",
     "scoring_mode": "auto",
-    "scoring_config": {}
+    "scoring_config": {},
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -1203,7 +1248,8 @@
         "번쩍이다",
         "반짝이다"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -1294,7 +1340,8 @@
         "번쩍이다",
         "반짝이다"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -1385,7 +1432,8 @@
         "번쩍이다",
         "반짝이다"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -1476,7 +1524,8 @@
         "번쩍이다",
         "반짝이다"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -1567,7 +1616,8 @@
         "번쩍이다",
         "반짝이다"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -1658,7 +1708,8 @@
         "번쩍이다",
         "반짝이다"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -1749,7 +1800,8 @@
         "번쩍이다",
         "반짝이다"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -1840,7 +1892,8 @@
         "번쩍이다",
         "반짝이다"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -1865,7 +1918,8 @@
       ],
       "maxLineChars": 18,
       "maxDuplicateLines": 2
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -1890,7 +1944,8 @@
       ],
       "maxLineChars": 18,
       "maxDuplicateLines": 2
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -1915,7 +1970,8 @@
       ],
       "maxLineChars": 18,
       "maxDuplicateLines": 2
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -1940,7 +1996,8 @@
       ],
       "maxLineChars": 18,
       "maxDuplicateLines": 2
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -1965,7 +2022,8 @@
       ],
       "maxLineChars": 18,
       "maxDuplicateLines": 2
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -1990,7 +2048,8 @@
       ],
       "maxLineChars": 18,
       "maxDuplicateLines": 2
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -2015,7 +2074,8 @@
       ],
       "maxLineChars": 18,
       "maxDuplicateLines": 2
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -2040,7 +2100,8 @@
       ],
       "maxLineChars": 18,
       "maxDuplicateLines": 2
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -2068,7 +2129,8 @@
       "maxNarrationLines": 3,
       "minMonologueChars": 8,
       "requireMonologueBetween": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -2096,7 +2158,8 @@
       "maxNarrationLines": 3,
       "minMonologueChars": 8,
       "requireMonologueBetween": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -2124,7 +2187,8 @@
       "maxNarrationLines": 3,
       "minMonologueChars": 8,
       "requireMonologueBetween": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -2152,7 +2216,8 @@
       "maxNarrationLines": 3,
       "minMonologueChars": 8,
       "requireMonologueBetween": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -2180,7 +2245,8 @@
       "maxNarrationLines": 3,
       "minMonologueChars": 8,
       "requireMonologueBetween": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -2208,7 +2274,8 @@
       "maxNarrationLines": 3,
       "minMonologueChars": 8,
       "requireMonologueBetween": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -2236,7 +2303,8 @@
       "maxNarrationLines": 3,
       "minMonologueChars": 8,
       "requireMonologueBetween": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -2264,7 +2332,8 @@
       "maxNarrationLines": 3,
       "minMonologueChars": 8,
       "requireMonologueBetween": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -2296,7 +2365,8 @@
       "requireAny": [
         "태윤"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -2328,7 +2398,8 @@
       "requireAny": [
         "하람"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -2360,7 +2431,8 @@
       "requireAny": [
         "정순"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -2392,7 +2464,8 @@
       "requireAny": [
         "무결"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -2424,7 +2497,8 @@
       "requireAny": [
         "소하"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -2456,7 +2530,8 @@
       "requireAny": [
         "유안"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -2488,7 +2563,8 @@
       "requireAny": [
         "규담"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -2520,7 +2596,8 @@
       "requireAny": [
         "연희"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -2550,7 +2627,8 @@
         "[복선]",
         "[결정타]"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -2580,7 +2658,8 @@
         "[복선]",
         "[결정타]"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -2610,7 +2689,8 @@
         "[복선]",
         "[결정타]"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -2640,7 +2720,8 @@
         "[복선]",
         "[결정타]"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -2670,7 +2751,8 @@
         "[복선]",
         "[결정타]"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -2700,7 +2782,8 @@
         "[복선]",
         "[결정타]"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -2730,7 +2813,8 @@
         "[복선]",
         "[결정타]"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -2760,7 +2844,8 @@
         "[복선]",
         "[결정타]"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "fill",
@@ -2798,7 +2883,8 @@
         "[결정타]"
       ],
       "forbidCopyOfFixedLines": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "fill",
@@ -2836,7 +2922,8 @@
         "[결정타]"
       ],
       "forbidCopyOfFixedLines": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "fill",
@@ -2875,7 +2962,8 @@
         "[결정타]"
       ],
       "forbidCopyOfFixedLines": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "fill",
@@ -2913,7 +3001,8 @@
         "[결정타]"
       ],
       "forbidCopyOfFixedLines": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "fill",
@@ -2951,7 +3040,8 @@
         "[결정타]"
       ],
       "forbidCopyOfFixedLines": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "fill",
@@ -2990,7 +3080,8 @@
         "[결정타]"
       ],
       "forbidCopyOfFixedLines": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "fill",
@@ -3035,7 +3126,8 @@
         "[결정타]"
       ],
       "forbidCopyOfFixedLines": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "fill",
@@ -3073,7 +3165,8 @@
         "[결정타]"
       ],
       "forbidCopyOfFixedLines": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "choice",
@@ -3093,7 +3186,8 @@
     "source_tag": "original",
     "instruction": "주인공은 최약체에서 회귀한 헌터 강도윤이다. 1화의 첫 문장으로, 독자를 주인공에게 붙드는 것을 고르시오.",
     "scoring_mode": "auto",
-    "scoring_config": {}
+    "scoring_config": {},
+    "reviewed": false
   },
   {
     "type": "choice",
@@ -3113,7 +3207,8 @@
     "source_tag": "original",
     "instruction": "주인공은 하룻밤에 멸문한 가문의 소년 진운이다. 1화의 첫 문장으로, 독자를 주인공에게 붙드는 것을 고르시오.",
     "scoring_mode": "auto",
-    "scoring_config": {}
+    "scoring_config": {},
+    "reviewed": false
   },
   {
     "type": "choice",
@@ -3133,7 +3228,8 @@
     "source_tag": "original",
     "instruction": "주인공은 결혼식 한 달 전 파혼을 통보받은 하은수다. 1화의 첫 문장으로, 독자를 주인공에게 붙드는 것을 고르시오.",
     "scoring_mode": "auto",
-    "scoring_config": {}
+    "scoring_config": {},
+    "reviewed": false
   },
   {
     "type": "choice",
@@ -3153,7 +3249,8 @@
     "source_tag": "original",
     "instruction": "주인공은 소설 속 처형당하는 악녀 카리엘의 몸에서 깨어났다. 1화의 첫 문장으로, 독자를 주인공에게 붙드는 것을 고르시오.",
     "scoring_mode": "auto",
-    "scoring_config": {}
+    "scoring_config": {},
+    "reviewed": false
   },
   {
     "type": "choice",
@@ -3173,7 +3270,8 @@
     "source_tag": "original",
     "instruction": "주인공 이재하는 자신이 만든 게임 속 중간보스의 몸에서 깨어났다. 1화의 첫 문장으로, 독자를 주인공에게 붙드는 것을 고르시오.",
     "scoring_mode": "auto",
-    "scoring_config": {}
+    "scoring_config": {},
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -3222,7 +3320,8 @@
         "강도윤",
         "도윤"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -3270,7 +3369,8 @@
       "requireAny": [
         "진운"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -3319,7 +3419,8 @@
         "하은수",
         "은수"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -3369,7 +3470,8 @@
       "requireAny": [
         "카리엘"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -3416,7 +3518,8 @@
         "이재하",
         "재하"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -3438,7 +3541,8 @@
         "강도윤",
         "도윤"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -3459,7 +3563,8 @@
       "requireAny": [
         "진운"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -3481,7 +3586,8 @@
         "하은수",
         "은수"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -3502,7 +3608,8 @@
       "requireAny": [
         "에스텔"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -3524,7 +3631,8 @@
         "서준혁",
         "준혁"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -3558,7 +3666,8 @@
         "하준"
       ],
       "forbidPassageCopy": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -3596,7 +3705,8 @@
         "소민"
       ],
       "forbidPassageCopy": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -3629,7 +3739,8 @@
         "조평"
       ],
       "forbidPassageCopy": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -3666,7 +3777,8 @@
         "시우"
       ],
       "forbidPassageCopy": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -3697,7 +3809,8 @@
         "리안"
       ],
       "forbidPassageCopy": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -3719,7 +3832,8 @@
         "김하준",
         "서담"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -3741,7 +3855,8 @@
         "윤소민",
         "하늘"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -3764,7 +3879,8 @@
         "유겸"
       ],
       "forbidPassageCopy": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -3786,7 +3902,8 @@
         "한시우",
         "도현"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -3808,7 +3925,8 @@
         "리안",
         "셀라"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -3839,7 +3957,8 @@
         "뿌듯하다"
       ],
       "forbidPassageCopy": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -3869,7 +3988,8 @@
         "초조"
       ],
       "forbidPassageCopy": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -3899,7 +4019,8 @@
         "증명하다"
       ],
       "forbidPassageCopy": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -3927,7 +4048,8 @@
         "다정하다"
       ],
       "forbidPassageCopy": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -3950,7 +4072,8 @@
         "시우"
       ],
       "forbidPassageCopy": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -3988,7 +4111,8 @@
         "배려하다"
       ],
       "forbidPassageCopy": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -4030,7 +4154,8 @@
         "친절하다"
       ],
       "forbidPassageCopy": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -4074,7 +4199,8 @@
         "원망하다"
       ],
       "forbidPassageCopy": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -4118,7 +4244,8 @@
         "마음에 들다"
       ],
       "forbidPassageCopy": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -4151,7 +4278,8 @@
         "눈치채지 못했다",
         "훗날"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -4189,7 +4317,8 @@
         "독"
       ],
       "forbidPassageCopy": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -4235,7 +4364,8 @@
         "알고 보니"
       ],
       "forbidPassageCopy": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -4271,7 +4401,8 @@
         "용의자"
       ],
       "forbidPassageCopy": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -4315,7 +4446,8 @@
         "해명하다"
       ],
       "forbidPassageCopy": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -4359,7 +4491,8 @@
         "해명하다"
       ],
       "forbidPassageCopy": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -4395,7 +4528,8 @@
         "운명"
       ],
       "ai_shadow": ["signal"]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -4432,7 +4566,8 @@
       ],
       "forbidPassageCopy": true,
       "ai_shadow": ["signal"]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -4469,7 +4604,8 @@
       ],
       "forbidPassageCopy": true,
       "ai_shadow": ["signal"]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -4507,7 +4643,8 @@
         "몰랐다"
       ],
       "forbidPassageCopy": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -4544,7 +4681,8 @@
       ],
       "forbidPassageCopy": true,
       "ai_shadow": ["signal"]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -4580,7 +4718,8 @@
         "프롤로그",
         "오래전부터"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -4623,7 +4762,8 @@
         "배려하다",
         "불쌍하다"
       ]
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -4659,7 +4799,8 @@
       ],
       "forbidPassageCopy": true,
       "passageCopyKeep": 3
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -4697,7 +4838,8 @@
         "오래전부터"
       ],
       "forbidPassageCopy": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -4735,7 +4877,8 @@
         "오래전부터"
       ],
       "forbidPassageCopy": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -4790,8 +4933,9 @@
       ],
       "forbidPassageCopy": true,
       "ai_shadow": ["support", "tell"],
-      "ai_hint_material": "강태는 오른손만 쓰고, 주먹을 크게 돌린다."
-    }
+      "ai_hint_material": "주먹은 뻗는 동안 그쪽 몸이 열린 채로 있다.\n열리는 자리는 뻗은 팔이 지나간 아래쪽이고, 주먹이 돌아오기 전까지 그대로 있다."
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -4847,7 +4991,8 @@
       "forbidPassageCopy": true,
       "ai_shadow": ["support", "tell"],
       "ai_hint_material": "창은 뒷손이 밀어야 찌르기가 나가고, 앞손이 창대를 감아쥐어야 후리기가 나간다.\n찌르기는 곧아서 반 뼘만 틀면 창끝이 몸을 스쳐 지나가고, 후리기는 둥글어서 원 안쪽이 가장 느리다."
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -4902,8 +5047,9 @@
       ],
       "forbidPassageCopy": true,
       "ai_shadow": ["support", "tell"],
-      "ai_hint_material": "도끼는 내려찍은 뒤 뽑는 데 한 호흡이 걸린다."
-    }
+      "ai_hint_material": "도끼는 내려찍은 뒤 뽑는 데 한 호흡이 걸린다.\n그 한 호흡은 도끼가 어딘가에 박혀야 생기고, 빗나간 도끼는 땅에 박힌다."
+    },
+    "reviewed": false
   },
   {
     "type": "convert",
@@ -4959,8 +5105,9 @@
       "forbidPassageCopy": true,
       "passageCopyKeep": 1,
       "ai_shadow": ["support", "tell"],
-      "ai_hint_material": "카엘은 같은 자리에 서서 같은 주문을 되풀이한다."
-    }
+      "ai_hint_material": "화염구는 빚는 데 시간이 걸리고, 빚는 동안 카엘의 두 손은 그 자리에 묶인다.\n막을 때마다 방패는 타들어 가지만 카엘은 한 발도 물러서지 않는다."
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -5016,7 +5163,8 @@
       "forbidPassageCopy": true,
       "ai_shadow": ["support", "tell"],
       "ai_hint_material": "하단 자세는 보통 올려 베기의 준비 자세로 읽힌다."
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -5052,7 +5200,8 @@
         "운명"
       ],
       "forbidPassageCopy": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -5088,7 +5237,8 @@
         "운명"
       ],
       "forbidPassageCopy": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -5124,7 +5274,8 @@
         "운명"
       ],
       "forbidPassageCopy": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -5164,7 +5315,8 @@
         "사랑"
       ],
       "forbidPassageCopy": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "continue",
@@ -5200,7 +5352,8 @@
         "운명"
       ],
       "forbidPassageCopy": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "fill",
@@ -5265,7 +5418,8 @@
         "프롤로그"
       ],
       "forbidCopyOfFixedLines": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "fill",
@@ -5330,7 +5484,8 @@
         "프롤로그"
       ],
       "forbidCopyOfFixedLines": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "fill",
@@ -5395,7 +5550,8 @@
         "프롤로그"
       ],
       "forbidCopyOfFixedLines": true
-    }
+    },
+    "reviewed": false
   },
   {
     "type": "fill",
@@ -5460,6 +5616,7 @@
         "프롤로그"
       ],
       "forbidCopyOfFixedLines": true
-    }
+    },
+    "reviewed": false
   }
 ]

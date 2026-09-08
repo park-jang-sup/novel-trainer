@@ -7529,6 +7529,48 @@ console.log('\n[9단계 pov_lock: 지시문 가드]')
   )
 }
 
+// ── problems.reviewed(세션 53) — 미검토 문항 표시. **전체 157건 전부**에
+//    붙는다(활성·비활성 안 가린다 — "박 님이 봤는가"는 활성 여부와 다른
+//    축이다). 초기값은 전부 false — 세션 이력으로 추정하지 않는다.
+console.log('\n[problems.reviewed: 미검토 문항 표시 — 전체 157건]')
+{
+  interface RvProblem { source_key: string; reviewed?: boolean }
+  const rvDumpPath = path.join(__dirname, '..', '..', 'seed', 'dump', 'problems.json')
+  const rvProblems: RvProblem[] = JSON.parse(readFileSync(rvDumpPath, 'utf8').replace(/^﻿/, ''))
+  t('problems.json: 전체 157건 전부 reviewed 필드가 있다(boolean)',
+    rvProblems.length === 157 && rvProblems.every((p) => typeof p.reviewed === 'boolean'),
+    `실제=${rvProblems.length}, boolean 아님=${JSON.stringify(rvProblems.filter((p) => typeof p.reviewed !== 'boolean').map((p) => p.source_key))}`)
+  t('problems.json: reviewed 초기값이 전부 false 다(세션 이력으로 추정하지 않는다)',
+    rvProblems.every((p) => p.reviewed === false),
+    JSON.stringify(rvProblems.filter((p) => p.reviewed !== false).map((p) => p.source_key)))
+
+  // seed_data.sql·seed_check.sql — gen-seed.ts 가 reviewed 를 insert·집계에 실었는가.
+  const seedDataSrc = readFileSync(path.join(__dirname, '..', '..', 'seed_data.sql'), 'utf8')
+  const reviewedColumnCount = (seedDataSrc.match(/source_key, reviewed\)/g) ?? []).length
+  t(`seed_data.sql: insert 컬럼 목록에 reviewed 가 문항 수만큼(157) 있다`,
+    reviewedColumnCount === 157, `실제=${reviewedColumnCount}`)
+  const seedCheckSrc = readFileSync(path.join(__dirname, '..', '..', 'seed_check.sql'), 'utf8')
+  t("seed_check.sql: 미검토 건수 집계가 있다(select reviewed, count(*) from problems group by 1)",
+    seedCheckSrc.includes('select reviewed, count(*) from problems group by 1;'))
+  t('seed_check.sql: 미검토 건수 집계가 마지막 select(통과 메시지) 보다 앞에 온다(그것만 화면에 보여야 한다)',
+    seedCheckSrc.indexOf('select reviewed, count(*) from problems group by 1;') <
+      seedCheckSrc.indexOf("select '덤프 ↔ DB 대조 통과' as 결과"))
+}
+
+// ── seed/add-reviewed-column.sql(세션 53) — 기존 DB 에 컬럼만 얹는 델타 ──
+{
+  const addReviewedPath = path.join(__dirname, '..', '..', 'seed', 'add-reviewed-column.sql')
+  t('seed/add-reviewed-column.sql 이 존재한다', existsSync(addReviewedPath))
+  if (existsSync(addReviewedPath)) {
+    const addReviewedSrc = readFileSync(addReviewedPath, 'utf8')
+    t("add-reviewed-column.sql: reviewed 를 boolean not null default false 로 추가한다",
+      /alter table problems add column if not exists reviewed boolean not null default false;/.test(addReviewedSrc))
+  }
+  const schemaSrc = readFileSync(path.join(__dirname, '..', '..', 'seed_schema.sql'), 'utf8')
+  t("seed_schema.sql: 새 DB 도 같은 alter 문으로 reviewed 를 갖는다(add-reviewed-column.sql 과 같은 문장)",
+    /alter table problems add column if not exists reviewed boolean not null default false;/.test(schemaSrc))
+}
+
 // ── 덤프 ↔ 생성된 SQL ────────────────────────────────────────────
 //
 // 셋 중 하나가 비어 있었다.
@@ -9252,6 +9294,58 @@ console.log('\n[힌트 v1 내림 · 카드 문구 교체 · 힌트 v2 — 세션
       !['bt-fireball-shield', 'bt-alley-hook', 'bt-orc-axe', 'bt-low-guard'].some((k) => v8Src.includes(`'${k}'`)))
   }
 
+  // ── seed/dump/problems.json(세션 53): 세 문항 재료를 두 줄로 — alley-hook·
+  //    orc-axe·fireball-shield 는 '\n' 을 품고, low-guard·spear-range 는
+  //    그대로다(low-guard 는 한 줄 대조군, spear-range 는 세션 49 부터 이미
+  //    두 줄이라 이 세션이 안 건드린다) ──
+  {
+    const twoLineKeys = ['bt-alley-hook', 'bt-orc-axe', 'bt-fireball-shield']
+    for (const key of twoLineKeys) {
+      const m = btForHintMaterial.find((p) => p.source_key === key)?.scoring_config.ai_hint_material
+      t(`problems.json: '${key}' 재료가 두 줄이다('\\n' 포함, 세션 53)`,
+        !!m && m.includes('\n'), JSON.stringify(m))
+    }
+    const expectedByKey: Record<string, string> = {
+      'bt-alley-hook': '주먹은 뻗는 동안 그쪽 몸이 열린 채로 있다.\n열리는 자리는 뻗은 팔이 지나간 아래쪽이고, 주먹이 돌아오기 전까지 그대로 있다.',
+      'bt-orc-axe': '도끼는 내려찍은 뒤 뽑는 데 한 호흡이 걸린다.\n그 한 호흡은 도끼가 어딘가에 박혀야 생기고, 빗나간 도끼는 땅에 박힌다.',
+      'bt-fireball-shield': '화염구는 빚는 데 시간이 걸리고, 빚는 동안 카엘의 두 손은 그 자리에 묶인다.\n막을 때마다 방패는 타들어 가지만 카엘은 한 발도 물러서지 않는다.',
+    }
+    for (const [key, expected] of Object.entries(expectedByKey)) {
+      t(`problems.json: '${key}' 재료가 박 님 확정 두 줄 그대로다(글자 하나도 안 바꿈, 세션 53)`,
+        btForHintMaterial.find((p) => p.source_key === key)?.scoring_config.ai_hint_material === expected)
+    }
+    t("problems.json: 'bt-low-guard' 재료는 한 줄 그대로다('\\n' 없음 — 대조군, 세션 53 안 건드림)",
+      btForHintMaterial.find((p) => p.source_key === 'bt-low-guard')?.scoring_config.ai_hint_material ===
+        '하단 자세는 보통 올려 베기의 준비 자세로 읽힌다.' &&
+        !btForHintMaterial.find((p) => p.source_key === 'bt-low-guard')?.scoring_config.ai_hint_material?.includes('\n'))
+    for (const key of twoLineKeys) {
+      const material = btForHintMaterial.find((p) => p.source_key === key)?.scoring_config.ai_hint_material ?? ''
+      const forbid = (btForHintMaterial.find((p) => p.source_key === key) as unknown as { scoring_config: { forbidWords?: string[] } })?.scoring_config.forbidWords ?? []
+      t(`problems.json: '${key}' 새 재료가 자기 문항 forbidWords 에 안 걸린다(세션 53)`,
+        findForbidden(material, forbid).length === 0, JSON.stringify(findForbidden(material, forbid)))
+    }
+  }
+
+  // ── seed/update-action-turn-v9.sql(세션 53): 세 문항만 ai_hint_material 갈아 끼운다 ──
+  const v9Path = path.join(__dirname, '..', '..', 'seed', 'update-action-turn-v9.sql')
+  t('update-action-turn-v9.sql 이 존재한다', existsSync(v9Path))
+  if (existsSync(v9Path)) {
+    const v9Src = readFileSync(v9Path, 'utf8')
+    for (const key of ['bt-alley-hook', 'bt-orc-axe', 'bt-fireball-shield']) {
+      t(`update-action-turn-v9.sql: '${key}' 에 ai_hint_material 을 jsonb_set 으로 넣는다`,
+        new RegExp(`jsonb_set\\(scoring_config, '\\{ai_hint_material\\}'.*where source_key = '${key}'`, 's').test(v9Src))
+    }
+    t('update-action-turn-v9.sql: bt-low-guard·bt-spear-range 는 안 건드린다',
+      !['bt-low-guard', 'bt-spear-range'].some((k) => v9Src.includes(`'${k}'`)))
+    t('update-action-turn-v9.sql: 세 재료 문안이 글자 하나도 안 바뀌고 그대로 있다',
+      v9Src.includes('주먹은 뻗는 동안 그쪽 몸이 열린 채로 있다.') &&
+      v9Src.includes('열리는 자리는 뻗은 팔이 지나간 아래쪽이고, 주먹이 돌아오기 전까지 그대로 있다.') &&
+      v9Src.includes('도끼는 내려찍은 뒤 뽑는 데 한 호흡이 걸린다.') &&
+      v9Src.includes('그 한 호흡은 도끼가 어딘가에 박혀야 생기고, 빗나간 도끼는 땅에 박힌다.') &&
+      v9Src.includes('화염구는 빚는 데 시간이 걸리고, 빚는 동안 카엘의 두 손은 그 자리에 묶인다.') &&
+      v9Src.includes('막을 때마다 방패는 타들어 가지만 카엘은 한 발도 물러서지 않는다.'))
+  }
+
   // ── bt- forbidWords 확장: 느낌명사 넷(고통·통증·아픔·지독) — 세션 48 후속 ──
   // 세션 45~47 tell 관측이 쌓은 실사용 동의어 우회(통증·열기·지독한 통증·아픔)를
   // forbidWords 로 승격했다(세션 47 tell-v2 판정선 — "겹침이 대부분이면 forbidWords
@@ -9341,6 +9435,8 @@ console.log('\n[재제출 비교 피드백: diffChecks · resubmitLine — 세�
     diffChecks([mkCheck('old', 'fail')], [mkCheck('new', 'pass')]).length === 0)
   t('diffChecks: prev 가 빈 배열(첫 제출 취급)이면 안 담는다',
     diffChecks([], [mkCheck('a', 'pass')]).length === 0)
+  t("diffChecks: 같은 key 라도 rule 이 다르면 안 담는다(세션 53 — 문항 설정이 바뀐 것, 학습자가 고친 게 아니다)",
+    diffChecks([mkCheck('maxChars', 'fail', '34자 이하')], [mkCheck('maxChars', 'pass', '68자 이하')]).length === 0)
 
   // ── resubmitLine — 조각 문구 표 ──────────────────────────────────
   t('resubmitLine: gained 이 비어 있으면 null', resubmitLine([], { hasForbidLabel: false }) === null)
