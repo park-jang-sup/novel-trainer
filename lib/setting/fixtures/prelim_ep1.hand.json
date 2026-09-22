@@ -478,5 +478,6 @@
    "reason": "hypothetical"
   }
  ],
- "dropped": []
+ "dropped": [],
+ "first_mention_fallback": 0
 }

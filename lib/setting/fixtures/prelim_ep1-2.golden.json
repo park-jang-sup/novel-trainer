@@ -1,5 +1,5 @@
 {
-  "_comment": "prelim_manuscript.txt(1화) + prelim_manuscript2.txt(2화) 를 순서대로 넣었을 때의 기대 결과. 모든 surface 는 원고에 문자 그대로 있음을 확인함(2026-09-22). 손으로 적은 정답이라 '있어야 하는 것' 과 '없어야 하는 것' 만 적고, 그 밖의 항목은 있어도 실패로 보지 않는다. 갈래 id(main / pre_regression)는 작품 설정에서 프롬프트 {{branches}}로 넘긴다 — 모델이 스스로 짓지 않는다. 원고: fixtures/prelim_ep1.txt, prelim_ep2.txt (대회 레포 public/samples 에서 복사, BOM 제거). 손 추출본: prelim_ep1.hand.json, prelim_ep2.hand.json.",
+  "_comment": "prelim_manuscript.txt(1화) + prelim_manuscript2.txt(2화) 를 순서대로 넣었을 때의 기대 결과. 모든 surface 는 원고에 문자 그대로 있음을 확인함(2026-09-22). 손으로 적은 정답이라 '있어야 하는 것' 과 '없어야 하는 것' 만 적고, 그 밖의 항목은 있어도 실패로 보지 않는다. 갈래 id(main / pre_regression)는 작품 설정에서 프롬프트 {{branches}}로 넘긴다 — 모델이 스스로 짓지 않는다. 원고: fixtures/prelim_ep1.txt, prelim_ep2.txt (대회 레포 public/samples 에서 복사, BOM 제거). 손 추출본: prelim_ep1.hand.json, prelim_ep2.hand.json. 세션 55 ①: excluded·규칙 카테고리·시간 미확정 비율은 info(실패 아님). 질풍·마강혁 근거는 surface_contains_any(후보 중 하나). 김수정.나이는 금지.",
   "narrator": {
     "person": "mixed",
     "entity_name": "유진혁"
@@ -146,8 +146,10 @@
       "branch": "main",
       "episode": 2,
       "exclusive": true,
-      "surface_contains": "스킬 질풍을 실험",
-      "_why": "2화 '내가 가진 유일한 스킬이다' → exclusive"
+      "_why": "2화 '내가 가진 유일한 스킬이다' → exclusive",
+      "surface_contains_any": [
+        "스킬 질풍을 실험"
+      ]
     },
     {
       "entity": "유진혁",
@@ -166,7 +168,9 @@
       ],
       "value_contains": "종로경찰서",
       "episode": 2,
-      "surface_contains": "종로경찰서 마강혁 형사입니다"
+      "surface_contains_any": [
+        "종로경찰서 마강혁 형사입니다"
+      ]
     },
     {
       "entity": "김태진",
@@ -225,6 +229,13 @@
       ],
       "branch": "main",
       "value_min": 25
+    },
+    {
+      "_why": "김수정의 나이는 원고 어디에도 없다. '계산 가능한 나이는 숫자로' 지시가 남의 나이를 지어내는지 감시",
+      "entity": "김수정",
+      "attribute_any": [
+        "나이"
+      ]
     }
   ],
   "events_required": [
@@ -317,21 +328,21 @@
       "statement_contains_any": [
         "100층"
       ],
-      "category_any": [
+      "surface_contains": "탑은 총 100층으로",
+      "category_info": [
         "system",
         "geography_physics"
-      ],
-      "surface_contains": "탑은 총 100층으로"
+      ]
     },
     {
       "statement_contains_any": [
         "무기",
         "반입"
       ],
-      "category_any": [
+      "surface_contains": "인류가 무기라 인식하는 모든 물건은 가지고 입장할 수 없다",
+      "category_info": [
         "system"
-      ],
-      "surface_contains": "인류가 무기라 인식하는 모든 물건은 가지고 입장할 수 없다"
+      ]
     },
     {
       "statement_contains_any": [
@@ -339,25 +350,25 @@
         "복수",
         "하나"
       ],
-      "category_any": [
+      "surface_contains": "소원 하나가 아닌 복수로",
+      "category_info": [
         "system",
         "magic"
-      ],
-      "surface_contains": "소원 하나가 아닌 복수로"
+      ]
     },
     {
       "statement_contains_any": [
         "입구",
         "사라"
       ],
-      "category_any": [
+      "surface_contains": "입구에 손을 대면",
+      "category_info": [
         "system",
         "geography_physics"
-      ],
-      "surface_contains": "입구에 손을 대면"
+      ]
     }
   ],
-  "excluded_required": [
+  "excluded_info": [
     {
       "surface_contains": "여자친구도 사귀고",
       "reason": "hypothetical"
@@ -372,7 +383,7 @@
     "ep1_min": 3,
     "ep2_min": 5,
     "ep1_first_scene_branch": "pre_regression",
-    "unanchored_allowed_max_ratio": 0.5
+    "unanchored_ratio_info": 0.5
   },
   "conflict_cards_required": [
     {
@@ -436,10 +447,12 @@
   "determinism": {
     "runs": 2,
     "must_equal": [
-      "entities",
-      "states",
-      "events",
+      "required_passed",
       "conflict_card_keys"
+    ],
+    "info": [
+      "entities",
+      "states"
     ]
   },
   "baseline_detector0": {

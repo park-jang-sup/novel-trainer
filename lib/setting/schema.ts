@@ -70,7 +70,8 @@ export const EntityRaw = z.object({
   aliases: z.array(z.string().min(1).max(60)).default([]),
   /** 한 줄. 원고에서 드러난 것만. */
   summary: z.string().max(200).nullable().default(null),
-  first_mention: EvidenceRaw,
+  /** 첫 등장 근거. 짧게 — 길수록 원고와 한 글자 어긋나 폐기된다. 못 찾으면 locate 가 name → aliases 로 대체한다. */
+  first_mention: z.object({ surface: z.string().min(2).max(60) }).describe("첫 등장 문장의 짧은 조각(60자 이하). 원고에 문자 그대로"),
 });
 
 // ───────────────────────── 상태 ─────────────────────────
@@ -227,6 +228,8 @@ export const Extraction = ExtractionRaw.extend({
     surface: z.string(),
     reason: z.enum(["surface_not_found", "orphan_ref"]),
   })),
+  /** first_mention 을 못 찾아 name → aliases 정확 일치로 대체한 개체 수. 폐기가 아니라 대체라 따로 센다 — 조용히 살리지 않는다. */
+  first_mention_fallback: z.number().int().nonnegative().default(0),
 });
 export type Extraction = z.infer<typeof Extraction>;
 
@@ -241,6 +244,8 @@ export const Coverage = z.object({
   ambiguous_surface: z.number().int(),
   /** 폐기된 개체를 가리켜 함께 버려진 상태·관계 수 — 조용히 버리지 않는다 (리뷰 I) */
   orphan_ref: z.number().int(),
+  /** first_mention 을 못 찾아 이름/별칭 정확 일치로 대체한 개체 수 */
+  first_mention_fallback: z.number().int(),
   /** 같은 개체에서 키가 갈린 유사 속성명 쌍 수 (P2) */
   similar_attributes_unmerged: z.number().int(),
   /** 값을 숫자로 바꾸지 못한 number 속성 상태 수 ("열댓 살") */

@@ -34,6 +34,8 @@ export const StateQuery = z.strictObject({
   certainty: z.enum(["explicit", "inferred"]).optional(),
   exclusive: z.boolean().optional(),
   surface_contains: z.string().optional(),
+  /** 근거 문장이 여러 후보 중 하나면 된다 — 모델이 같은 사실을 다른 문장으로 잡는 자리(질풍·마강혁). 조건은 유지된다: 하나는 맞아야 한다 */
+  surface_contains_any: z.array(z.string()).min(1).optional(),
 });
 export type StateQuery = z.infer<typeof StateQuery>;
 
@@ -60,11 +62,13 @@ export const RelationRequired = z.strictObject({
 
 export const RuleRequired = z.strictObject({
   statement_contains_any: z.array(z.string()).min(1),
-  category_any: z.array(z.string()).min(1),
+  /** 정보성. 카테고리가 여기 없어도 실패가 아니다 — 불일치 수만 찍는다 */
+  category_info: z.array(z.string()).min(1).optional(),
   surface_contains: z.string().optional(),
 });
 
-export const ExcludedRequired = z.strictObject({
+/** 정보성. 모델이 무엇을 일부러 뺐는지는 보되, 못 뺐다고 실패로 삼지 않는다 */
+export const ExcludedInfo = z.strictObject({
   surface_contains: z.string(),
   reason: z.string(),
 });
@@ -102,14 +106,15 @@ export const GoldenSchema = z.strictObject({
   events_forbidden: z.array(EventQuery).default([]),
   relations_required: z.array(RelationRequired).default([]),
   rules_required: z.array(RuleRequired).default([]),
-  excluded_required: z.array(ExcludedRequired).default([]),
+  excluded_info: z.array(ExcludedInfo).default([]),
   unclassified_expected_min: z.number().int().nonnegative(),
   unclassified_examples: z.array(z.string()).default([]),
   scenes: z.strictObject({
     ep1_min: z.number().int().nonnegative(),
     ep2_min: z.number().int().nonnegative(),
     ep1_first_scene_branch: z.string(),
-    unanchored_allowed_max_ratio: z.number().min(0).max(1),
+    /** 정보성. 시간 미확정 장면 비율을 찍기만 한다 — 앵커는 2단계(검사 ②) 몫이다 */
+    unanchored_ratio_info: z.number().min(0).max(1).optional(),
   }),
   conflict_cards_required: z.array(ConflictCardRequired),
   caps: Caps.default({}),
@@ -121,7 +126,9 @@ export const GoldenSchema = z.strictObject({
   })).default([]),
   determinism: z.strictObject({
     runs: z.number().int().positive(),
-    must_equal: z.array(z.enum(["entities", "states", "events", "conflict_card_keys"])),
+    /** required_passed·conflict_card_keys 는 실패 조건. entities·states 는 대칭차를 info 로만 찍는다 (세션 55 ①-6) */
+    must_equal: z.array(z.enum(["required_passed", "conflict_card_keys"])),
+    info: z.array(z.enum(["entities", "states"])).default([]),
   }),
   /** 검출기 #0 기준선. 사람이 옆에 두고 보는 수치라 verify 는 읽지 않는다. */
   baseline_detector0: z.strictObject({

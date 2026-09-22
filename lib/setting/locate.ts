@@ -167,13 +167,25 @@ export function locateAll(text: string, raw: ExtractionRaw): Extraction {
       return [{ ...row, evidence: { surface: row.evidence.surface, episode: ep, span: { start: loc.start, end: loc.end }, scene: sceneOf(loc.start, sceneStarts), occurrences: loc.occurrences } }];
     });
 
+  // 개체는 first_mention 이 안 잡혀도 이름 → 별칭 순으로 **정확 일치** 대체를 한 번 더 본다.
+  // 이름이 원고에 있는데 근거 문장이 한 글자 어긋났다고 개체째 버리면 그 개체를 가리키는 상태·관계가
+  // 전부 orphan 이 된다. 대체는 폐기가 아니라 first_mention_fallback 으로 센다 — 조용히 살리지 않는다.
+  let first_mention_fallback = 0;
   const entities = raw.entities.flatMap((e) => {
-    const loc = locate(text, e.first_mention.surface, folded);
+    let loc = locate(text, e.first_mention.surface, folded);
+    let surface = e.first_mention.surface;
+    if (!loc) {
+      for (const cand of [e.name, ...e.aliases]) {
+        const idx = text.indexOf(cand);
+        if (idx >= 0) { loc = { start: idx, end: idx + cand.length, occurrences: countOccurrences(text, cand) }; surface = cand; break; }
+      }
+      if (loc) first_mention_fallback++;
+    }
     if (!loc) {
       dropped.push({ table: "entities", surface: e.first_mention.surface, reason: "surface_not_found" });
       return [];
     }
-    return [{ ...e, first_mention: { surface: e.first_mention.surface, episode: ep, span: { start: loc.start, end: loc.end }, scene: sceneOf(loc.start, sceneStarts), occurrences: loc.occurrences } }];
+    return [{ ...e, first_mention: { surface, episode: ep, span: { start: loc.start, end: loc.end }, scene: sceneOf(loc.start, sceneStarts), occurrences: loc.occurrences } }];
   });
 
   // 개체가 폐기되면 그 ref 를 가리키는 상태·관계도 같이 폐기한다. 조용히가 아니라 orphan_ref 로 세어서.
@@ -192,5 +204,6 @@ export function locateAll(text: string, raw: ExtractionRaw): Extraction {
     rules: withEvidence("rules", keep("rules", raw.rules, (r) => refOk(r.scope))),
     timeline: withEvidence("timeline", raw.timeline),
     dropped,
+    first_mention_fallback,
   };
 }

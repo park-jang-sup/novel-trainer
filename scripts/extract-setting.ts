@@ -147,8 +147,10 @@ async function main() {
   const step = arg('step', '')
   const model = arg('model', DEFAULT_MODEL)
   const maxOut = Number(arg('max-out', '32768'))
-  if (!dry && !check && step !== 'schema' && step !== 'run') {
-    console.error('★ --dry · --check · --step=schema · --step=run 중 하나. --step=schema 가 첫 호출(1회)이다.')
+  const rescore = flag('rescore')
+  const dump = flag('dump')
+  if (!dry && !check && !rescore && !dump && step !== 'schema' && step !== 'run') {
+    console.error('★ --dry · --check · --rescore · --dump · --step=schema · --step=run 중 하나. --step=schema 가 첫 호출(1회)이다.')
     process.exit(1)
   }
   const plannedCalls = step === 'run' ? 4 : 1
@@ -171,6 +173,34 @@ async function main() {
     console.log('\n--- 프롬프트 앞 1200자 ---\n' + probePrompt.slice(0, 1200))
     console.log('\n--- 프롬프트 끝 300자 ---\n' + probePrompt.slice(-300))
     console.log('\n--dry 다. DB 도 Gemini 도 안 탔다. 마개까지 재려면 --check 다.')
+    return
+  }
+
+  // ── --rescore : raw → locate → verify. 호출 0회. 코드·골든을 고친 뒤 같은 응답으로 다시 채점한다 ──
+  if (rescore) {
+    const names: [string, number, string][] = [['prelim_ep1.llm', 1, t1], ['prelim_ep2.llm', 2, t2], ['prelim_ep1.llm2', 1, t1], ['prelim_ep2.llm2', 2, t2]]
+    let made = 0
+    for (const [name, episode, text] of names) {
+      let rawFile: { text: string; model?: string; usage?: TokenUsage; cost_usd?: number | null }
+      try { rawFile = JSON.parse(readFileSync(new URL(`${name}.raw.json`, RAW), 'utf8')) } catch { console.log(`\n[${name}] raw 없음 — 건너뜀`); continue }
+      const r: CallResult = { name, model: rawFile.model ?? '?', usage: rawFile.usage ?? { inputTokens: 0, cachedTokens: 0, outputTokens: 0 }, costUsd: rawFile.cost_usd ?? null, text: rawFile.text, parsed: null, parseError: null }
+      try {
+        const json = JSON.parse(rawFile.text)
+        const parsedRaw = ExtractionRaw.safeParse({ ...json, episode })
+        if (!parsedRaw.success) r.parseError = 'ExtractionRaw 불일치: ' + parsedRaw.error.issues.slice(0, 8).map((i) => `${i.path.join('.')} ${i.message}`).join(' | ')
+        else r.parsed = locateAll(text, parsedRaw.data)
+      } catch (e) { r.parseError = `JSON 파싱 실패: ${(e as Error).message}` }
+      report(r)
+      if (r.parsed) { writeFileSync(new URL(`${name}.json`, FIX), JSON.stringify(r.parsed, null, 1)); made++ }
+    }
+    if (made === 0) { console.log('\n★ 재채점할 raw 가 하나도 없다 — lib/setting/fixtures/raw/*.raw.json 을 둔다'); process.exit(1) }
+    runVerify()
+    return
+  }
+
+  // ── --dump : llm.json 에서 정해진 자리를 뽑아 보여준다. 호출 0회 ──
+  if (dump) {
+    dumpSections()
     return
   }
 
@@ -241,13 +271,67 @@ async function main() {
   }
   console.log(`\n호출 ${calls}회 · 실비 $${results.reduce((s, x) => s + (x.costUsd ?? 0), 0).toFixed(6)} · 토큰 in ${results.reduce((s, x) => s + x.usage.inputTokens, 0)} / out ${results.reduce((s, x) => s + x.usage.outputTokens, 0)}`)
 
+  runVerify()
+}
+
+/** llm/llm2 네 파일이 다 있으면 4인자(결정성 포함), 둘만 있으면 2인자. verify 의 종료 코드를 그대로 낸다. */
+function runVerify(): never {
   const files = ['prelim_ep1.llm.json', 'prelim_ep2.llm.json', 'prelim_ep1.llm2.json', 'prelim_ep2.llm2.json'].map((f) => p(new URL(f, FIX)))
   const have = files.filter((f) => { try { readFileSync(f); return true } catch { return false } })
-  if (have.length < 2) { console.log('★ verify 를 돌릴 파일이 모자란다 — 멈춘다'); process.exit(1) }
+  if (have.length < 2 || !have.includes(files[0]) || !have.includes(files[1])) { console.log('★ verify 를 돌릴 파일이 모자란다(llm 1·2화가 필요) — 멈춘다'); process.exit(1) }
   const args = have.length === 4 ? files : files.slice(0, 2)
   console.log(`\n=== verify ${have.length === 4 ? '4인자(결정성 포함)' : '2인자 — run2 가 없어 결정성은 못 잰다'} ===`)
   const v = spawnSync('npx', ['tsx', p(new URL('verify.ts', SETTING)), ...args], { stdio: 'inherit' })
   process.exit(v.status ?? 1)
+}
+
+/**
+ * 0번 덤프 (세션 55 ①-0). llm.json(run1)에서 정해진 자리만 뽑는다 — 고치기 전의 모습.
+ *   2화 유진혁 스킬/능력 계열 상태 전부 · 2화 마강혁 전부 · 2화 유진혁 소속 · 1화 김수정 관련 전부(dropped 포함)
+ *   1화 excluded 전문 · 1화 events 전부 · 2화 relations 전부
+ */
+function dumpSections() {
+  const loadEx = (f: string): Extraction | null => { try { return JSON.parse(readFileSync(new URL(f, FIX), 'utf8')) } catch { return null } }
+  const e1 = loadEx('prelim_ep1.llm.json'), e2 = loadEx('prelim_ep2.llm.json')
+  if (!e1 || !e2) { console.log('★ prelim_ep1.llm.json / prelim_ep2.llm.json 이 없다 — --rescore 나 --step=run 이 먼저다'); process.exit(1) }
+  const j = (x: unknown) => JSON.stringify(x)
+  const nameOf = (ex: Extraction, ref: string | null) => ref == null ? null : (ex.entities.find((e) => e.ref === ref)?.name ?? `?${ref}`)
+  const refsOf = (ex: Extraction, names: string[]) => ex.entities.filter((e) => names.includes(e.name) || e.aliases.some((a) => names.includes(a))).map((e) => e.ref)
+  const stateLine = (ex: Extraction, s: Extraction['states'][number]) => `    ${nameOf(ex, s.entity)}.${s.attribute} = ${j(s.value)}  [${s.branch}${s.certainty === 'inferred' ? ' inferred' : ''}${s.claimed_in_dialogue ? ' 대사:' + nameOf(ex, s.speaker) : ''}${s.exclusive ? ' ★exclusive' : ''}]  surface=${j(s.evidence.surface)}`
+  const eventLine = (ex: Extraction, e: Extraction['events'][number]) => `    ${e.kind} "${e.description}" [${e.branch}]${e.subject ? ` ${nameOf(ex, e.subject)}.${e.attribute} ${j(e.before)}→${j(e.after)}` : ''}${e.elapsed_years != null ? ` elapsed=${e.elapsed_years}` : ''}  surface=${j(e.evidence.surface)}`
+  const relLine = (ex: Extraction, r: Extraction['relations'][number]) => `    ${nameOf(ex, r.subject)} -${r.predicate}-> ${nameOf(ex, r.object)} [${r.branch}${r.claimed_in_dialogue ? ' 대사' : ''}]  surface=${j(r.evidence.surface)}`
+  const entLine = (e: Extraction['entities'][number]) => `    ${e.name} (${e.kind})${e.aliases.length ? ' 별칭 ' + e.aliases.join('/') : ''}${e.summary ? ' — ' + e.summary : ''}  first_mention=${j(e.first_mention.surface)}`
+
+  const jh = refsOf(e2, ['유진혁', '진혁'])
+  console.log('\n[2화 유진혁 스킬/능력 계열 상태]')
+  for (const s of e2.states) if (jh.includes(s.entity) && /스킬|능력|기술|특성|마법/.test(s.attribute)) console.log(stateLine(e2, s))
+  console.log('\n[2화 마강혁 전부]')
+  const mg = refsOf(e2, ['마강혁'])
+  for (const e of e2.entities) if (mg.includes(e.ref)) console.log(entLine(e))
+  for (const s of e2.states) if (mg.includes(s.entity)) console.log(stateLine(e2, s))
+  for (const r of e2.relations) if (mg.includes(r.subject) || mg.includes(r.object)) console.log(relLine(e2, r))
+  for (const e of e2.events) if (e.subject && mg.includes(e.subject)) console.log(eventLine(e2, e))
+  if (mg.length === 0) console.log('    (개체 없음)')
+  console.log('\n[2화 유진혁 소속]')
+  for (const s of e2.states) if (jh.includes(s.entity) && /소속|팀|조직/.test(s.attribute)) console.log(stateLine(e2, s))
+  console.log('\n[1화 김수정 관련 전부 (dropped 포함)]')
+  const sj = refsOf(e1, ['김수정', '수정'])
+  for (const e of e1.entities) if (sj.includes(e.ref)) console.log(entLine(e))
+  for (const s of e1.states) if (sj.includes(s.entity)) console.log(stateLine(e1, s))
+  for (const r of e1.relations) if (sj.includes(r.subject) || sj.includes(r.object)) console.log(relLine(e1, r))
+  for (const e of e1.events) if ((e.subject && sj.includes(e.subject)) || /수정/.test(e.description)) console.log(eventLine(e1, e))
+  for (const d of e1.dropped) if (/수정/.test(d.surface)) console.log(`    dropped [${d.table}] ${d.reason} ${j(d.surface)}`)
+  if (sj.length === 0) console.log('    (개체 없음 — 이름/별칭으로 못 찾음)')
+  console.log('\n[1화 excluded 전문]')
+  for (const x of e1.excluded) console.log(`    ${x.reason}  ${j(x.surface)}`)
+  console.log('\n[1화 events 전부]')
+  for (const e of e1.events) console.log(eventLine(e1, e))
+  console.log('\n[2화 relations 전부]')
+  for (const r of e2.relations) console.log(relLine(e2, r))
+  console.log(`\n[1화 dropped 전부 ${e1.dropped.length}건]`)
+  for (const d of e1.dropped) console.log(`    [${d.table}] ${d.reason} ${j(d.surface)}`)
+  console.log(`\n[2화 dropped 전부 ${e2.dropped.length}건]`)
+  for (const d of e2.dropped) console.log(`    [${d.table}] ${d.reason} ${j(d.surface)}`)
 }
 
 main().catch((e) => {

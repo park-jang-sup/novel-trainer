@@ -75,6 +75,12 @@ export function normalizeAttribute(attr: string, workAliases: Record<string, str
   return workAliases[folded] ?? workAliases[attr] ?? DEFAULT_SYNONYMS[folded] ?? folded;
 }
 
+/** 이 속성명이 동의어표(기본 + 작품별)에 있는가. 관계 술어를 상태로 물질화할지 가르는 기준 (store.ts). */
+export function isKnownAttribute(attr: string, workAliases: Record<string, string> = {}): boolean {
+  const folded = foldAttributeName(attr);
+  return folded in workAliases || attr in workAliases || folded in DEFAULT_SYNONYMS;
+}
+
 export function specOf(key: string): AttributeSpec {
   return SPEC_BY_KEY.get(key) ?? { key, cardinality: "single", valueKind: "text" };
 }

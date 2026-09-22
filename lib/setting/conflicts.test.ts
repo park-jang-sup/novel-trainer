@@ -173,4 +173,38 @@ t("P8d locate: 3단계도 정확 일치다 — 한 글자 다르면 폐기", () 
   assert.equal(locate("다가갔다.쿠르릉!서울 광화문", "다가갔다. 쿠르릉! 서울 광화문역"), null);
 });
 
+// ── P9 first_mention 대체 (세션 55 ①-3) ──
+import { locateAll } from "./locate";
+import { ExtractionRaw } from "./schema";
+import { materializeRelationStates } from "./store";
+const rawWith = (entities: unknown[], extra: Record<string, unknown> = {}) => ExtractionRaw.parse({
+  episode: 1, narrator: { person: "first", entity: null }, branches: [{ id: "main", label: "현재" }],
+  scenes: [{ ord: 0, opening: { surface: "탑에 들어갔다" }, branch: "main", anchor: null, pov: null, summary: "" }],
+  entities, states: [], events: [], relations: [], rules: [], timeline: [], unclassified: [], excluded: [], ...extra,
+});
+t("P9a first_mention 이 원고에 없어도 name 이 있으면 살린다 — first_mention_fallback 1, 폐기 0, 근거는 이름 자리", () => {
+  const text = "탑에 들어갔다. 고블린 두 마리가 나왔다.";
+  const ex = locateAll(text, rawWith([{ ref: "g", kind: "creature", name: "고블린", aliases: [], summary: null, first_mention: { surface: "고블린 2명이 나왔다" } }]));
+  assert.equal(ex.first_mention_fallback, 1); assert.equal(ex.dropped.length, 0); assert.equal(ex.entities.length, 1);
+  assert.equal(ex.entities[0].first_mention.surface, "고블린"); assert.equal(text.slice(ex.entities[0].first_mention.span.start, ex.entities[0].first_mention.span.end), "고블린");
+});
+t("P9b name 도 aliases 도 원고에 없으면 폐기 — 대체는 정확 일치뿐", () => {
+  const text = "탑에 들어갔다. 고블린 두 마리가 나왔다.";
+  const ex = locateAll(text, rawWith([{ ref: "o", kind: "creature", name: "오크", aliases: ["오우거"], summary: null, first_mention: { surface: "오크가 나왔다" } }],
+    { states: [{ entity: "o", attribute: "생사", value: "생존", branch: "main", certainty: "explicit", evidence: { surface: "나왔다" } }] }));
+  assert.equal(ex.first_mention_fallback, 0); assert.equal(ex.entities.length, 0);
+  assert.deepEqual(ex.dropped.map((d) => d.reason), ["surface_not_found", "orphan_ref"]);   // 개체 폐기 + 그걸 가리키던 상태
+});
+
+// ── P10 관계 → 상태 물질화 (세션 55 ①-4) ──
+t("P10 술어가 동의어표에 있고 객체가 사람이 아니면 상태로 물질화. 사람 객체·표 밖 술어는 관계로만", () => {
+  const ents = [{ id: "A", name: "김태진", kind: "character" }, { id: "V", name: "베나토르", kind: "organization" }, { id: "B", name: "유진혁", kind: "character" }];
+  const rel = (predicate: string, object_id: string) => ({ subject_id: "A", predicate, object_id, branch: "main", episode: 2, pos: 10, surface: "s", claimed_in_dialogue: true });
+  const out = materializeRelationStates([rel("소속", "V"), rel("동료", "B"), rel("소속", "B"), rel("짝사랑", "V")], ents);
+  assert.equal(out.length, 1);
+  assert.equal(out[0].entity_id, "A"); assert.equal(out[0].attribute, "소속"); assert.equal(out[0].value, "베나토르"); assert.equal(out[0].claimed_in_dialogue, true);
+  const st = toStoredState({ id: "x", ...out[0] });
+  assert.equal(st.attribute_key, "affiliation"); assert.equal(st.value, "베나토르");
+});
+
 console.log(`\n통과 ${n} / 실패 0`);
