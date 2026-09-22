@@ -1,0 +1,482 @@
+{
+ "episode": 1,
+ "narrator": {
+  "person": "mixed",
+  "entity": "jinhyuk"
+ },
+ "branches": [
+  {
+   "id": "main",
+   "label": "현재"
+  },
+  {
+   "id": "pre_regression",
+   "label": "회귀 전"
+  }
+ ],
+ "scenes": [
+  {
+   "ord": 0,
+   "opening": {
+    "surface": "1화 시산혈해",
+    "episode": 1,
+    "span": {
+     "start": 0,
+     "end": 7
+    },
+    "scene": 0,
+    "occurrences": 1
+   },
+   "branch": "pre_regression",
+   "anchor": {
+    "event": "탑 정상 도달",
+    "relation": "during"
+   },
+   "pov": "jinhyuk",
+   "summary": "탑 정상, 수정의 죽음, 소원",
+   "span": {
+    "start": 0,
+    "end": 1924
+   }
+  },
+  {
+   "ord": 1,
+   "opening": {
+    "surface": "커튼 사이에 빠져나온 햇빛",
+    "episode": 1,
+    "span": {
+     "start": 1924,
+     "end": 1938
+    },
+    "scene": 1,
+    "occurrences": 1
+   },
+   "branch": "main",
+   "anchor": {
+    "event": "수능 종료",
+    "relation": "after"
+   },
+   "pov": "jinhyuk",
+   "summary": "수능 다음날, 약속",
+   "span": {
+    "start": 1924,
+    "end": 2809
+   }
+  },
+  {
+   "ord": 2,
+   "opening": {
+    "surface": "쿠르릉!서울 광화문 앞",
+    "episode": 1,
+    "span": {
+     "start": 2809,
+     "end": 2821
+    },
+    "scene": 2,
+    "occurrences": 1
+   },
+   "branch": "main",
+   "anchor": {
+    "event": "탑 등장",
+    "relation": "during"
+   },
+   "pov": "jinhyuk",
+   "summary": "탑 등장, 입장",
+   "span": {
+    "start": 2809,
+    "end": 4287
+   }
+  },
+  {
+   "ord": 3,
+   "opening": {
+    "surface": "‘분명 이 블록을 밟으면",
+    "episode": 1,
+    "span": {
+     "start": 4287,
+     "end": 4300
+    },
+    "scene": 3,
+    "occurrences": 1
+   },
+   "branch": "main",
+   "anchor": {
+    "event": "탑 등장",
+    "relation": "after"
+   },
+   "pov": "jinhyuk",
+   "summary": "튜토리얼",
+   "span": {
+    "start": 4287,
+    "end": 6717
+   }
+  }
+ ],
+ "entities": [
+  {
+   "ref": "jinhyuk",
+   "kind": "character",
+   "name": "유진혁",
+   "aliases": [
+    "진혁"
+   ],
+   "summary": null,
+   "first_mention": {
+    "surface": "....진혁아",
+    "episode": 1,
+    "span": {
+     "start": 139,
+     "end": 146
+    },
+    "scene": 0,
+    "occurrences": 1
+   }
+  },
+  {
+   "ref": "sujeong",
+   "kind": "character",
+   "name": "김수정",
+   "aliases": [
+    "수정"
+   ],
+   "summary": null,
+   "first_mention": {
+    "surface": "수정이의 목소리",
+    "episode": 1,
+    "span": {
+     "start": 726,
+     "end": 734
+    },
+    "scene": 0,
+    "occurrences": 1
+   }
+  },
+  {
+   "ref": "tower",
+   "kind": "structure",
+   "name": "탑",
+   "aliases": [],
+   "summary": null,
+   "first_mention": {
+    "surface": "탑의 마지막 층",
+    "episode": 1,
+    "span": {
+     "start": 294,
+     "end": 302
+    },
+    "scene": 0,
+    "occurrences": 1
+   }
+  },
+  {
+   "ref": "tutorial",
+   "kind": "term",
+   "name": "튜토리얼",
+   "aliases": [],
+   "summary": null,
+   "first_mention": {
+    "surface": "튜토리얼을 클리어 후",
+    "episode": 1,
+    "span": {
+     "start": 3320,
+     "end": 3331
+    },
+    "scene": 2,
+    "occurrences": 1
+   }
+  },
+  {
+   "ref": "wish",
+   "kind": "item",
+   "name": "소원권",
+   "aliases": [],
+   "summary": null,
+   "first_mention": {
+    "surface": "소원권. 이를 얻어",
+    "episode": 1,
+    "span": {
+     "start": 317,
+     "end": 327
+    },
+    "scene": 0,
+    "occurrences": 1
+   }
+  },
+  {
+   "ref": "quick",
+   "kind": "skill",
+   "name": "쾌속",
+   "aliases": [],
+   "summary": null,
+   "first_mention": {
+    "surface": "스킬 쾌속을 얻으셨습니다",
+    "episode": 1,
+    "span": {
+     "start": 6079,
+     "end": 6092
+    },
+    "scene": 3,
+    "occurrences": 1
+   }
+  },
+  {
+   "ref": "contract",
+   "kind": "skill",
+   "name": "계약",
+   "aliases": [],
+   "summary": null,
+   "first_mention": {
+    "surface": "스킬을 하나 발동했다.[계약]",
+    "episode": 1,
+    "span": {
+     "start": 1744,
+     "end": 1760
+    },
+    "scene": 0,
+    "occurrences": 1
+   }
+  },
+  {
+   "ref": "goblin",
+   "kind": "creature",
+   "name": "고블린",
+   "aliases": [],
+   "summary": null,
+   "first_mention": {
+    "surface": "고블린 2명을 죽이면 클리어",
+    "episode": 1,
+    "span": {
+     "start": 3588,
+     "end": 3603
+    },
+    "scene": 2,
+    "occurrences": 1
+   }
+  },
+  {
+   "ref": "gwanghwamun",
+   "kind": "place",
+   "name": "광화문",
+   "aliases": [],
+   "summary": null,
+   "first_mention": {
+    "surface": "서울 광화문 앞",
+    "episode": 1,
+    "span": {
+     "start": 2813,
+     "end": 2821
+    },
+    "scene": 2,
+    "occurrences": 1
+   }
+  }
+ ],
+ "states": [
+  {
+   "entity": "jinhyuk",
+   "attribute": "나이",
+   "value": "19",
+   "branch": "main",
+   "certainty": "inferred",
+   "claimed_in_dialogue": false,
+   "speaker": null,
+   "exclusive": false,
+   "evidence": {
+    "surface": "생일도 지난 나이라 합법적으로",
+    "episode": 1,
+    "span": {
+     "start": 2030,
+     "end": 2046
+    },
+    "scene": 1,
+    "occurrences": 1
+   }
+  },
+  {
+   "entity": "jinhyuk",
+   "attribute": "스킬",
+   "value": "쾌속",
+   "branch": "main",
+   "certainty": "explicit",
+   "claimed_in_dialogue": false,
+   "speaker": null,
+   "exclusive": false,
+   "evidence": {
+    "surface": "스킬 쾌속을 얻으셨습니다",
+    "episode": 1,
+    "span": {
+     "start": 6079,
+     "end": 6092
+    },
+    "scene": 3,
+    "occurrences": 1
+   }
+  },
+  {
+   "entity": "sujeong",
+   "attribute": "생사",
+   "value": "사망",
+   "branch": "pre_regression",
+   "certainty": "explicit",
+   "claimed_in_dialogue": false,
+   "speaker": null,
+   "exclusive": false,
+   "evidence": {
+    "surface": "죽어버린 그녀의 눈을",
+    "episode": 1,
+    "span": {
+     "start": 1275,
+     "end": 1286
+    },
+    "scene": 0,
+    "occurrences": 1
+   }
+  }
+ ],
+ "events": [
+  {
+   "kind": "occurrence",
+   "description": "광화문에 탑 등장",
+   "branch": "main",
+   "subject": null,
+   "attribute": null,
+   "before": null,
+   "after": null,
+   "elapsed_years": null,
+   "evidence": {
+    "surface": "서울 광화문 앞 그 중심에 거대한 탑이",
+    "episode": 1,
+    "span": {
+     "start": 2813,
+     "end": 2834
+    },
+    "scene": 2,
+    "occurrences": 1
+   }
+  },
+  {
+   "kind": "transition",
+   "description": "튜토리얼 보상으로 스킬 쾌속 획득",
+   "branch": "main",
+   "subject": "jinhyuk",
+   "attribute": "스킬",
+   "before": null,
+   "after": "쾌속",
+   "elapsed_years": null,
+   "evidence": {
+    "surface": "스킬 쾌속을 얻으셨습니다",
+    "episode": 1,
+    "span": {
+     "start": 6079,
+     "end": 6092
+    },
+    "scene": 3,
+    "occurrences": 1
+   }
+  },
+  {
+   "kind": "occurrence",
+   "description": "소원으로 탑 이전 과거로 회귀",
+   "branch": "pre_regression",
+   "subject": null,
+   "attribute": null,
+   "before": null,
+   "after": null,
+   "elapsed_years": null,
+   "evidence": {
+    "surface": "탑이 생기기 전 과거로 돌려보네",
+    "episode": 1,
+    "span": {
+     "start": 1848,
+     "end": 1865
+    },
+    "scene": 0,
+    "occurrences": 1
+   }
+  }
+ ],
+ "relations": [
+  {
+   "subject": "jinhyuk",
+   "predicate": "짝사랑",
+   "object": "sujeong",
+   "branch": "main",
+   "claimed_in_dialogue": false,
+   "evidence": {
+    "surface": "첫눈에 반해 3년 내내",
+    "episode": 1,
+    "span": {
+     "start": 2428,
+     "end": 2440
+    },
+    "scene": 1,
+    "occurrences": 1
+   }
+  }
+ ],
+ "rules": [
+  {
+   "category": "system",
+   "statement": "탑은 총 100층",
+   "scope": null,
+   "branch": "main",
+   "evidence": {
+    "surface": "탑은 총 100층으로",
+    "episode": 1,
+    "span": {
+     "start": 6237,
+     "end": 6248
+    },
+    "scene": 3,
+    "occurrences": 1
+   }
+  },
+  {
+   "category": "system",
+   "statement": "소원은 하나만, 복수 불가",
+   "scope": null,
+   "branch": "pre_regression",
+   "evidence": {
+    "surface": "소원 하나가 아닌 복수로",
+    "episode": 1,
+    "span": {
+     "start": 1710,
+     "end": 1723
+    },
+    "scene": 0,
+    "occurrences": 1
+   }
+  }
+ ],
+ "timeline": [
+  {
+   "label": "탑 등장",
+   "branch": "main",
+   "order_hint": 2,
+   "evidence": {
+    "surface": "서울 광화문 앞",
+    "episode": 1,
+    "span": {
+     "start": 2813,
+     "end": 2821
+    },
+    "scene": 2,
+    "occurrences": 1
+   }
+  }
+ ],
+ "unclassified": [
+  {
+   "surface": "중학교 때부터 배워온 복싱",
+   "attach_to": "jinhyuk",
+   "note": null
+  }
+ ],
+ "excluded": [
+  {
+   "surface": "여자친구도 사귀고",
+   "reason": "hypothetical"
+  }
+ ],
+ "dropped": []
+}

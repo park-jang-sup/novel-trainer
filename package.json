@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test:scoring": "tsx lib/scoring/verify.ts",
+    "test:setting": "tsx lib/setting/conflicts.test.ts && tsx lib/setting/verify.ts lib/setting/fixtures/prelim_ep1.hand.json lib/setting/fixtures/prelim_ep2.hand.json",
     "check:numbers": "tsx scripts/stale-numbers.ts",
     "gen:seed": "tsx scripts/gen-seed.ts",
     "ai:probe": "NODE_OPTIONS=--conditions=react-server tsx scripts/ai-probe.ts",

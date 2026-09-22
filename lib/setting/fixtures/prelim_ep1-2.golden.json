@@ -1,0 +1,453 @@
+{
+  "_comment": "prelim_manuscript.txt(1화) + prelim_manuscript2.txt(2화) 를 순서대로 넣었을 때의 기대 결과. 모든 surface 는 원고에 문자 그대로 있음을 확인함(2026-09-22). 손으로 적은 정답이라 '있어야 하는 것' 과 '없어야 하는 것' 만 적고, 그 밖의 항목은 있어도 실패로 보지 않는다. 갈래 id(main / pre_regression)는 작품 설정에서 프롬프트 {{branches}}로 넘긴다 — 모델이 스스로 짓지 않는다. 원고: fixtures/prelim_ep1.txt, prelim_ep2.txt (대회 레포 public/samples 에서 복사, BOM 제거). 손 추출본: prelim_ep1.hand.json, prelim_ep2.hand.json.",
+  "narrator": {
+    "person": "mixed",
+    "entity_name": "유진혁"
+  },
+  "branches_min": [
+    "main",
+    "pre_regression"
+  ],
+  "entities_required": [
+    {
+      "name": "유진혁",
+      "kind": "character",
+      "aliases_any": [
+        "진혁"
+      ]
+    },
+    {
+      "name": "김수정",
+      "kind": "character",
+      "aliases_any": [
+        "수정"
+      ]
+    },
+    {
+      "name": "마강혁",
+      "kind": "character"
+    },
+    {
+      "name": "김태진",
+      "kind": "character"
+    },
+    {
+      "name": "이무진",
+      "kind": "character"
+    },
+    {
+      "name": "김진규",
+      "kind": "character"
+    },
+    {
+      "name": "박무건",
+      "kind": "character"
+    },
+    {
+      "name": "베나토르",
+      "kind": "organization"
+    },
+    {
+      "name": "국정원",
+      "kind": "organization"
+    },
+    {
+      "name": "종로경찰서",
+      "kind": "organization"
+    },
+    {
+      "name": "광화문",
+      "kind": "place"
+    },
+    {
+      "name": "탑",
+      "kind": "structure"
+    },
+    {
+      "name": "튜토리얼",
+      "kind": "term"
+    },
+    {
+      "name": "소원권",
+      "kind": "item"
+    },
+    {
+      "name": "쾌속",
+      "kind": "skill"
+    },
+    {
+      "name": "질풍",
+      "kind": "skill"
+    },
+    {
+      "name": "계약",
+      "kind": "skill"
+    },
+    {
+      "name": "고블린",
+      "kind": "creature"
+    }
+  ],
+  "entities_forbidden_kind": [
+    {
+      "name": "쾌속",
+      "not_kind": "character"
+    },
+    {
+      "name": "질풍",
+      "not_kind": "character"
+    },
+    {
+      "name": "베나토르",
+      "not_kind": "character"
+    }
+  ],
+  "states_required": [
+    {
+      "entity": "유진혁",
+      "attribute_any": [
+        "나이"
+      ],
+      "value": 19,
+      "branch": "main",
+      "episode": 1,
+      "certainty": "inferred",
+      "surface_contains": "생일도 지난 나이라 합법적으로"
+    },
+    {
+      "entity": "유진혁",
+      "attribute_any": [
+        "나이"
+      ],
+      "value": 22,
+      "branch": "main",
+      "episode": 2,
+      "certainty": "explicit",
+      "surface_contains": "스물두 살 인생에"
+    },
+    {
+      "entity": "유진혁",
+      "attribute_any": [
+        "스킬",
+        "보유 스킬"
+      ],
+      "value": "쾌속",
+      "branch": "main",
+      "episode": 1,
+      "surface_contains": "스킬 쾌속을 얻으셨습니다"
+    },
+    {
+      "entity": "유진혁",
+      "attribute_any": [
+        "스킬",
+        "보유 스킬"
+      ],
+      "value": "질풍",
+      "branch": "main",
+      "episode": 2,
+      "exclusive": true,
+      "surface_contains": "스킬 질풍을 실험",
+      "_why": "2화 '내가 가진 유일한 스킬이다' → exclusive"
+    },
+    {
+      "entity": "유진혁",
+      "attribute_any": [
+        "소속"
+      ],
+      "value": "베나토르",
+      "branch": "main",
+      "episode": 2
+    },
+    {
+      "entity": "마강혁",
+      "attribute_any": [
+        "소속",
+        "직업"
+      ],
+      "value_contains": "종로경찰서",
+      "episode": 2,
+      "surface_contains": "종로경찰서 마강혁 형사입니다"
+    },
+    {
+      "entity": "김태진",
+      "attribute_any": [
+        "소속"
+      ],
+      "value": "국정원",
+      "episode": 2
+    },
+    {
+      "entity": "이무진",
+      "attribute_any": [
+        "직업",
+        "직위"
+      ],
+      "value_contains": "대통령",
+      "episode": 2
+    },
+    {
+      "entity": "김수정",
+      "attribute_any": [
+        "생사",
+        "상태"
+      ],
+      "value_contains": "사망",
+      "branch": "pre_regression",
+      "episode": 1
+    }
+  ],
+  "states_forbidden": [
+    {
+      "_why": "회귀 전 갈래의 사망을 현재 갈래로 올리면 안 된다",
+      "entity": "김수정",
+      "attribute_any": [
+        "생사",
+        "상태"
+      ],
+      "value_contains": "사망",
+      "branch": "main"
+    },
+    {
+      "_why": "가정법 — 여자친구는 상태가 아니다",
+      "entity": "유진혁",
+      "attribute_any": [
+        "연인",
+        "여자친구",
+        "관계"
+      ],
+      "value_contains": "여자친구"
+    },
+    {
+      "_why": "'10년이 훌쩍 넘는' 은 탑 등반 기간이지 현재 나이가 아니다",
+      "entity": "유진혁",
+      "attribute_any": [
+        "나이"
+      ],
+      "branch": "main",
+      "value_min": 25
+    }
+  ],
+  "events_required": [
+    {
+      "kind": "occurrence",
+      "branch": "main",
+      "description_contains_any": [
+        "탑",
+        "광화문"
+      ],
+      "episode": 1,
+      "surface_contains": "서울 광화문 앞"
+    },
+    {
+      "kind": "transition",
+      "branch": "main",
+      "subject": "유진혁",
+      "attribute_any": [
+        "스킬",
+        "보유 스킬"
+      ],
+      "after": "쾌속",
+      "episode": 1,
+      "surface_contains": "스킬 쾌속을 얻으셨습니다"
+    },
+    {
+      "kind": "transition",
+      "branch": "main",
+      "subject": "유진혁",
+      "attribute_any": [
+        "소속"
+      ],
+      "after": "베나토르",
+      "episode": 2
+    },
+    {
+      "kind": "occurrence",
+      "branch": "pre_regression",
+      "description_contains_any": [
+        "회귀",
+        "과거로"
+      ],
+      "episode": 1
+    }
+  ],
+  "events_forbidden": [
+    {
+      "_why": "1~2화 사이에 나이를 바꾸는 사건은 없어야 한다. 있으면 검사 ① 이 죽는다",
+      "kind": "transition",
+      "subject": "유진혁",
+      "attribute_any": [
+        "나이"
+      ]
+    },
+    {
+      "_why": "쾌속→질풍 개명 사건은 원고에 없다. 만들어내면 환각",
+      "kind": "transition",
+      "subject": "유진혁",
+      "attribute_any": [
+        "스킬",
+        "보유 스킬"
+      ],
+      "before": "쾌속",
+      "after": "질풍"
+    }
+  ],
+  "relations_required": [
+    {
+      "subject": "김태진",
+      "predicate_any": [
+        "소속",
+        "구성원"
+      ],
+      "object": "베나토르",
+      "episode": 2
+    },
+    {
+      "subject": "유진혁",
+      "predicate_any": [
+        "짝사랑",
+        "호감",
+        "약속"
+      ],
+      "object": "김수정",
+      "episode": 1
+    }
+  ],
+  "rules_required": [
+    {
+      "statement_contains_any": [
+        "100층"
+      ],
+      "category_any": [
+        "system",
+        "geography_physics"
+      ],
+      "surface_contains": "탑은 총 100층으로"
+    },
+    {
+      "statement_contains_any": [
+        "무기",
+        "반입"
+      ],
+      "category_any": [
+        "system"
+      ],
+      "surface_contains": "인류가 무기라 인식하는 모든 물건은 가지고 입장할 수 없다"
+    },
+    {
+      "statement_contains_any": [
+        "소원",
+        "복수",
+        "하나"
+      ],
+      "category_any": [
+        "system",
+        "magic"
+      ],
+      "surface_contains": "소원 하나가 아닌 복수로"
+    },
+    {
+      "statement_contains_any": [
+        "입구",
+        "사라"
+      ],
+      "category_any": [
+        "system",
+        "geography_physics"
+      ],
+      "surface_contains": "입구에 손을 대면"
+    }
+  ],
+  "excluded_required": [
+    {
+      "surface_contains": "여자친구도 사귀고",
+      "reason": "hypothetical"
+    }
+  ],
+  "unclassified_expected_min": 1,
+  "unclassified_examples": [
+    "중학교 때부터 배워온 복싱",
+    "위기를 생각보다 즐기는 성격"
+  ],
+  "scenes": {
+    "ep1_min": 3,
+    "ep2_min": 5,
+    "ep1_first_scene_branch": "pre_regression",
+    "unanchored_allowed_max_ratio": 0.5
+  },
+  "conflict_cards_required": [
+    {
+      "kind": "state_change_without_event",
+      "entity": "유진혁",
+      "attribute_any": [
+        "나이"
+      ],
+      "evidence_values": [
+        19,
+        22
+      ],
+      "weak": false,
+      "_why": "심은 오류 1. 19 는 inferred, 22 는 explicit 이므로 weak 가 아니다"
+    },
+    {
+      "kind": "state_change_without_event",
+      "entity_lexicon_merge_of": [
+        "쾌속",
+        "질풍"
+      ],
+      "attribute_any": [
+        "표기",
+        "스킬",
+        "보유 스킬"
+      ],
+      "evidence_values": [
+        "쾌속",
+        "질풍"
+      ],
+      "_why": "심은 오류 2. 스킬은 집합 속성이라 원소 추가는 카드가 아니다. 2화 '내가 가진 유일한 스킬이다' 가 exclusive 관찰이므로 1화 쾌속과 충돌한다. lexicon 이 두 스킬을 같은 개체로 묶으면 '표기' 경로로도 잡힌다. 어느 경로든 카드가 있어야 통과"
+    }
+  ],
+  "caps": {
+    "_why": "required 만 보면 카드 100장을 내도 통과한다. 상한이 정밀도다.",
+    "conflict_cards_max": 4,
+    "dropped_max": 3,
+    "orphan_ref_max": 0,
+    "ambiguous_surface_max": 3,
+    "similar_attributes_unmerged_max": 0
+  },
+  "info_optional": [
+    {
+      "_what": "단위 흔들림",
+      "surfaces": [
+        "고블린 2명",
+        "고블린 두 마리"
+      ]
+    },
+    {
+      "_what": "표기 흔들림 후보 (원고 오타)",
+      "surfaces": [
+        "대통력 이무진"
+      ],
+      "expected_pair": [
+        "대통력",
+        "대통령"
+      ]
+    }
+  ],
+  "determinism": {
+    "runs": 2,
+    "must_equal": [
+      "entities",
+      "states",
+      "events",
+      "conflict_card_keys"
+    ]
+  },
+  "baseline_detector0": {
+    "_what": "check_setting.py 를 test/settings.md 기준으로 같은 원고에 돌린 값. 비교용 기준선.",
+    "planted_errors": 2,
+    "detected": 0,
+    "violations": 0,
+    "proposed_additions_ep1": 149,
+    "proposed_additions_ep2": 139
+  }
+}

@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 53 · 커밋 `3814ac9` 위
+마지막 갱신: 세션 54 · 커밋 `c8a2671` 위
 
 ★ 활성 144 (전체 157 − 비활성 13). 언어 관문 전수 불변식(verify.ts)이 이 수를
   출력·단언한다 — 문항 증감 때마다 이 줄과 불변식을 같이 갱신한다.
@@ -123,6 +123,8 @@
   forbidWords 확장이냐를 가른다 — tell_only 표본이 forbidWords 와 100% 겹쳐(세션 47
   실측) **forbidWords 확장으로 결정**(세션 48 후속): bt- 5건에 느낌명사 넷(고통·통증·
   아픔·지독)을 더했다. tell-v2 자체는 여전히 route.ts 미배선 — AI 승격은 안 했다.
+★ **설정검사는 아직 앱에 없다** — lib/setting/ 에 검사기·골든 골격만(네트워크 없음, 다음 6).
+  실제 LLM 추출은 scripts/extract-setting.ts(세션 55)가 붙어야 돈다.
 ```
 
 ## 닫힌 것
@@ -370,6 +372,40 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
                         열린 채로 남기는 것(아래 미결 참고) — AI 관측 비교(판정선을 넘은 뒤) ·
                         '고쳐서 다시 내기' 버튼(재제출 비율을 재고 낮을 때) · '자주 하는 실수'
                         집계(같은 key 가 여러 문항에서 반복 fail).
+6  설정집 × 설정검사 — 1단계 (세션 54 착수, lib/setting/ 골격 이식 끝)
+                        설계 `docs/설정집_설정검사_통합설계_v1.md`(대회 레포 novel-setting-check-
+                        service 감사에서 나온 재설계 — 그 레포는 읽기만, 여기만 고친다).
+                        검사기(conflicts ①·①′)·정규화(attributes)·문지기(locate)·스키마(zod)·
+                        골든 대조(verify)·손 추출본(make-hand-fixtures)이 lib/setting/ 에 있다.
+                        네트워크 없음. 물기 시험 29/0 · 골든 61/0(손 추출본, 결정성 대조까지 62/0) · 카드 정확히 2건
+                        (심은 오류 2건: 나이 19→22, 스킬 쾌속→질풍) · 정밀도 100% · coverage 0.
+                        ★ 이건 "골든·검사기·스키마가 서로 맞는다"는 확인이지 LLM 추출이 된다는
+                          확인이 아니다. 검출기 #0(대회 check_setting.py) 기준선: 심은 오류
+                          2건 중 0건 검출, 제안 149+139건.
+                        세션 54 가 이식하며 고친 것 — ① locate 3단계(공백 전부 제거 + 곱은따옴표→
+                        곧은따옴표 + …→..., 위치 매핑 유지, 여전히 정확 일치. prelim 원고는 6717자가
+                        7줄이고 문장이 붙어 있어 모델이 마침표 뒤 공백을 넣으면 2단계로 못 찾았다)
+                        ② schema `.describe()` — ref 규칙·kind 구분·exclusive·anchor.event·
+                        elapsed_years·갈래 id 가 z.toJSONSchema 를 타고 모델에게 간다(TS 주석은
+                        안 간다) ③ 골든을 GoldenSchema(strict) 로 읽는다 — 키 오타가 "조건 없음"
+                        으로 조용히 통과하던 것을 막음 ④ 프롬프트에서 temperature 0 삭제(3.7 Flash
+                        는 온도를 안 받는다, gemini.ts), 유추 숫자는 숫자로, ref 규칙 한 줄.
+                        다음(세션 55): scripts/extract-setting.ts — ai-probe 와 같은 하니스 경로
+                        (NODE_OPTIONS=--conditions=react-server tsx, gate 마개·ai_usage_log 그대로).
+                        callGemini 에 선택 인자 { responseJsonSchema, maxOutputTokens } 를 더한다
+                        (maxOutputTokens 2048 은 회차 전문 추출엔 모자란다). 첫 호출은 스키마 수용
+                        여부 1회(z.toJSONSchema 결과에 $schema·default 18·additionalProperties 20 —
+                        Gemini 가 받는지는 돌려봐야 안다). 흐름: 1화 → locate → 개체 목록을 2화
+                        {{lexicon}} 으로 → 2화, 2회 반복 → ex1·ex2·ex1b·ex2b 를 디스크에 → verify.
+                        ★ 이 픽스처의 {{branches}} 는 작품 설정으로 main / pre_regression 을 넘긴다
+                          (골든 _comment) — 스크립트가 그 자리를 가진다. 모델이 갈래 id 를 짓지 않는다.
+                        예상 실패 순서(리뷰): dropped 상한 → 갈래 id → 질풍 exclusive → 유추 나이
+                        숫자화 → 개체 kind → 유사 속성 미병합 상한. 앞의 넷은 세션 54 가 미리 막았다.
+                        마지막 것은 동의어표를 넓혀서 풀지 상한을 낮춰서 풀지 않는다.
+                        완료 기준(설계 §11): 실제 추출 verify 실패 0 · 결정성 통과 · 검출기 #0 옆에
+                        새 숫자. 첫 호출 결과(스키마 수용·골든 실패 목록)를 보고 프롬프트/골든 어느
+                        쪽을 고칠지 박 님과 같이 판단한다.
+                        비용: 회차당 출력 2~3만 토큰 기준 4회 호출 약 $0.5.
 ```
 
 ### 끝난 것 — 세션 53 (bt- 재료 두 줄 확장 셋 · diffChecks rule 대조 · reviewed 컬럼)
@@ -3114,6 +3150,7 @@ cd scoring-server && source .venv/bin/activate && SCORING_SECRET=dev uvicorn mai
 
 npx next typegen && npx tsc --noEmit     # 0건
 npm run test:scoring | tail -1           # 0 실패만 본다
+npm run test:setting | tail -1           # 설정검사 골격 — 물기 29/0 + 골든 61/0 (네트워크 없음)
 npm run check:numbers | tail -1          # 낡은 수 0건
 npm run gen:seed                         # 아무 파일도 안 바뀌어야 한다
 ```

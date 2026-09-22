@@ -1,0 +1,578 @@
+{
+ "episode": 2,
+ "narrator": {
+  "person": "mixed",
+  "entity": "jinhyuk"
+ },
+ "branches": [
+  {
+   "id": "main",
+   "label": "현재"
+  }
+ ],
+ "scenes": [
+  {
+   "ord": 0,
+   "opening": {
+    "surface": "2화“뭐야 당신 누구야",
+    "episode": 2,
+    "span": {
+     "start": 0,
+     "end": 12
+    },
+    "scene": 0,
+    "occurrences": 1
+   },
+   "branch": "main",
+   "anchor": {
+    "event": "탑 등장",
+    "relation": "after"
+   },
+   "pov": "jinhyuk",
+   "summary": "불심검문",
+   "span": {
+    "start": 0,
+    "end": 946
+   }
+  },
+  {
+   "ord": 1,
+   "opening": {
+    "surface": "***치료와 조사를 받고",
+    "episode": 2,
+    "span": {
+     "start": 946,
+     "end": 959
+    },
+    "scene": 1,
+    "occurrences": 1
+   },
+   "branch": "main",
+   "anchor": {
+    "event": "불심검문",
+    "relation": "after"
+   },
+   "pov": "jinhyuk",
+   "summary": "귀가",
+   "span": {
+    "start": 946,
+    "end": 1580
+   }
+  },
+  {
+   "ord": 2,
+   "opening": {
+    "surface": "***대통령 집무실",
+    "episode": 2,
+    "span": {
+     "start": 1580,
+     "end": 1590
+    },
+    "scene": 2,
+    "occurrences": 1
+   },
+   "branch": "main",
+   "anchor": null,
+   "pov": "leemujin",
+   "summary": "청와대",
+   "span": {
+    "start": 1580,
+    "end": 2244
+   }
+  },
+  {
+   "ord": 3,
+   "opening": {
+    "surface": "***세상이 혼란스러움과",
+    "episode": 2,
+    "span": {
+     "start": 2244,
+     "end": 2257
+    },
+    "scene": 3,
+    "occurrences": 1
+   },
+   "branch": "main",
+   "anchor": {
+    "event": "불심검문",
+    "relation": "after"
+   },
+   "pov": "jinhyuk",
+   "summary": "질풍 실험, 김태진 전화",
+   "span": {
+    "start": 2244,
+    "end": 3721
+   }
+  },
+  {
+   "ord": 4,
+   "opening": {
+    "surface": "***통화가 끝나고",
+    "episode": 2,
+    "span": {
+     "start": 3721,
+     "end": 3731
+    },
+    "scene": 4,
+    "occurrences": 1
+   },
+   "branch": "main",
+   "anchor": {
+    "event": "베나토르 합류",
+    "relation": "during"
+   },
+   "pov": "jinhyuk",
+   "summary": "합류",
+   "span": {
+    "start": 3721,
+    "end": 4619
+   }
+  },
+  {
+   "ord": 5,
+   "opening": {
+    "surface": "그래서 현재 준비를 마친",
+    "episode": 2,
+    "span": {
+     "start": 4619,
+     "end": 4632
+    },
+    "scene": 5,
+    "occurrences": 1
+   },
+   "branch": "main",
+   "anchor": {
+    "event": "베나토르 합류",
+    "relation": "after"
+   },
+   "pov": "jinhyuk",
+   "summary": "2차 입장",
+   "span": {
+    "start": 4619,
+    "end": 5420
+   }
+  }
+ ],
+ "entities": [
+  {
+   "ref": "jinhyuk",
+   "kind": "character",
+   "name": "유진혁",
+   "aliases": [
+    "진혁"
+   ],
+   "summary": null,
+   "first_mention": {
+    "surface": "유진혁씨 되시나요",
+    "episode": 2,
+    "span": {
+     "start": 2757,
+     "end": 2766
+    },
+    "scene": 3,
+    "occurrences": 1
+   }
+  },
+  {
+   "ref": "magang",
+   "kind": "character",
+   "name": "마강혁",
+   "aliases": [],
+   "summary": null,
+   "first_mention": {
+    "surface": "종로경찰서 마강혁 형사입니다",
+    "episode": 2,
+    "span": {
+     "start": 419,
+     "end": 434
+    },
+    "scene": 0,
+    "occurrences": 1
+   }
+  },
+  {
+   "ref": "kimtj",
+   "kind": "character",
+   "name": "김태진",
+   "aliases": [],
+   "summary": null,
+   "first_mention": {
+    "surface": "국정원 소속 김태진이라고 합니다",
+    "episode": 2,
+    "span": {
+     "start": 692,
+     "end": 709
+    },
+    "scene": 0,
+    "occurrences": 1
+   }
+  },
+  {
+   "ref": "leemujin",
+   "kind": "character",
+   "name": "이무진",
+   "aliases": [],
+   "summary": null,
+   "first_mention": {
+    "surface": "대통력 이무진",
+    "episode": 2,
+    "span": {
+     "start": 1660,
+     "end": 1667
+    },
+    "scene": 2,
+    "occurrences": 1
+   }
+  },
+  {
+   "ref": "kimjg",
+   "kind": "character",
+   "name": "김진규",
+   "aliases": [],
+   "summary": null,
+   "first_mention": {
+    "surface": "국방부장관 김진규와",
+    "episode": 2,
+    "span": {
+     "start": 1674,
+     "end": 1684
+    },
+    "scene": 2,
+    "occurrences": 1
+   }
+  },
+  {
+   "ref": "parkmg",
+   "kind": "character",
+   "name": "박무건",
+   "aliases": [],
+   "summary": null,
+   "first_mention": {
+    "surface": "경찰청장 박무건",
+    "episode": 2,
+    "span": {
+     "start": 1685,
+     "end": 1693
+    },
+    "scene": 2,
+    "occurrences": 1
+   }
+  },
+  {
+   "ref": "venator",
+   "kind": "organization",
+   "name": "베나토르",
+   "aliases": [],
+   "summary": null,
+   "first_mention": {
+    "surface": "일명 베나토르라는 팀을",
+    "episode": 2,
+    "span": {
+     "start": 3838,
+     "end": 3850
+    },
+    "scene": 4,
+    "occurrences": 1
+   }
+  },
+  {
+   "ref": "nis",
+   "kind": "organization",
+   "name": "국정원",
+   "aliases": [],
+   "summary": null,
+   "first_mention": {
+    "surface": "국정원 소속 김태진",
+    "episode": 2,
+    "span": {
+     "start": 692,
+     "end": 702
+    },
+    "scene": 0,
+    "occurrences": 3
+   }
+  },
+  {
+   "ref": "jongno",
+   "kind": "organization",
+   "name": "종로경찰서",
+   "aliases": [],
+   "summary": null,
+   "first_mention": {
+    "surface": "종로경찰서 마강혁",
+    "episode": 2,
+    "span": {
+     "start": 419,
+     "end": 428
+    },
+    "scene": 0,
+    "occurrences": 1
+   }
+  },
+  {
+   "ref": "gale",
+   "kind": "skill",
+   "name": "질풍",
+   "aliases": [],
+   "summary": "등록명 쾌속 와 같은 대상일 수 있음",
+   "first_mention": {
+    "surface": "스킬 질풍을 실험",
+    "episode": 2,
+    "span": {
+     "start": 2402,
+     "end": 2411
+    },
+    "scene": 3,
+    "occurrences": 1
+   }
+  }
+ ],
+ "states": [
+  {
+   "entity": "jinhyuk",
+   "attribute": "나이",
+   "value": "스물두 살",
+   "branch": "main",
+   "certainty": "explicit",
+   "claimed_in_dialogue": false,
+   "speaker": null,
+   "exclusive": false,
+   "evidence": {
+    "surface": "스물두 살 인생에",
+    "episode": 2,
+    "span": {
+     "start": 3091,
+     "end": 3100
+    },
+    "scene": 3,
+    "occurrences": 1
+   }
+  },
+  {
+   "entity": "jinhyuk",
+   "attribute": "보유 스킬",
+   "value": "질풍",
+   "branch": "main",
+   "certainty": "explicit",
+   "claimed_in_dialogue": false,
+   "speaker": null,
+   "exclusive": true,
+   "evidence": {
+    "surface": "스킬 질풍을 실험",
+    "episode": 2,
+    "span": {
+     "start": 2402,
+     "end": 2411
+    },
+    "scene": 3,
+    "occurrences": 1
+   }
+  },
+  {
+   "entity": "jinhyuk",
+   "attribute": "소속",
+   "value": "베나토르",
+   "branch": "main",
+   "certainty": "explicit",
+   "claimed_in_dialogue": false,
+   "speaker": null,
+   "exclusive": false,
+   "evidence": {
+    "surface": "저희 팀의 일원이 되어주십쇼",
+    "episode": 2,
+    "span": {
+     "start": 4320,
+     "end": 4335
+    },
+    "scene": 4,
+    "occurrences": 1
+   }
+  },
+  {
+   "entity": "magang",
+   "attribute": "소속",
+   "value": "종로경찰서",
+   "branch": "main",
+   "certainty": "explicit",
+   "claimed_in_dialogue": true,
+   "speaker": "magang",
+   "exclusive": false,
+   "evidence": {
+    "surface": "종로경찰서 마강혁 형사입니다",
+    "episode": 2,
+    "span": {
+     "start": 419,
+     "end": 434
+    },
+    "scene": 0,
+    "occurrences": 1
+   }
+  },
+  {
+   "entity": "kimtj",
+   "attribute": "소속",
+   "value": "국정원",
+   "branch": "main",
+   "certainty": "explicit",
+   "claimed_in_dialogue": true,
+   "speaker": "kimtj",
+   "exclusive": false,
+   "evidence": {
+    "surface": "국정원 소속 김태진이라고 합니다",
+    "episode": 2,
+    "span": {
+     "start": 692,
+     "end": 709
+    },
+    "scene": 0,
+    "occurrences": 1
+   }
+  },
+  {
+   "entity": "leemujin",
+   "attribute": "직위",
+   "value": "대통령",
+   "branch": "main",
+   "certainty": "explicit",
+   "claimed_in_dialogue": false,
+   "speaker": null,
+   "exclusive": false,
+   "evidence": {
+    "surface": "대통력 이무진",
+    "episode": 2,
+    "span": {
+     "start": 1660,
+     "end": 1667
+    },
+    "scene": 2,
+    "occurrences": 1
+   }
+  }
+ ],
+ "events": [
+  {
+   "kind": "transition",
+   "description": "베나토르 합류",
+   "branch": "main",
+   "subject": "jinhyuk",
+   "attribute": "소속",
+   "before": null,
+   "after": "베나토르",
+   "elapsed_years": null,
+   "evidence": {
+    "surface": "하.. 알겠습니다.",
+    "episode": 2,
+    "span": {
+     "start": 4602,
+     "end": 4612
+    },
+    "scene": 4,
+    "occurrences": 1
+   }
+  },
+  {
+   "kind": "occurrence",
+   "description": "불심검문",
+   "branch": "main",
+   "subject": null,
+   "attribute": null,
+   "before": null,
+   "after": null,
+   "elapsed_years": null,
+   "evidence": {
+    "surface": "불심검문 차 신분증 제시와",
+    "episode": 2,
+    "span": {
+     "start": 449,
+     "end": 463
+    },
+    "scene": 0,
+    "occurrences": 1
+   }
+  }
+ ],
+ "relations": [
+  {
+   "subject": "kimtj",
+   "predicate": "소속",
+   "object": "venator",
+   "branch": "main",
+   "claimed_in_dialogue": true,
+   "evidence": {
+    "surface": "이 팀에는 저를 포함해서",
+    "episode": 2,
+    "span": {
+     "start": 3884,
+     "end": 3897
+    },
+    "scene": 4,
+    "occurrences": 1
+   }
+  }
+ ],
+ "rules": [
+  {
+   "category": "system",
+   "statement": "무기로 인식되는 물건은 탑에 반입 불가",
+   "scope": null,
+   "branch": "main",
+   "evidence": {
+    "surface": "인류가 무기라 인식하는 모든 물건은 가지고 입장할 수 없다",
+    "episode": 2,
+    "span": {
+     "start": 5067,
+     "end": 5099
+    },
+    "scene": 5,
+    "occurrences": 1
+   }
+  },
+  {
+   "category": "geography_physics",
+   "statement": "입구에 손을 대면 빛과 함께 사라진다",
+   "scope": null,
+   "branch": "main",
+   "evidence": {
+    "surface": "입구에 손을 대면 그대로 이상한 빛에 휘감겨 사라집니다",
+    "episode": 2,
+    "span": {
+     "start": 1749,
+     "end": 1779
+    },
+    "scene": 2,
+    "occurrences": 1
+   }
+  }
+ ],
+ "timeline": [
+  {
+   "label": "베나토르 합류",
+   "branch": "main",
+   "order_hint": 5,
+   "evidence": {
+    "surface": "일명 베나토르라는 팀을",
+    "episode": 2,
+    "span": {
+     "start": 3838,
+     "end": 3850
+    },
+    "scene": 4,
+    "occurrences": 1
+   }
+  }
+ ],
+ "unclassified": [
+  {
+   "surface": "위기를 생각보다 즐기는 성격",
+   "attach_to": "jinhyuk",
+   "note": null
+  }
+ ],
+ "excluded": [
+  {
+   "surface": "21세기 세상에서",
+   "reason": "unit_noise"
+  }
+ ],
+ "dropped": []
+}
