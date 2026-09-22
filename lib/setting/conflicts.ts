@@ -125,11 +125,26 @@ function isWeak(a: StoredState, b: StoredState): boolean {
   return unparsed || bothInferred || foreignClaim(a) || foreignClaim(b) || !!a.weak || !!b.weak;
 }
 
+/** 텍스트 값 하나가 다른 값을 품는다(서울경찰청장 ⊃ 경찰청장). 변화가 아니라 표기 축약이라 카드 대신 info (세션 55 1단계 마감). */
+export interface Abbreviation {
+  entity_id: string;
+  attribute_key: string;
+  attribute: string;
+  values: [string, string];
+  evidence: [StoredState, StoredState];
+}
+export function isAbbreviation(a: Value, b: Value): boolean {
+  if (typeof a !== "string" || typeof b !== "string") return false;
+  const x = a.replace(/\s+/g, ""), y = b.replace(/\s+/g, "");
+  if (x === y || x.length < 2 || y.length < 2) return false;
+  return x.includes(y) || y.includes(x);
+}
+
 export function detectStateChangeWithoutEvent(
   states: StoredState[],
   events: StoredEvent[],
   decisions: Decision[],
-): { cards: ConflictCard[]; weak_dialogue_claims: number; ambiguous_order: number } {
+): { cards: ConflictCard[]; weak_dialogue_claims: number; ambiguous_order: number; abbreviations: Abbreviation[] } {
   const dismissed = new Set(decisions.filter((d) => d.action === "dismiss").map((d) => d.key));
   const usable = states.filter((s) => s.status !== "rejected");
   const weak_dialogue_claims = usable.filter(foreignClaim).length;
@@ -143,6 +158,7 @@ export function detectStateChangeWithoutEvent(
   const jumps = events.filter((e) => e.kind === "occurrence" && e.elapsed_years != null);
 
   const cards: ConflictCard[] = [];
+  const abbreviations: Abbreviation[] = [];
   let ambiguous = 0;
 
   for (const [, list] of groups) {
@@ -152,6 +168,12 @@ export function detectStateChangeWithoutEvent(
     for (let i = 0; i + 1 < sorted.length; i++) {
       const a = sorted[i], b = sorted[i + 1];
       if (sameValue(a.value, b.value)) continue;
+
+      // 텍스트 값의 포함 관계는 변화가 아니라 표기 축약 — 카드가 아니라 info 로 남긴다.
+      if (spec.valueKind === "text" && isAbbreviation(a.value, b.value)) {
+        abbreviations.push({ entity_id: a.entity_id, attribute_key: a.attribute_key, attribute: b.attribute, values: [String(a.value), String(b.value)], evidence: [a, b] });
+        continue;
+      }
 
       // set 속성: 뒤 관찰이 exclusive 일 때만 "앞 값이 사라졌다" 로 본다. 아니면 원소 추가일 뿐.
       if (spec.cardinality === "set" && !b.exclusive) continue;
@@ -229,7 +251,7 @@ export function detectStateChangeWithoutEvent(
   }
 
   cards.sort((x, y) => x.dismiss_key.localeCompare(y.dismiss_key));   // 출력 순서도 입력과 무관하게
-  return { cards, weak_dialogue_claims, ambiguous_order: ambiguous };
+  return { cards, weak_dialogue_claims, ambiguous_order: ambiguous, abbreviations };
 }
 
 /**

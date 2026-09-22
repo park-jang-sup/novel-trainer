@@ -12,7 +12,8 @@ novel-trainer 규칙을 따른다: 빈 결과를 통과로 읽지 않는다. 검
 | `prompts/extract.ko.md` | 추출 프롬프트. 구체 이름·값 예시 없음(베끼기 방지). `{{ }}` 는 서버가 채움 | — |
 | `locate.ts` | `surface` → 원고 위치. 정확 일치 → 공백 접기 → 3단계(공백 전부 제거 + 곱은따옴표→곧은따옴표 + …→..., 위치 매핑 유지). 셋 다 정확 일치이고 유사 일치는 없다. 못 찾으면 폐기(`dropped`). 개체의 first_mention 만은 name → aliases 정확 일치로 한 번 더 대체하고 `first_mention_fallback` 으로 센다. 원칙 6의 문지기 | 없음 |
 | `conflicts.ts` | 검사 ①(전이 없는 변화) + ①′(전이 뒤 옛 값 재등장). 위치는 (회차, 오프셋). 입력 순서 무관 | 없음 |
-| `conflicts.test.ts` | 물기 시험 32건 — 골격 10 + 리뷰 탐침 P1~P7 + 정규화·시간 + locate 3단계 P8 + first_mention 대체 P9 + 관계→상태 P10 | 없음 |
+| `conflicts.test.ts` | 물기 시험 36건 — 골격 10 + 리뷰 탐침 P1~P7 + 정규화·시간 + locate 3단계 P8 + first_mention 대체 P9 + 관계→상태 P10 + 전이→상태 P11 + 표기 축약 P12 + 합집합 P13 | 없음 |
+| `union.ts` | 같은 회차 N회 추출을 근거 기준으로 합친다(상태 = 개체·속성키·정규화 값·갈래). support = 등장 횟수, runs = N. **1단계 기본 경로: MEDIUM · 3회 · 합집합. support 1/N 은 weak** | 없음 |
 | `golden.ts` | 골든의 zod 계약(strict). 관계는 주체·객체·근거 문장(surface_contains_any)으로 판정하고 술어는 info. 개체 kind 는 kind_any 로 둘 이상 허용. 키 오타가 "조건 없음" 으로 조용히 통과하지 않게 로드 시 `safeParse`. `excluded_info`·`category_info`·`unanchored_ratio_info` 는 정보(실패 아님), `surface_contains_any` 는 후보 중 하나 | 없음 |
 | `store.ts` | 저장소 물질화 규칙. ① 술어가 동의어표에 있고 객체가 사람이 아닌 관계는 상태로도(김태진 -소속-> 베나토르 ⇒ 김태진.소속=베나토르). ② subject·attribute·after 가 있는 transition 은 그 위치의 관찰 상태로도(source: from_transition) — 같은 위치의 전이가 설명이라 ① 이 잡지 않는다. verify 의 buildStore 와 나중 저장소 어댑터가 같이 쓴다 | 없음 |
 | `verify.ts` | 1·2화 골든 대조 + 결정성 대조 | 없음 |
@@ -42,13 +43,14 @@ novel-trainer 규칙을 따른다: 빈 결과를 통과로 읽지 않는다. 검
 
 ```bash
 npm run test:setting                                        # 아래 둘을 이어서
-npx tsx lib/setting/conflicts.test.ts                       # 32 / 0
+npx tsx lib/setting/conflicts.test.ts                       # 36 / 0
 npx tsx lib/setting/make-hand-fixtures.ts                   # 손 추출본 재생성
 npx tsx lib/setting/verify.ts lib/setting/fixtures/prelim_ep1.hand.json lib/setting/fixtures/prelim_ep2.hand.json   # 60 / 0 (4인자면 run1·run2·결정성이 따로 찍히고 총계는 합 — 같은 파일 두 번이면 122 / 0)
 npx tsx lib/setting/verify.ts <ep1> <ep2> <ep1_run2> <ep2_run2>   # + 결정성(required 통과 집합 + 카드 키 집합. 개체·상태 대칭차는 info)
 npm run setting:extract -- --rescore                        # fixtures/raw/*.raw.json → locate → verify. 호출 0회. 코드·골든을 고친 뒤 재채점
 npm run setting:extract -- --rescore --set=p2 --runs=N      # 세트별·N회분. verify 는 2쌍 이상이면 N회 결정성(required 항목별 통과 횟수 · 카드 키별 등장 횟수)
-npm run setting:extract -- --rescore --set=p3-medium --runs=3 --union   # + 합집합 채점: N회를 근거 기준으로 합쳐(같은 개체·속성·값·갈래 = 하나, support 등장 횟수) 골든 채점 + 카드. support 1/N 은 weak
+npm run setting:extract -- --rescore --set=p3-medium --runs=3           # 기본 = 합집합 채점(prelim_ep{1,2}.llm.union.json 을 만들고 그걸 verify). support 1/N 은 weak
+npm run setting:extract -- --rescore --set=p3-medium --runs=3 --per-run # 실행별 + N회 결정성 + 합집합
 npm run setting:extract -- --dump                           # llm.json 의 정해진 자리(유진혁 스킬·마강혁·김수정·excluded·events·relations)를 뽑아 본다
 ```
 

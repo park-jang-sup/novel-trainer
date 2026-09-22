@@ -4,7 +4,7 @@
 `docs/archive/` 의 인수인계 3~16 · AI심사_설계안 · 10단계_재설계안은 경위다.
 필요한 문장은 여기로 끌어온다. 저쪽을 고치지 않는다.
 
-마지막 갱신: 세션 54 · 커밋 `c8a2671` 위
+마지막 갱신: 세션 55 · 커밋 `5f5b051` 위
 
 ★ 활성 144 (전체 157 − 비활성 13). 언어 관문 전수 불변식(verify.ts)이 이 수를
   출력·단언한다 — 문항 증감 때마다 이 줄과 불변식을 같이 갱신한다.
@@ -123,8 +123,8 @@
   forbidWords 확장이냐를 가른다 — tell_only 표본이 forbidWords 와 100% 겹쳐(세션 47
   실측) **forbidWords 확장으로 결정**(세션 48 후속): bt- 5건에 느낌명사 넷(고통·통증·
   아픔·지독)을 더했다. tell-v2 자체는 여전히 route.ts 미배선 — AI 승격은 안 했다.
-★ **설정검사는 아직 앱에 없다** — lib/setting/ 에 검사기·골든 골격만(네트워크 없음, 다음 6).
-  실제 LLM 추출은 scripts/extract-setting.ts(세션 55)가 붙어야 돈다.
+★ **설정검사는 아직 앱 화면에 없다** — lib/setting/ 검사기·합집합·골든 + scripts/extract-setting.ts 하니스까지(1단계 닫힘,
+  다음 6). 실제 추출은 MEDIUM·3회·합집합으로 심은 오류 2/2 를 잡는다(합집합 59/1). 화면·저장소는 2단계(다음 7).
 ```
 
 ## 닫힌 것
@@ -372,84 +372,36 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
                         열린 채로 남기는 것(아래 미결 참고) — AI 관측 비교(판정선을 넘은 뒤) ·
                         '고쳐서 다시 내기' 버튼(재제출 비율을 재고 낮을 때) · '자주 하는 실수'
                         집계(같은 key 가 여러 문항에서 반복 fail).
-6  설정집 × 설정검사 — 1단계 (세션 54 착수, lib/setting/ 골격 이식 끝)
-                        설계 `docs/설정집_설정검사_통합설계_v1.md`(대회 레포 novel-setting-check-
-                        service 감사에서 나온 재설계 — 그 레포는 읽기만, 여기만 고친다).
-                        검사기(conflicts ①·①′)·정규화(attributes)·문지기(locate)·스키마(zod)·
-                        골든 대조(verify)·손 추출본(make-hand-fixtures)이 lib/setting/ 에 있다.
-                        네트워크 없음. 물기 시험 32/0 · 골든 60/0(손 추출본. 4인자면 run1·run2·결정성 분리, 122/0) · 카드 2건(+관계 물질화가 낸 김태진.소속 weak 1건, 아래)
-                        (심은 오류 2건: 나이 19→22, 스킬 쾌속→질풍) · 정밀도 100% · coverage 0.
-                        ★ 이건 "골든·검사기·스키마가 서로 맞는다"는 확인이지 LLM 추출이 된다는
-                          확인이 아니다. 검출기 #0(대회 check_setting.py) 기준선: 심은 오류
-                          2건 중 0건 검출, 제안 149+139건.
-                        세션 54 가 이식하며 고친 것 — ① locate 3단계(공백 전부 제거 + 곱은따옴표→
-                        곧은따옴표 + …→..., 위치 매핑 유지, 여전히 정확 일치. prelim 원고는 6717자가
-                        7줄이고 문장이 붙어 있어 모델이 마침표 뒤 공백을 넣으면 2단계로 못 찾았다)
-                        ② schema `.describe()` — ref 규칙·kind 구분·exclusive·anchor.event·
-                        elapsed_years·갈래 id 가 z.toJSONSchema 를 타고 모델에게 간다(TS 주석은
-                        안 간다) ③ 골든을 GoldenSchema(strict) 로 읽는다 — 키 오타가 "조건 없음"
-                        으로 조용히 통과하던 것을 막음 ④ 프롬프트에서 temperature 0 삭제(3.7 Flash
-                        는 온도를 안 받는다, gemini.ts), 유추 숫자는 숫자로, ref 규칙 한 줄.
-                        다음(세션 55): scripts/extract-setting.ts — ai-probe 와 같은 하니스 경로
-                        (NODE_OPTIONS=--conditions=react-server tsx, gate 마개·ai_usage_log 그대로).
-                        callGemini 에 선택 인자 { responseJsonSchema, maxOutputTokens } 를 더한다
-                        (maxOutputTokens 2048 은 회차 전문 추출엔 모자란다). 첫 호출은 스키마 수용
-                        여부 1회(z.toJSONSchema 결과에 $schema·default 18·additionalProperties 20 —
-                        Gemini 가 받는지는 돌려봐야 안다). 흐름: 1화 → locate → 개체 목록을 2화
-                        {{lexicon}} 으로 → 2화, 2회 반복 → ex1·ex2·ex1b·ex2b 를 디스크에 → verify.
-                        ★ 이 픽스처의 {{branches}} 는 작품 설정으로 main / pre_regression 을 넘긴다
-                          (골든 _comment) — 스크립트가 그 자리를 가진다. 모델이 갈래 id 를 짓지 않는다.
-                        예상 실패 순서(리뷰): dropped 상한 → 갈래 id → 질풍 exclusive → 유추 나이
-                        숫자화 → 개체 kind → 유사 속성 미병합 상한. 앞의 넷은 세션 54 가 미리 막았다.
-                        마지막 것은 동의어표를 넓혀서 풀지 상한을 낮춰서 풀지 않는다.
-                        완료 기준(설계 §11): 실제 추출 verify 실패 0 · 결정성 통과 · 검출기 #0 옆에
-                        새 숫자. 첫 호출 결과(스키마 수용·골든 실패 목록)를 보고 프롬프트/골든 어느
-                        쪽을 고칠지 박 님과 같이 판단한다.
-                        비용: 회차당 출력 2~3만 토큰 기준 4회 호출 약 $0.5.
-                        ★ 세션 55 ①(호출 0회, 박 님 지시): first_mention max 60 + name→aliases 대체
-                          (first_mention_fallback) · 관계→상태 물질화(store.ts, 술어가 동의어표에 있고
-                          객체가 사람 아님) · 골든 excluded/규칙 카테고리/미확정 비율은 info ·
-                          질풍·마강혁 surface_contains_any · 김수정.나이 금지 · 결정성 = required 통과
-                          집합 + 카드 키 집합(대칭차는 info) · --rescore(raw→locate→verify) · --dump.
-                          물질화의 값: 손 추출본에서 김태진.소속 국정원→베나토르 weak 카드가 하나 더
-                          난다(2화 대사 "국정원 소속 김태진" + 관계 "김태진 ∈ 베나토르" — 관계에는
-                          speaker 가 없어 weak). 상한 4 안이라 통과지만 정밀도 100→67%. 겹소속을
-                          어떻게 볼지는 박 님 결정. raw 4개는 이 환경에 없어 ①-0 덤프와 ①-7 재채점은
-                          박 님 로컬(--dump · --rescore) 또는 raw 푸시 뒤에.
-                        ★ ①-b(호출 0회): 모델용 스키마 ExtractionRawForModel(first_mention 60자) 와 파싱용
-                          ExtractionRaw(300자) 분리 — 필드 하나 때문에 회차 전체를 버리지 않는다(run2 가
-                          이걸로 파싱될 것). 질풍 근거 후보에 "유일한 스킬". verify 는 run1·run2·결정성을
-                          완전히 분리해 찍고 총계는 합. "쾌속 을" 은 저장소 골든에 없음(grep 0건).
-                        ★ 첫 실제 추출(박 님 로컬, LOW, raw 는 fixtures/raw/ 에 커밋됨) 재채점 —
-                          ①-b 코드 100/22(run1 51/9 · run2 49/11 · 결정성 0/2) → 소속 set 뒤 카드 오탐 1 제거 →
-                          전이→상태 물질화(store.ts, from_transition)·골든 후보(100개 층·소원·연심) 뒤
-                          **105/17(run1 54/6 · run2 51/9 · 결정성 0/2)**. 이것이 ②(프롬프트) 의 비교 기준선.
-                          남은 실패의 뿌리: 나이 상태 자체가 없음(카드 1 못 섬) · 튜토리얼을 개체로 안 잡음 ·
-                          transition 이 run1 0건 · run2 의 after 에 설명이 섞임("쾌속 스킬 획득") · 결정성 없음.
-                          ② 는 --set=p2 로 돌려 LOW 결과를 안 덮는다. 검출기 #0(0/2) 옆의 첫 숫자: 심은 오류 2건 중 1건(쾌속→질풍), run1 기준.
-                        ★ ②(프롬프트 v2, LOW, raw fixtures/raw/p2/) 재채점 — 골든에 소원권 kind_any·관계는 객체+근거 문장 판정
-                          (술어 info) 반영 뒤 **114/8(run1 57/3 · run2 57/3 · 결정성 0/2)**. 같은 골든으로 LOW 기준선은 105/17.
-                          run1 은 심은 오류 2건 다 잡음(카드 2장, 정밀도 100%) — 검출기 #0 의 0/2 옆에 2/2. run2 는 1/2(나이 상태
-                          가 안 나옴). transition: LOW 0·0/2·0 → p2 1·0/3·1. 김수정.나이 오탐 0. 1화 쾌속은 두 실행 모두
-                          살았지만 둘 다 상태가 아니라 transition 물질화로 산 것. 결정성 없음 — 불안정 4건(나이 상태·나이 카드·
-                          2화 소속 상태·소속 transition 이 실행마다 갈림). 남은 실패: 김수정.생사=사망(두 실행 다 없음).
-                          ③ 준비 끝: --runs=N · GEMINI_THINKING_LEVEL=MEDIUM · --set=p3-medium. '없음' thinking 은 SDK 에
-                          없다(MINIMAL·LOW·MEDIUM·HIGH). verify 는 N회 결정성을 항목별 통과 횟수·카드 키별 등장 횟수로 찍는다.
-                        ★ ③ 결과(MEDIUM×3, raw fixtures/raw/p3-medium/; MINIMAL 은 모델이 400 으로 거부) — 골든에 유진혁.나이
-                          1화 value_any [19,20](만/세는 나이) 반영 뒤. 실행별 56/4 · 57/3 · **60/0(run3 전부 통과)** · 결정성 0/2
-                          (불안정 7, 전부 2/3 이상). 같은 골든으로 p2(LOW×2) 57/3 · 57/3. 합집합(--union, ③-3): LOW 55/5 ·
-                          p2 58/2 · MEDIUM 59/1 — 합집합은 재현율을 올리고 support 가 정밀도를 말한다(MEDIUM 합집합 상태 23건 중
-                          3/3 이 11, 1/3 이 9). 합집합에서 남는 실패는 "나이 카드가 weak 가 아니어야 한다" 하나 — 19 는 1/3 support 라
-                          weak. 합집합이 19(1화)→20(1화) 카드도 하나 더 낸다(만/세는 나이 힌트가 붙는 자리, 오탐이 아니라 원고의 애매함).
-                          비용: MEDIUM 6회 $0.130, LOW p2 4회 $0.075. 출력 토큰 MEDIUM 이 회차당 ~1.2~1.5배.
-                        ★ 일일 지출 상한 20→60 USD: seed/update-spend-cap-60.sql(system_flags key=daily_spend_cap_usd 의 value 를 '60' 으로
-                          update, 1행 확인). 이 상한은 하루 누적 cost_usd 합계다 — 호출당이 아니다. 실행당 호출 수 상한은 하니스
-                          --cap(기본 = 계획 호출 수)이고 DB 와 무관하다. DB 실행은 박 님 몫.
-                        ★ 두 번째 픽스처 후보(대회 레포 public/samples, 읽기만 함): prelim 말고는 fantasy(279자+565자·2화),
-                          martial(552자), modern_fantasy(436자) 셋뿐이고 전부 검출기 #0 시연용 미니 원고(문장마다 "그의 나이 스물네 살"
-                          꼴로 설정이 박힌 합성 텍스트)라 프롬프트 과적합을 재기엔 너무 짧고 문체가 원고가 아니다. test/manuscript.txt
-                          (12,263자, 29줄)는 prelim 1화의 이전 판(같은 원고, 문장 손질 전)이라 다른 작품이 아니다.
-                          → 진짜 두 번째 원고는 밖에서 와야 한다(박 님 본인/지인 원고 1·2화, 다른 장르). 골든은 손으로 다시 쓴다.
+6  (닫힘, 세션 55) 설정집 × 설정검사 — 1단계 (실제 LLM 추출 → 골든 대조 → 결정)
+                        설계 `docs/설정집_설정검사_통합설계_v1.md`(대회 레포 novel-setting-check-service 감사의
+                        재설계 — 그 레포는 읽기만, 여기만 고친다). 코드는 lib/setting/(스키마·정규화·locate·
+                        검사 ①①′·합집합·골든 대조·손 추출본), 하니스는 scripts/extract-setting.ts(ai-probe 와
+                        같은 마개 경로 C). 프롬프트 lib/setting/prompts/extract.ko.md. raw 는 fixtures/raw/<세트>/.
+                        ★ 결정(박 님): **기본 경로 = MEDIUM · 3회 · 합집합. support 1/N 인 관찰은 weak.**
+                          --step=run 은 prelim_ep{1,2}.llm.union.json 을 내고 verify 는 그 합집합을 채점한다.
+                          실행별·N회 결정성은 --per-run. 소속은 set(겹소속 정상). 텍스트 값의 포함 관계
+                          (서울경찰청장 ⊃ 경찰청장)는 카드가 아니라 표기 축약 info. 관계·전이는 상태로 물질화.
+                        ★ 숫자(같은 골든, 실제 추출) — 검출기 #0 기준선은 심은 오류 2건 중 0건, 제안 149+139건.
+                          LOW×2(첫 프롬프트)   실행별 54/6 · 51/9 · 합집합 55/5 · 카드 1/2
+                          LOW×2(프롬프트 v2)   57/3 · 57/3 · 합집합 58/2 · 카드 2/2(run1)
+                          MEDIUM×3(v2)         56/4 · 57/3 · 60/0 · 합집합 59/1 · 카드 2/2 · 비용 6회 $0.130
+                          합집합에서 남는 실패 1: 나이 카드가 weak — 19 가 support 1/3(나이를 20 으로 낸 실행이 있다.
+                          골든은 19|20 을 둘 다 허용). 결정성(required 통과 집합 동일)은 어느 세트도 없다 — 그래서 합집합.
+                          MINIMAL thinking 은 모델이 400 으로 거부. '없음' 은 SDK 에 없다.
+                        확인: 물기 36/0 · 손 추출본 60/0(3회 --per-run 182/0) · tsc 0 · lint 0. test:setting 이 이 둘을 돈다.
+                        경위(호출 0회 수정들, 세션 55): first_mention 60/300 분리 · name→aliases 대체 · 골든 strict ·
+                        info 항목(excluded·카테고리·미확정 비율·술어) · 관계는 객체+근거로 판정 · 나이 value_any ·
+                        --set/--runs/--rescore/--dump/--per-run · 지출 상한 SQL seed/update-spend-cap-60.sql(DB 실행은 박 님).
+                        두 번째 픽스처: 대회 레포 samples 는 전부 300~600자 합성 미니 원고라 못 쓴다. 밖에서 와야 한다.
+7  설정집 × 설정검사 — 2단계 (저장소 관찰/정본 분리 · 개체 페이지 · 회차 슬라이더 · decisions)
+                        준비(세션 55, 코드 전): migrations/setting/0001_setting_init.sql(초안 — setting 스키마,
+                        observations/canonical 분리, decisions.dismiss_key 멱등키, 카드 테이블 없음, RLS 는 works.owner_id
+                        + work_members. 실행 안 했다) · docs/설정집_설정검사_2단계_설계초안.md(작품 뷰·개체 페이지·
+                        확인 필요 카드의 와이어 텍스트, decisions 액션 표, 완료 기준 5, 열린 질문 4).
+                        ★ 착수 전 박 님 결정: 편집자 권한 · 회차 투입 3회 호출을 사용자 한도에 세는 법 · scenes.work_id ·
+                          app/setting/ 레이아웃. 완료 기준: 되돌리기 동작 · 카드 = 순수 함수 확인(설계 §11).
+                        순서 제안: 저장소 어댑터(순수 함수 + 물기) → 회차 투입 라우트(마개 뒤, 합집합) → 개체 페이지 →
+                        확인 필요 카드 + decisions → 회차 슬라이더. 골든은 그대로 두고 2단계는 골든이 아니라 되돌리기로 문다.
 ```
 
 ### 끝난 것 — 세션 53 (bt- 재료 두 줄 확장 셋 · diffChecks rule 대조 · reviewed 컬럼)
@@ -3194,7 +3146,7 @@ cd scoring-server && source .venv/bin/activate && SCORING_SECRET=dev uvicorn mai
 
 npx next typegen && npx tsc --noEmit     # 0건
 npm run test:scoring | tail -1           # 0 실패만 본다
-npm run test:setting | tail -1           # 설정검사 골격 — 물기 32/0 + 골든 60/0 (네트워크 없음)
+npm run test:setting | tail -1           # 설정검사 — 물기 36/0 + 손 추출본 골든 60/0 (네트워크 없음)
 npm run check:numbers | tail -1          # 낡은 수 0건
 npm run gen:seed                         # 아무 파일도 안 바뀌어야 한다
 ```

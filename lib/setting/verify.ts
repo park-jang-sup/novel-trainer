@@ -21,6 +21,7 @@ import { GoldenSchema, type ConflictCardRequired, type EventQuery, type Golden, 
 import { detectStateChangeWithoutEvent, toStoredState, type ConflictCard, type StoredEvent, type StoredState } from "./conflicts";
 import { normalizeAttribute, normalizeValue, sameValue, similarUnmergedAttributePairs } from "./attributes";
 import { materializeRelationStates, materializeTransitionStates } from "./store";
+import { unionExtractions } from "./union";
 
 interface Line { ok: boolean | null; line: string }   // ok=null 은 info — 세지 않는다
 type Sink = Line[];
@@ -105,7 +106,8 @@ function buildStore(exs: Extraction[]): Store {
     for (const s of ex.states) {
       const entity_id = rid(s.entity);
       if (!entity_id) { st.orphan_ref++; continue; }   // 조용히 버리지 않는다
-      st.states.push(toStoredState({ id: `st_${st.states.length}`, entity_id, attribute: s.attribute, value: s.value, branch: s.branch, episode: ex.episode, pos: s.evidence.span.start, certainty: s.certainty, claimed_in_dialogue: s.claimed_in_dialogue, speaker_id: rid(s.speaker), exclusive: s.exclusive, status: "observed", surface: s.evidence.surface }));
+      const runs = ex.runs ?? 1;
+      st.states.push({ ...toStoredState({ id: `st_${st.states.length}`, entity_id, attribute: s.attribute, value: s.value, branch: s.branch, episode: ex.episode, pos: s.evidence.span.start, certainty: s.certainty, claimed_in_dialogue: s.claimed_in_dialogue, speaker_id: rid(s.speaker), exclusive: s.exclusive, status: "observed", surface: s.evidence.surface }), support: s.support, weak: runs > 1 && s.support === 1 });
     }
     const trRows = [];
     for (const ev of ex.events) {
@@ -263,7 +265,8 @@ function verify(st: Store, g: Golden, sink: Sink): VerifyOutcome {
 
   // 검사 ① — 여기서는 저장소 상태만 태운다. 등록된 별칭(유진혁/진혁)은 표기 변경이 아니므로
   // namingStatesFromMentions 는 lexicon 이 "다른 이름 두 개를 같은 개체로 묶었을 때" 만 쓴다 (서비스 코드 몫).
-  const { cards, ambiguous_order } = detectStateChangeWithoutEvent(st.states, st.events, []);
+  const { cards, ambiguous_order, abbreviations } = detectStateChangeWithoutEvent(st.states, st.events, []);
+  for (const ab of abbreviations) info(`표기 축약(카드 아님): ${st.entities.find((e) => e.id === ab.entity_id)?.name ?? ab.entity_id}.${ab.attribute} ${ab.values[0]} ⊃⊂ ${ab.values[1]} (${ab.evidence[0].episode}화·${ab.evidence[1].episode}화)`);
   let requiredHit = 0;
   const cardMatch = (q: ConflictCardRequired) => cards.some((c) => {
     if (c.kind !== q.kind) return false;
@@ -340,64 +343,7 @@ function determinism(runs: VerifyOutcome[], sink: Sink) {
   for (let i = 1; i < N; i++) info(`대칭차 run1↔run${i + 1}: 개체 ${symdiff(entSig(runs[0].store), entSig(runs[i].store))} · 상태 ${symdiff(stSig(runs[0].store), stSig(runs[i].store))} (run1 개체 ${runs[0].store.entities.length}/상태 ${runs[0].store.states.length} · run${i + 1} 개체 ${runs[i].store.entities.length}/상태 ${runs[i].store.states.length})`);
 }
 
-/**
- * 합집합 채점 (세션 55 ③-3, --union). N회 결과를 근거 기준으로 하나로 합친다 —
- *   상태  같은 (개체 이름, 속성키, 값, 갈래) 면 하나. support = 몇 회에서 나왔나. 1/N 이면 weak (카드가 weak 가 된다).
- *         exclusive 는 OR, certainty 는 하나라도 explicit 이면 explicit, 위치는 가장 앞선 것.
- *   사건  transition 은 (주체, 속성키, before, after, 갈래), occurrence 는 (갈래, description). 관계는 (주체, 객체, 술어). 규칙은 statement.
- *   장면  회차마다 장면이 가장 많은 실행의 것(장면은 실행마다 경계가 달라 합칠 수 없다). 화자는 run1.
- *   coverage 수치는 실행 중 최댓값.
- * 합집합은 "N번 돌려 모은 것" 이지 한 실행의 성적이 아니다 — 재현율은 오르고 support 가 정밀도를 말한다.
- */
-function unionStores(stores: Store[]): Store {
-  const N = stores.length;
-  const st: Store = { entities: [], states: [], events: [], relations: [], rules: [], excluded: [], unclassified: [], scenes: [], narrator: stores[0].narrator, branches: new Set(), orphan_ref: 0, dropped: 0, ambiguous_surface: 0, first_mention_fallback: 0, states_from_relations: 0, states_from_transitions: 0 };
-  const idByName = new Map<string, string>();
-  for (const s of stores) for (const e of s.entities) {
-    const names = [e.name, ...e.aliases];
-    let id = names.map((n) => idByName.get(n)).find(Boolean);
-    if (!id) { id = `u_${st.entities.length}`; st.entities.push({ id, name: e.name, kind: e.kind, aliases: [...e.aliases] }); }
-    else { const ent = st.entities.find((x) => x.id === id)!; for (const n of names) if (n !== ent.name && !ent.aliases.includes(n)) ent.aliases.push(n); }
-    for (const n of names) idByName.set(n, id);
-  }
-  const uid = (s: Store, id: string | null) => (id == null ? null : idByName.get(s.entities.find((e) => e.id === id)?.name ?? "") ?? null);
-  const posKey = (x: { episode: number; pos: number }) => x.episode * 1e9 + x.pos;
-
-  const states = new Map<string, StoredState>(), stSup = new Map<string, number>();
-  const events = new Map<string, StoredEvent>();
-  const rels = new Map<string, Store["relations"][number]>();
-  const rules = new Map<string, Store["rules"][number]>();
-  const excluded = new Map<string, Store["excluded"][number]>();
-  const uncl = new Map<string, Store["unclassified"][number]>();
-  for (const s of stores) {
-    for (const b of s.branches) st.branches.add(b);
-    st.dropped = Math.max(st.dropped, s.dropped); st.orphan_ref = Math.max(st.orphan_ref, s.orphan_ref); st.ambiguous_surface = Math.max(st.ambiguous_surface, s.ambiguous_surface);
-    st.first_mention_fallback = Math.max(st.first_mention_fallback, s.first_mention_fallback); st.states_from_relations = Math.max(st.states_from_relations, s.states_from_relations); st.states_from_transitions = Math.max(st.states_from_transitions, s.states_from_transitions);
-    const seen = new Set<string>();
-    for (const x of s.states) {
-      const eid = uid(s, x.entity_id); if (!eid) continue;
-      const k = [eid, x.attribute_key, String(x.value), x.branch].join("\0");
-      const cur = states.get(k);
-      if (!cur) states.set(k, { ...x, id: `st_${states.size}`, entity_id: eid, speaker_id: uid(s, x.speaker_id) });
-      else { if (x.exclusive) cur.exclusive = true; if (x.certainty === "explicit") cur.certainty = "explicit"; if (posKey(x) < posKey(cur)) { cur.pos = x.pos; cur.episode = x.episode; cur.surface = x.surface; } }
-      if (!seen.has(k)) { seen.add(k); stSup.set(k, (stSup.get(k) ?? 0) + 1); }
-    }
-    for (const e of s.events) {
-      const sid = uid(s, e.subject_id);
-      const k = e.kind === "transition" ? ["t", sid, e.attribute_key, String(e.value_before), String(e.value_after), e.branch].join("\0") : ["o", e.branch, e.description].join("\0");
-      if (!events.has(k)) events.set(k, { ...e, id: `ev_${events.size}`, subject_id: sid });
-    }
-    for (const r of s.relations) { const a = uid(s, r.subject), b = uid(s, r.object); if (!a || !b) continue; const k = [a, b, r.predicate].join("\0"); if (!rels.has(k)) rels.set(k, { ...r, subject: a, object: b }); }
-    for (const r of s.rules) if (!rules.has(r.statement)) rules.set(r.statement, r);
-    for (const x of s.excluded) { const k = x.surface + "\0" + x.reason; if (!excluded.has(k)) excluded.set(k, x); }
-    for (const u of s.unclassified) if (!uncl.has(u.surface)) uncl.set(u.surface, u);
-  }
-  for (const [k, x] of states) { const sup = stSup.get(k)!; x.support = sup; x.weak = N > 1 && sup === 1; st.states.push(x); }
-  st.events = [...events.values()]; st.relations = [...rels.values()]; st.rules = [...rules.values()]; st.excluded = [...excluded.values()]; st.unclassified = [...uncl.values()];
-  for (const ep of [1, 2]) { const best = stores.map((s) => s.scenes.filter((x) => x.episode === ep)).sort((a, b) => b.length - a.length)[0] ?? []; st.scenes.push(...best); }
-  return st;
-}
-
+/** 합집합 상태의 support 분포 (합집합 Extraction 을 buildStore 한 Store 에서). */
 function supportSummary(st: Store, N: number, sink: Sink) {
   const { info } = mk(sink);
   const hist = new Map<number, number>(); for (const x of st.states) hist.set(x.support ?? 0, (hist.get(x.support ?? 0) ?? 0) + 1);
@@ -406,9 +352,11 @@ function supportSummary(st: Store, N: number, sink: Sink) {
 }
 
 // ── main ──
-const union = process.argv.includes("--union");
-const args = process.argv.slice(2).filter((a) => a !== "--union");
-if (args.length < 2 || args.length % 2 !== 0) { console.error("usage: verify.ts ep1.json ep2.json [ep1_run2.json ep2_run2.json [ep1_run3.json ep2_run3.json …]]  — 회차 쌍을 실행 수만큼"); process.exit(2); }
+// 기본 = 합집합 채점 (1단계 결정: MEDIUM · 3회 · 합집합, support 1/N 은 weak). N쌍이면 여기서 합치고, 합집합 파일 한 쌍이면 그대로.
+// --per-run 이면 실행별 블록 + N회 결정성을 앞에 찍고 합집합을 뒤에 찍는다.
+const perRun = process.argv.includes("--per-run");
+const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
+if (args.length < 2 || args.length % 2 !== 0) { console.error("usage: verify.ts ep1.json ep2.json [ep1_run2.json ep2_run2.json …] [--per-run]  — 회차 쌍을 실행 수만큼. 기본은 합집합 채점"); process.exit(2); }
 const golden = loadGolden();
 const tally = (sink: Sink) => ({ pass: sink.filter((r) => r.ok === true).length, fail: sink.filter((r) => r.ok === false).length });
 const print = (title: string, sink: Sink) => {
@@ -419,33 +367,27 @@ const print = (title: string, sink: Sink) => {
   return t;
 };
 
-// 실행별로 완전히 분리해 찍는다 (세션 55 ①-b-4). run1 → run2 → … → 결정성. 총계는 전부의 합이다.
 console.log("prelim 1·2화 골든 대조");
 const N = args.length / 2;
-const outs: VerifyOutcome[] = [];
-const tallies: { pass: number; fail: number }[] = [];
-const stores: Store[] = [];
-for (let i = 0; i < N; i++) {
-  const sink: Sink = [];
-  const store = buildStore([load(args[2 * i]), load(args[2 * i + 1])]);
-  stores.push(store);
-  outs.push(verify(store, golden, sink));
-  tallies.push(print(`run${i + 1}`, sink));
+const pairs = Array.from({ length: N }, (_, i) => [load(args[2 * i]), load(args[2 * i + 1])] as const);
+const parts: string[] = [];
+let nPass = 0, nFail = 0;
+
+if (perRun && N >= 2) {
+  const outs: VerifyOutcome[] = [];
+  pairs.forEach((pr, i) => { const sink: Sink = []; outs.push(verify(buildStore([...pr]), golden, sink)); const t = print(`run${i + 1}`, sink); parts.push(`run${i + 1} ${t.pass}/${t.fail}`); nPass += t.pass; nFail += t.fail; });
+  const sinkD: Sink = []; determinism(outs, sinkD); const tD = print("결정성", sinkD); parts.push(`결정성 ${tD.pass}/${tD.fail}`); nPass += tD.pass; nFail += tD.fail;
 }
-let tD = { pass: 0, fail: 0 };
-if (N >= 2) {
-  const sinkD: Sink = [];
-  determinism(outs, sinkD);
-  tD = print("결정성", sinkD);
-}
-let tU = { pass: 0, fail: 0 };
-if (union && N >= 2) {
-  const sinkU: Sink = [];
-  const u = unionStores(stores);
-  supportSummary(u, N, sinkU);
-  verify(u, golden, sinkU);
-  tU = print(`union(${N})`, sinkU);
-}
-const nPass = tallies.reduce((s, t) => s + t.pass, 0) + tD.pass + tU.pass, nFail = tallies.reduce((s, t) => s + t.fail, 0) + tD.fail + tU.fail;
-console.log(`\n통과 ${nPass} / 실패 ${nFail}   (${tallies.map((t, i) => `run${i + 1} ${t.pass}/${t.fail}`).join(" · ")}${N >= 2 ? ` · 결정성 ${tD.pass}/${tD.fail}` : ""}${union && N >= 2 ? ` · union ${tU.pass}/${tU.fail}` : ""} · 검출기 #0 기준선: 심은 오류 2건 중 0건)`);
+
+// 합집합 (N=1 이면 그 쌍 자체 — 합집합 파일이면 runs/support 가 안에 있다)
+const uEp1 = unionExtractions(pairs.map((pr) => pr[0])), uEp2 = unionExtractions(pairs.map((pr) => pr[1]));
+const runsIn = uEp1.runs ?? 1;
+const sinkU: Sink = [];
+const uStore = buildStore([uEp1, uEp2]);
+if (runsIn > 1) supportSummary(uStore, runsIn, sinkU);
+verify(uStore, golden, sinkU);
+const titleU = runsIn > 1 ? `union(${runsIn})` : "run1";
+const tU = print(titleU, sinkU); parts.push(`${titleU} ${tU.pass}/${tU.fail}`); nPass += tU.pass; nFail += tU.fail;
+
+console.log(`\n통과 ${nPass} / 실패 ${nFail}   (${parts.join(" · ")} · 검출기 #0 기준선: 심은 오류 2건 중 0건)`);
 process.exit(nFail === 0 ? 0 : 1);

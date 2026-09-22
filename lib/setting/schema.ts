@@ -225,12 +225,15 @@ export const ExtractionRawForModel = ExtractionRaw.extend({
 });
 
 /** locate.ts 를 거친 뒤의 형태. Evidence 에 span/scene/episode 가 붙고, 못 찾은 항목은 dropped 로 옮겨진다. */
+/** 합집합(union.ts)에서만 붙는다: N회 중 몇 번 나왔나. 없으면 단일 실행. */
+const Support = z.number().int().positive().optional();
+
 export const Extraction = ExtractionRaw.extend({
   entities: z.array(EntityRaw.extend({ first_mention: Evidence.extend({ surface: z.string().min(2).max(300) }) })),
-  states: z.array(StateRaw.extend({ evidence: Evidence })),
-  events: z.array(EventRaw.extend({ evidence: Evidence })),
-  relations: z.array(RelationRaw.extend({ evidence: Evidence })),
-  rules: z.array(RuleRaw.extend({ evidence: Evidence })),
+  states: z.array(StateRaw.extend({ evidence: Evidence, support: Support })),
+  events: z.array(EventRaw.extend({ evidence: Evidence, support: Support })),
+  relations: z.array(RelationRaw.extend({ evidence: Evidence, support: Support })),
+  rules: z.array(RuleRaw.extend({ evidence: Evidence, support: Support })),
   timeline: z.array(TimelineRaw.extend({ evidence: Evidence })),
   scenes: z.array(SceneRaw.extend({
     opening: Evidence,
@@ -244,6 +247,8 @@ export const Extraction = ExtractionRaw.extend({
   })),
   /** first_mention 을 못 찾아 name → aliases 정확 일치로 대체한 개체 수. 폐기가 아니라 대체라 따로 센다 — 조용히 살리지 않는다. */
   first_mention_fallback: z.number().int().nonnegative().default(0),
+  /** 합집합이면 합친 실행 수. support 1/runs 인 관찰은 weak. 없으면 단일 실행. */
+  runs: z.number().int().positive().optional(),
 });
 export type Extraction = z.infer<typeof Extraction>;
 

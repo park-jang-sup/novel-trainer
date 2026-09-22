@@ -14,7 +14,10 @@
  * npm run setting:extract -- --step=run --set=p2   # ★ 세트: raw 와 llm json 을 fixtures/raw/p2/ · fixtures/p2/ 에. 앞 실행을 안 덮는다
  * GEMINI_THINKING_LEVEL=MEDIUM npm run setting:extract -- --step=run --runs=3 --set=p3-medium   # ③: (1화→2화)×3 = 6회. thinking 은 env
  * npm run setting:extract -- --rescore --runs=3 --set=p3-medium                                 # 3회분 raw → verify 6인자(N회 결정성)
- * npm run setting:extract -- --rescore --runs=3 --set=p3-medium --union                         # + 합집합 채점(support 1/N 은 weak)
+ * npm run setting:extract -- --rescore --runs=3 --set=p3-medium --per-run                       # 실행별·결정성까지. 기본은 합집합만
+ *
+ * ★ 1단계 결정(세션 55): 기본 경로는 MEDIUM · 3회 · 합집합. --step=run 은 prelim_ep{1,2}.llm.union.json 을 기본으로 내고
+ *   verify 는 그 합집합을 채점한다. support(N회 중 등장 횟수) 1/N 인 관찰은 weak.
  * ```
  *
  * thinking 은 gemini.ts 가 env GEMINI_THINKING_LEVEL 로 읽는다(MINIMAL·LOW·MEDIUM·HIGH — @google/genai 2.19 의 ThinkingLevel.
@@ -33,6 +36,7 @@ import { spawnSync } from 'node:child_process'
 import { z } from 'zod'
 import { ExtractionRaw, ExtractionRawForModel, type Extraction } from '../lib/setting/schema'
 import { locateAll } from '../lib/setting/locate'
+import { unionExtractions } from '../lib/setting/union'
 import { callGemini, DEFAULT_MODEL, THINKING_LEVEL } from '../lib/ai/gemini'
 import { checkGateBeforeQuota, checkRunBudget } from '../lib/ai/gate'
 import { countTodayRows, logPgError, readFlags, sumSpendTodayUsd } from '../lib/ai/flags'
@@ -166,7 +170,7 @@ async function main() {
   const maxOut = Number(arg('max-out', '32768'))
   const rescore = flag('rescore')
   const dump = flag('dump')
-  const union = flag('union')
+  const perRun = flag('per-run')
   if (!dry && !check && !rescore && !dump && step !== 'schema' && step !== 'run') {
     console.error('★ --dry · --check · --rescore · --dump · --step=schema · --step=run 중 하나. --step=schema 가 첫 호출(1회)이다.')
     process.exit(1)
@@ -216,7 +220,8 @@ async function main() {
       if (r.parsed) { writeFileSync(new URL(`${name}.json`, FIX), JSON.stringify(r.parsed, null, 1)); made++ }
     }
     if (made === 0) { console.log(`\n★ 재채점할 raw 가 하나도 없다 — ${p(RAW)}*.raw.json 을 둔다`); process.exit(1) }
-    runVerify(runs, union)
+    writeUnion(runs)
+    runVerify(runs, perRun)
     return
   }
 
@@ -293,25 +298,47 @@ async function main() {
   }
   console.log(`\n호출 ${calls}회 · 실비 $${results.reduce((s, x) => s + (x.costUsd ?? 0), 0).toFixed(6)} · 토큰 in ${results.reduce((s, x) => s + x.usage.inputTokens, 0)} / out ${results.reduce((s, x) => s + x.usage.outputTokens, 0)}`)
 
-  runVerify(runs, union)
+  writeUnion(runs)
+  runVerify(runs, perRun)
 }
 
 /** run i 의 파일 접미사: llm · llm2 · llm3 … */
 const suffixFor = (i: number) => (i === 0 ? 'llm' : `llm${i + 1}`)
 
-/** 회차 쌍이 앞에서부터 이어지는 만큼 verify 에 넘긴다(2쌍 이상이면 N회 결정성). verify 의 종료 코드를 그대로 낸다. */
-function runVerify(runs: number, union = false): never {
-  const exists = (f: string) => { try { readFileSync(f); return true } catch { return false } }
+const exists = (f: string) => { try { readFileSync(f); return true } catch { return false } }
+const pairFiles = (runs: number): string[] => {
   const pairs: string[] = []
   for (let i = 0; i < runs; i++) {
     const a = p(new URL(`prelim_ep1.${suffixFor(i)}.json`, FIX)), b = p(new URL(`prelim_ep2.${suffixFor(i)}.json`, FIX))
     if (!(exists(a) && exists(b))) break
     pairs.push(a, b)
   }
+  return pairs
+}
+
+/** 기본 출력: N회 합집합 prelim_ep{1,2}.llm.union.json (1단계 결정). 2회 이상 파싱됐을 때만. */
+function writeUnion(runs: number) {
+  const pairs = pairFiles(runs)
+  const n = pairs.length / 2
+  if (n < 2) { console.log(`\n합집합 없음 — 파싱된 실행이 ${n}회뿐`); return }
+  const load = (f: string) => JSON.parse(readFileSync(f, 'utf8')) as Extraction
+  const u1 = unionExtractions(pairs.filter((_, i) => i % 2 === 0).map(load)), u2 = unionExtractions(pairs.filter((_, i) => i % 2 === 1).map(load))
+  writeFileSync(new URL('prelim_ep1.llm.union.json', FIX), JSON.stringify(u1, null, 1))
+  writeFileSync(new URL('prelim_ep2.llm.union.json', FIX), JSON.stringify(u2, null, 1))
+  const hist = (u: Extraction) => { const h = new Map<number, number>(); for (const s of u.states) h.set(s.support ?? 0, (h.get(s.support ?? 0) ?? 0) + 1); return [...h].sort((a, b) => b[0] - a[0]).map(([k, v]) => `${k}/${n}:${v}`).join(' ') }
+  console.log(`\n합집합 ${n}회 → prelim_ep1.llm.union.json (상태 ${u1.states.length}건 support ${hist(u1)}) · prelim_ep2.llm.union.json (상태 ${u2.states.length}건 support ${hist(u2)})`)
+}
+
+/** 기본은 합집합 파일 한 쌍으로 verify(= 합집합 채점). --per-run 이면 회차 쌍 전부 + --per-run(실행별·결정성·합집합). verify 의 종료 코드를 그대로 낸다. */
+function runVerify(runs: number, perRun = false): never {
+  const pairs = pairFiles(runs)
   if (pairs.length < 2) { console.log('★ verify 를 돌릴 파일이 모자란다(llm 1·2화가 필요) — 멈춘다'); process.exit(1) }
   const n = pairs.length / 2
-  console.log(`\n=== verify ${n}회분 ${pairs.length}인자${n >= 2 ? ` (${n}회 결정성 포함)` : ' — 1회뿐이라 결정성은 못 잰다'} ===`)
-  const v = spawnSync('npx', ['tsx', p(new URL('verify.ts', SETTING)), ...pairs, ...(union ? ['--union'] : [])], { stdio: 'inherit' })
+  const u1 = p(new URL('prelim_ep1.llm.union.json', FIX)), u2 = p(new URL('prelim_ep2.llm.union.json', FIX))
+  const useUnion = n >= 2 && exists(u1) && exists(u2)
+  const vargs = perRun && n >= 2 ? [...pairs, '--per-run'] : useUnion ? [u1, u2] : pairs.slice(0, 2)
+  console.log(`\n=== verify ${perRun && n >= 2 ? `${n}회 실행별 + 결정성 + 합집합` : useUnion ? `합집합(${n}회) 파일` : '1회'} ===`)
+  const v = spawnSync('npx', ['tsx', p(new URL('verify.ts', SETTING)), ...vargs], { stdio: 'inherit' })
   process.exit(v.status ?? 1)
 }
 

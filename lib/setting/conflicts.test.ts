@@ -223,4 +223,32 @@ t("P11 subject·attribute·after 가 있는 transition 만 그 위치의 상태�
   assert.equal(run([s0, s1]).cards.length, 1);                // 전이를 빼면 ① 카드 — 물질화 상태도 진짜 관찰처럼 비교된다
 });
 
+// ── P12 표기 축약 (1단계 마감) ──
+t("P12a 텍스트 값이 다른 값을 품으면 카드가 아니라 표기 축약 info — 서울경찰청장 ⊃ 경찰청장", () => {
+  const r = run([S({ entity_id: "A", attribute: "직책", value: "서울경찰청장", episode: 2, pos: 10 }), S({ entity_id: "A", attribute: "직책", value: "경찰청장", episode: 2, pos: 900 })]);
+  assert.equal(r.cards.length, 0); assert.equal(r.abbreviations.length, 1);
+  assert.deepEqual(r.abbreviations[0].values, ["서울경찰청장", "경찰청장"]); assert.equal(r.abbreviations[0].attribute_key, "title");
+});
+t("P12b 무관한 텍스트 값이면 그대로 카드 — 경찰청장 → 국방부장관. 숫자 속성은 포함 검사를 안 한다(19 ⊄ 190)", () => {
+  const r = run([S({ entity_id: "A", attribute: "직책", value: "경찰청장", episode: 2 }), S({ entity_id: "A", attribute: "직책", value: "국방부장관", episode: 3 })]);
+  assert.equal(r.cards.length, 1); assert.equal(r.abbreviations.length, 0);
+  const n2 = run([S({ entity_id: "A", attribute: "나이", value: 19, episode: 1 }), S({ entity_id: "A", attribute: "나이", value: 190, episode: 2 })]);
+  assert.equal(n2.cards.length, 1);
+});
+
+// ── P13 합집합 (union.ts) ──
+import { unionExtractions } from "./union";
+t("P13 같은 회차 2회를 합치면 같은 관찰은 support 2, 한쪽에만 있는 관찰은 support 1, 개체는 이름으로 묶이고 ref 가 다시 매핑된다", () => {
+  const text = "탑에 들어갔다. 진혁은 열아홉이었다. 스킬 쾌속을 얻었다.";
+  const mk = (ref: string, states: { attribute: string; value: string }[]) => locateAll(text, rawWith(
+    [{ ref, kind: "character", name: "유진혁", aliases: ["진혁"], summary: null, first_mention: { surface: "진혁은" } }],
+    { states: states.map((x) => ({ entity: ref, attribute: x.attribute, value: x.value, branch: "main", certainty: "explicit", evidence: { surface: "열아홉이었다" } })) }));
+  const u = unionExtractions([mk("a1", [{ attribute: "나이", value: "19" }, { attribute: "스킬", value: "쾌속" }]), mk("b7", [{ attribute: "나이", value: "열아홉" }])]);
+  assert.equal(u.runs, 2); assert.equal(u.entities.length, 1); assert.equal(u.entities[0].ref, "a1");
+  const by = Object.fromEntries(u.states.map((s) => [s.attribute + "=" + s.value, s.support]));
+  assert.equal(by["나이=19"], 2);            // "19" 와 "열아홉" 은 정규화하면 같은 값 — 하나로, support 2
+  assert.equal(by["스킬=쾌속"], 1);
+  assert.ok(u.states.every((s) => s.entity === "a1"));
+});
+
 console.log(`\n통과 ${n} / 실패 0`);
