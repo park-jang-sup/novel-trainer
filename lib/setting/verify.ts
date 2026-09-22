@@ -315,19 +315,29 @@ function determinism(a: VerifyOutcome, b: VerifyOutcome, sink: Sink) {
 const args = process.argv.slice(2);
 if (args.length < 2) { console.error("usage: verify.ts ep1.json ep2.json [ep1_run2.json ep2_run2.json]"); process.exit(2); }
 const golden = loadGolden();
-const results: Sink = [];
-const run1 = [load(args[0]), load(args[1])];
-console.log("prelim 1·2화 골든 대조");
-const out1 = verify(buildStore(run1), golden, results);
-if (args.length >= 4) {
-  const scratch: Sink = [];   // run2 의 required 대조 줄은 안 찍는다 — 통과 집합만 쓴다
-  console.log("\nrun2:");
-  const out2 = verify(buildStore([load(args[2]), load(args[3])]), golden, scratch);
-  determinism(out1, out2, results);
-}
+const tally = (sink: Sink) => ({ pass: sink.filter((r) => r.ok === true).length, fail: sink.filter((r) => r.ok === false).length });
+const print = (title: string, sink: Sink) => {
+  console.log(`\n=== ${title} ===`);
+  for (const r of sink) console.log(r.line);
+  const t = tally(sink);
+  console.log(`  ${title}: 통과 ${t.pass} / 실패 ${t.fail}`);
+  return t;
+};
 
-for (const r of results) console.log(r.line);
-const nFail = results.filter((r) => r.ok === false).length;
-const nPass = results.filter((r) => r.ok === true).length;
-console.log(`\n통과 ${nPass} / 실패 ${nFail}   (검출기 #0 기준선: 심은 오류 2건 중 0건)`);
+// 실행별로 완전히 분리해 찍는다 (세션 55 ①-b-4). run1 → run2 → 결정성. 총계는 셋의 합이다.
+console.log("prelim 1·2화 골든 대조");
+const sink1: Sink = [];
+const out1 = verify(buildStore([load(args[0]), load(args[1])]), golden, sink1);
+const t1 = print("run1", sink1);
+let t2 = { pass: 0, fail: 0 }, t3 = { pass: 0, fail: 0 };
+if (args.length >= 4) {
+  const sink2: Sink = [];
+  const out2 = verify(buildStore([load(args[2]), load(args[3])]), golden, sink2);
+  t2 = print("run2", sink2);
+  const sink3: Sink = [];
+  determinism(out1, out2, sink3);
+  t3 = print("결정성", sink3);
+}
+const nPass = t1.pass + t2.pass + t3.pass, nFail = t1.fail + t2.fail + t3.fail;
+console.log(`\n통과 ${nPass} / 실패 ${nFail}   (run1 ${t1.pass}/${t1.fail}${args.length >= 4 ? ` · run2 ${t2.pass}/${t2.fail} · 결정성 ${t3.pass}/${t3.fail}` : ""} · 검출기 #0 기준선: 심은 오류 2건 중 0건)`);
 process.exit(nFail === 0 ? 0 : 1);

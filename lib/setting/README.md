@@ -7,7 +7,7 @@ novel-trainer 규칙을 따른다: 빈 결과를 통과로 읽지 않는다. 검
 
 | 파일 | 역할 | 네트워크 |
 |---|---|---|
-| `schema.ts` | 추출 결과 계약(zod v4). LLM 이 내는 `ExtractionRaw`(값은 문자열만) 와 서버가 위치를 붙인 `Extraction`. `.describe()` 가 모델에게 가는 필드 설명이다(z.toJSONSchema 가 싣는다 — TS 주석은 안 간다) | 없음 |
+| `schema.ts` | 추출 결과 계약(zod v4). LLM 이 내는 `ExtractionRaw`(값은 문자열만) 와 서버가 위치를 붙인 `Extraction`. `.describe()` 가 모델에게 가는 필드 설명이다(z.toJSONSchema 가 싣는다 — TS 주석은 안 간다). **모델용 스키마는 `ExtractionRawForModel`(first_mention 60자), 파싱은 `ExtractionRaw`(300자)** — 필드 하나 때문에 회차 전체를 버리지 않는다. 60을 넘긴 개체는 locate 가 대체·폐기로 처리한다 | 없음 |
 | `attributes.ts` | 속성 정규화층. 원문 `attribute` ↔ 검사용 `attribute_key`, 카디널리티(single/set), 값 숫자화, 엄격 `sameValue` | 없음 |
 | `prompts/extract.ko.md` | 추출 프롬프트. 구체 이름·값 예시 없음(베끼기 방지). `{{ }}` 는 서버가 채움 | — |
 | `locate.ts` | `surface` → 원고 위치. 정확 일치 → 공백 접기 → 3단계(공백 전부 제거 + 곱은따옴표→곧은따옴표 + …→..., 위치 매핑 유지). 셋 다 정확 일치이고 유사 일치는 없다. 못 찾으면 폐기(`dropped`). 개체의 first_mention 만은 name → aliases 정확 일치로 한 번 더 대체하고 `first_mention_fallback` 으로 센다. 원칙 6의 문지기 | 없음 |
@@ -44,13 +44,13 @@ novel-trainer 규칙을 따른다: 빈 결과를 통과로 읽지 않는다. 검
 npm run test:setting                                        # 아래 둘을 이어서
 npx tsx lib/setting/conflicts.test.ts                       # 32 / 0
 npx tsx lib/setting/make-hand-fixtures.ts                   # 손 추출본 재생성
-npx tsx lib/setting/verify.ts lib/setting/fixtures/prelim_ep1.hand.json lib/setting/fixtures/prelim_ep2.hand.json   # 61 / 0 (4인자로 같은 파일을 두 번 주면 결정성 1건이 붙어 62 / 0)
+npx tsx lib/setting/verify.ts lib/setting/fixtures/prelim_ep1.hand.json lib/setting/fixtures/prelim_ep2.hand.json   # 60 / 0 (4인자면 run1·run2·결정성이 따로 찍히고 총계는 합 — 같은 파일 두 번이면 122 / 0)
 npx tsx lib/setting/verify.ts <ep1> <ep2> <ep1_run2> <ep2_run2>   # + 결정성(required 통과 집합 + 카드 키 집합. 개체·상태 대칭차는 info)
 npm run setting:extract -- --rescore                        # fixtures/raw/*.raw.json → locate → verify. 호출 0회. 코드·골든을 고친 뒤 재채점
 npm run setting:extract -- --dump                           # llm.json 의 정해진 자리(유진혁 스킬·마강혁·김수정·excluded·events·relations)를 뽑아 본다
 ```
 
-`*.hand.json` 은 locate 를 거친 Extraction. 손으로 만든 최소 추출본으로 verify 61/0(+결정성 1 = 62/0), 카드 정확히 2건(나이 19→22, 스킬 쾌속→질풍), 정밀도 100%, 상한 5종 통과, coverage 전부 0 을 확인했다(2026-09-22, 리뷰 반영 후). 이 추출본은 1화 `스킬`/2화 `보유 스킬`, 값 `"스물두 살"` 처럼 정규화층을 일부러 지나게 만들었다. 이것은 **골든과 검사기가 서로 맞는다는 확인**이지 LLM 추출이 된다는 확인이 아니다. 다음 세션의 일은 실제 추출 결과를 여기에 태우는 것이다.
+`*.hand.json` 은 locate 를 거친 Extraction. 손으로 만든 최소 추출본으로 verify 60/0(4인자 122/0), 카드 정확히 2건(나이 19→22, 스킬 쾌속→질풍), 정밀도 100%, 상한 5종 통과, coverage 전부 0 을 확인했다(2026-09-22, 리뷰 반영 후). 이 추출본은 1화 `스킬`/2화 `보유 스킬`, 값 `"스물두 살"` 처럼 정규화층을 일부러 지나게 만들었다. 이것은 **골든과 검사기가 서로 맞는다는 확인**이지 LLM 추출이 된다는 확인이 아니다. 다음 세션의 일은 실제 추출 결과를 여기에 태우는 것이다.
 
 ## 1단계 완료 기준 (설계 §11)
 

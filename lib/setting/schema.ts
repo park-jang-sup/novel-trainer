@@ -52,6 +52,8 @@ export const EntityKind = z.enum([
 
 const REF = "entities 의 ref";
 
+const FirstMention = (max: number) => z.object({ surface: z.string().min(2).max(max) }).describe("첫 등장 문장의 짧은 조각(60자 이하). 원고에 문자 그대로");
+
 /** 참고 앱(스노우플레이크 계열)의 세계 카테고리를 그대로 기본값으로 쓴다. */
 export const RuleCategory = z.enum([
   "history", "economy", "politics", "religion",
@@ -70,8 +72,12 @@ export const EntityRaw = z.object({
   aliases: z.array(z.string().min(1).max(60)).default([]),
   /** 한 줄. 원고에서 드러난 것만. */
   summary: z.string().max(200).nullable().default(null),
-  /** 첫 등장 근거. 짧게 — 길수록 원고와 한 글자 어긋나 폐기된다. 못 찾으면 locate 가 name → aliases 로 대체한다. */
-  first_mention: z.object({ surface: z.string().min(2).max(60) }).describe("첫 등장 문장의 짧은 조각(60자 이하). 원고에 문자 그대로"),
+  /**
+   * 첫 등장 근거. 짧게 — 길수록 원고와 한 글자 어긋나 폐기된다. 못 찾으면 locate 가 name → aliases 로 대체한다.
+   * ★ 모델에게 주는 JSON 스키마는 60자(ExtractionRawForModel), 서버 파싱은 300자. 원칙: 필드 하나 때문에 회차 전체를 버리지 않는다.
+   *   모델이 60을 넘겨 내면 그 개체는 locate 가 대체·폐기로 처리하지, ExtractionRaw 가 회차째 거부하지 않는다.
+   */
+  first_mention: FirstMention(300),
 });
 
 // ───────────────────────── 상태 ─────────────────────────
@@ -210,9 +216,17 @@ export const ExtractionRaw = z.object({
 });
 export type ExtractionRaw = z.infer<typeof ExtractionRaw>;
 
+/**
+ * 모델에게 보내는 JSON 스키마의 원천. ExtractionRaw 와 같되 first_mention 만 60자로 조인다.
+ * z.toJSONSchema(ExtractionRawForModel) 를 responseJsonSchema 에 넣는다. 파싱은 ExtractionRaw(300자)로 한다.
+ */
+export const ExtractionRawForModel = ExtractionRaw.extend({
+  entities: z.array(EntityRaw.extend({ first_mention: FirstMention(60) })),
+});
+
 /** locate.ts 를 거친 뒤의 형태. Evidence 에 span/scene/episode 가 붙고, 못 찾은 항목은 dropped 로 옮겨진다. */
 export const Extraction = ExtractionRaw.extend({
-  entities: z.array(EntityRaw.extend({ first_mention: Evidence })),
+  entities: z.array(EntityRaw.extend({ first_mention: Evidence.extend({ surface: z.string().min(2).max(300) }) })),
   states: z.array(StateRaw.extend({ evidence: Evidence })),
   events: z.array(EventRaw.extend({ evidence: Evidence })),
   relations: z.array(RelationRaw.extend({ evidence: Evidence })),

@@ -377,7 +377,7 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
                         service 감사에서 나온 재설계 — 그 레포는 읽기만, 여기만 고친다).
                         검사기(conflicts ①·①′)·정규화(attributes)·문지기(locate)·스키마(zod)·
                         골든 대조(verify)·손 추출본(make-hand-fixtures)이 lib/setting/ 에 있다.
-                        네트워크 없음. 물기 시험 32/0 · 골든 61/0(손 추출본, 결정성 대조까지 62/0) · 카드 2건(+관계 물질화가 낸 김태진.소속 weak 1건, 아래)
+                        네트워크 없음. 물기 시험 32/0 · 골든 60/0(손 추출본. 4인자면 run1·run2·결정성 분리, 122/0) · 카드 2건(+관계 물질화가 낸 김태진.소속 weak 1건, 아래)
                         (심은 오류 2건: 나이 19→22, 스킬 쾌속→질풍) · 정밀도 100% · coverage 0.
                         ★ 이건 "골든·검사기·스키마가 서로 맞는다"는 확인이지 LLM 추출이 된다는
                           확인이 아니다. 검출기 #0(대회 check_setting.py) 기준선: 심은 오류
@@ -416,6 +416,10 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
                           speaker 가 없어 weak). 상한 4 안이라 통과지만 정밀도 100→67%. 겹소속을
                           어떻게 볼지는 박 님 결정. raw 4개는 이 환경에 없어 ①-0 덤프와 ①-7 재채점은
                           박 님 로컬(--dump · --rescore) 또는 raw 푸시 뒤에.
+                        ★ ①-b(호출 0회): 모델용 스키마 ExtractionRawForModel(first_mention 60자) 와 파싱용
+                          ExtractionRaw(300자) 분리 — 필드 하나 때문에 회차 전체를 버리지 않는다(run2 가
+                          이걸로 파싱될 것). 질풍 근거 후보에 "유일한 스킬". verify 는 run1·run2·결정성을
+                          완전히 분리해 찍고 총계는 합. "쾌속 을" 은 저장소 골든에 없음(grep 0건).
 ```
 
 ### 끝난 것 — 세션 53 (bt- 재료 두 줄 확장 셋 · diffChecks rule 대조 · reviewed 컬럼)
@@ -3160,7 +3164,7 @@ cd scoring-server && source .venv/bin/activate && SCORING_SECRET=dev uvicorn mai
 
 npx next typegen && npx tsc --noEmit     # 0건
 npm run test:scoring | tail -1           # 0 실패만 본다
-npm run test:setting | tail -1           # 설정검사 골격 — 물기 29/0 + 골든 61/0 (네트워크 없음)
+npm run test:setting | tail -1           # 설정검사 골격 — 물기 32/0 + 골든 60/0 (네트워크 없음)
 npm run check:numbers | tail -1          # 낡은 수 0건
 npm run gen:seed                         # 아무 파일도 안 바뀌어야 한다
 ```

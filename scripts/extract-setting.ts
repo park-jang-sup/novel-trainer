@@ -22,7 +22,7 @@ import './load-env'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { z } from 'zod'
-import { ExtractionRaw, type Extraction } from '../lib/setting/schema'
+import { ExtractionRaw, ExtractionRawForModel, type Extraction } from '../lib/setting/schema'
 import { locateAll } from '../lib/setting/locate'
 import { callGemini, DEFAULT_MODEL, THINKING_LEVEL } from '../lib/ai/gemini'
 import { checkGateBeforeQuota, checkRunBudget } from '../lib/ai/gate'
@@ -73,9 +73,10 @@ function lexiconOf(ex: Extraction): string {
 /**
  * z.toJSONSchema 결과에서 `$schema` 만 뗀다 — 메타 키라 스키마 뜻이 아니고, provider 가 모르는 최상위 키로
  * 거부할 수 있다. `default` · `additionalProperties` · `anyOf` 는 **그대로 둔다.** 이번 호출이 재는 것이 그것이다.
+ * ★ 모델용은 ExtractionRawForModel(first_mention 60자). 파싱은 ExtractionRaw(300자) — 필드 하나 때문에 회차 전체를 버리지 않는다.
  */
 function buildJsonSchema(): Record<string, unknown> {
-  const j = z.toJSONSchema(ExtractionRaw) as Record<string, unknown>
+  const j = z.toJSONSchema(ExtractionRawForModel) as Record<string, unknown>
   delete j.$schema
   return j
 }

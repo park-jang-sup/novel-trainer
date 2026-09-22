@@ -148,7 +148,8 @@
       "exclusive": true,
       "_why": "2화 '내가 가진 유일한 스킬이다' → exclusive",
       "surface_contains_any": [
-        "스킬 질풍을 실험"
+        "스킬 질풍을 실험",
+        "유일한 스킬"
       ]
     },
     {
