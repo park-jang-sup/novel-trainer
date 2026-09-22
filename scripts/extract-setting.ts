@@ -9,6 +9,9 @@
  * npm run setting:extract -- --check          # 마개와 쓰기를 재고 멈춘다. Gemini 는 안 부른다
  * npm run setting:extract -- --step=schema    # ★ 1회 호출. 1화만. 스키마가 받아들여지는지 본다
  * npm run setting:extract -- --step=run       # 4회 호출. (1화 → 2화) × 2 → llm/llm2 → verify 4인자
+ * npm run setting:extract -- --rescore         # raw → locate → verify. 호출 0회
+ * npm run setting:extract -- --dump            # llm.json 의 정해진 자리를 뽑아 본다. 호출 0회
+ * npm run setting:extract -- --step=run --set=p2   # ★ 세트: raw 와 llm json 을 fixtures/raw/p2/ · fixtures/p2/ 에. 앞 실행을 안 덮는다
  * ```
  *
  * ★ 반복 실행 금지 — step 하나가 낼 수 있는 호출 수가 곧 이 실행의 상한(run_cap)이다.
@@ -35,8 +38,14 @@ const arg = (name: string, fallback: string) =>
 const flag = (name: string) => process.argv.includes(`--${name}`)
 
 const SETTING = new URL('../lib/setting/', import.meta.url)
-const FIX = new URL('fixtures/', SETTING)
-const RAW = new URL('fixtures/raw/', SETTING)
+/**
+ * `--set=NAME` 이면 raw 와 llm json 이 fixtures/raw/NAME/ · fixtures/NAME/ 에 간다 — 프롬프트·thinking 을 바꿔
+ * 다시 돌릴 때 앞 실행(①-b 의 LOW)을 덮어쓰지 않기 위해. 없으면 지금까지의 자리 그대로.
+ */
+const SET = arg('set', '')
+const FIX = SET ? new URL(`fixtures/${SET}/`, SETTING) : new URL('fixtures/', SETTING)
+const RAW = SET ? new URL(`fixtures/raw/${SET}/`, SETTING) : new URL('fixtures/raw/', SETTING)
+const FIX_BASE = new URL('fixtures/', SETTING)   // 원고·골든은 세트와 무관
 const p = (u: URL) => decodeURIComponent(u.pathname)
 
 /** 이 픽스처의 작품 설정. 골든 _comment 가 정한 것 — 모델이 짓지 않는다. */
@@ -120,7 +129,8 @@ function report(r: CallResult) {
   if (r.parseError) { console.log(`  ★ ${r.parseError}`); return }
   const ex = r.parsed!
   const n = (k: keyof Extraction) => (ex[k] as unknown[]).length
-  console.log(`  entities ${n('entities')} · states ${n('states')} · events ${n('events')} · relations ${n('relations')} · rules ${n('rules')} · scenes ${n('scenes')} · timeline ${n('timeline')} · unclassified ${n('unclassified')} · excluded ${n('excluded')}`)
+  const tr = ex.events.filter((e) => e.kind === 'transition').length
+  console.log(`  entities ${n('entities')} · states ${n('states')} · events ${n('events')} (transition ${tr} · occurrence ${n('events') - tr}) · relations ${n('relations')} · rules ${n('rules')} · scenes ${n('scenes')} · timeline ${n('timeline')} · unclassified ${n('unclassified')} · excluded ${n('excluded')}`)
   const amb = [...ex.states, ...ex.events, ...ex.relations, ...ex.rules].filter((x) => x.evidence.occurrences > 1).length
   console.log(`  coverage: dropped(surface_not_found) ${ex.dropped.filter((d) => d.reason === 'surface_not_found').length} · orphan_ref ${ex.dropped.filter((d) => d.reason === 'orphan_ref').length} · ambiguous_surface ${amb} · scenes_unanchored ${ex.scenes.filter((s) => s.anchor === null).length}/${ex.scenes.length} · states_inferred ${ex.states.filter((s) => s.certainty === 'inferred').length} · claimed_in_dialogue ${ex.states.filter((s) => s.claimed_in_dialogue).length}`)
   if (ex.dropped.length) {
@@ -157,14 +167,15 @@ async function main() {
   const plannedCalls = step === 'run' ? 4 : 1
   const runCap = Number(arg('cap', String(plannedCalls)))
 
-  const t1 = readFileSync(new URL('prelim_ep1.txt', FIX), 'utf8')
-  const t2 = readFileSync(new URL('prelim_ep2.txt', FIX), 'utf8')
+  const t1 = readFileSync(new URL('prelim_ep1.txt', FIX_BASE), 'utf8')
+  const t2 = readFileSync(new URL('prelim_ep2.txt', FIX_BASE), 'utf8')
+  if (SET) mkdirSync(p(FIX), { recursive: true })
   const tpl = loadTemplate()
   const schema = buildJsonSchema()
   const schemaStr = JSON.stringify(schema)
   const probePrompt = fillTemplate(tpl, { episode: '1', lexicon: '없음', branches: branchesLine(), text: t1 })
 
-  console.log(`모델 ${model} · thinking ${THINKING_LEVEL} · maxOutputTokens ${maxOut} · 이 실행 상한 ${runCap}회 (계획 ${plannedCalls}회)`)
+  console.log(`모델 ${model} · thinking ${THINKING_LEVEL} · maxOutputTokens ${maxOut} · 이 실행 상한 ${runCap}회 (계획 ${plannedCalls}회) · 세트 ${SET || '(기본)'} → ${p(FIX)}`)
   console.log(`원고 1화 ${t1.length}자 · 2화 ${t2.length}자 · 프롬프트(1화) ${probePrompt.length}자 · JSON 스키마 ${schemaStr.length}바이트`)
   console.log(`스키마 모양: anyOf ${(schemaStr.match(/"anyOf"/g) ?? []).length} · default ${(schemaStr.match(/"default"/g) ?? []).length} · additionalProperties ${(schemaStr.match(/"additionalProperties"/g) ?? []).length} · description ${(schemaStr.match(/"description"/g) ?? []).length} · $schema 뗌`)
   if (!PRICES[model]) console.log('★ 단가표에 없는 모델이다. 비용이 null 로 나간다 — pricing.ts 에 넣어라')
@@ -194,7 +205,7 @@ async function main() {
       report(r)
       if (r.parsed) { writeFileSync(new URL(`${name}.json`, FIX), JSON.stringify(r.parsed, null, 1)); made++ }
     }
-    if (made === 0) { console.log('\n★ 재채점할 raw 가 하나도 없다 — lib/setting/fixtures/raw/*.raw.json 을 둔다'); process.exit(1) }
+    if (made === 0) { console.log(`\n★ 재채점할 raw 가 하나도 없다 — ${p(RAW)}*.raw.json 을 둔다`); process.exit(1) }
     runVerify()
     return
   }
