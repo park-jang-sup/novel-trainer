@@ -435,6 +435,21 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
                           2화 소속 상태·소속 transition 이 실행마다 갈림). 남은 실패: 김수정.생사=사망(두 실행 다 없음).
                           ③ 준비 끝: --runs=N · GEMINI_THINKING_LEVEL=MEDIUM · --set=p3-medium. '없음' thinking 은 SDK 에
                           없다(MINIMAL·LOW·MEDIUM·HIGH). verify 는 N회 결정성을 항목별 통과 횟수·카드 키별 등장 횟수로 찍는다.
+                        ★ ③ 결과(MEDIUM×3, raw fixtures/raw/p3-medium/; MINIMAL 은 모델이 400 으로 거부) — 골든에 유진혁.나이
+                          1화 value_any [19,20](만/세는 나이) 반영 뒤. 실행별 56/4 · 57/3 · **60/0(run3 전부 통과)** · 결정성 0/2
+                          (불안정 7, 전부 2/3 이상). 같은 골든으로 p2(LOW×2) 57/3 · 57/3. 합집합(--union, ③-3): LOW 55/5 ·
+                          p2 58/2 · MEDIUM 59/1 — 합집합은 재현율을 올리고 support 가 정밀도를 말한다(MEDIUM 합집합 상태 23건 중
+                          3/3 이 11, 1/3 이 9). 합집합에서 남는 실패는 "나이 카드가 weak 가 아니어야 한다" 하나 — 19 는 1/3 support 라
+                          weak. 합집합이 19(1화)→20(1화) 카드도 하나 더 낸다(만/세는 나이 힌트가 붙는 자리, 오탐이 아니라 원고의 애매함).
+                          비용: MEDIUM 6회 $0.130, LOW p2 4회 $0.075. 출력 토큰 MEDIUM 이 회차당 ~1.2~1.5배.
+                        ★ 일일 지출 상한 20→60 USD: seed/update-spend-cap-60.sql(system_flags key=daily_spend_cap_usd 의 value 를 '60' 으로
+                          update, 1행 확인). 이 상한은 하루 누적 cost_usd 합계다 — 호출당이 아니다. 실행당 호출 수 상한은 하니스
+                          --cap(기본 = 계획 호출 수)이고 DB 와 무관하다. DB 실행은 박 님 몫.
+                        ★ 두 번째 픽스처 후보(대회 레포 public/samples, 읽기만 함): prelim 말고는 fantasy(279자+565자·2화),
+                          martial(552자), modern_fantasy(436자) 셋뿐이고 전부 검출기 #0 시연용 미니 원고(문장마다 "그의 나이 스물네 살"
+                          꼴로 설정이 박힌 합성 텍스트)라 프롬프트 과적합을 재기엔 너무 짧고 문체가 원고가 아니다. test/manuscript.txt
+                          (12,263자, 29줄)는 prelim 1화의 이전 판(같은 원고, 문장 손질 전)이라 다른 작품이 아니다.
+                          → 진짜 두 번째 원고는 밖에서 와야 한다(박 님 본인/지인 원고 1·2화, 다른 장르). 골든은 손으로 다시 쓴다.
 ```
 
 ### 끝난 것 — 세션 53 (bt- 재료 두 줄 확장 셋 · diffChecks rule 대조 · reviewed 컬럼)

@@ -48,6 +48,7 @@ npx tsx lib/setting/verify.ts lib/setting/fixtures/prelim_ep1.hand.json lib/sett
 npx tsx lib/setting/verify.ts <ep1> <ep2> <ep1_run2> <ep2_run2>   # + 결정성(required 통과 집합 + 카드 키 집합. 개체·상태 대칭차는 info)
 npm run setting:extract -- --rescore                        # fixtures/raw/*.raw.json → locate → verify. 호출 0회. 코드·골든을 고친 뒤 재채점
 npm run setting:extract -- --rescore --set=p2 --runs=N      # 세트별·N회분. verify 는 2쌍 이상이면 N회 결정성(required 항목별 통과 횟수 · 카드 키별 등장 횟수)
+npm run setting:extract -- --rescore --set=p3-medium --runs=3 --union   # + 합집합 채점: N회를 근거 기준으로 합쳐(같은 개체·속성·값·갈래 = 하나, support 등장 횟수) 골든 채점 + 카드. support 1/N 은 weak
 npm run setting:extract -- --dump                           # llm.json 의 정해진 자리(유진혁 스킬·마강혁·김수정·excluded·events·relations)를 뽑아 본다
 ```
 

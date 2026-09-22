@@ -8,6 +8,8 @@
 import { z } from "zod";
 
 const Value = z.union([z.string(), z.number()]);
+/** 값 하나 또는 후보 여럿(만 나이/세는 나이처럼 원고가 둘 다 허용하는 자리) */
+const ValueOrAny = z.union([Value, z.array(Value).min(1)]);
 const Why = z.string().optional();
 
 export const EntityRequired = z.strictObject({
@@ -29,6 +31,8 @@ export const StateQuery = z.strictObject({
   entity: z.string(),
   attribute_any: z.array(z.string()).min(1),
   value: Value.optional(),
+  /** 후보 중 하나면 된다 — 유진혁.나이 1화 19|20 (만/세는 나이 둘 다 원고가 허용) */
+  value_any: z.array(Value).min(1).optional(),
   value_contains: z.string().optional(),
   value_min: z.number().optional(),
   branch: z.string().optional(),
@@ -86,7 +90,7 @@ export const ConflictCardRequired = z.strictObject({
   entity: z.string().optional(),
   entity_lexicon_merge_of: z.array(z.string()).min(1).optional(),
   attribute_any: z.array(z.string()).min(1),
-  evidence_values: z.tuple([Value, Value]),
+  evidence_values: z.tuple([ValueOrAny, ValueOrAny]),
   weak: z.boolean().optional(),
 }).refine((q) => q.entity !== undefined || q.entity_lexicon_merge_of !== undefined, { message: "entity 또는 entity_lexicon_merge_of 가 필요하다" });
 export type ConflictCardRequired = z.infer<typeof ConflictCardRequired>;

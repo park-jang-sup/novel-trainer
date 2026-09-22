@@ -193,6 +193,7 @@ function verify(st: Store, g: Golden, sink: Sink): VerifyOutcome {
     if (q.certainty && s.certainty !== q.certainty) return false;
     if (q.exclusive !== undefined && s.exclusive !== q.exclusive) return false;
     if (q.value !== undefined && !sameValue(s.value, q.value)) return false;
+    if (q.value_any && !q.value_any.some((v) => sameValue(s.value, v))) return false;
     if (!contains(s.value, q.value_contains)) return false;
     if (!contains(s.surface, q.surface_contains)) return false;
     if (!containsAny(s.surface, q.surface_contains_any)) return false;
@@ -200,8 +201,9 @@ function verify(st: Store, g: Golden, sink: Sink): VerifyOutcome {
     return true;
   };
   for (const q of g.states_required) {
-    const label = `상태 ${q.entity}.${q.attribute_any[0]} = ${q.value ?? q.value_contains} (${q.episode}화)`;
-    req(label, st.states.some((s) => stateMatch(s, q)), `상태 없음: ${q.entity}.${q.attribute_any[0]} = ${q.value ?? q.value_contains} (${q.episode}화)`);
+    const shown = q.value ?? q.value_any?.join("|") ?? q.value_contains;
+    const label = `상태 ${q.entity}.${q.attribute_any[0]} = ${shown} (${q.episode}화)`;
+    req(label, st.states.some((s) => stateMatch(s, q)), `상태 없음: ${q.entity}.${q.attribute_any[0]} = ${shown} (${q.episode}화)`);
   }
   for (const q of g.states_forbidden) {
     const hits = st.states.filter((s) => stateMatch(s, q));
@@ -274,19 +276,20 @@ function verify(st: Store, g: Golden, sink: Sink): VerifyOutcome {
     }
     if (!anyAttr(c.attribute, q.attribute_any) && !anyAttr(c.attribute_key, q.attribute_any)) return false;
     const vals = [c.evidence[0].value, c.evidence[1].value];
-    if (!q.evidence_values.every((v, i) => sameValue(vals[i], v))) return false;
+    if (!q.evidence_values.every((v, i) => (Array.isArray(v) ? v.some((x) => sameValue(vals[i], x)) : sameValue(vals[i], v)))) return false;
     if (q.weak !== undefined && c.weak !== q.weak) return false;
     return true;
   });
   for (const q of g.conflict_cards_required) {
     const ok = cardMatch(q);
     if (ok) requiredHit++;
-    req(`카드 ${q.kind} ${q.entity ?? q.entity_lexicon_merge_of?.join("/")} ${q.evidence_values.join("→")}`, ok, `카드 없음: ${q._why}`);
+    req(`카드 ${q.kind} ${q.entity ?? q.entity_lexicon_merge_of?.join("/")} ${q.evidence_values.map((v) => (Array.isArray(v) ? v.join("|") : String(v))).join("→")}`, ok, `카드 없음: ${q._why}`);
   }
   // 나온 카드 전부 — 요구 밖 카드가 무엇인지 보여야 정밀도가 읽힌다
   for (const c of cards) {
     const ent = st.entities.find((e) => e.id === c.entity_id)?.name ?? c.entity_id;
-    info(`카드: ${ent}.${c.attribute} ${String(c.evidence[0].value)}(${c.evidence[0].episode}화)→${String(c.evidence[1].value)}(${c.evidence[1].episode}화)${c.weak ? " weak" : ""} [${c.kind}]`);
+    const sup = (x: StoredState) => (x.support !== undefined ? ` s${x.support}` : "");
+    info(`카드: ${ent}.${c.attribute} ${String(c.evidence[0].value)}(${c.evidence[0].episode}화${sup(c.evidence[0])})→${String(c.evidence[1].value)}(${c.evidence[1].episode}화${sup(c.evidence[1])})${c.weak ? " weak" : ""} [${c.kind}]`);
   }
 
   // 상한 (리뷰 E) — required 만 보면 카드 100장을 내도 통과한다
@@ -337,8 +340,74 @@ function determinism(runs: VerifyOutcome[], sink: Sink) {
   for (let i = 1; i < N; i++) info(`대칭차 run1↔run${i + 1}: 개체 ${symdiff(entSig(runs[0].store), entSig(runs[i].store))} · 상태 ${symdiff(stSig(runs[0].store), stSig(runs[i].store))} (run1 개체 ${runs[0].store.entities.length}/상태 ${runs[0].store.states.length} · run${i + 1} 개체 ${runs[i].store.entities.length}/상태 ${runs[i].store.states.length})`);
 }
 
+/**
+ * 합집합 채점 (세션 55 ③-3, --union). N회 결과를 근거 기준으로 하나로 합친다 —
+ *   상태  같은 (개체 이름, 속성키, 값, 갈래) 면 하나. support = 몇 회에서 나왔나. 1/N 이면 weak (카드가 weak 가 된다).
+ *         exclusive 는 OR, certainty 는 하나라도 explicit 이면 explicit, 위치는 가장 앞선 것.
+ *   사건  transition 은 (주체, 속성키, before, after, 갈래), occurrence 는 (갈래, description). 관계는 (주체, 객체, 술어). 규칙은 statement.
+ *   장면  회차마다 장면이 가장 많은 실행의 것(장면은 실행마다 경계가 달라 합칠 수 없다). 화자는 run1.
+ *   coverage 수치는 실행 중 최댓값.
+ * 합집합은 "N번 돌려 모은 것" 이지 한 실행의 성적이 아니다 — 재현율은 오르고 support 가 정밀도를 말한다.
+ */
+function unionStores(stores: Store[]): Store {
+  const N = stores.length;
+  const st: Store = { entities: [], states: [], events: [], relations: [], rules: [], excluded: [], unclassified: [], scenes: [], narrator: stores[0].narrator, branches: new Set(), orphan_ref: 0, dropped: 0, ambiguous_surface: 0, first_mention_fallback: 0, states_from_relations: 0, states_from_transitions: 0 };
+  const idByName = new Map<string, string>();
+  for (const s of stores) for (const e of s.entities) {
+    const names = [e.name, ...e.aliases];
+    let id = names.map((n) => idByName.get(n)).find(Boolean);
+    if (!id) { id = `u_${st.entities.length}`; st.entities.push({ id, name: e.name, kind: e.kind, aliases: [...e.aliases] }); }
+    else { const ent = st.entities.find((x) => x.id === id)!; for (const n of names) if (n !== ent.name && !ent.aliases.includes(n)) ent.aliases.push(n); }
+    for (const n of names) idByName.set(n, id);
+  }
+  const uid = (s: Store, id: string | null) => (id == null ? null : idByName.get(s.entities.find((e) => e.id === id)?.name ?? "") ?? null);
+  const posKey = (x: { episode: number; pos: number }) => x.episode * 1e9 + x.pos;
+
+  const states = new Map<string, StoredState>(), stSup = new Map<string, number>();
+  const events = new Map<string, StoredEvent>();
+  const rels = new Map<string, Store["relations"][number]>();
+  const rules = new Map<string, Store["rules"][number]>();
+  const excluded = new Map<string, Store["excluded"][number]>();
+  const uncl = new Map<string, Store["unclassified"][number]>();
+  for (const s of stores) {
+    for (const b of s.branches) st.branches.add(b);
+    st.dropped = Math.max(st.dropped, s.dropped); st.orphan_ref = Math.max(st.orphan_ref, s.orphan_ref); st.ambiguous_surface = Math.max(st.ambiguous_surface, s.ambiguous_surface);
+    st.first_mention_fallback = Math.max(st.first_mention_fallback, s.first_mention_fallback); st.states_from_relations = Math.max(st.states_from_relations, s.states_from_relations); st.states_from_transitions = Math.max(st.states_from_transitions, s.states_from_transitions);
+    const seen = new Set<string>();
+    for (const x of s.states) {
+      const eid = uid(s, x.entity_id); if (!eid) continue;
+      const k = [eid, x.attribute_key, String(x.value), x.branch].join("\0");
+      const cur = states.get(k);
+      if (!cur) states.set(k, { ...x, id: `st_${states.size}`, entity_id: eid, speaker_id: uid(s, x.speaker_id) });
+      else { if (x.exclusive) cur.exclusive = true; if (x.certainty === "explicit") cur.certainty = "explicit"; if (posKey(x) < posKey(cur)) { cur.pos = x.pos; cur.episode = x.episode; cur.surface = x.surface; } }
+      if (!seen.has(k)) { seen.add(k); stSup.set(k, (stSup.get(k) ?? 0) + 1); }
+    }
+    for (const e of s.events) {
+      const sid = uid(s, e.subject_id);
+      const k = e.kind === "transition" ? ["t", sid, e.attribute_key, String(e.value_before), String(e.value_after), e.branch].join("\0") : ["o", e.branch, e.description].join("\0");
+      if (!events.has(k)) events.set(k, { ...e, id: `ev_${events.size}`, subject_id: sid });
+    }
+    for (const r of s.relations) { const a = uid(s, r.subject), b = uid(s, r.object); if (!a || !b) continue; const k = [a, b, r.predicate].join("\0"); if (!rels.has(k)) rels.set(k, { ...r, subject: a, object: b }); }
+    for (const r of s.rules) if (!rules.has(r.statement)) rules.set(r.statement, r);
+    for (const x of s.excluded) { const k = x.surface + "\0" + x.reason; if (!excluded.has(k)) excluded.set(k, x); }
+    for (const u of s.unclassified) if (!uncl.has(u.surface)) uncl.set(u.surface, u);
+  }
+  for (const [k, x] of states) { const sup = stSup.get(k)!; x.support = sup; x.weak = N > 1 && sup === 1; st.states.push(x); }
+  st.events = [...events.values()]; st.relations = [...rels.values()]; st.rules = [...rules.values()]; st.excluded = [...excluded.values()]; st.unclassified = [...uncl.values()];
+  for (const ep of [1, 2]) { const best = stores.map((s) => s.scenes.filter((x) => x.episode === ep)).sort((a, b) => b.length - a.length)[0] ?? []; st.scenes.push(...best); }
+  return st;
+}
+
+function supportSummary(st: Store, N: number, sink: Sink) {
+  const { info } = mk(sink);
+  const hist = new Map<number, number>(); for (const x of st.states) hist.set(x.support ?? 0, (hist.get(x.support ?? 0) ?? 0) + 1);
+  info(`합집합 상태 ${st.states.length}건 — support ${[...hist].sort((a, b) => b[0] - a[0]).map(([k, v]) => `${k}/${N}: ${v}`).join(" · ")} (1/${N} 은 weak)`);
+  info(`합집합 개체 ${st.entities.length} · 사건 ${st.events.length} · 관계 ${st.relations.length} · 규칙 ${st.rules.length}`);
+}
+
 // ── main ──
-const args = process.argv.slice(2);
+const union = process.argv.includes("--union");
+const args = process.argv.slice(2).filter((a) => a !== "--union");
 if (args.length < 2 || args.length % 2 !== 0) { console.error("usage: verify.ts ep1.json ep2.json [ep1_run2.json ep2_run2.json [ep1_run3.json ep2_run3.json …]]  — 회차 쌍을 실행 수만큼"); process.exit(2); }
 const golden = loadGolden();
 const tally = (sink: Sink) => ({ pass: sink.filter((r) => r.ok === true).length, fail: sink.filter((r) => r.ok === false).length });
@@ -355,9 +424,12 @@ console.log("prelim 1·2화 골든 대조");
 const N = args.length / 2;
 const outs: VerifyOutcome[] = [];
 const tallies: { pass: number; fail: number }[] = [];
+const stores: Store[] = [];
 for (let i = 0; i < N; i++) {
   const sink: Sink = [];
-  outs.push(verify(buildStore([load(args[2 * i]), load(args[2 * i + 1])]), golden, sink));
+  const store = buildStore([load(args[2 * i]), load(args[2 * i + 1])]);
+  stores.push(store);
+  outs.push(verify(store, golden, sink));
   tallies.push(print(`run${i + 1}`, sink));
 }
 let tD = { pass: 0, fail: 0 };
@@ -366,6 +438,14 @@ if (N >= 2) {
   determinism(outs, sinkD);
   tD = print("결정성", sinkD);
 }
-const nPass = tallies.reduce((s, t) => s + t.pass, 0) + tD.pass, nFail = tallies.reduce((s, t) => s + t.fail, 0) + tD.fail;
-console.log(`\n통과 ${nPass} / 실패 ${nFail}   (${tallies.map((t, i) => `run${i + 1} ${t.pass}/${t.fail}`).join(" · ")}${N >= 2 ? ` · 결정성 ${tD.pass}/${tD.fail}` : ""} · 검출기 #0 기준선: 심은 오류 2건 중 0건)`);
+let tU = { pass: 0, fail: 0 };
+if (union && N >= 2) {
+  const sinkU: Sink = [];
+  const u = unionStores(stores);
+  supportSummary(u, N, sinkU);
+  verify(u, golden, sinkU);
+  tU = print(`union(${N})`, sinkU);
+}
+const nPass = tallies.reduce((s, t) => s + t.pass, 0) + tD.pass + tU.pass, nFail = tallies.reduce((s, t) => s + t.fail, 0) + tD.fail + tU.fail;
+console.log(`\n통과 ${nPass} / 실패 ${nFail}   (${tallies.map((t, i) => `run${i + 1} ${t.pass}/${t.fail}`).join(" · ")}${N >= 2 ? ` · 결정성 ${tD.pass}/${tD.fail}` : ""}${union && N >= 2 ? ` · union ${tU.pass}/${tU.fail}` : ""} · 검출기 #0 기준선: 심은 오류 2건 중 0건)`);
 process.exit(nFail === 0 ? 0 : 1);

@@ -46,6 +46,9 @@ export interface StoredState {
   exclusive: boolean;
   status: "observed" | "canonical" | "rejected";
   surface: string;
+  /** 합집합 채점(verify --union)에서만: N회 중 몇 번 관찰됐나. 1/N 이면 weak (세션 55 ③-3) */
+  support?: number;
+  weak?: boolean;
 }
 
 export interface StoredEvent {
@@ -119,7 +122,7 @@ function isWeak(a: StoredState, b: StoredState): boolean {
   const numeric = specOf(a.attribute_key).valueKind === "number";
   const unparsed = numeric && (typeof a.value !== "number" || typeof b.value !== "number");
   const bothInferred = a.certainty === "inferred" && b.certainty === "inferred";
-  return unparsed || bothInferred || foreignClaim(a) || foreignClaim(b);
+  return unparsed || bothInferred || foreignClaim(a) || foreignClaim(b) || !!a.weak || !!b.weak;
 }
 
 export function detectStateChangeWithoutEvent(

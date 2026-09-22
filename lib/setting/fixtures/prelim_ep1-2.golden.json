@@ -111,11 +111,15 @@
       "attribute_any": [
         "나이"
       ],
-      "value": 19,
       "branch": "main",
       "episode": 1,
       "certainty": "inferred",
-      "surface_contains": "생일도 지난 나이라 합법적으로"
+      "surface_contains": "생일도 지난 나이라 합법적으로",
+      "value_any": [
+        19,
+        20
+      ],
+      "_why": "만 나이 19 / 세는 나이 20 — 원고(\"생일도 지난 나이라 합법적으로\")가 둘 다 허용"
     },
     {
       "entity": "유진혁",
@@ -411,7 +415,10 @@
         "나이"
       ],
       "evidence_values": [
-        19,
+        [
+          19,
+          20
+        ],
         22
       ],
       "weak": false,

@@ -14,6 +14,7 @@
  * npm run setting:extract -- --step=run --set=p2   # ★ 세트: raw 와 llm json 을 fixtures/raw/p2/ · fixtures/p2/ 에. 앞 실행을 안 덮는다
  * GEMINI_THINKING_LEVEL=MEDIUM npm run setting:extract -- --step=run --runs=3 --set=p3-medium   # ③: (1화→2화)×3 = 6회. thinking 은 env
  * npm run setting:extract -- --rescore --runs=3 --set=p3-medium                                 # 3회분 raw → verify 6인자(N회 결정성)
+ * npm run setting:extract -- --rescore --runs=3 --set=p3-medium --union                         # + 합집합 채점(support 1/N 은 weak)
  * ```
  *
  * thinking 은 gemini.ts 가 env GEMINI_THINKING_LEVEL 로 읽는다(MINIMAL·LOW·MEDIUM·HIGH — @google/genai 2.19 의 ThinkingLevel.
@@ -165,6 +166,7 @@ async function main() {
   const maxOut = Number(arg('max-out', '32768'))
   const rescore = flag('rescore')
   const dump = flag('dump')
+  const union = flag('union')
   if (!dry && !check && !rescore && !dump && step !== 'schema' && step !== 'run') {
     console.error('★ --dry · --check · --rescore · --dump · --step=schema · --step=run 중 하나. --step=schema 가 첫 호출(1회)이다.')
     process.exit(1)
@@ -214,7 +216,7 @@ async function main() {
       if (r.parsed) { writeFileSync(new URL(`${name}.json`, FIX), JSON.stringify(r.parsed, null, 1)); made++ }
     }
     if (made === 0) { console.log(`\n★ 재채점할 raw 가 하나도 없다 — ${p(RAW)}*.raw.json 을 둔다`); process.exit(1) }
-    runVerify(runs)
+    runVerify(runs, union)
     return
   }
 
@@ -291,14 +293,14 @@ async function main() {
   }
   console.log(`\n호출 ${calls}회 · 실비 $${results.reduce((s, x) => s + (x.costUsd ?? 0), 0).toFixed(6)} · 토큰 in ${results.reduce((s, x) => s + x.usage.inputTokens, 0)} / out ${results.reduce((s, x) => s + x.usage.outputTokens, 0)}`)
 
-  runVerify(runs)
+  runVerify(runs, union)
 }
 
 /** run i 의 파일 접미사: llm · llm2 · llm3 … */
 const suffixFor = (i: number) => (i === 0 ? 'llm' : `llm${i + 1}`)
 
 /** 회차 쌍이 앞에서부터 이어지는 만큼 verify 에 넘긴다(2쌍 이상이면 N회 결정성). verify 의 종료 코드를 그대로 낸다. */
-function runVerify(runs: number): never {
+function runVerify(runs: number, union = false): never {
   const exists = (f: string) => { try { readFileSync(f); return true } catch { return false } }
   const pairs: string[] = []
   for (let i = 0; i < runs; i++) {
@@ -309,7 +311,7 @@ function runVerify(runs: number): never {
   if (pairs.length < 2) { console.log('★ verify 를 돌릴 파일이 모자란다(llm 1·2화가 필요) — 멈춘다'); process.exit(1) }
   const n = pairs.length / 2
   console.log(`\n=== verify ${n}회분 ${pairs.length}인자${n >= 2 ? ` (${n}회 결정성 포함)` : ' — 1회뿐이라 결정성은 못 잰다'} ===`)
-  const v = spawnSync('npx', ['tsx', p(new URL('verify.ts', SETTING)), ...pairs], { stdio: 'inherit' })
+  const v = spawnSync('npx', ['tsx', p(new URL('verify.ts', SETTING)), ...pairs, ...(union ? ['--union'] : [])], { stdio: 'inherit' })
   process.exit(v.status ?? 1)
 }
 
