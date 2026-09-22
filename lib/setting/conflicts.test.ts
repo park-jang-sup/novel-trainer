@@ -38,9 +38,9 @@ t("4 앞 값을 만든 사건은 앞→뒤 변화의 설명이 아니다 — 쾌
     [E({ subject_id: "A", attribute: "스킬", episode: 1, pos: 300, value_after: "쾌속", description: "쾌속 획득" })]);
   assert.deepEqual(vals(r), ["①skill:쾌속→질풍"]);
 });
-t("5 사건의 after 값이 뒤 값과 다르면 설명이 아니다 (single)", () => {
-  const r = run([S({ entity_id: "A", attribute: "소속", value: "국정원", episode: 1 }), S({ entity_id: "A", attribute: "소속", value: "국방부", episode: 3 })],
-    [E({ subject_id: "A", attribute: "소속", episode: 2, value_after: "베나토르" })]);
+t("5 사건의 after 값이 뒤 값과 다르면 설명이 아니다 (single — 거주지. 소속은 ①-b 에서 set 이 됐다)", () => {
+  const r = run([S({ entity_id: "A", attribute: "거주지", value: "서울", episode: 1 }), S({ entity_id: "A", attribute: "거주지", value: "부산", episode: 3 })],
+    [E({ subject_id: "A", attribute: "거주지", episode: 2, value_after: "대전" })]);
   assert.equal(r.cards.length, 1);
 });
 t("6 갈래가 다르면 비교하지 않는다 — 회귀 전 32세와 현재 19세", () => {
@@ -205,6 +205,10 @@ t("P10 술어가 동의어표에 있고 객체가 사람이 아니면 상태로 
   assert.equal(out[0].entity_id, "A"); assert.equal(out[0].attribute, "소속"); assert.equal(out[0].value, "베나토르"); assert.equal(out[0].claimed_in_dialogue, true);
   const st = toStoredState({ id: "x", ...out[0] });
   assert.equal(st.attribute_key, "affiliation"); assert.equal(st.value, "베나토르");
+  // 소속은 set — 대사 "국정원 소속" 과 물질화된 "베나토르" 가 같은 회차에 있어도 카드가 아니다(겹소속). exclusive 면 카드.
+  const nis = S({ entity_id: "A", attribute: "소속", value: "국정원", episode: 2, pos: 5 });
+  assert.equal(run([nis, st]).cards.length, 0);
+  assert.deepEqual(vals(run([nis, { ...st, exclusive: true }])), ["①affiliation:국정원→베나토르"]);
 });
 
 console.log(`\n통과 ${n} / 실패 0`);

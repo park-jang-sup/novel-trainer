@@ -51,3 +51,7 @@ __pycache__/
 #   그쪽은 커밋한다. 관측 원본이 없으면 결론을 재현할 수 없다.
 #   인수인계_세션13.md 12-6장에 대응표가 있다.
 ai-probe.json
+
+# 설정검사: llm*.json 은 fixtures/raw/*.raw.json 에서 --rescore 로 재생성되는 파생물. raw 만 커밋한다
+lib/setting/fixtures/**/*.llm*.json
+lib/setting/fixtures/*.llm*.json

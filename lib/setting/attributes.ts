@@ -30,7 +30,12 @@ export interface AttributeSpec {
 
 const DEFAULT_SPECS: AttributeSpec[] = [
   { key: "age", cardinality: "single", valueKind: "number", drifts_with_time: true },
-  { key: "affiliation", cardinality: "single", valueKind: "text" },
+  /**
+   * 소속은 set 이다 (세션 55 ①-b, 박 님 결정). 겹소속은 정상이다 — 국정원 직원이면서 베나토르 팀원.
+   * single 로 두면 "국정원 소속 김태진" 과 관계 "김태진 ∈ 베나토르" 가 같은 회차에서 카드가 된다(오탐).
+   * 이적을 서술 없이 넘긴 것은 ①′(옛 소속 재등장)와 exclusive 관찰("이제 X 소속뿐")로 잡는다.
+   */
+  { key: "affiliation", cardinality: "set", valueKind: "text" },
   { key: "residence", cardinality: "single", valueKind: "text" },
   { key: "title", cardinality: "single", valueKind: "text" },
   { key: "alive", cardinality: "single", valueKind: "text" },
