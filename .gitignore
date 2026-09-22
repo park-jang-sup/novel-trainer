@@ -53,5 +53,6 @@ __pycache__/
 ai-probe.json
 
 # 설정검사: llm*.json 은 fixtures/raw/*.raw.json 에서 --rescore 로 재생성되는 파생물. raw 만 커밋한다
-lib/setting/fixtures/**/*.llm*.json
-lib/setting/fixtures/*.llm*.json
+lib/setting/fixtures/**/*.llm.json
+lib/setting/fixtures/**/*.llm2.json
+lib/setting/fixtures/**/*.llm[0-9].json

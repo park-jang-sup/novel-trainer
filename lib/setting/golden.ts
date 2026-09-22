@@ -12,9 +12,11 @@ const Why = z.string().optional();
 
 export const EntityRequired = z.strictObject({
   name: z.string(),
-  kind: z.string(),
+  kind: z.string().optional(),
+  /** kind 가 둘 중 하나여도 되는 자리(소원권: item/term). kind 와 kind_any 중 하나는 있어야 한다 */
+  kind_any: z.array(z.string()).min(1).optional(),
   aliases_any: z.array(z.string()).min(1).optional(),
-});
+}).refine((q) => q.kind !== undefined || q.kind_any !== undefined, { message: "kind 또는 kind_any 가 필요하다" });
 
 export const EntityForbiddenKind = z.strictObject({
   name: z.string(),
@@ -53,10 +55,12 @@ export const EventQuery = z.strictObject({
 });
 export type EventQuery = z.infer<typeof EventQuery>;
 
+/** 판정은 주체·객체 + 근거 문장(surface_contains_any). 술어는 모델이 제 말로 짓는 자리라 info 로만 본다 (세션 55 ②) */
 export const RelationRequired = z.strictObject({
   subject: z.string(),
-  predicate_any: z.array(z.string()).min(1),
   object: z.string(),
+  surface_contains_any: z.array(z.string()).min(1),
+  predicate_info: z.array(z.string()).min(1).optional(),
   episode: z.number().int().positive().optional(),
 });
 

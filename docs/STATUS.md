@@ -427,6 +427,14 @@ fill-smoke@example.com          하니스용 계정. 학습자 답안 수를 셀
                           남은 실패의 뿌리: 나이 상태 자체가 없음(카드 1 못 섬) · 튜토리얼을 개체로 안 잡음 ·
                           transition 이 run1 0건 · run2 의 after 에 설명이 섞임("쾌속 스킬 획득") · 결정성 없음.
                           ② 는 --set=p2 로 돌려 LOW 결과를 안 덮는다. 검출기 #0(0/2) 옆의 첫 숫자: 심은 오류 2건 중 1건(쾌속→질풍), run1 기준.
+                        ★ ②(프롬프트 v2, LOW, raw fixtures/raw/p2/) 재채점 — 골든에 소원권 kind_any·관계는 객체+근거 문장 판정
+                          (술어 info) 반영 뒤 **114/8(run1 57/3 · run2 57/3 · 결정성 0/2)**. 같은 골든으로 LOW 기준선은 105/17.
+                          run1 은 심은 오류 2건 다 잡음(카드 2장, 정밀도 100%) — 검출기 #0 의 0/2 옆에 2/2. run2 는 1/2(나이 상태
+                          가 안 나옴). transition: LOW 0·0/2·0 → p2 1·0/3·1. 김수정.나이 오탐 0. 1화 쾌속은 두 실행 모두
+                          살았지만 둘 다 상태가 아니라 transition 물질화로 산 것. 결정성 없음 — 불안정 4건(나이 상태·나이 카드·
+                          2화 소속 상태·소속 transition 이 실행마다 갈림). 남은 실패: 김수정.생사=사망(두 실행 다 없음).
+                          ③ 준비 끝: --runs=N · GEMINI_THINKING_LEVEL=MEDIUM · --set=p3-medium. '없음' thinking 은 SDK 에
+                          없다(MINIMAL·LOW·MEDIUM·HIGH). verify 는 N회 결정성을 항목별 통과 횟수·카드 키별 등장 횟수로 찍는다.
 ```
 
 ### 끝난 것 — 세션 53 (bt- 재료 두 줄 확장 셋 · diffChecks rule 대조 · reviewed 컬럼)

@@ -58,7 +58,7 @@ interface Store {
   entities: StoreEntity[];
   states: StoredState[];
   events: StoredEvent[];
-  relations: { subject: string; predicate: string; object: string; episode: number }[];
+  relations: { subject: string; predicate: string; object: string; episode: number; surface: string }[];
   rules: { statement: string; category: string; surface: string; episode: number }[];
   excluded: { surface: string; reason: string; episode: number }[];
   unclassified: { surface: string; episode: number }[];
@@ -124,7 +124,7 @@ function buildStore(exs: Extraction[]): Store {
     for (const r of ex.relations) {
       const s = rid(r.subject), o = rid(r.object);
       if (!(s && o)) continue;
-      st.relations.push({ subject: s, predicate: r.predicate, object: o, episode: ex.episode });
+      st.relations.push({ subject: s, predicate: r.predicate, object: o, episode: ex.episode, surface: r.evidence.surface });
       relRows.push({ subject_id: s, predicate: r.predicate, object_id: o, branch: r.branch, episode: ex.episode, pos: r.evidence.span.start, surface: r.evidence.surface, claimed_in_dialogue: r.claimed_in_dialogue });
     }
     // 관계 → 상태 물질화 (store.ts). 술어가 동의어표에 있고 객체가 사람이 아닌 것만.
@@ -171,9 +171,10 @@ function verify(st: Store, g: Golden, sink: Sink): VerifyOutcome {
   // entities
   for (const r of g.entities_required) {
     const e = entityByName(st, r.name);
-    const label = `개체 ${r.name} (${r.kind})`;
+    const kinds = r.kind_any ?? [r.kind!];
+    const label = `개체 ${r.name} (${kinds.join("/")})`;
     if (!e) { fail(`개체 없음: ${r.name}`); continue; }
-    if (e.kind !== r.kind) { fail(`개체 ${r.name} kind: 기대 ${r.kind}, 실제 ${e.kind}`); continue; }
+    if (!kinds.includes(e.kind)) { fail(`개체 ${r.name} kind: 기대 ${kinds.join("/")}, 실제 ${e.kind}`); continue; }
     if (r.aliases_any && !r.aliases_any.some((a) => e.aliases.includes(a))) { fail(`개체 ${r.name} 별칭 누락 (${r.aliases_any.join("/")})`); continue; }
     pass(label); passed.add(label);
   }
@@ -226,12 +227,15 @@ function verify(st: Store, g: Golden, sink: Sink): VerifyOutcome {
     req(`금지 사건 없음: ${q._why}`, hits.length === 0, `금지 사건 존재: ${q._why} — ${hits.map((h) => `${h.episode}화 "${h.description}" ${String(h.value_before)}→${String(h.value_after)}`).join(" / ")}`);
   }
 
-  // relations
+  // relations — 판정은 주체·객체·근거 문장. 술어는 info
+  let predicateMismatch = 0;
   for (const q of g.relations_required) {
     const s = entityByName(st, q.subject), o = entityByName(st, q.object);
-    const ok = !!s && !!o && st.relations.some((r) => r.subject === s.id && r.object === o.id && q.predicate_any.some((p) => r.predicate.includes(p)));
-    req(`관계 ${q.subject} -${q.predicate_any[0]}-> ${q.object}`, ok, `관계 없음: ${q.subject} -> ${q.object}`);
+    const hits = s && o ? st.relations.filter((r) => r.subject === s.id && r.object === o.id && containsAny(r.surface, q.surface_contains_any)) : [];
+    req(`관계 ${q.subject} -> ${q.object} (${q.surface_contains_any[0]})`, hits.length > 0, `관계 없음: ${q.subject} -> ${q.object} — 근거 후보 ${JSON.stringify(q.surface_contains_any)}; 있는 관계: ${(s && o ? st.relations.filter((r) => r.subject === s.id && r.object === o.id) : []).map((r) => `${r.predicate} "${r.surface.slice(0, 30)}"`).join(" / ") || "(없음)"}`);
+    if (hits.length > 0 && q.predicate_info && !hits.some((r) => q.predicate_info!.some((p) => r.predicate.includes(p)))) { predicateMismatch++; info(`관계 술어 불일치: ${q.subject} -> ${q.object} 실제 "${hits.map((r) => r.predicate).join("/")}" (참고 ${q.predicate_info.join("/")})`); }
   }
+  info(`관계 술어 불일치 ${predicateMismatch} / ${g.relations_required.length}`);
 
   // rules — 카테고리는 info
   let categoryMismatch = 0;
@@ -304,25 +308,38 @@ function verify(st: Store, g: Golden, sink: Sink): VerifyOutcome {
   return { passed, cards, store: st };
 }
 
-/** 결정성 (세션 55 ①-6): required 통과 집합 동일 + 카드 키 집합 동일. 개체·상태 대칭차는 info. */
-function determinism(a: VerifyOutcome, b: VerifyOutcome, sink: Sink) {
+/**
+ * 결정성 (세션 55 ①-6 → ③ N회). 실패 조건 둘: 모든 실행의 required 통과 집합 동일 · 카드 키 집합 동일.
+ * 그 밑에 정보: required 항목별 N회 중 통과 횟수(불안정한 것만 나열) · 카드 키별 N회 중 등장 횟수 · 실행별 카드 수 · 개체·상태 대칭차(run1 대비).
+ */
+function determinism(runs: VerifyOutcome[], sink: Sink) {
   const { info, check } = mk(sink);
+  const N = runs.length;
   const setEq = (x: Set<string>, y: Set<string>) => x.size === y.size && [...x].every((v) => y.has(v));
   const symdiff = (x: string[], y: string[]) => { const X = new Set(x), Y = new Set(y); return [...X].filter((v) => !Y.has(v)).length + [...Y].filter((v) => !X.has(v)).length; };
-  const onlyIn = (x: Set<string>, y: Set<string>) => [...x].filter((v) => !y.has(v));
 
-  const ka = new Set(a.cards.map((c) => c.dismiss_key)), kb = new Set(b.cards.map((c) => c.dismiss_key));
-  check(setEq(a.passed, b.passed), "결정성: 두 실행의 required 통과 집합 동일", `결정성: required 통과 집합이 다름 — run1 만: ${JSON.stringify(onlyIn(a.passed, b.passed))} run2 만: ${JSON.stringify(onlyIn(b.passed, a.passed))}`);
-  check(setEq(ka, kb), "결정성: 두 실행의 카드 키 집합 동일", `결정성: 카드 키 집합이 다름 — run1 ${ka.size}장, run2 ${kb.size}장`);
-  info(`카드 수 run1 ${a.cards.length} · run2 ${b.cards.length}`);
+  // required 항목별 통과 횟수
+  const allLabels = new Set<string>(); for (const r of runs) for (const l of r.passed) allLabels.add(l);
+  const passCount = new Map<string, number>(); for (const l of allLabels) passCount.set(l, runs.filter((r) => r.passed.has(l)).length);
+  const unstable = [...passCount].filter(([, k]) => k < N);
+  check(runs.every((r) => setEq(r.passed, runs[0].passed)), `결정성: ${N}회 required 통과 집합 동일 (${runs[0].passed.size}건)`, `결정성: required 통과 집합이 실행마다 다름 — 불안정 ${unstable.length}건 (아래 info)`);
+  // 카드 키별 등장 횟수
+  const keySets = runs.map((r) => new Set(r.cards.map((c) => c.dismiss_key)));
+  const allKeys = new Set<string>(); for (const k of keySets) for (const v of k) allKeys.add(v);
+  const keyLabel = (key: string) => { for (const r of runs) { const c = r.cards.find((x) => x.dismiss_key === key); if (c) return `${r.store.entities.find((e) => e.id === c.entity_id)?.name ?? c.entity_id}.${c.attribute} ${String(c.evidence[0].value)}→${String(c.evidence[1].value)}`; } return key; };
+  check(keySets.every((k) => setEq(k, keySets[0])), `결정성: ${N}회 카드 키 집합 동일 (${keySets[0].size}장)`, `결정성: 카드 키 집합이 실행마다 다름 — ${runs.map((r, i) => `run${i + 1} ${r.cards.length}장`).join(" · ")}`);
+  info(`카드 수 ${runs.map((r, i) => `run${i + 1} ${r.cards.length}`).join(" · ")}`);
+  for (const key of allKeys) info(`카드 키 등장 ${keySets.filter((k) => k.has(key)).length}/${N}: ${keyLabel(key)}`);
+  info(`required 안정 ${allLabels.size - unstable.length} · 불안정 ${unstable.length} (${N}회 모두 통과한 항목 수 / 실행마다 갈리는 항목 수)`);
+  for (const [l, k] of unstable.sort((x, y) => y[1] - x[1])) info(`required 통과 ${k}/${N}: ${l}`);
   const entSig = (st: Store) => st.entities.map((x) => [x.name, x.kind].join("|"));
   const stSig = (st: Store) => st.states.map((x) => [st.entities.find((e) => e.id === x.entity_id)?.name, x.attribute_key, String(x.value), x.branch].join("|"));
-  info(`대칭차: 개체 ${symdiff(entSig(a.store), entSig(b.store))} · 상태 ${symdiff(stSig(a.store), stSig(b.store))} (run1 개체 ${a.store.entities.length}/상태 ${a.store.states.length} · run2 개체 ${b.store.entities.length}/상태 ${b.store.states.length})`);
+  for (let i = 1; i < N; i++) info(`대칭차 run1↔run${i + 1}: 개체 ${symdiff(entSig(runs[0].store), entSig(runs[i].store))} · 상태 ${symdiff(stSig(runs[0].store), stSig(runs[i].store))} (run1 개체 ${runs[0].store.entities.length}/상태 ${runs[0].store.states.length} · run${i + 1} 개체 ${runs[i].store.entities.length}/상태 ${runs[i].store.states.length})`);
 }
 
 // ── main ──
 const args = process.argv.slice(2);
-if (args.length < 2) { console.error("usage: verify.ts ep1.json ep2.json [ep1_run2.json ep2_run2.json]"); process.exit(2); }
+if (args.length < 2 || args.length % 2 !== 0) { console.error("usage: verify.ts ep1.json ep2.json [ep1_run2.json ep2_run2.json [ep1_run3.json ep2_run3.json …]]  — 회차 쌍을 실행 수만큼"); process.exit(2); }
 const golden = loadGolden();
 const tally = (sink: Sink) => ({ pass: sink.filter((r) => r.ok === true).length, fail: sink.filter((r) => r.ok === false).length });
 const print = (title: string, sink: Sink) => {
@@ -333,20 +350,22 @@ const print = (title: string, sink: Sink) => {
   return t;
 };
 
-// 실행별로 완전히 분리해 찍는다 (세션 55 ①-b-4). run1 → run2 → 결정성. 총계는 셋의 합이다.
+// 실행별로 완전히 분리해 찍는다 (세션 55 ①-b-4). run1 → run2 → … → 결정성. 총계는 전부의 합이다.
 console.log("prelim 1·2화 골든 대조");
-const sink1: Sink = [];
-const out1 = verify(buildStore([load(args[0]), load(args[1])]), golden, sink1);
-const t1 = print("run1", sink1);
-let t2 = { pass: 0, fail: 0 }, t3 = { pass: 0, fail: 0 };
-if (args.length >= 4) {
-  const sink2: Sink = [];
-  const out2 = verify(buildStore([load(args[2]), load(args[3])]), golden, sink2);
-  t2 = print("run2", sink2);
-  const sink3: Sink = [];
-  determinism(out1, out2, sink3);
-  t3 = print("결정성", sink3);
+const N = args.length / 2;
+const outs: VerifyOutcome[] = [];
+const tallies: { pass: number; fail: number }[] = [];
+for (let i = 0; i < N; i++) {
+  const sink: Sink = [];
+  outs.push(verify(buildStore([load(args[2 * i]), load(args[2 * i + 1])]), golden, sink));
+  tallies.push(print(`run${i + 1}`, sink));
 }
-const nPass = t1.pass + t2.pass + t3.pass, nFail = t1.fail + t2.fail + t3.fail;
-console.log(`\n통과 ${nPass} / 실패 ${nFail}   (run1 ${t1.pass}/${t1.fail}${args.length >= 4 ? ` · run2 ${t2.pass}/${t2.fail} · 결정성 ${t3.pass}/${t3.fail}` : ""} · 검출기 #0 기준선: 심은 오류 2건 중 0건)`);
+let tD = { pass: 0, fail: 0 };
+if (N >= 2) {
+  const sinkD: Sink = [];
+  determinism(outs, sinkD);
+  tD = print("결정성", sinkD);
+}
+const nPass = tallies.reduce((s, t) => s + t.pass, 0) + tD.pass, nFail = tallies.reduce((s, t) => s + t.fail, 0) + tD.fail;
+console.log(`\n통과 ${nPass} / 실패 ${nFail}   (${tallies.map((t, i) => `run${i + 1} ${t.pass}/${t.fail}`).join(" · ")}${N >= 2 ? ` · 결정성 ${tD.pass}/${tD.fail}` : ""} · 검출기 #0 기준선: 심은 오류 2건 중 0건)`);
 process.exit(nFail === 0 ? 0 : 1);

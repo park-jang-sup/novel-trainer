@@ -12,7 +12,12 @@
  * npm run setting:extract -- --rescore         # raw → locate → verify. 호출 0회
  * npm run setting:extract -- --dump            # llm.json 의 정해진 자리를 뽑아 본다. 호출 0회
  * npm run setting:extract -- --step=run --set=p2   # ★ 세트: raw 와 llm json 을 fixtures/raw/p2/ · fixtures/p2/ 에. 앞 실행을 안 덮는다
+ * GEMINI_THINKING_LEVEL=MEDIUM npm run setting:extract -- --step=run --runs=3 --set=p3-medium   # ③: (1화→2화)×3 = 6회. thinking 은 env
+ * npm run setting:extract -- --rescore --runs=3 --set=p3-medium                                 # 3회분 raw → verify 6인자(N회 결정성)
  * ```
+ *
+ * thinking 은 gemini.ts 가 env GEMINI_THINKING_LEVEL 로 읽는다(MINIMAL·LOW·MEDIUM·HIGH — @google/genai 2.19 의 ThinkingLevel.
+ * '없음' 은 없다. 가장 낮은 것이 MINIMAL). raw 파일에 thinking 이 적히므로 세트 이름과 어긋나면 raw 로 드러난다.
  *
  * ★ 반복 실행 금지 — step 하나가 낼 수 있는 호출 수가 곧 이 실행의 상한(run_cap)이다.
  * ★ 원응답은 lib/setting/fixtures/raw/ 에 그대로 남긴다. verify 를 고칠 때 다시 부르지 않기 위해.
@@ -164,7 +169,9 @@ async function main() {
     console.error('★ --dry · --check · --rescore · --dump · --step=schema · --step=run 중 하나. --step=schema 가 첫 호출(1회)이다.')
     process.exit(1)
   }
-  const plannedCalls = step === 'run' ? 4 : 1
+  const runs = Number(arg('runs', '2'))
+  if (!Number.isInteger(runs) || runs < 1 || runs > 9) { console.error(`★ --runs 는 1~9 (받은 것: ${arg('runs', '2')})`); process.exit(1) }
+  const plannedCalls = step === 'run' ? 2 * runs : 1
   const runCap = Number(arg('cap', String(plannedCalls)))
 
   const t1 = readFileSync(new URL('prelim_ep1.txt', FIX_BASE), 'utf8')
@@ -175,7 +182,7 @@ async function main() {
   const schemaStr = JSON.stringify(schema)
   const probePrompt = fillTemplate(tpl, { episode: '1', lexicon: '없음', branches: branchesLine(), text: t1 })
 
-  console.log(`모델 ${model} · thinking ${THINKING_LEVEL} · maxOutputTokens ${maxOut} · 이 실행 상한 ${runCap}회 (계획 ${plannedCalls}회) · 세트 ${SET || '(기본)'} → ${p(FIX)}`)
+  console.log(`모델 ${model} · thinking ${THINKING_LEVEL} · maxOutputTokens ${maxOut} · 실행 ${runs}회 · 이 실행 상한 ${runCap}회 (계획 ${plannedCalls}회) · 세트 ${SET || '(기본)'} → ${p(FIX)}`)
   console.log(`원고 1화 ${t1.length}자 · 2화 ${t2.length}자 · 프롬프트(1화) ${probePrompt.length}자 · JSON 스키마 ${schemaStr.length}바이트`)
   console.log(`스키마 모양: anyOf ${(schemaStr.match(/"anyOf"/g) ?? []).length} · default ${(schemaStr.match(/"default"/g) ?? []).length} · additionalProperties ${(schemaStr.match(/"additionalProperties"/g) ?? []).length} · description ${(schemaStr.match(/"description"/g) ?? []).length} · $schema 뗌`)
   if (!PRICES[model]) console.log('★ 단가표에 없는 모델이다. 비용이 null 로 나간다 — pricing.ts 에 넣어라')
@@ -190,7 +197,8 @@ async function main() {
 
   // ── --rescore : raw → locate → verify. 호출 0회. 코드·골든을 고친 뒤 같은 응답으로 다시 채점한다 ──
   if (rescore) {
-    const names: [string, number, string][] = [['prelim_ep1.llm', 1, t1], ['prelim_ep2.llm', 2, t2], ['prelim_ep1.llm2', 1, t1], ['prelim_ep2.llm2', 2, t2]]
+    const names: [string, number, string][] = []
+    for (let i = 0; i < runs; i++) names.push([`prelim_ep1.${suffixFor(i)}`, 1, t1], [`prelim_ep2.${suffixFor(i)}`, 2, t2])
     let made = 0
     for (const [name, episode, text] of names) {
       let rawFile: { text: string; model?: string; usage?: TokenUsage; cost_usd?: number | null }
@@ -206,7 +214,7 @@ async function main() {
       if (r.parsed) { writeFileSync(new URL(`${name}.json`, FIX), JSON.stringify(r.parsed, null, 1)); made++ }
     }
     if (made === 0) { console.log(`\n★ 재채점할 raw 가 하나도 없다 — ${p(RAW)}*.raw.json 을 둔다`); process.exit(1) }
-    runVerify()
+    runVerify(runs)
     return
   }
 
@@ -271,8 +279,8 @@ async function main() {
   }
 
   // ── step=run : (1화 → 2화) × 2 ──
-  const suffixes = ['llm', 'llm2']
-  for (const sfx of suffixes) {
+  for (let i = 0; i < runs; i++) {
+    const sfx = suffixFor(i)
     const r1 = await guarded(`prelim_ep1.${sfx}`, 1, t1, '없음')
     if (!r1) break
     if (!r1.parsed) { console.log(`★ 1화(${sfx})가 안 읽혀 2화의 {{lexicon}} 을 만들 수 없다 — 이 회차는 여기서 멈춘다`); continue }
@@ -283,17 +291,25 @@ async function main() {
   }
   console.log(`\n호출 ${calls}회 · 실비 $${results.reduce((s, x) => s + (x.costUsd ?? 0), 0).toFixed(6)} · 토큰 in ${results.reduce((s, x) => s + x.usage.inputTokens, 0)} / out ${results.reduce((s, x) => s + x.usage.outputTokens, 0)}`)
 
-  runVerify()
+  runVerify(runs)
 }
 
-/** llm/llm2 네 파일이 다 있으면 4인자(결정성 포함), 둘만 있으면 2인자. verify 의 종료 코드를 그대로 낸다. */
-function runVerify(): never {
-  const files = ['prelim_ep1.llm.json', 'prelim_ep2.llm.json', 'prelim_ep1.llm2.json', 'prelim_ep2.llm2.json'].map((f) => p(new URL(f, FIX)))
-  const have = files.filter((f) => { try { readFileSync(f); return true } catch { return false } })
-  if (have.length < 2 || !have.includes(files[0]) || !have.includes(files[1])) { console.log('★ verify 를 돌릴 파일이 모자란다(llm 1·2화가 필요) — 멈춘다'); process.exit(1) }
-  const args = have.length === 4 ? files : files.slice(0, 2)
-  console.log(`\n=== verify ${have.length === 4 ? '4인자(결정성 포함)' : '2인자 — run2 가 없어 결정성은 못 잰다'} ===`)
-  const v = spawnSync('npx', ['tsx', p(new URL('verify.ts', SETTING)), ...args], { stdio: 'inherit' })
+/** run i 의 파일 접미사: llm · llm2 · llm3 … */
+const suffixFor = (i: number) => (i === 0 ? 'llm' : `llm${i + 1}`)
+
+/** 회차 쌍이 앞에서부터 이어지는 만큼 verify 에 넘긴다(2쌍 이상이면 N회 결정성). verify 의 종료 코드를 그대로 낸다. */
+function runVerify(runs: number): never {
+  const exists = (f: string) => { try { readFileSync(f); return true } catch { return false } }
+  const pairs: string[] = []
+  for (let i = 0; i < runs; i++) {
+    const a = p(new URL(`prelim_ep1.${suffixFor(i)}.json`, FIX)), b = p(new URL(`prelim_ep2.${suffixFor(i)}.json`, FIX))
+    if (!(exists(a) && exists(b))) break
+    pairs.push(a, b)
+  }
+  if (pairs.length < 2) { console.log('★ verify 를 돌릴 파일이 모자란다(llm 1·2화가 필요) — 멈춘다'); process.exit(1) }
+  const n = pairs.length / 2
+  console.log(`\n=== verify ${n}회분 ${pairs.length}인자${n >= 2 ? ` (${n}회 결정성 포함)` : ' — 1회뿐이라 결정성은 못 잰다'} ===`)
+  const v = spawnSync('npx', ['tsx', p(new URL('verify.ts', SETTING)), ...pairs], { stdio: 'inherit' })
   process.exit(v.status ?? 1)
 }
 

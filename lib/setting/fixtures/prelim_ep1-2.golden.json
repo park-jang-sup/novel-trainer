@@ -69,7 +69,10 @@
     },
     {
       "name": "소원권",
-      "kind": "item"
+      "kind_any": [
+        "item",
+        "term"
+      ]
     },
     {
       "name": "쾌속",
@@ -306,16 +309,21 @@
   "relations_required": [
     {
       "subject": "김태진",
-      "predicate_any": [
+      "object": "베나토르",
+      "episode": 2,
+      "predicate_info": [
         "소속",
         "구성원"
       ],
-      "object": "베나토르",
-      "episode": 2
+      "surface_contains_any": [
+        "이 팀에는 저를 포함해서"
+      ]
     },
     {
       "subject": "유진혁",
-      "predicate_any": [
+      "object": "김수정",
+      "episode": 1,
+      "predicate_info": [
         "짝사랑",
         "호감",
         "약속",
@@ -323,8 +331,10 @@
         "반함",
         "연심"
       ],
-      "object": "김수정",
-      "episode": 1
+      "surface_contains_any": [
+        "첫눈에 반해",
+        "3년 내내"
+      ]
     }
   ],
   "rules_required": [
