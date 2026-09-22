@@ -13,7 +13,8 @@
     "gen:seed": "tsx scripts/gen-seed.ts",
     "ai:probe": "NODE_OPTIONS=--conditions=react-server tsx scripts/ai-probe.ts",
     "ai:report": "tsx scripts/ai-report.ts",
-    "ai:support-golden": "NODE_OPTIONS=--conditions=react-server tsx scripts/support-golden.ts"
+    "ai:support-golden": "NODE_OPTIONS=--conditions=react-server tsx scripts/support-golden.ts",
+    "setting:extract": "NODE_OPTIONS=--conditions=react-server tsx scripts/extract-setting.ts"
   },
   "dependencies": {
     "@google/genai": "^2.19.0",

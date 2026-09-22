@@ -1,6 +1,6 @@
 import 'server-only'
 import { GoogleGenAI, ThinkingLevel } from '@google/genai'
-import type { GeminiCall, GeminiReply } from './observe'
+import type { GeminiReply } from './observe'
 import { backoffMs, isRetryable, statusOf } from './retry'
 
 /**
@@ -76,7 +76,20 @@ export const THINKING_LEVEL: ThinkingLevel =
  *   이 몇 배가 된다. 그래도 이건 **아낀 것이지 잰 것이 아니다** — thinking level
  *   은 토큰 수를 보장하는 값이 아니라 상대적 지침이다. 진짜 수는 재야 나온다.
  */
-export const callGemini: GeminiCall = async (prompt, model): Promise<GeminiReply> => {
+/**
+ * 선택 인자(세션 55, 설정검사 추출용). **둘 다 안 주면 지금까지와 똑같이 동작한다.**
+ *   responseJsonSchema  구조화 출력. z.toJSONSchema(ExtractionRaw) 를 그대로 넣는다.
+ *                       `@google/genai` 2.19 의 `responseJsonSchema`(전체 JSON 스키마) 자리다 —
+ *                       `responseSchema`(OpenAPI 부분집합)가 아니다.
+ *   maxOutputTokens     기본 2048 은 한 줄 판정용이다. 회차 전문 추출은 그보다 훨씬 크다.
+ * 심사·힌트 호출자는 GeminiCall 타입으로 이 함수를 받으므로 이 인자를 볼 수 없다 — 그쪽은 안 바뀐다.
+ */
+export interface GeminiCallOptions {
+  responseJsonSchema?: unknown
+  maxOutputTokens?: number
+}
+
+export const callGemini = async (prompt: string, model: string, opts: GeminiCallOptions = {}): Promise<GeminiReply> => {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) throw new Error('GEMINI_API_KEY 없음')
 
@@ -86,7 +99,7 @@ export const callGemini: GeminiCall = async (prompt, model): Promise<GeminiReply
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     if (attempt > 0) await sleep(backoffMs(attempt - 1))
     try {
-      return await once(ai, prompt, model)
+      return await once(ai, prompt, model, opts)
     } catch (e) {
       lastError = e
       if (!isRetryable(e)) throw e
@@ -97,19 +110,21 @@ export const callGemini: GeminiCall = async (prompt, model): Promise<GeminiReply
   throw lastError
 }
 
-async function once(ai: GoogleGenAI, prompt: string, model: string): Promise<GeminiReply> {
+async function once(ai: GoogleGenAI, prompt: string, model: string, opts: GeminiCallOptions): Promise<GeminiReply> {
   const res = await ai.models.generateContent({
     model,
     contents: prompt,
     config: {
-      // 프롬프트가 이미 'JSON 하나만' 이라고 못 박는다. responseSchema 는 안 건다 —
+      // 프롬프트가 이미 'JSON 하나만' 이라고 못 박는다. 심사·힌트는 responseSchema 를 안 건다 —
       // 스키마를 걸면 설계안이 재려던 것과 다른 조건에서 재게 된다. 꼴이 틀리면
       // parseObservation 이 틀렸다고 낸다(설계안 2-2 의 출력 형식이 곧 계약이다).
+      // ★ 설정검사 추출만 responseJsonSchema 를 준다(opts). 안 주면 필드 자체가 안 나간다.
       responseMimeType: 'application/json',
+      ...(opts.responseJsonSchema !== undefined ? { responseJsonSchema: opts.responseJsonSchema } : {}),
       thinkingConfig: { thinkingLevel: THINKING_LEVEL },
       // 넉넉히 준다. 과금은 실제 사용량으로 나가고, 좁게 주면 생각 토큰에 밀려
       // 본문이 잘린 채로 와서 파싱 실패가 프롬프트 탓처럼 보인다.
-      maxOutputTokens: 2048,
+      maxOutputTokens: opts.maxOutputTokens ?? 2048,
       abortSignal: AbortSignal.timeout(TIMEOUT_MS),
     },
   })
