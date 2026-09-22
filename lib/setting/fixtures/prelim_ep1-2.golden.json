@@ -320,7 +320,8 @@
         "호감",
         "약속",
         "반해",
-        "반함"
+        "반함",
+        "연심"
       ],
       "object": "김수정",
       "episode": 1
@@ -329,7 +330,8 @@
   "rules_required": [
     {
       "statement_contains_any": [
-        "100층"
+        "100층",
+        "100개 층"
       ],
       "surface_contains": "탑은 총 100층으로",
       "category_info": [
@@ -353,10 +355,13 @@
         "복수",
         "하나"
       ],
-      "surface_contains": "소원 하나가 아닌 복수로",
       "category_info": [
         "system",
         "magic"
+      ],
+      "surface_contains_any": [
+        "소원 하나가 아닌 복수로",
+        "소원"
       ]
     },
     {

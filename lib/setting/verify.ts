@@ -20,7 +20,7 @@ import { Extraction } from "./schema";
 import { GoldenSchema, type ConflictCardRequired, type EventQuery, type Golden, type StateQuery } from "./golden";
 import { detectStateChangeWithoutEvent, toStoredState, type ConflictCard, type StoredEvent, type StoredState } from "./conflicts";
 import { normalizeAttribute, normalizeValue, sameValue, similarUnmergedAttributePairs } from "./attributes";
-import { materializeRelationStates } from "./store";
+import { materializeRelationStates, materializeTransitionStates } from "./store";
 
 interface Line { ok: boolean | null; line: string }   // ok=null 은 info — 세지 않는다
 type Sink = Line[];
@@ -69,13 +69,14 @@ interface Store {
   dropped: number;
   ambiguous_surface: number;
   first_mention_fallback: number;
-  /** 관계에서 물질화된 상태 수 (store.ts) */
+  /** 관계·전이에서 물질화된 상태 수 (store.ts) */
   states_from_relations: number;
+  states_from_transitions: number;
 }
 
 /** 이름 정규화: 같은 이름/별칭이면 같은 개체로. 실제 서비스의 lexicon 대조를 단순화한 것. */
 function buildStore(exs: Extraction[]): Store {
-  const st: Store = { entities: [], states: [], events: [], relations: [], rules: [], excluded: [], unclassified: [], scenes: [], narrator: { person: "", entityName: null }, branches: new Set(), orphan_ref: 0, dropped: 0, ambiguous_surface: 0, first_mention_fallback: 0, states_from_relations: 0 };
+  const st: Store = { entities: [], states: [], events: [], relations: [], rules: [], excluded: [], unclassified: [], scenes: [], narrator: { person: "", entityName: null }, branches: new Set(), orphan_ref: 0, dropped: 0, ambiguous_surface: 0, first_mention_fallback: 0, states_from_relations: 0, states_from_transitions: 0 };
   const idByName = new Map<string, string>();
   const idOf = (name: string) => idByName.get(name.trim());
 
@@ -106,10 +107,18 @@ function buildStore(exs: Extraction[]): Store {
       if (!entity_id) { st.orphan_ref++; continue; }   // 조용히 버리지 않는다
       st.states.push(toStoredState({ id: `st_${st.states.length}`, entity_id, attribute: s.attribute, value: s.value, branch: s.branch, episode: ex.episode, pos: s.evidence.span.start, certainty: s.certainty, claimed_in_dialogue: s.claimed_in_dialogue, speaker_id: rid(s.speaker), exclusive: s.exclusive, status: "observed", surface: s.evidence.surface }));
     }
+    const trRows = [];
     for (const ev of ex.events) {
       const attribute_key = ev.attribute ? normalizeAttribute(ev.attribute) : null;
-      st.events.push({ id: `ev_${st.events.length}`, kind: ev.kind, subject_id: rid(ev.subject), attribute_key, branch: ev.branch, episode: ex.episode, pos: ev.evidence.span.start, description: ev.description, surface: ev.evidence.surface,
+      const subject_id = rid(ev.subject);
+      st.events.push({ id: `ev_${st.events.length}`, kind: ev.kind, subject_id, attribute_key, branch: ev.branch, episode: ex.episode, pos: ev.evidence.span.start, description: ev.description, surface: ev.evidence.surface,
         value_before: ev.before != null && attribute_key ? normalizeValue(attribute_key, ev.before) : ev.before, value_after: ev.after != null && attribute_key ? normalizeValue(attribute_key, ev.after) : ev.after, elapsed_years: ev.elapsed_years });
+      trRows.push({ kind: ev.kind, subject_id, attribute: ev.attribute, after: ev.after, branch: ev.branch, episode: ex.episode, pos: ev.evidence.span.start, surface: ev.evidence.surface });
+    }
+    // 전이 → 상태 물질화 (store.ts). subject·attribute·after 가 다 있는 transition 만. 같은 위치의 전이가 설명이 된다.
+    for (const m of materializeTransitionStates(trRows)) {
+      st.states.push(toStoredState({ id: `st_${st.states.length}`, ...m }));
+      st.states_from_transitions++;
     }
     const relRows = [];
     for (const r of ex.relations) {
@@ -227,7 +236,7 @@ function verify(st: Store, g: Golden, sink: Sink): VerifyOutcome {
   // rules — 카테고리는 info
   let categoryMismatch = 0;
   for (const q of g.rules_required) {
-    const hits = st.rules.filter((r) => q.statement_contains_any.some((k) => r.statement.includes(k)) && contains(r.surface, q.surface_contains));
+    const hits = st.rules.filter((r) => q.statement_contains_any.some((k) => r.statement.includes(k)) && contains(r.surface, q.surface_contains) && containsAny(r.surface, q.surface_contains_any));
     req(`규칙 ${q.statement_contains_any[0]}`, hits.length > 0, `규칙 없음: ${q.statement_contains_any.join("/")}`);
     if (hits.length > 0 && q.category_info && !hits.some((r) => q.category_info!.includes(r.category))) categoryMismatch++;
   }
@@ -291,7 +300,7 @@ function verify(st: Store, g: Golden, sink: Sink): VerifyOutcome {
 
   const precision = cards.length === 0 ? 0 : requiredHit / cards.length;
   console.log(`\n  카드 총 ${cards.length}건 / 골든 요구 ${g.conflict_cards_required.length}건 충족 ${requiredHit} → 정밀도 ${(precision * 100).toFixed(0)}%   (검출기 #0: 제안 149건 중 실제 후보 한 자릿수)`);
-  console.log(`  coverage: dropped ${st.dropped} · orphan_ref ${st.orphan_ref} · first_mention_fallback ${st.first_mention_fallback} · ambiguous_surface ${st.ambiguous_surface} · ambiguous_order ${ambiguous_order} · similar_attributes_unmerged ${unmerged.length}${unmerged.length ? " " + JSON.stringify(unmerged) : ""} · states_from_relations ${st.states_from_relations}`);
+  console.log(`  coverage: dropped ${st.dropped} · orphan_ref ${st.orphan_ref} · first_mention_fallback ${st.first_mention_fallback} · ambiguous_surface ${st.ambiguous_surface} · ambiguous_order ${ambiguous_order} · similar_attributes_unmerged ${unmerged.length}${unmerged.length ? " " + JSON.stringify(unmerged) : ""} · states_from_relations ${st.states_from_relations} · states_from_transitions ${st.states_from_transitions}`);
   return { passed, cards, store: st };
 }
 

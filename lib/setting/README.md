@@ -14,7 +14,7 @@ novel-trainer 규칙을 따른다: 빈 결과를 통과로 읽지 않는다. 검
 | `conflicts.ts` | 검사 ①(전이 없는 변화) + ①′(전이 뒤 옛 값 재등장). 위치는 (회차, 오프셋). 입력 순서 무관 | 없음 |
 | `conflicts.test.ts` | 물기 시험 32건 — 골격 10 + 리뷰 탐침 P1~P7 + 정규화·시간 + locate 3단계 P8 + first_mention 대체 P9 + 관계→상태 P10 | 없음 |
 | `golden.ts` | 골든의 zod 계약(strict). 키 오타가 "조건 없음" 으로 조용히 통과하지 않게 로드 시 `safeParse`. `excluded_info`·`category_info`·`unanchored_ratio_info` 는 정보(실패 아님), `surface_contains_any` 는 후보 중 하나 | 없음 |
-| `store.ts` | 저장소 물질화 규칙. 술어가 동의어표에 있고 객체가 사람이 아닌 관계는 상태로도 만든다(김태진 -소속-> 베나토르 ⇒ 김태진.소속=베나토르). verify 의 buildStore 와 나중 저장소 어댑터가 같이 쓴다 | 없음 |
+| `store.ts` | 저장소 물질화 규칙. ① 술어가 동의어표에 있고 객체가 사람이 아닌 관계는 상태로도(김태진 -소속-> 베나토르 ⇒ 김태진.소속=베나토르). ② subject·attribute·after 가 있는 transition 은 그 위치의 관찰 상태로도(source: from_transition) — 같은 위치의 전이가 설명이라 ① 이 잡지 않는다. verify 의 buildStore 와 나중 저장소 어댑터가 같이 쓴다 | 없음 |
 | `verify.ts` | 1·2화 골든 대조 + 결정성 대조 | 없음 |
 | `fixtures/prelim_ep1.txt`, `prelim_ep2.txt` | 원고 1·2화. 대회 레포 `public/samples/` 에서 **복사**(BOM 제거). 대회 레포는 읽기만 했고 쓰지 않는다 | — |
 | `fixtures/prelim_ep1-2.golden.json` | 골든. required / forbidden / caps | — |

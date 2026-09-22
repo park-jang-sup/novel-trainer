@@ -65,6 +65,8 @@ export const RuleRequired = z.strictObject({
   /** 정보성. 카테고리가 여기 없어도 실패가 아니다 — 불일치 수만 찍는다 */
   category_info: z.array(z.string()).min(1).optional(),
   surface_contains: z.string().optional(),
+  /** 근거 문장 후보 중 하나면 된다 — 모델이 같은 규칙을 다른 문장에서 잡는 자리 */
+  surface_contains_any: z.array(z.string()).min(1).optional(),
 });
 
 /** 정보성. 모델이 무엇을 일부러 뺐는지는 보되, 못 뺐다고 실패로 삼지 않는다 */

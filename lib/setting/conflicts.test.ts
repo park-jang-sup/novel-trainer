@@ -176,7 +176,7 @@ t("P8d locate: 3단계도 정확 일치다 — 한 글자 다르면 폐기", () 
 // ── P9 first_mention 대체 (세션 55 ①-3) ──
 import { locateAll } from "./locate";
 import { ExtractionRaw } from "./schema";
-import { materializeRelationStates } from "./store";
+import { materializeRelationStates, materializeTransitionStates } from "./store";
 const rawWith = (entities: unknown[], extra: Record<string, unknown> = {}) => ExtractionRaw.parse({
   episode: 1, narrator: { person: "first", entity: null }, branches: [{ id: "main", label: "현재" }],
   scenes: [{ ord: 0, opening: { surface: "탑에 들어갔다" }, branch: "main", anchor: null, pov: null, summary: "" }],
@@ -209,6 +209,18 @@ t("P10 술어가 동의어표에 있고 객체가 사람이 아니면 상태로 
   const nis = S({ entity_id: "A", attribute: "소속", value: "국정원", episode: 2, pos: 5 });
   assert.equal(run([nis, st]).cards.length, 0);
   assert.deepEqual(vals(run([nis, { ...st, exclusive: true }])), ["①affiliation:국정원→베나토르"]);
+});
+
+// ── P11 전이 → 상태 물질화 (세션 55 ②-0) ──
+t("P11 subject·attribute·after 가 있는 transition 만 그 위치의 상태가 되고, 같은 위치의 전이가 설명이라 ① 카드가 안 선다", () => {
+  const tr = (o: Partial<Parameters<typeof materializeTransitionStates>[0][number]>) => ({ kind: "transition" as const, subject_id: "A", attribute: "무기", after: "도끼", branch: "main", episode: 3, pos: 700, surface: "도끼를 들었다", ...o });
+  const out = materializeTransitionStates([tr({}), tr({ after: null }), tr({ subject_id: null }), tr({ kind: "occurrence" }), tr({ attribute: null })]);
+  assert.equal(out.length, 1); assert.equal(out[0].source, "from_transition"); assert.equal(out[0].value, "도끼"); assert.equal(out[0].pos, 700);
+  const s0 = S({ entity_id: "A", attribute: "무기", value: "검", episode: 1, exclusive: true });
+  const s1 = { ...toStoredState({ id: "m", ...out[0] }), exclusive: true };
+  const ev = E({ subject_id: "A", attribute: "무기", episode: 3, pos: 700, value_before: "검", value_after: "도끼", description: "검이 부러져 도끼로" });
+  assert.equal(run([s0, s1], [ev]).cards.length, 0);          // 전이가 설명한다
+  assert.equal(run([s0, s1]).cards.length, 1);                // 전이를 빼면 ① 카드 — 물질화 상태도 진짜 관찰처럼 비교된다
 });
 
 console.log(`\n통과 ${n} / 실패 0`);
